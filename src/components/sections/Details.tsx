@@ -1,0 +1,5 @@
+import { CalendarDays, Clock3, Gift, MapPin, Shirt } from 'lucide-react';
+import event from '../../data/event.json';
+import { Section } from '../shared/Section';
+const details = [{ icon: CalendarDays, label: 'Fecha', value: event.dateLabel }, { icon: Clock3, label: 'Hora', value: '7:00 PM' }, { icon: Shirt, label: 'Vestimenta', value: event.dressCode, sub: event.dressCodeDetail }, { icon: Gift, label: 'Mesa de regalos', value: event.giftTable.detail, link: event.giftTable.url }];
+export function Details() { return <Section id="detalles" eyebrow="Todo listo para celebrar" title="Detalles del evento"><div className="details"><article className="place-card"><MapPin /><span>El lugar</span><h3>{event.location.name}</h3><p>{event.location.address}</p><a href="#ubicacion">Cómo llegar →</a></article><div className="details-list">{details.map(({icon: Icon, label, value, sub, link}) => <article className="detail" key={label}><Icon /><div><span>{label}</span>{link ? <a href={link} target="_blank" rel="noreferrer">{value} ↗</a> : <strong>{value}</strong>}{sub && <small>{sub}</small>}</div></article>)}</div></div></Section>; }

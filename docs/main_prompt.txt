@@ -1,0 +1,568 @@
+https://github.com/Leonxlnx/taste-skill
+
+# ROL
+
+Actúa como un equipo conformado por:
+
+- Principal Software Architect
+- Senior Software Engineer
+- Senior Frontend Engineer
+- Senior React Developer
+- Senior UX Designer
+- Senior UI Designer
+- Senior Product Designer
+- Senior Motion Designer
+
+Todos trabajando juntos para crear un producto comercial de nivel profesional.
+
+No generes una demo sencilla.
+
+Quiero una aplicación con calidad de producción.
+
+Piensa como si este producto fuera vendido a miles de clientes.
+
+---
+
+# CONTEXTO DEL PRODUCTO
+
+Estamos desarrollando un SaaS de Invitaciones Digitales para eventos.
+
+La primera versión estará enfocada en XV Años.
+
+En el futuro soportará:
+
+- Bodas
+- Bautizos
+- Graduaciones
+- Cumpleaños
+- Baby Shower
+- Revelación de género
+- Eventos empresariales
+
+La invitación NO es el producto principal.
+
+La invitación es únicamente la puerta de entrada.
+
+El verdadero producto será una plataforma para administrar eventos.
+
+La filosofía del proyecto es:
+
+"No vendemos invitaciones.
+
+Vendemos una herramienta para organizar eventos."
+
+Todo el proyecto deberá construirse pensando en poder crecer durante muchos años.
+
+No crear código difícil de mantener.
+
+No crear componentes acoplados.
+
+Todo debe ser escalable.
+
+---
+
+# IMPORTANTE
+
+Aunque en esta fase únicamente desarrollarás una Landing Demo, toda la arquitectura deberá estar preparada para incorporar posteriormente:
+
+- Autenticación
+- Panel Administrativo
+- Gestión de Eventos
+- Gestión de Invitados
+- RSVP
+- Administración de Mesas
+- Recordatorios automáticos
+- Libro de firmas
+- Álbum colaborativo
+- IA para generación de contenido
+- Multiempresa
+- Múltiples organizadores
+- Múltiples plantillas
+- Múltiples tipos de eventos
+
+NO desarrollar estas funcionalidades.
+
+Únicamente preparar la arquitectura para recibirlas en el futuro.
+
+---
+
+# OBJETIVO
+
+Construir una Landing Demo completamente funcional.
+
+No habrá backend.
+
+Toda la información será Dummy.
+
+Debe parecer un producto terminado.
+
+Debe impresionar a cualquier cliente.
+
+La demo será utilizada para vender el producto.
+
+---
+
+# FILOSOFÍA DE DISEÑO
+
+No quiero una landing tradicional.
+
+Quiero una experiencia emocional.
+
+Elegante.
+
+Premium.
+
+Minimalista.
+
+Moderna.
+
+Refinada.
+
+Con mucho espacio en blanco.
+
+Visualmente limpia.
+
+Nada recargado.
+
+Nada infantil.
+
+Nada con exceso de animaciones.
+
+La experiencia debe transmitir:
+
+Elegancia
+
+Exclusividad
+
+Emoción
+
+Celebración
+
+Calidad
+
+---
+
+# MOBILE FIRST (REQUERIMIENTO MÁS IMPORTANTE)
+
+La aplicación debe diseñarse completamente bajo una estrategia **Mobile First**.
+
+Este es el requerimiento más importante del proyecto.
+
+La mayoría de los usuarios abrirán la invitación desde:
+
+- WhatsApp
+- Facebook Messenger
+- Instagram
+- Telegram
+- SMS
+
+Más del 90% utilizará un teléfono móvil.
+
+Por lo tanto:
+
+- Diseñar primero para pantallas móviles.
+- Toda la experiencia debe sentirse como una aplicación nativa.
+- Los botones deben ser grandes y fáciles de tocar.
+- Excelente legibilidad.
+- Espaciado cómodo para el pulgar.
+- Evitar bloques enormes de texto.
+- Scroll natural.
+- Excelente rendimiento en dispositivos de gama media.
+- Optimizar la carga inicial.
+- Las imágenes deben adaptarse correctamente.
+- La navegación debe ser intuitiva desde el teléfono.
+
+Después adaptar la experiencia a:
+
+- Tablet
+- Desktop
+
+Desktop NO es la prioridad.
+
+Mobile siempre tendrá prioridad sobre cualquier otra resolución.
+
+---
+
+# STACK
+
+React 19
+
+TypeScript
+
+Vite
+
+TailwindCSS
+
+shadcn/ui
+
+Framer Motion
+
+Lucide Icons
+
+React Hook Form
+
+Zod
+
+---
+
+# ARQUITECTURA
+
+Aplicar principios SOLID.
+
+Componentes reutilizables.
+
+Separación clara de responsabilidades.
+
+Escalable.
+
+Código limpio.
+
+Sin duplicación.
+
+Buenas prácticas.
+
+Preparado para crecer.
+
+---
+
+# ESTRUCTURA
+
+src/
+
+components/
+
+ui/
+
+sections/
+
+hooks/
+
+contexts/
+
+services/
+
+types/
+
+utils/
+
+config/
+
+assets/
+
+data/
+
+styles/
+
+layouts/
+
+pages/
+
+---
+
+# FUENTE DE DATOS
+
+No utilizar datos hardcodeados.
+
+Toda la información deberá salir desde:
+
+data/event.json
+
+Ejemplo:
+
+Nombre
+
+Fecha
+
+Historia
+
+Fotos
+
+Cronograma
+
+Ubicación
+
+Vestimenta
+
+Mesa de regalos
+
+Redes sociales
+
+Frases
+
+etc.
+
+Todo debe consumirse desde este archivo.
+
+---
+
+# PALETA
+
+Blanco
+
+Marfil
+
+Rosa pastel
+
+Dorado elegante
+
+Grises suaves
+
+Mucho espacio en blanco.
+
+Nada estridente.
+
+---
+
+# TIPOGRAFÍA
+
+Elegante.
+
+Moderna.
+
+Excelente jerarquía.
+
+Muy legible en móviles.
+
+---
+
+# ANIMACIONES
+
+Utilizar Framer Motion.
+
+Animaciones suaves.
+
+Fade
+
+Slide
+
+Scale
+
+Parallax ligero
+
+Scroll Reveal
+
+Nada exagerado.
+
+El contenido debe sentirse vivo pero elegante.
+
+---
+
+# PERFORMANCE
+
+Lazy Loading.
+
+Optimización de imágenes.
+
+Evitar renders innecesarios.
+
+Excelente Lighthouse Score.
+
+---
+
+# ACCESIBILIDAD
+
+ARIA Labels.
+
+Alt en imágenes.
+
+Buen contraste.
+
+Navegación con teclado.
+
+Buenas prácticas WCAG.
+
+---
+
+# SECCIONES
+
+## 1 Hero
+
+Gran fotografía.
+
+Nombre.
+
+Frase.
+
+Cuenta regresiva.
+
+Fecha.
+
+Botón Confirmar.
+
+Botón Ver ubicación.
+
+---
+
+## 2 Historia
+
+Fotografía.
+
+Historia emotiva.
+
+Diseño elegante.
+
+---
+
+## 3 Galería
+
+Grid responsive.
+
+Hover elegante.
+
+Lightbox.
+
+---
+
+## 4 Detalles
+
+Cards elegantes con:
+
+Fecha
+
+Hora
+
+Lugar
+
+Vestimenta
+
+Mesa de regalos
+
+---
+
+## 5 Cronograma
+
+Timeline vertical.
+
+Recepción
+
+Misa
+
+Cena
+
+Vals
+
+Baile
+
+---
+
+## 6 Ubicación
+
+Mapa dummy.
+
+Botón Google Maps.
+
+---
+
+## 7 RSVP
+
+Formulario elegante.
+
+Nombre.
+
+Teléfono.
+
+Número de asistentes.
+
+Botón Confirmar.
+
+Simular envío únicamente en frontend.
+
+---
+
+## 8 Mensaje Final
+
+Texto emotivo.
+
+Fotografía.
+
+---
+
+## 9 Footer
+
+Contacto.
+
+Redes sociales.
+
+Derechos reservados.
+
+---
+
+# COMPONENTES
+
+Cada sección debe ser un componente independiente.
+
+Crear además componentes reutilizables como:
+
+Container
+
+SectionTitle
+
+Button
+
+Card
+
+Timeline
+
+Countdown
+
+Gallery
+
+MapCard
+
+MusicPlayer
+
+Photo
+
+Input
+
+Form
+
+Modal
+
+Badge
+
+Chip
+
+etc.
+
+---
+
+# EXPERIENCIA
+
+No construir una Landing.
+
+Construir una experiencia.
+
+Cada sección debe sentirse cuidadosamente diseñada.
+
+Debe parecer una aplicación premium.
+
+Debe sorprender visualmente.
+
+---
+
+# RESULTADO ESPERADO
+
+Cuando termine de ejecutar este prompt quiero sentir que estoy viendo un producto listo para comercializar.
+
+Debe parecer una plataforma profesional.
+
+Debe transmitir confianza.
+
+Debe ser elegante.
+
+Debe ser memorable.
+
+Debe ser fácilmente extensible para el futuro.
+
+Antes de comenzar el desarrollo:
+
+1. Analiza todos los requerimientos.
+2. Define la arquitectura del proyecto.
+3. Propón la estructura de carpetas.
+4. Explica brevemente las decisiones técnicas.
+5. Después comienza a generar el código siguiendo esa arquitectura.
+
+No sacrifiques calidad por velocidad.
+
+Prioriza mantenibilidad, escalabilidad y experiencia de usuario.

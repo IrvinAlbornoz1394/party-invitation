@@ -1,0 +1,2 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Sacramento&display=swap');
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#fffdfb;color:#4a3a3a;font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.55}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}h1,h2,h3,p{margin-top:0}h1,h2,h3{font-family:'Playfair Display',serif;font-weight:500;line-height:1.1}::selection{background:#e7bdc2;color:#3c2529}
