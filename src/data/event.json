@@ -1,18 +1,20 @@
 {
-  "name": "Valentina", "fullName": "Valentina Sofía", "eventType": "Mis XV años",
+  "name": "Lucero e Irvin", "fullName": "Lucero & Irvin", "eventType": "Nuestra boda",
   "tagline": "Una noche para soñar, celebrar y guardar por siempre.",
-  "date": "2026-10-15T19:00:00", "dateLabel": "Jueves 15 de octubre, 2026",
+  "date": "2026-10-15T18:00:00", "dateLabel": "Jueves 15 de octubre, 2026", "timeLabel": "6:00 PM",
+  "city": "Mérida, Yucatán",
   "heroImage": "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1500&q=85",
   "storyImage": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=85",
   "finalImage": "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85",
-  "story": "Hay momentos que se quedan a vivir en el corazón. Hoy celebro la alegría de crecer, los sueños que empiezan y la fortuna de tenerlos cerca para compartirlos.",
-  "location": { "name": "Salón Real", "address": "Av. Principal 123, Ciudad de México", "mapUrl": "https://maps.google.com/?q=Av.+Principal+123" },
+  "story": "Hay momentos que se quedan a vivir en el corazón. Hoy celebramos el camino que nos trajo hasta aquí, los sueños que empiezan juntos y la fortuna de tenerlos cerca para compartirlos.",
+  "church": { "label": "La ceremonia", "name": "Iglesia de Nuestra Señora de Lourdes", "address": "Centro, Mérida, Yucatán", "detail": "Misa de bodas · 6:00 PM", "mapUrl": "https://www.google.com/maps/search/?api=1&query=Iglesia+de+Nuestra+Se%C3%B1ora+de+Lourdes+Centro+M%C3%A9rida+Yucat%C3%A1n" },
+  "location": { "label": "La recepción", "name": "Salón Real", "address": "Paseo de Montejo 123, Centro, Mérida, Yucatán", "detail": "Recepción · 7:30 PM", "mapUrl": "https://www.google.com/maps/search/?api=1&query=Paseo+de+Montejo+M%C3%A9rida+Yucat%C3%A1n" },
   "schedule": [
-    { "time": "19:00", "title": "Recepción", "description": "Los esperamos para brindar juntos." },
-    { "time": "20:00", "title": "Ceremonia", "description": "Un momento lleno de significado." },
-    { "time": "21:00", "title": "Cena", "description": "Compartamos la mesa y la alegría." },
-    { "time": "22:30", "title": "Vals", "description": "El comienzo de una noche inolvidable." },
-    { "time": "23:00", "title": "Baile", "description": "La celebración continúa." }
+    { "time": "18:00", "title": "Misa", "description": "En la Iglesia de Lourdes, en el centro de Mérida." },
+    { "time": "19:30", "title": "Recepción", "description": "Los esperamos para brindar juntos." },
+    { "time": "20:30", "title": "Cena", "description": "Compartamos la mesa y la alegría." },
+    { "time": "22:00", "title": "Primer baile", "description": "El comienzo de una noche inolvidable." },
+    { "time": "22:30", "title": "Fiesta", "description": "La celebración continúa." }
   ],
   "dressCode": "Formal", "dressCodeDetail": "Evita usar blanco; reserva tus mejores tonos para celebrar.",
   "giftTable": { "name": "Mesa de regalos Liverpool", "detail": "Evento 52678431", "url": "https://www.liverpool.com.mx" },
@@ -25,9 +27,9 @@
     "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80"
   ],
   "messages": [
-    { "quote": "Que esta nueva etapa esté llena de sueños cumplidos y momentos que te hagan brillar.", "author": "Mamá y Papá", "role": "Con todo nuestro amor", "group": "Familia" },
-    { "quote": "Que nunca te falten razones para reír, bailar y perseguir todo aquello que imaginas.", "author": "Tus abuelos", "role": "Siempre a tu lado", "group": "Familia" },
-    { "quote": "Hoy celebramos a la mujer maravillosa en la que te estás convirtiendo. ¡Disfruta cada instante!", "author": "Sofía y Mariana", "role": "Tus mejores amigas", "group": "Amistades" }
+    { "quote": "Que esta nueva etapa esté llena de sueños cumplidos y de momentos que los hagan brillar.", "author": "Mamá y Papá", "role": "Con todo nuestro amor", "group": "Familia" },
+    { "quote": "Que nunca les falten razones para reír, bailar y perseguir todo aquello que imaginan.", "author": "Sus abuelos", "role": "Siempre a su lado", "group": "Familia" },
+    { "quote": "Hoy celebramos el amor que construyeron juntos. ¡Disfruten cada instante de este día!", "author": "Sofía y Mariana", "role": "Sus mejores amigas", "group": "Amistades" }
   ],
-  "contact": { "phone": "+52 55 1234 5678", "instagram": "@valentina.xv" }
+  "contact": { "phone": "+52 999 123 4567", "instagram": "@luceroeirvin" }
 }

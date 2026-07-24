@@ -28,8 +28,8 @@ export default function App() {
     <EventMessages />
     <Location />
     <Rsvp />
-    <section className="closing"><img src={event.finalImage} alt="Celebración de quince años" /><div className="closing-copy"><span className="eyebrow">Con mucho cariño</span><h2>Tu presencia hará esta noche aún más especial.</h2><p>Gracias por acompañarme a celebrar un momento que guardaré para siempre.</p><Heart size={22} fill="currentColor" /></div></section>
-    <footer><div><strong>{event.fullName}</strong><span>{event.dateLabel}</span></div><div><a href={`tel:${event.contact.phone.replace(/\s/g, '')}`}>{event.contact.phone}</a><a href={`https://instagram.com/${event.contact.instagram.slice(1)}`} target="_blank" rel="noreferrer">{event.contact.instagram}</a></div><small>© 2026 · Hecho para celebrar momentos extraordinarios</small></footer>
+    <section className="closing"><img src={event.finalImage} alt="Celebración de boda" /><div className="closing-copy"><span className="eyebrow">Con mucho cariño</span><h2>Tu presencia hará esta noche aún más especial.</h2><p>Gracias por acompañarnos a celebrar un momento que guardaremos para siempre.</p><Heart size={22} fill="currentColor" /></div></section>
+    <footer><div><strong>{event.fullName}</strong><span>{event.dateLabel} · {event.city}</span></div><div><a href={`tel:${event.contact.phone.replace(/\s/g, '')}`}>{event.contact.phone}</a><a href={`https://instagram.com/${event.contact.instagram.slice(1)}`} target="_blank" rel="noreferrer">{event.contact.instagram}</a></div><small>© 2026 · Hecho para celebrar momentos extraordinarios</small></footer>
     <button className="music" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pausar música' : 'Activar música'}>{playing ? <Pause size={17} /> : <Music2 size={17} />}<span>{playing ? 'Pausar' : 'Música'}</span></button>
     <a className="scroll-top" href="#inicio" aria-label="Volver arriba"><ChevronUp size={18} /></a>
   </main>;
