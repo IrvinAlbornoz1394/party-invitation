@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Container } from '../shared/Container';
-import eventData from '../../data/event.json';
+import { Container } from '../../shared/Container';
+import eventData from '../../../data/event.json';
 
 export function Historia() {
   return (

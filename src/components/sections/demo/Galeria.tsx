@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Container } from '../shared/Container';
+import { Container } from '../../shared/Container';
 
 export function Galeria() {
   const photos = Array.from({ length: 4 }, (_, i) => i + 1);
