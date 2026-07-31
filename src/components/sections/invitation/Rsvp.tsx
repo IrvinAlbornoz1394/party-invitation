@@ -1,7 +1,23 @@
-import { useState } from 'react';
-import { Check, Heart } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { MessageCircle } from 'lucide-react';
 import event from '../../../data/event.json';
 import { Section } from '../../shared/Section';
-type Form = { name: string; phone: string; guests: string; kids: string; note: string };
-export function Rsvp() { const { register, handleSubmit, formState: { errors } } = useForm<Form>(); const [sent, setSent] = useState(false); if (sent) return <Section id="rsvp" eyebrow="Gracias" title="¡Tu lugar está reservado!"><div className="rsvp-success"><span><Check /></span><p>Hemos registrado tu confirmación. A Kamilah le va a encantar verte ahí.</p></div></Section>; return <Section id="rsvp" eyebrow="Celebremos juntos" title="Confirma tu asistencia" tone="ivory"><p className="rsvp-lead">Por favor confirma antes del 1 de octubre para reservar tu lugar.</p><form className="rsvp-form" onSubmit={handleSubmit(() => setSent(true))}><label>Nombre completo<input {...register('name', { required: 'Escribe tu nombre' })} placeholder="Tu nombre" />{errors.name && <small>{errors.name.message}</small>}</label><label>Teléfono<input {...register('phone', { required: 'Comparte un teléfono' })} inputMode="tel" placeholder="999 123 4567" />{errors.phone && <small>{errors.phone.message}</small>}</label><label>Número de adultos<select {...register('guests', { required: true })}><option value="">Selecciona una opción</option><option>1 adulto</option><option>2 adultos</option><option>3 adultos</option><option>4 adultos o más</option></select></label><label>¿Cuántos niños vienen? <span>(para el brincolín)</span><select {...register('kids')}><option value="">Sin niños</option><option>1 niño</option><option>2 niños</option><option>3 niños</option><option>4 niños o más</option></select></label><label>Un mensaje para {event.name} <span>(opcional)</span><textarea {...register('note')} rows={3} placeholder="Escribe unas palabras bonitas..." /></label><button className="button primary submit" type="submit"><Heart size={17} fill="currentColor" /> Confirmar asistencia</button></form></Section>; }
+
+/** Formato de wa.me: solo dígitos, con lada de país y sin +, espacios ni guiones. */
+const host = event.contact.whatsapp.replace(/\D/g, '');
+/** El mensaje va completo y listo para enviar. Para cambiar el texto, edita estas líneas. */
+const message = [
+  `¡Hola! Confirmo mi asistencia a la presentación de ${event.fullName} 🎉`,
+  '',
+  `${event.dateLabel} · ${event.city}`,
+].join('\n');
+const waUrl = `https://wa.me/${host}?text=${encodeURIComponent(message)}`;
+
+export function Rsvp() {
+  return <Section id="rsvp" eyebrow="Celebremos juntos" title="Confirma tu asistencia" tone="ivory">
+    <div className="rsvp-cta">
+      <p>Nos encantará contar contigo. Confirma antes del 1 de octubre.</p>
+      <a className="button primary" href={waUrl} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Confirmar por WhatsApp</a>
+      <small>Se abre WhatsApp con el mensaje listo. Cuéntanos cuántos adultos y niños vienen antes de enviarlo.</small>
+    </div>
+  </Section>;
+}
