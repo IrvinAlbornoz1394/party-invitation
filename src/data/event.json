@@ -1,35 +1,53 @@
 {
-  "name": "Lucero e Irvin", "fullName": "Lucero & Irvin", "eventType": "Nuestra boda",
-  "tagline": "Una noche para soñar, celebrar y guardar por siempre.",
-  "date": "2026-10-15T18:00:00", "dateLabel": "Jueves 15 de octubre, 2026", "timeLabel": "6:00 PM",
+  "name": "Kamilah", "fullName": "Kamilah Michelle", "lastName": "Albornoz Meléndez", "eventType": "Mi presentación · 3 años",
+  "tagline": "Tres años de bendiciones. Primero doy gracias ante Cristo y después… ¡que empiece la fiesta!",
+  "date": "2026-10-17T12:00:00", "dateLabel": "Sábado 17 de octubre, 2026", "timeLabel": "12:00 PM",
   "city": "Mérida, Yucatán",
-  "heroImage": "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1500&q=85",
-  "storyImage": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=85",
-  "finalImage": "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85",
-  "story": "Hay momentos que se quedan a vivir en el corazón. Hoy celebramos el camino que nos trajo hasta aquí, los sueños que empiezan juntos y la fortuna de tenerlos cerca para compartirlos.",
-  "church": { "label": "La ceremonia", "name": "Iglesia de Nuestra Señora de Lourdes", "address": "Centro, Mérida, Yucatán", "detail": "Misa de bodas · 6:00 PM", "mapUrl": "https://www.google.com/maps/search/?api=1&query=Iglesia+de+Nuestra+Se%C3%B1ora+de+Lourdes+Centro+M%C3%A9rida+Yucat%C3%A1n" },
-  "location": { "label": "La recepción", "name": "Salón Real", "address": "Paseo de Montejo 123, Centro, Mérida, Yucatán", "detail": "Recepción · 7:30 PM", "mapUrl": "https://www.google.com/maps/search/?api=1&query=Paseo+de+Montejo+M%C3%A9rida+Yucat%C3%A1n" },
+  "parents": { "label": "Mis papás", "father": "Irvin M. Albornoz Vázquez", "mother": "Lucero B. Meléndez Casanova" },
+  "godparents": { "label": "Mis padrinos de presentación", "names": ["Juan Pérez Chan", "Ana López Ruiz"] },
+  "storyImage": "https://images.unsplash.com/photo-1602631985686-1bb0e6a8696e?auto=format&fit=crop&w=1000&q=85",
+  "finalImage": "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=85",
+  "story": "Hace tres años llegó a nuestra vida la sonrisa que nos cambió todo. Hoy queremos llevarla ante Cristo para dar gracias por su vida, por su salud y por cada travesura, y después celebrarlo con las personas que la queremos. Gracias por ser parte de su historia.",
+  "church": { "label": "Misa de acción de gracias", "name": "Templo de Nuestra Señora de Guadalupe", "address": "Calle 45 #201 x 26 y 28, Col. Dolores Otero, Mérida, Yucatán", "detail": "Misa de acción de gracias · 12:00 PM", "mapUrl": "https://www.google.com/maps/search/?api=1&query=Col.+Dolores+Otero+M%C3%A9rida+Yucat%C3%A1n" },
+  "location": { "label": "La fiesta infantil", "name": "Casa de la familia Albornoz Meléndez", "address": "Calle 43 #185 x 28 y 30, Col. Dolores Otero, Mérida, Yucatán", "detail": "Fiesta infantil · 2:00 PM", "mapUrl": "https://www.google.com/maps/search/?api=1&query=Col.+Dolores+Otero+M%C3%A9rida+Yucat%C3%A1n" },
+  "party": {
+    "eyebrow": "Y después de la misa…",
+    "theme": "Saja Boys",
+    "title": "¡Fiesta temática Saja Boys!",
+    "intro": "La misa es para dar gracias, y la tarde es para cantar, brincar y bailar. Mi fiesta está tematizada con los Saja Boys de KPop Demon Hunters, así que ven listo para el escenario.",
+    "lineup": ["Jinu", "Abby", "Baby", "Romance", "Mystery"],
+    "attractions": [
+      { "icon": "bounce", "name": "Brincolín", "detail": "Toda la tarde, para brincar sin parar." },
+      { "icon": "candy", "name": "Mesa de dulces", "detail": "En morado, rosa y mucho brillo." },
+      { "icon": "camera", "name": "Rincón de fotos", "detail": "Con marco temático para llevarte el recuerdo." },
+      { "icon": "cake", "name": "Feliz cumpleaños", "detail": "Acompañemos a Kamilah a cantar en la mesa del pastel." }
+    ],
+    "musicNote": "Música para que chicos y grandes bailen"
+  },
   "schedule": [
-    { "time": "18:00", "title": "Misa", "description": "En la Iglesia de Lourdes, en el centro de Mérida." },
-    { "time": "19:30", "title": "Recepción", "description": "Los esperamos para brindar juntos." },
-    { "time": "20:30", "title": "Cena", "description": "Compartamos la mesa y la alegría." },
-    { "time": "22:00", "title": "Primer baile", "description": "El comienzo de una noche inolvidable." },
-    { "time": "22:30", "title": "Fiesta", "description": "La celebración continúa." }
+    { "time": "12:00", "title": "Misa de acción de gracias", "description": "En el Templo de Nuestra Señora de Guadalupe." },
+    { "time": "13:00", "title": "Fotos con la festejada", "description": "Afuera del templo, antes de irnos a la fiesta." },
+    { "time": "14:00", "title": "Bienvenida a la fiesta", "description": "Te esperamos en la Col. Dolores Otero." },
+    { "time": "14:30", "title": "Brincolín y juegos", "description": "Que los peques lleguen listos para jugar." },
+    { "time": "15:30", "title": "Comida", "description": "Compartamos la mesa y la alegría." },
+    { "time": "16:30", "title": "Música y baile", "description": "Música para que chicos y grandes bailen." },
+    { "time": "17:30", "title": "Feliz cumpleaños", "description": "Acompañemos a Kamilah a cantar en la mesa del pastel." },
+    { "time": "18:00", "title": "Piñata y dulces", "description": "El gran final de la tarde." }
   ],
-  "dressCode": "Formal", "dressCodeDetail": "Evita usar blanco; reserva tus mejores tonos para celebrar.",
-  "giftTable": { "name": "Mesa de regalos Liverpool", "detail": "Evento 52678431", "url": "https://www.liverpool.com.mx" },
+  "music": { "src": "/music/soda-pop-acoustic-cover.mp3", "title": "Música de la fiesta" },
+  "giftTable": { "name": "Sugerencia de regalo", "detail": "Juguetes para 3 años, libros o un detalle con cariño", "url": "https://www.google.com/search?q=juguetes+para+3+a%C3%B1os" },
   "gallery": [
-    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=900&q=80",
-    "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=900&q=80",
-    "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=900&q=80",
-    "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80",
-    "https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&w=900&q=80",
-    "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80"
+    "https://images.unsplash.com/photo-1602631985686-1bb0e6a8696e?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1560421683-6856ea585c78?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1607344645866-009c320b63e0?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=900&q=80"
   ],
   "messages": [
-    { "quote": "Que esta nueva etapa esté llena de sueños cumplidos y de momentos que los hagan brillar.", "author": "Mamá y Papá", "role": "Con todo nuestro amor", "group": "Familia" },
-    { "quote": "Que nunca les falten razones para reír, bailar y perseguir todo aquello que imaginan.", "author": "Sus abuelos", "role": "Siempre a su lado", "group": "Familia" },
-    { "quote": "Hoy celebramos el amor que construyeron juntos. ¡Disfruten cada instante de este día!", "author": "Sofía y Mariana", "role": "Sus mejores amigas", "group": "Amistades" }
+    { "quote": "Tres años de risas, de abrazos y de aprender contigo. Que Dios te siga cuidando siempre, mi niña.", "author": "Irvin y Lucero", "role": "Tus papás", "group": "Familia" },
+    { "quote": "Llegaste a llenar la casa de música y de travesuras. Que nunca te falten motivos para bailar.", "author": "Tus abuelos", "role": "Con todo su amor", "group": "Familia" },
+    { "quote": "Hoy te presentamos ante Cristo y prometemos acompañarte en cada paso del camino.", "author": "Juan y Ana", "role": "Tus padrinos", "group": "Padrinos" }
   ],
-  "contact": { "phone": "+52 999 123 4567", "instagram": "@luceroeirvin" }
+  "contact": { "phone": "+52 999 123 4567", "instagram": "@kamilah3anios" }
 }

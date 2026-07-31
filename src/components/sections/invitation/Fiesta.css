@@ -1,0 +1,65 @@
+.fiesta{position:relative;overflow:hidden;padding:82px 0;background:linear-gradient(165deg,#2b1140 0%,#42155c 44%,#7a1a58 100%);color:#fdf4ff;isolation:isolate}
+.fiesta-glow,.fiesta-stars{position:absolute;inset:0;pointer-events:none}
+.fiesta-glow{background:radial-gradient(circle at 18% 12%,#e05fb355 0,transparent 46%),radial-gradient(circle at 84% 78%,#8b5cf655 0,transparent 44%)}
+.fiesta-stars{background-image:radial-gradient(#ffffff70 1px,transparent 1px),radial-gradient(#ffb4e680 1px,transparent 1px);background-size:118px 96px,73px 61px;background-position:0 0,29px 37px;opacity:.55}
+.fiesta .wrap{position:relative;z-index:2}
+
+/* --- los 5 personajes --- */
+/* Cada uno va en el flujo, emparejado con una tarjeta y alternando lado. Así se ven
+   COMPLETOS en cualquier ancho (nada de posición absoluta ni recortes) y siguen
+   repartidos a lo largo de la sección conforme haces scroll. */
+.fiesta-char{flex:0 0 auto;width:clamp(92px,25vw,124px);filter:drop-shadow(0 12px 15px #1c0a2e80)}
+.fiesta-char img{display:block;width:100%;height:auto;animation:char-float 5.2s ease-in-out infinite}
+.fiesta-char.char-1{--tilt:-3deg}
+.fiesta-char.char-2{--tilt:2.5deg}
+.fiesta-char.char-3{--tilt:-2deg}
+.fiesta-char.char-4{--tilt:3deg}
+.fiesta-char.char-5{--tilt:-2.5deg}
+.fiesta-char.char-1 img{animation-duration:5.2s;animation-delay:-.4s}
+.fiesta-char.char-2 img{animation-duration:6.4s;animation-delay:-1.9s}
+.fiesta-char.char-3 img{animation-duration:5.7s;animation-delay:-3.1s}
+.fiesta-char.char-4 img{animation-duration:6.9s;animation-delay:-1.1s}
+.fiesta-char.char-5 img{animation-duration:6.1s;animation-delay:-2.5s}
+@keyframes char-float{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg))}50%{transform:translateY(-13px) rotate(calc(var(--tilt,0deg) * -1))}}
+
+.fiesta-heading{text-align:center;max-width:640px;margin:0 auto 26px}
+.fiesta-heading .eyebrow{color:#ffb9e8}
+.fiesta-theme{display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;padding:6px 14px;border-radius:30px;border:1px solid #ffffff40;background:#ffffff14;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.fiesta-heading h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,12vw,86px);letter-spacing:.02em;line-height:.95;margin:0;background:linear-gradient(92deg,#fff 12%,#ffc2ec 52%,#c4a6ff 92%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.fiesta-heading p{margin:16px 0 0;color:#f4dcff;font-size:15px}
+.fiesta-lineup{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:38px}
+.fiesta-lineup span{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.13em;padding:7px 15px;border-radius:2px;border:1px solid #ffffff33;background:linear-gradient(180deg,#ffffff1f,#ffffff08);color:#fff}
+/* Un personaje por pareja, de pie junto a su tarjeta. nth-child(odd) lo manda al lado
+   contrario: en celular alternan izquierda/derecha, y en 2 columnas quedan por fuera. */
+.fiesta-pairs{display:grid;gap:16px}
+.fiesta-pair{display:flex;align-items:flex-end;gap:10px}
+.fiesta-pairs>.fiesta-pair:nth-child(odd){flex-direction:row-reverse}
+.fiesta-pair-music{flex-direction:row-reverse;margin-top:34px}
+.fiesta-pair>.fiesta-card,.fiesta-pair>.fiesta-music{flex:1;min-width:0}
+.fiesta-card{position:relative;padding:24px 22px;border-radius:3px;border:1px solid #ffffff26;background:linear-gradient(180deg,#ffffff17,#ffffff07);backdrop-filter:blur(3px);transition:.25s}
+.fiesta-card:hover{transform:translateY(-3px);border-color:#ffb9e880;background:linear-gradient(180deg,#ffffff24,#ffffff0c)}
+.fiesta-card>span{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:linear-gradient(140deg,#f472b6,#a855f7);color:#fff;margin-bottom:15px}
+.fiesta-card h3{font-size:20px;margin:0 0 5px;color:#fff}
+.fiesta-card p{margin:0;font-size:13px;color:#eed4ff}
+.fiesta-music{padding:20px 22px;border-radius:3px;border:1px dashed #ffffff3d;display:grid;gap:9px;justify-items:center;text-align:center}
+.fiesta-music>svg{color:#ffb9e8}
+.fiesta-music strong{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#ffd9f4;font-weight:600}
+.fiesta-music p{margin:0;font:italic 500 17px/1.35 'Playfair Display',serif}
+
+@media(min-width:700px){
+  .fiesta{padding:118px 0}
+  .fiesta-lineup span{font-size:20px;padding:9px 20px}
+  .fiesta-pairs{grid-template-columns:repeat(2,1fr);gap:20px}
+  .fiesta-pair{gap:14px}
+  .fiesta-char{width:clamp(108px,12vw,146px)}
+  .fiesta-pair-music{margin-top:44px}
+  .fiesta-music{padding:26px}
+  .fiesta-music p{font-size:21px}
+}
+
+@media(min-width:1100px){
+  .fiesta-pair{gap:18px}
+  .fiesta-char{width:162px}
+}
+
+@media(prefers-reduced-motion:reduce){.fiesta-char img{animation:none}}
