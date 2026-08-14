@@ -1,0 +1,138 @@
+/* ============================================================================
+   Pantalla de acceso
+   ============================================================================
+   Vive en su propio módulo y no con el panel, por la misma razón por la que `/acceso` vive
+   fuera de `/admin` y de `/panel`: es la puerta de las DOS clases de cuenta. Colgarla de
+   cualquiera de los dos paneles obligaría a que ese panel tuviera una excepción para su
+   propia pantalla de entrada — justo el tipo de excepción que acaba dejando una ruta sin
+   proteger.
+
+   Antes compartía hoja con el armazón del panel, así que un retoque en el degradado de la
+   barra lateral podía mover el formulario de acceso. Ahora son dos archivos sin nada en
+   común salvo las fuentes. */
+
+.access {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(1200px 600px at 50% -10%, #f6ecf1, #faf6f4 60%);
+}
+
+.access__card {
+  width: min(100%, 440px);
+  padding: 26px 22px;
+  text-align: center;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 70px #2e1a2b16;
+}
+.access__card h2 {
+  margin: 22px 0 6px;
+  font-family: var(--font-display);
+  /* 400, como el resto de los títulos de la marca. Cormorant en 600 se empasta y deja de
+     distinguirse del serif del sistema. Se compensa con cuerpo, no con peso. */
+  font-weight: 400;
+  font-size: 30px;
+  letter-spacing: -0.005em;
+}
+.access__card .ant-typography {
+  display: block;
+}
+.access__card form {
+  margin-top: 27px;
+  text-align: left;
+}
+.access__card .ant-btn-link {
+  margin-top: 14px;
+}
+
+/* El logotipo, centrado. `--dash-mark` da el oro del monograma; fuera del panel esa variable
+   no existe, así que se declara aquí el mismo valor de la marca. */
+.access__brand {
+  --dash-mark: #c9a96a;
+  display: flex;
+  justify-content: center;
+}
+
+.access__note {
+  margin-top: 18px;
+  font-size: 12px;
+}
+.access__alert {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.access__label {
+  display: block;
+  margin: 22px 0 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6a5c66;
+  text-align: left;
+}
+.access__card form .access__label:first-of-type {
+  margin-top: 0;
+}
+.access__submit {
+  margin-top: 24px;
+}
+
+/* ── Casillas del código ──────────────────────────────────────────────────── */
+.access__otp {
+  display: flex;
+  justify-content: center;
+  margin-top: 26px;
+}
+/* Los dígitos se leen de un teléfono y se teclean aquí, así que van grandes y separados.
+   Tabulares para que al escribir no cambie el ancho de cada casilla. */
+.access__otp .ant-otp-input {
+  width: 44px;
+  height: 52px;
+  font-size: 21px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.access__actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+.access__actions form {
+  margin: 0;
+}
+/* «Reenviar código» y «Usar otro correo» son botones de enlace, que antd deja en 32px de
+   alto. Se pulsan con el pulgar en la pantalla donde más prisa hay —el código vence en diez
+   minutos— así que suben al mínimo táctil. */
+.access__actions .ant-btn {
+  min-height: 44px;
+}
+
+/* ── Foco visible ─────────────────────────────────────────────────────────── */
+.access :focus-visible {
+  outline: 2px solid #6b3a5e;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (max-width: 420px) {
+  /* Las casillas se quedan en 44px, que es el mínimo táctil, y lo que cede es el espacio
+     alrededor. Seis casillas de 44 son 264px: a 375 de pantalla solo caben si la tarjeta
+     estrecha su relleno y el hueco entre casillas baja a 6px. Antes cabían por lo contrario
+     —encogiendo la casilla a 38px— y con seis intentos contados, fallar el toque es peor
+     que ir justo de margen. */
+  .access__card {
+    padding-inline: 14px;
+  }
+  .access__otp .ant-otp {
+    gap: 6px;
+  }
+  .access__otp .ant-otp-input {
+    width: 44px;
+    height: 50px;
+    font-size: 18px;
+  }
+}

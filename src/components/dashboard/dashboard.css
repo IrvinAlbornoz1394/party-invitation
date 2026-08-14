@@ -1,0 +1,1371 @@
+/* ============================================================================
+   Panel: armazón, superficies y primitivos
+   ============================================================================
+   Los colores NO se escriben aquí. Llegan como variables (`--dash-accent`,
+   `--dash-sider-from`…) que `DashboardShell` cuelga del elemento raíz a partir de
+   `dashboard-palette.ts`, que es también quien se las pasa a antd. Un solo origen para
+   los dos motores de estilo.
+
+   Lo que sí vive aquí es la retícula, las superficies y los primitivos: todo aquello para
+   lo que antd no tiene token y que, si se intentara con `ConfigProvider`, acabaría siendo
+   una pelea de especificidad.
+
+   ── Por qué el armazón ya no usa `Layout` de antd ─────────────────────────────
+   Porque `.ant-layout` declara `min-height: 0`, con la misma especificidad que cualquier
+   clase nuestra y —al inyectarse en runtime con cssinjs— DESPUÉS de esta hoja. Ganaba
+   siempre. El resultado era el fallo que se veía en pantalla: el contenedor se encogía a
+   la altura de su contenido, así que la barra lateral terminaba donde terminaba la última
+   opción del menú y el panel entero quedaba cortado a media pantalla.
+
+   Se podía forzar con `!important` en cinco reglas. En su lugar el armazón es una retícula
+   CSS de doce líneas que es full-height POR CONSTRUCCIÓN, y antd se queda con lo que hace
+   bien: tablas, selectores y modales. */
+
+/* ── Retícula del armazón ─────────────────────────────────────────────────── */
+.dash {
+  /* Escala de espaciado densa (dial de densidad 8/10): un panel de datos necesita ver más
+     filas por pantalla que una página de marketing. */
+  --dash-gap-xs: 6px;
+  --dash-gap-sm: 10px;
+  --dash-gap: 16px;
+  --dash-gap-lg: 24px;
+  --dash-gap-xl: 32px;
+
+  --dash-sidebar-width: 264px;
+  --dash-radius: 14px;
+  --dash-radius-sm: 10px;
+
+  --dash-surface: #fff;
+  /* Neutros CÁLIDOS, derivados del berenjena y no de un gris puro. Un gris frío junto a una
+     marca berenjena y oro delata la plantilla: las superficies se ven azuladas al lado del
+     acento. Estos llevan una pizca de rojo, así que el conjunto se lee como una sola familia. */
+  --dash-border: #ede5e9;
+  --dash-ink: #2c222a;
+  --dash-ink-soft: #6a5c66;
+  /* 4.94:1 sobre blanco y 4.60:1 sobre el lienzo crema. Es más oscuro de lo que pide el ojo
+     para un «gris secundario», y es a propósito: el tono anterior (#8c7e88) se quedaba en
+     3.85:1, por debajo del 4.5:1 que exige AA para texto pequeño — y este gris pinta justo
+     los textos de 12px. El fondo contra el que hay que medirlo es el crema, no el blanco. */
+  --dash-muted: #7a6c7a;
+
+  /* Dos sombras: un contacto de 1px y una difusa muy suave. Una sola sombra grande flota;
+     este par es lo que hace que la tarjeta parezca apoyada y no pegada. */
+  --dash-shadow: 0 1px 2px #241d290a, 0 8px 24px #241d2908;
+  --dash-shadow-lifted: 0 2px 6px #241d290f, 0 16px 40px #241d2914;
+
+  /* Escala de apilamiento, declarada en un solo sitio. Sin ella cada capa nueva se inventa
+     un número —y siempre acaba siendo 9999— hasta que dos empatan y el velo tapa justo lo
+     que debía destacar. Los huecos permiten meter algo intermedio sin renumerar. */
+  --dash-z-topbar: 20;
+  --dash-z-scrim: 30;
+  --dash-z-sidebar: 40;
+  --dash-z-skip: 60;
+
+  display: grid;
+  /* `minmax(0, 1fr)` y no `1fr`. Una columna de retícula toma por defecto `min-width: auto`,
+     que es el ancho de su contenido MÁS ANCHO: basta una tabla de ocho columnas para que la
+     columna se estire, empuje la barra lateral fuera de la pantalla y aparezca el scroll
+     horizontal que ninguna interfaz debería tener. El `0` deja que la columna encoja y que
+     sea la tabla la que gestione su propio desbordamiento. */
+  grid-template-columns: var(--dash-sidebar-width) minmax(0, 1fr);
+  /* `100dvh` sigue a la barra del navegador móvil al aparecer y desaparecer; `100vh` se
+     queda con la altura máxima y deja la última fila bajo la barra de direcciones. */
+  min-height: 100dvh;
+  background: var(--dash-canvas);
+  color: var(--dash-ink);
+}
+
+/* ── Barra lateral ────────────────────────────────────────────────────────── */
+/* `position: sticky` + `height: 100dvh` es lo que garantiza que la barra ocupe SIEMPRE el
+   alto de la ventana, tenga tres opciones de menú o veinte, y que se quede fija mientras el
+   contenido se desplaza. Era exactamente lo que fallaba antes. */
+.dash__sidebar {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 18px 12px 14px;
+  background: linear-gradient(170deg, var(--dash-sider-from), var(--dash-sider-to));
+  /* Un borde interior claro despega la barra del lienzo sin recurrir a una sombra, que a
+     este tamaño se lee como suciedad. */
+  box-shadow: inset -1px 0 0 #ffffff14;
+}
+
+/* La navegación es lo único que se desplaza: la marca queda arriba y el pie abajo, anclados.
+   `min-height: 0` es obligatorio — un hijo flex no encoge por debajo de su contenido sin él,
+   así que sin esta línea la lista desbordaría la barra en vez de desplazarse por dentro. */
+.dash__sidebar-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -4px;
+  padding: 0 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff30 transparent;
+}
+
+/* ── Marca ────────────────────────────────────────────────────────────────── */
+/* La marca la dibuja `EclatWordmark`; aquí solo se coloca y se le cuelga el distintivo.
+   Es `flex-direction: column` porque el logotipo ya trae su bajada: puesto el distintivo al
+   lado, competiría con ella y se leerían como dos bajadas. */
+.dash__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-start;
+  flex: none;
+  padding: 2px 6px 0;
+  text-decoration: none;
+}
+/* El distintivo que separa la herramienta interna del producto del cliente. Su único trabajo
+   es responder "¿en cuál estoy?", y por eso va en lo primero que se mira al llegar.
+   Enmarcado y no suelto: junto a una bajada que ya va en versalitas espaciadas, sin marco se
+   confundiría con ella. */
+.dash__brand-badge {
+  padding: 2px 7px;
+  border: 1px solid #ffffff2e;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1.7;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--dash-sider-ink);
+}
+
+/* ── Identidad ────────────────────────────────────────────────────────────── */
+.dash__identity {
+  flex: none;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 18px 2px 14px;
+  padding: 10px;
+  border: 1px solid #ffffff17;
+  border-radius: 12px;
+  background: #ffffff10;
+}
+.dash__identity-body {
+  min-width: 0;
+  line-height: 1.35;
+}
+.dash__identity-title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  /* Un nombre largo recorta con puntos suspensivos en vez de romper la caja. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash__identity-caption {
+  display: block;
+  font-size: 11px;
+  color: var(--dash-sider-ink);
+  opacity: 0.72;
+}
+
+/* ── Navegación ───────────────────────────────────────────────────────────── */
+.dash__nav-group + .dash__nav-group {
+  margin-top: 18px;
+}
+/* El rótulo del grupo. Diez píxeles y muy espaciado: tiene que ordenar la lista sin
+   competir con las opciones, que son lo que de verdad se pulsa. */
+.dash__nav-label {
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font: 600 10px/1.6 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dash-sider-ink);
+  opacity: 0.55;
+}
+.dash__nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dash__nav-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  /* 44px de alto: mínimo táctil de Apple HIG. La barra lateral se toca con el pulgar. */
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: var(--dash-radius-sm);
+  color: #ffffffc7;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+.dash__nav-item:hover {
+  background: #ffffff14;
+  color: #fff;
+}
+.dash__nav-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  font-size: 16px;
+  opacity: 0.85;
+}
+.dash__nav-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* El elemento activo es una pastilla BLANCA con el texto en el color del panel, no un bloque
+   del color primario: sobre un fondo oscuro, el bloque de color se funde con la barra y hay
+   que buscar dónde estás. El blanco se lee de un vistazo desde el otro lado de la mesa. */
+.dash__nav-item[aria-current='page'] {
+  background: #fff;
+  color: #2c2430;
+  font-weight: 600;
+  box-shadow: 0 2px 8px #00000024;
+}
+.dash__nav-item[aria-current='page'] .dash__nav-icon {
+  opacity: 1;
+  color: var(--dash-accent);
+}
+/* Contador a la derecha de una opción (eventos, pendientes). Cifras tabulares para que al
+   pasar de 9 a 10 no se desplace nada. */
+.dash__nav-count {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ffffff1f;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.dash__nav-item[aria-current='page'] .dash__nav-count {
+  background: var(--dash-accent-wash);
+  color: var(--dash-accent);
+}
+
+/* ── Pie de la barra ──────────────────────────────────────────────────────── */
+.dash__sidebar-footer {
+  flex: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ffffff17;
+}
+/* "Salir" se separa del resto de la navegación a propósito: es la acción de la que uno no
+   vuelve sin volver a pedir un código, y no debe quedar a un píxel de "Ajustes". */
+.dash__signout {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--dash-radius-sm);
+  background: transparent;
+  color: #ffffffa8;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+.dash__signout:hover:not(:disabled) {
+  background: #ffffff14;
+  color: #fff;
+}
+.dash__signout:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* ── Columna principal ────────────────────────────────────────────────────── */
+/* `min-width: 0` por el mismo motivo que el `minmax(0, …)` de la retícula: sin él, un hijo
+   ancho (una tabla) estira esta columna y rompe el ancho del panel entero. */
+.dash__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Cabecera ─────────────────────────────────────────────────────────────── */
+/* Pegajosa y translúcida: al desplazar una tabla larga, el título de la pantalla y el
+   acceso a la cuenta siguen a la vista. El desenfoque evita que el texto de debajo se lea a
+   través, que es lo que hace que una cabecera translúcida parezca sucia. */
+.dash__topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--dash-z-topbar);
+  display: flex;
+  gap: var(--dash-gap);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  min-height: 64px;
+  padding: 12px var(--dash-gap-xl);
+  border-bottom: 1px solid var(--dash-border);
+  background: color-mix(in srgb, var(--dash-canvas) 82%, transparent);
+  backdrop-filter: blur(12px);
+}
+.dash__topbar-lead {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  min-width: 0;
+}
+.dash__topbar-actions {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+}
+
+/* Migas de pan: dónde estás dentro del panel. Sustituyen al saludo "Hola, Irvin", que
+   ocupaba la misma franja y no ayudaba a orientarse a partir del segundo día. */
+.dash__crumbs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.dash__crumb {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  color: var(--dash-muted);
+}
+.dash__crumb a {
+  color: var(--dash-muted);
+  text-decoration: none;
+  transition: color 160ms ease-out;
+}
+.dash__crumb a:hover {
+  color: var(--dash-accent);
+}
+.dash__crumb[aria-current='page'] {
+  color: var(--dash-ink);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash__crumb-sep {
+  color: #cbbfcd;
+  /* El separador es decoración: se oculta a los lectores de pantalla, que ya reciben la
+     estructura desde la lista y el `aria-current`. */
+  user-select: none;
+}
+
+/* El botón que abre la navegación en pantallas estrechas. En escritorio no existe: la
+   navegación está siempre a la vista y un botón para "abrir" lo ya abierto solo confunde. */
+.dash__nav-toggle {
+  display: none;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+  background: var(--dash-surface);
+  color: var(--dash-ink);
+  font-size: 17px;
+}
+
+/* ── Contenido ────────────────────────────────────────────────────────────── */
+.dash__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--dash-gap-lg) var(--dash-gap-xl) var(--dash-gap-xl);
+}
+/* El contenido recibe el foco tras el enlace de salto, pero no debe pintar un recuadro
+   alrededor de media pantalla: el desplazamiento ya dice que llegaste. */
+.dash__content:focus-visible {
+  outline: none;
+}
+
+/* ── Velo y enlace de salto ───────────────────────────────────────────────── */
+/* El velo cumple dos funciones y por eso no es decorativo: aísla el contenido para que la
+   barra se lea como una capa, y da el gesto de cierre que se espera al tocar fuera. */
+.dash__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dash-z-scrim);
+  border: 0;
+  padding: 0;
+  background: #1c101a80;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease-out, visibility 200ms;
+}
+
+/* Fuera de la pantalla hasta que se enfoca. No se usa `display:none` ni `visibility:hidden`
+   porque ambos lo sacan del orden de tabulación, que es lo único que este enlace hace. Sin
+   él, quien navega con teclado atraviesa la barra lateral entera —hasta doce enlaces— en
+   CADA pantalla antes de llegar a lo que vino a leer. */
+.dash__skip {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: var(--dash-z-skip);
+  padding: 10px 16px;
+  border-radius: var(--dash-radius-sm);
+  background: var(--dash-surface);
+  box-shadow: var(--dash-shadow-lifted);
+  color: var(--dash-accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-150%);
+}
+.dash__skip:focus-visible {
+  transform: none;
+}
+
+/* ── Foco visible ─────────────────────────────────────────────────────────── */
+/* `:focus-visible` y no `:focus`: el navegador solo lo aplica cuando la interacción vino del
+   teclado, así que el anillo aparece para quien lo necesita y no en cada clic de ratón —que
+   es la razón por la que tanta gente acaba borrando el foco por completo—. */
+.dash :focus-visible {
+  outline: 2px solid var(--dash-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* Sobre la barra oscura el acento no contrasta; ahí el anillo es blanco. Misma marca, otro
+   fondo. */
+.dash__sidebar :focus-visible {
+  outline-color: #fff;
+}
+
+/* ── Encabezado de pantalla ───────────────────────────────────────────────── */
+.dash-page-header {
+  display: flex;
+  gap: var(--dash-gap);
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: var(--dash-gap-lg);
+}
+.dash-page-header__title {
+  margin: 0;
+  /* 400 y no 600: Cormorant es un garalde fino y engordarlo lo convierte en el «serif de
+     sistema en negrita» que se confunde con Times. Se compensa subiendo el cuerpo. */
+  font: 400 31px/1.12 var(--font-display);
+  letter-spacing: -0.005em;
+  color: var(--dash-ink);
+}
+.dash-page-header__description {
+  margin: 5px 0 0;
+  max-width: 68ch; /* 60-75 caracteres: el rango en el que un párrafo se lee sin esfuerzo. */
+  font-size: 13.5px;
+  color: var(--dash-muted);
+}
+.dash-page-header__actions {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── Superficie de tarjeta ────────────────────────────────────────────────── */
+.dash-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius);
+  background: var(--dash-surface);
+  box-shadow: var(--dash-shadow);
+}
+.dash-card__header {
+  display: flex;
+  gap: var(--dash-gap);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 14px var(--dash-gap);
+  border-bottom: 1px solid var(--dash-border);
+}
+.dash-card__title {
+  margin: 0;
+  /* Los títulos de tarjeta van en palo seco, no en el serif. Con serif en todos los niveles,
+     el título de pantalla deja de destacar; reservarlo para el nivel superior es lo que le
+     da jerarquía. */
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--dash-ink);
+}
+.dash-card__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
+.dash-card__action {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dash-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.dash-card__action:hover {
+  text-decoration: underline;
+}
+.dash-card__body {
+  padding: var(--dash-gap);
+}
+/* Una tabla llega hasta el borde de la tarjeta: su propio relleno de celda ya la separa, y
+   sumar el de la tarjeta la deja flotando en medio. */
+.dash-card__body--flush {
+  padding: 0;
+}
+
+/* ── Retícula de tarjetas ─────────────────────────────────────────────────── */
+/* `auto-fit` + `minmax` en vez de columnas por breakpoint: la retícula se reacomoda sola a
+   cualquier ancho, así que no hay un tamaño intermedio en el que las tarjetas queden
+   demasiado estrechas o demasiado anchas. */
+.dash-grid {
+  display: grid;
+  gap: var(--dash-gap);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 232px), 1fr));
+}
+.dash-grid--wide {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+}
+/* Dos columnas asimétricas para "lo principal + lo secundario". Colapsa a una sola por
+   debajo de 1100px, donde la columna estrecha dejaría de ser legible. */
+.dash-split {
+  display: grid;
+  gap: var(--dash-gap);
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+}
+.dash-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dash-gap);
+}
+@media (max-width: 1100px) {
+  .dash-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Tarjeta de cifra ─────────────────────────────────────────────────────── */
+.dash-stat {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  padding: var(--dash-gap);
+}
+.dash-stat__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 19px;
+}
+.dash-stat__body {
+  min-width: 0;
+}
+.dash-stat__label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+.dash-stat__value {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font: 400 32px/1.02 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--dash-ink);
+  /* Cifras de ancho fijo. En proporcional el "1" es mucho más estrecho que el "8", así que
+     al pasar de 11 a 12 el número entero se desplaza y la fila da un tirón. Es el detalle
+     que separa un panel que se siente estable de uno que parece nervioso. */
+  font-variant-numeric: tabular-nums;
+}
+.dash-stat__suffix {
+  font: 400 12.5px/1 var(--font-body);
+  color: var(--dash-muted);
+}
+
+/* Tonos de la pastilla: pastel de fondo y el mismo color saturado en el glifo, para que el
+   icono aguante el contraste sobre su propio fondo. */
+.dash-tone-rose { background: #f8e9ee; color: #a85f76; }
+.dash-tone-sage { background: #e6efe8; color: #4f7d5e; }
+.dash-tone-azure { background: #e5ecf7; color: #55749f; }
+.dash-tone-gold { background: #f6edda; color: #9a7738; }
+.dash-tone-plum { background: #f0e6ee; color: #74456a; }
+.dash-tone-slate { background: #eceaf0; color: #5f5768; }
+
+/* ── Barra de proporción ──────────────────────────────────────────────────── */
+/* Una distribución (planes, estados) sin traer una librería de gráficas por cuatro barras.
+   El valor va SIEMPRE escrito al lado: el ancho da la comparación de un vistazo, el número
+   da el dato exacto, y quien no distinga los tonos sigue teniendo la cifra. */
+.dash-meter + .dash-meter {
+  margin-top: 13px;
+}
+.dash-meter__head {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+.dash-meter__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dash-ink-soft);
+}
+.dash-meter__value {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-ink);
+}
+.dash-meter__track {
+  height: 7px;
+  border-radius: 999px;
+  background: #f1ecf2;
+  overflow: hidden;
+}
+/* Sin transición, y a conciencia. El ancho se fija en el servidor con `style` y nada lo
+   cambia después —la barra no es reactiva—, así que una transición aquí no llegaría a
+   dispararse nunca: sería CSS muerto que además anima una propiedad de layout.
+
+   Si algún día la cifra pasa a cambiar en el cliente, la animación no debe hacerse sobre el
+   ancho: esa propiedad es de layout y provoca reflujo en cada fotograma. La salida correcta
+   entonces es `transform: scaleX()` sobre un hijo interior sin bordes redondeados, o
+   `clip-path`, que se componen sin tocar el layout. */
+.dash-meter__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--dash-accent);
+}
+
+/* ── Estado vacío ─────────────────────────────────────────────────────────── */
+.dash-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  padding: 44px var(--dash-gap-lg);
+  text-align: center;
+}
+.dash-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #f4f0f5;
+  color: var(--dash-muted);
+  font-size: 21px;
+}
+.dash-empty__title {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--dash-ink);
+}
+.dash-empty__description {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 13px;
+  color: var(--dash-muted);
+}
+
+/* ── Lista de datos ───────────────────────────────────────────────────────── */
+/* Un `<dl>` de verdad y no una tabla de dos columnas: la relación etiqueta-valor es
+   semántica, y un lector de pantalla la anuncia como tal. */
+.dash-facts {
+  margin: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+  overflow: hidden;
+}
+.dash-facts__row {
+  display: flex;
+  gap: var(--dash-gap);
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 11px 13px;
+  background: var(--dash-surface);
+}
+.dash-facts__label {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
+.dash-facts__value {
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: right;
+  color: var(--dash-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ── Tablas ───────────────────────────────────────────────────────────────── */
+.dash .ant-table-thead > tr > th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dash-muted);
+}
+/* Fechas y conteos alineados dígito con dígito: es lo que permite comparar dos filas de un
+   vistazo sin llegar a leerlas. */
+.dash .ant-table-tbody > tr > td {
+  font-variant-numeric: tabular-nums;
+}
+/* Una fila que se puede pulsar tiene que parecerlo antes de tocarla, no solo por el cursor
+   —que en móvil no existe—. El realce al pasar ya lo da antd; esto añade el del teclado. */
+.dash-table__row--clickable {
+  cursor: pointer;
+}
+.dash .ant-table-tbody > tr.dash-table__row--clickable:focus-visible {
+  outline: 2px solid var(--dash-accent);
+  outline-offset: -2px;
+}
+
+/* Celda de identidad: el nombre y, debajo, su dato de apoyo (correo, slug, cliente). */
+.dash-cell__primary {
+  display: block;
+  font-weight: 600;
+  color: var(--dash-ink);
+}
+.dash-cell__secondary {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+/* Identificadores, slugs y códigos: en monoespaciada, que es lo que permite dictarlos por
+   teléfono sin confundir un cero con una O. */
+.dash-code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: #f4f0f5;
+  color: var(--dash-ink-soft);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+/* ── Avatar ───────────────────────────────────────────────────────────────── */
+/* El tamaño de fuente llega por `style` como proporción del diámetro, no se mide del nodo
+   tras montar como hace el de antd: así el primer pintado del servidor ya es el definitivo
+   y el texto no salta al hidratar. */
+.dash-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+/* ── Usuario de la cabecera ───────────────────────────────────────────────── */
+.dash__topbar-user {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 220px;
+}
+.dash__topbar-username {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dash-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Por debajo de 900px solo queda el avatar: el nombre completo empujaría las migas de pan a
+   una segunda línea, y de las dos cosas la posición importa más que la identidad —que ya
+   está en la barra lateral—. */
+@media (max-width: 900px) {
+  .dash__topbar-username {
+    display: none;
+  }
+}
+
+/* ── Pastilla de estado ───────────────────────────────────────────────────── */
+/* Siempre con texto, nunca solo color: ver el comentario de `StatusPill.tsx`. Los pares
+   fondo/texto están elegidos por encima de 4.5:1, que es el mínimo AA para texto pequeño. */
+.dash-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dash-pill--positive { background: #e6efe8; color: #3d6b4c; }
+.dash-pill--pending { background: #f7edd9; color: #85622a; }
+.dash-pill--neutral { background: #eeebf0; color: #5d5563; }
+.dash-pill--danger { background: #f9e6e7; color: #9c383f; }
+
+/* ── Solo para lectores de pantalla ───────────────────────────────────────── */
+/* El patrón estándar: fuera de la vista pero dentro del árbol de accesibilidad.
+   `display:none` y `visibility:hidden` lo sacarían también del lector, que es justo lo
+   contrario de lo que se busca. */
+.dash-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Barra de herramientas ────────────────────────────────────────────────── */
+.dash-toolbar {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: var(--dash-gap);
+}
+.dash-toolbar__filters {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.dash-toolbar__count {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted);
+}
+
+/* ── Avisos de pantalla ───────────────────────────────────────────────────── */
+.dash-page-alert {
+  margin-bottom: var(--dash-gap);
+}
+
+/* ── Formularios de modal ─────────────────────────────────────────────────── */
+.dash-form__intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dash-muted);
+}
+.dash-form {
+  margin-top: 18px;
+}
+.dash-form__label {
+  display: block;
+  margin: 16px 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dash-ink-soft);
+}
+.dash-form__label:first-of-type {
+  margin-top: 0;
+}
+.dash-form__hint {
+  font-weight: 400;
+  color: var(--dash-muted);
+}
+/* Texto de ayuda persistente bajo el campo, no un marcador de posición: el placeholder
+   desaparece justo cuando se empieza a escribir, que es cuando la ayuda hace falta. */
+.dash-form__help {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+.dash-form__alert {
+  margin-bottom: 16px;
+}
+.dash-form__submit {
+  margin-top: 22px;
+}
+
+/* ── Tarjeta de tema ──────────────────────────────────────────────────────── */
+.dash-theme {
+  overflow: hidden;
+}
+/* La tira de color va arriba y a sangre: un tema se elige por cómo se ve, así que la muestra
+   tiene que ser lo primero y lo más grande de la tarjeta. */
+.dash-theme__swatches {
+  display: flex;
+  height: 68px;
+}
+.dash-theme__swatch {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.dash-theme__swatch--empty {
+  background: repeating-linear-gradient(45deg, #f4f0f5, #f4f0f5 8px, #ece7ee 8px, #ece7ee 16px);
+}
+.dash-theme__body {
+  padding: var(--dash-gap);
+}
+.dash-theme__head {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.dash-theme__meta {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* ── Registro de componentes ──────────────────────────────────────────────── */
+/* ── Pestañas del catálogo ────────────────────────────────────────────────────
+   Solo se ajusta la etiqueta —icono y texto en la misma línea de base—; el resto de la
+   pestaña lo dibuja antd con los tokens que ya recibe de `DashboardTheme`. Reestilar aquí su
+   barra sería empezar una pelea de especificidad con una hoja que se inyecta después. */
+.dash-tab {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dash-block__intro {
+  margin-bottom: 18px;
+}
+.dash-block__description {
+  margin: 0 0 6px;
+  max-width: 68ch;
+  font-size: 13px;
+  color: var(--dash-ink-soft);
+}
+/* El plan que exige el bloque, en el tono secundario: es una condición, no una descripción, y
+   compitiendo en el mismo peso que el texto de arriba se leerían como un solo párrafo. */
+.dash-block__requirement {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
+.dash-variants {
+  display: grid;
+  gap: var(--dash-gap-sm);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 244px), 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dash-variant {
+  padding: 12px;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+  background: #fcfbfc;
+}
+.dash-variant__head {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.dash-variant__name {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--dash-ink);
+}
+.dash-variant__description {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
+.dash-variant__plan {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dash-accent);
+}
+/* El botón de ver ejemplo va al pie de la tarjeta y separado por una línea: es una acción,
+   no un dato más de la variante, y mezclarlo con los tres textos de arriba lo escondería. */
+.dash-variant__actions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dash-border);
+}
+
+/* ── Tarjeta de plan ──────────────────────────────────────────────────────── */
+.dash-plan {
+  padding: var(--dash-gap);
+}
+.dash-plan__head {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.dash-plan__price {
+  margin: 0 0 8px;
+  font: 400 30px/1.08 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--dash-ink);
+  font-variant-numeric: tabular-nums;
+}
+.dash-plan__period {
+  margin-left: 5px;
+  font: 400 12.5px/1 var(--font-body);
+  color: var(--dash-muted);
+}
+.dash-plan__meta {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+
+/* ── Rejilla de planes y funcionalidades ──────────────────────────────────── */
+/* El desbordamiento lo gestiona este contenedor y no la página: sin él, con cinco planes en
+   un teléfono, sería el `body` el que se desplazaría en horizontal y se movería la interfaz
+   entera al arrastrar, no solo la rejilla. */
+.dash-matrix__scroll {
+  overflow-x: auto;
+}
+.dash-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.dash-matrix th,
+.dash-matrix td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dash-border);
+  text-align: left;
+}
+.dash-matrix thead th {
+  position: sticky;
+  top: 0;
+  background: var(--dash-surface);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dash-muted);
+  white-space: nowrap;
+}
+/* Las columnas de plan van centradas y estrechas: lo que se compara es la presencia de la
+   marca, y alinearlas facilita recorrer una fila con la vista. */
+.dash-matrix thead th:not(:first-child),
+.dash-matrix td {
+  width: 120px;
+  text-align: center;
+}
+.dash-matrix tbody th {
+  font-weight: 500;
+  vertical-align: top;
+}
+.dash-matrix__group th {
+  padding-top: 16px;
+  background: #fbfafc;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--dash-ink-soft);
+  text-align: left;
+}
+.dash-matrix__yes {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  color: #3d6b4c;
+}
+.dash-matrix__limit {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--dash-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.dash-matrix__no {
+  color: #c4bac6;
+}
+
+/* ── Listas con icono ─────────────────────────────────────────────────────── */
+.dash-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dash-bullets li {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--dash-ink-soft);
+}
+.dash-bullets__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+.dash-bullets strong {
+  font-weight: 600;
+  color: var(--dash-ink);
+}
+
+/* ── Enlace de la invitación ──────────────────────────────────────────────── */
+.dash-invite__label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
+.dash-invite__row {
+  display: flex;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+/* El campo se estira y las acciones no. `min-width` en una base pequeña permite que, en un
+   teléfono, los botones bajen a la línea siguiente en vez de estrujar la URL a treinta
+   píxeles. */
+.dash-invite__url {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 0 12px;
+  height: 40px;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+  background: #fbfafc;
+  color: var(--dash-ink);
+  /* Monoespaciada: la URL lleva un código que se dicta por teléfono, y ahí la diferencia
+     entre un cero y una O deja de ser cosmética. */
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  text-overflow: ellipsis;
+}
+.dash-invite__url:read-only {
+  cursor: text;
+}
+.dash-invite__actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: none;
+}
+
+/* La misma dirección dentro de una celda de tabla: la ruta y los botones de copiar y abrir,
+   alineados en una sola línea para no engordar la fila. */
+.dash-invite-cell {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 100%;
+}
+.dash-invite-cell .dash-code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Vista previa de un componente ────────────────────────────────────────────
+   El escenario donde el panel renderiza un bloque real de la invitación. Todo lo de dentro
+   del marco se estila SOLO con las variables `--inv-*` del tema, nunca desde aquí: una regla
+   de esta hoja que alcanzara al componente haría que la previsualización se viera distinta a
+   la invitación, que es la única forma en que esta ventana puede fallar de verdad. */
+.dash-preview {
+  display: grid;
+  gap: var(--dash-gap);
+}
+.dash-preview__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dash-gap) var(--dash-gap-lg);
+  padding-bottom: var(--dash-gap);
+  border-bottom: 1px solid var(--dash-border);
+}
+.dash-preview__control {
+  display: grid;
+  gap: 6px;
+}
+.dash-preview__control-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+/* Un fondo distinto del blanco de la tarjeta: la mitad de los temas tienen el papel casi
+   blanco, y sobre blanco no se vería dónde empieza el componente. */
+.dash-preview__stage {
+  display: flex;
+  justify-content: center;
+  /* Arriba y no centrado: un bloque más alto que el escenario —una historia de cuatro
+     párrafos— quedaría con su principio cortado por encima del área visible, que es la parte
+     que primero se quiere ver. */
+  align-items: flex-start;
+  /* La portada cabe entera; la historia no tiene por qué. En lugar de encoger el bloque —que
+     lo pintaría distinto a como se verá— el escenario se desplaza. */
+  max-height: 64vh;
+  overflow: auto;
+  padding: var(--dash-gap);
+  border-radius: var(--dash-radius);
+  background: #f3eff3;
+}
+.dash-preview__device {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+  background: #fff;
+  box-shadow: var(--dash-shadow-lifted);
+  /* El cambio de móvil a escritorio es instantáneo, y conviene que lo sea: animar `max-width`
+     obliga al navegador a recalcular la maqueta del bloque entero —tipografía con `clamp()`,
+     imagen a sangre, degradados— en cada cuadro. Además, lo que se compara aquí es cómo se
+     RECOMPONE el bloque a otro ancho, y eso no lo enseña ninguna transición: se ve alternando
+     entre los dos estados. */
+}
+.dash-preview__missing {
+  margin: 0;
+  padding: 48px 24px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+/* ── Contexto de la cabecera ──────────────────────────────────────────────── */
+/* El nombre del evento cuando el cliente solo tiene uno: texto, no un selector de un solo
+   elemento. Ver el razonamiento en `EventPicker.tsx`. */
+.dash__topbar-context {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--dash-ink);
+}
+
+/* ── «tú» en la tabla de equipo ───────────────────────────────────────────── */
+.dash-you {
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--dash-accent-wash);
+  color: var(--dash-accent);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  vertical-align: middle;
+}
+
+/* ── Tira de etiquetas dentro de una celda ────────────────────────────────── */
+.dash-chip-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+/* ── Adaptación a pantallas estrechas ─────────────────────────────────────── */
+/* 1023.98px y no 1024: en 1024 exacto las dos consultas (`max-width` y `min-width`) se
+   solapan y hay un píxel en el que ambas aplican. */
+@media (max-width: 1023.98px) {
+  /* La barra deja de empujar y pasa a superponerse. Empujando, sus 264px se comen dos
+     tercios de una pantalla de 375 y el contenido queda en 111px: la tabla se desborda y
+     aparece el scroll horizontal. Como capa, el contenido conserva su ancho intacto. */
+  .dash {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dash__sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: var(--dash-z-sidebar);
+    width: var(--dash-sidebar-width);
+    /* Fuera de pantalla mientras no esté abierta. Se anima `transform` y no `left` porque
+       solo `transform` y `opacity` se componen en la GPU sin provocar reflujo. */
+    transform: translateX(-100%);
+    transition: transform 220ms ease-out;
+  }
+  .dash[data-nav-open='true'] .dash__sidebar {
+    transform: none;
+  }
+  /* El velo solo se descubre donde la barra es una capa. Sin acotarlo, quien abriera el
+     menú en móvil y ensanchara la ventana se encontraría la pantalla velada en escritorio,
+     con la barra ya visible y nada que cerrar. */
+  .dash[data-nav-open='true'] .dash__scrim {
+    opacity: 1;
+    visibility: visible;
+  }
+  .dash__nav-toggle {
+    display: grid;
+  }
+}
+
+@media (max-width: 720px) {
+  .dash__topbar {
+    padding: 10px var(--dash-gap);
+  }
+  .dash__content {
+    padding: var(--dash-gap) var(--dash-gap) var(--dash-gap-xl);
+  }
+  .dash-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--dash-gap-sm);
+  }
+  .dash-page-header__title {
+    font-size: 22px;
+  }
+  .dash-stat__value {
+    font-size: 24px;
+  }
+  /* En pantalla estrecha solo se conserva la miga actual: la ruta completa ocuparía dos
+     líneas y empujaría el contenido, y el botón de "atrás" del navegador ya cubre el
+     retroceso. */
+  .dash__crumb:not([aria-current='page']),
+  .dash__crumb-sep {
+    display: none;
+  }
+}
+
+/* ── Movimiento reducido ──────────────────────────────────────────────────── */
+/* `prefers-reduced-motion` no lo activa a quien "no le gustan las animaciones": lo activa
+   quien tiene trastornos vestibulares, para los que un desplazamiento animado provoca mareo
+   real. Se anula la transición, NO la visibilidad: el velo tiene que seguir apareciendo
+   —es lo que indica que el menú está abierto—; lo que se quita es el recorrido entre los dos
+   estados. Confundir ambas cosas deja la interfaz rota en vez de quieta. */
+@media (prefers-reduced-motion: reduce) {
+  .dash__sidebar,
+  .dash__scrim,
+  .dash__skip,
+  .dash__nav-item,
+  .dash__signout {
+    transition: none;
+  }
+}
