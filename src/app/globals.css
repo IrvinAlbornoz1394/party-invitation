@@ -1,0 +1,502 @@
+/*
+ * Las fuentes ya NO se piden aquí.
+ *
+ * Este archivo empezaba con un `@import url('https://fonts.googleapis.com/...')`, que
+ * encadena tres peticiones antes de tener una sola letra en pantalla: bajar esta hoja,
+ * parsearla, pedir el CSS de Google y por fin los archivos de fuente. Ahora las carga
+ * `next/font` en `app/layout.tsx`, se sirven desde este mismo dominio y llegan con
+ * métricas de respaldo calculadas para que el texto no salte al cambiar.
+ *
+ * Aquí solo quedan los nombres, apuntando a las variables que define ese layout. El
+ * segundo valor de cada `var()` es el respaldo: si alguien renderiza un trozo de este CSS
+ * fuera del layout raíz —una prueba, un correo— sigue habiendo una familia razonable en
+ * lugar de la fuente por defecto del navegador.
+ */
+
+/*
+ * TailwindCSS v4, importado SIN preflight.
+ *
+ * Preflight es el reset de Tailwind, y aplicarlo ahora rompería el diseño existente:
+ * la invitación está hecha con CSS a mano (App.css, Fiesta.css, Gallery.css) que se
+ * apoya en los valores por defecto del navegador para márgenes, listas y tipografía.
+ * El reset propio ya está más abajo en este archivo y cubre lo necesario.
+ *
+ * Cuando la invitación se porte a Tailwind se puede adoptar preflight completo
+ * cambiando estas dos líneas por `@import 'tailwindcss';`.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+ * Tokens del tema, en la sintaxis CSS-first de v4. Sustituyen al tailwind.config.js
+ * de v3, que ya no se lee.
+ *
+ * Los valores son los mismos que las variables CSS de App.css y que
+ * SAJA_THEME_TOKENS en el seed: una sola paleta, tres consumidores. Cuando los temas
+ * se sirvan desde la base de datos, estas variables pasarán a inyectarse por evento.
+ */
+@theme {
+  --color-plum: #6b2d7b;
+  --color-plum-dark: #53215f;
+  --color-pink: #e79ac9;
+  --color-blush: #fbeaf6;
+  --color-ivory: #fdf6fc;
+  --color-ink: #42304a;
+  --color-accent: #c0559f;
+  --color-line: #eddbe9;
+
+  /*
+   * El respaldo va DENTRO del `var()`, no detrás.
+   *
+   * `var(--x), 'Fuente', serif` parece equivalente y no lo es: si `--x` no está definida, la
+   * función `var()` entera es inválida y **toda la declaración** se descarta, así que el
+   * elemento no cae en 'Fuente' sino en el serif del sistema — Times New Roman. Con
+   * `var(--x, 'Fuente')` el respaldo lo resuelve la propia función y la cadena sobrevive.
+   *
+   * Es un fallo que solo se ve si la variable falta, así que conviene escribirlo bien desde
+   * el principio en vez de descubrirlo el día que alguien renderice un trozo de este CSS
+   * fuera del layout raíz.
+   */
+  --font-display: var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif;
+  --font-body: var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif;
+  --font-signature: var(--font-sacramento, 'Sacramento'), cursive;
+  --font-poster: var(--font-bebas, 'Bebas Neue'), Impact, sans-serif;
+}
+
+/*
+ * Reset propio. Deliberadamente mínimo: solo lo que el diseño necesita.
+ *
+ * ## Por qué va dentro de `@layer base`
+ *
+ * Estaba fuera de toda capa, y eso lo hacía ganar a TODAS las utilidades de Tailwind: el CSS sin
+ * capa tiene prioridad sobre el que está en una, por encima de la especificidad. La consecuencia
+ * era invisible hasta que se veía: `a { color: inherit }` anulaba cualquier `text-inv-*` puesta
+ * sobre un enlace, así que el botón de confirmar y los enlaces de mapa heredaban el color de su
+ * contenedor en lugar del suyo — y en un fondo de color, se volvían ilegibles.
+ *
+ * Dentro de `base`, que es la primera capa declarada arriba, el reset sigue estableciendo los
+ * valores de partida y cualquier utilidad lo sobreescribe, que es exactamente el orden que se
+ * quería.
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  /*
+   * El desplazamiento suave es una preferencia, no una constante.
+   *
+   * `prefers-reduced-motion` no lo activa quien "no le gustan las animaciones": lo activa
+   * quien tiene trastornos vestibulares, para los que un desplazamiento largo y animado
+   * provoca mareo real. El ajuste está en el sistema operativo y el navegador lo comunica;
+   * aplicarlo sin preguntar es ignorar una petición explícita del usuario.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  body {
+    margin: 0;
+    background: #fffcfd;
+    color: #42304a;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
+  a {
+    color: inherit;
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+  h1,
+  h2,
+  h3 {
+    /* La variable, no el nombre a pelo: escrito literal, un cambio de marca obliga a buscar
+       esta línea suelta que nadie recuerda que existe. */
+    font-family: var(--font-display);
+    /* 400, no 500. Cormorant es un garalde de trazo fino pensado para títulos: engordarlo le
+       quita justo lo que lo distingue de un serif de sistema. */
+    font-weight: 400;
+    line-height: 1.15;
+    /* Tracking ligeramente negativo en display. A tamaños grandes, el espaciado por defecto de
+       un serif fino se abre demasiado y el título se deshilacha. */
+    letter-spacing: -0.015em;
+  }
+  ::selection {
+    background: #e7d3e0;
+    color: #2c222a;
+  }
+}
+
+/* ── Puente entre los temas de invitación y Tailwind ───────────────────────────
+ *
+ * `@theme inline` es la palabra clave de todo esto. Sin `inline`, Tailwind COPIA el valor de
+ * la variable al generar la utilidad, y `bg-inv-primary` quedaría congelado con el morado del
+ * tema base: cambiar de tema no cambiaría nada. Con `inline`, la utilidad emite
+ * `background-color: var(--inv-color-primary)` y el color lo resuelve el navegador contra el
+ * `ThemeScope` más cercano — que es lo que permite que en la pantalla de temas del panel
+ * convivan cuatro previsualizaciones distintas del mismo componente en la misma página.
+ *
+ * Las `--inv-*` a las que apuntan NO se declaran aquí ni en `:root`, también a propósito. Su
+ * único origen es `themeCssVariables()`, así que un bloque fuera de un `ThemeScope` se ve roto
+ * de inmediato en lugar de heredar en silencio los colores de otro tema y parecer correcto.
+ */
+@theme inline {
+  --color-inv-bg: var(--inv-color-background);
+  --color-inv-surface: var(--inv-color-surface);
+  --color-inv-ink: var(--inv-color-ink);
+  --color-inv-ink-soft: var(--inv-color-ink-soft);
+  --color-inv-primary: var(--inv-color-primary);
+  --color-inv-on-primary: var(--inv-color-on-primary);
+  --color-inv-accent: var(--inv-color-accent);
+  --color-inv-line: var(--inv-color-line);
+  --color-inv-overlay: var(--inv-color-overlay);
+
+  --font-inv-display: var(--inv-font-display);
+  --font-inv-body: var(--inv-font-body);
+  --font-inv-script: var(--inv-font-script);
+
+  --radius-inv-sm: var(--inv-radius-sm);
+  --radius-inv-md: var(--inv-radius-md);
+  --radius-inv-lg: var(--inv-radius-lg);
+
+  --shadow-inv-soft: var(--inv-shadow-soft);
+}
+
+/* ── Dirección de arte del tema ───────────────────────────────────────────────
+ *
+ * Las dos piezas que el tema controla y que ninguna utilidad de Tailwind puede expresar: el
+ * tratamiento de las fotografías y el motivo decorativo. Las dos leen tokens `--inv-*`, así que
+ * un tema nuevo las cambia sin tocar una línea de código.
+ */
+
+/*
+ * El color de las fotografías.
+ *
+ * Se aplica a TODAS las imágenes de la invitación. Es la pieza de dirección de arte que más se
+ * nota: la misma foto que sube el cliente se ve cálida y lavada en un tema de papelería y con
+ * contraste de cine en uno nocturno, sin pedirle nada a nadie.
+ */
+.inv-photo {
+  filter: var(--inv-photo-filter, none);
+}
+
+/*
+ * El ornamento. Filete · nodo · filete, con las medidas en tokens.
+ *
+ * `em` y no `rem` en la separación: el ornamento acompaña siempre a un rótulo, y así crece con
+ * él en lugar de quedarse pequeño cuando el rótulo es grande.
+ */
+.inv-ornament {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  opacity: var(--inv-ornament-opacity, 0.55);
+}
+.inv-ornament__line {
+  display: block;
+  width: var(--inv-ornament-line, 1.75rem);
+  height: 1px;
+  background: currentColor;
+}
+/* Con el nodo a cero desaparece sin dejar hueco: es lo que hace que «sin ornamento» sea un
+   valor del tema y no un caso especial en el componente. */
+.inv-ornament__node {
+  display: block;
+  width: var(--inv-ornament-node, 0);
+  height: var(--inv-ornament-node, 0);
+  border-radius: var(--inv-ornament-node-radius, 50%);
+  background: currentColor;
+  rotate: var(--inv-ornament-node-rotate, 0deg);
+}
+
+/*
+ * La entrada de un bloque.
+ *
+ * Se anima con CSS y no con framer-motion para que las variantes puedan ser Componentes de
+ * Servidor: `motion.div` obliga a marcar el archivo con `'use client'`, y con eso la portada
+ * entera —la primera pantalla de la invitación— pasaría a depender de que llegue y se ejecute
+ * JavaScript antes de verse. La duración y la curva las pone el tema (`motion.reveal`), así
+ * que un tema puede tener una entrada más lenta sin tocar ningún componente.
+ */
+@keyframes inv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.inv-rise {
+  animation: inv-rise var(--inv-motion-reveal, 0.7s ease-out) both;
+}
+/*
+ * Quien pide menos movimiento lo pide por vértigo, no por gusto: la entrada se queda en el
+ * cambio de opacidad, sin desplazamiento. Anularla del todo dejaría el contenido en su estado
+ * inicial —invisible— en los navegadores que sí respetan `both`.
+ */
+/*
+ * La aparición del visor de fotografías.
+ *
+ * Solo opacidad y muy corta: el visor tapa la pantalla entera, y cualquier desplazamiento o
+ * escala en algo de ese tamaño se lee como un salto. 180ms es el umbral por debajo del cual
+ * una transición deja de percibirse como espera y solo suaviza el corte.
+ */
+@keyframes inv-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.inv-fade {
+  animation: inv-fade 0.18s ease-out both;
+}
+
+/*
+ * La fotografía que se deshace en el papel (`hero.portrait`).
+ *
+ * Es una MÁSCARA sobre la propia imagen, no un degradado del color del fondo puesto encima. La
+ * diferencia es la que hace que funcione con los seis temas: un degradado tendría que ir
+ * pintado del color del papel para que la costura no se vea, y ese color cambia con el tema —en
+ * uno oscuro, un degradado a blanco sería una niebla—. Recortando la imagen, lo que aparece
+ * debajo es el fondo del bloque, sea cual sea, y no hay nada que hacer coincidir.
+ *
+ * El prefijo `-webkit-` sigue haciendo falta: Safari solo entiende `mask-image` sin prefijo
+ * desde 15.4, y una parte de los invitados abre la invitación desde el WebView de WhatsApp en
+ * un iPhone que no se actualiza. Si el navegador no entendiera ninguna de las dos, la foto se
+ * ve entera con un corte recto abajo: menos bonito, nunca roto.
+ *
+ * Los cortes del degradado no son redondos por capricho. Hasta el 42% la imagen va intacta —ahí
+ * está la cara—, entre el 42% y el 88% se apaga, y el texto entra alrededor del 80%, donde ya
+ * queda poco más que un rastro. Subir el último tramo dejaría la caligrafía encima de la foto
+ * todavía visible, que es justo el problema que las otras portadas resuelven con un velo.
+ */
+.inv-dissolve {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.55) 68%,
+    rgba(0, 0, 0, 0.14) 82%,
+    transparent 92%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.55) 68%,
+    rgba(0, 0, 0, 0.14) 82%,
+    transparent 92%
+  );
+}
+
+/*
+ * Los pétalos suspendidos de la portada de retrato.
+ *
+ * Balanceo corto en el sitio, no una caída. Una caída depende del alto del bloque y ese alto
+ * cambia entre la pantalla del móvil y el recuadro de 560px de la previsualización del panel;
+ * un desplazamiento de quince píxeles se ve igual en los dos. Cada pétalo trae su duración y su
+ * desfase en variables, así que siete elementos comparten una sola animación sin latir a la vez.
+ */
+@keyframes inv-float {
+  from,
+  to {
+    transform: translate3d(0, 0, 0) rotate(var(--inv-float-tilt, 0deg));
+  }
+  50% {
+    transform: translate3d(var(--inv-float-x, 8px), var(--inv-float-y, -14px), 0)
+      rotate(calc(var(--inv-float-tilt, 0deg) + 14deg));
+  }
+}
+.inv-float {
+  animation: inv-float var(--inv-float-duration, 17s) ease-in-out var(--inv-float-delay, 0s)
+    infinite;
+}
+
+/* ── La pantalla de bienvenida ────────────────────────────────────────────────
+ *
+ * El telón que tapa la invitación hasta que el invitado pulsa. Todo lo que hay aquí es la
+ * **salida**: la entrada no se anima a propósito —la puerta ya está puesta cuando llega el HTML,
+ * y hacerla aparecer significaría enseñar medio segundo de la invitación que venía a tapar.
+ */
+
+/*
+ * Mientras la puerta está puesta, la página de detrás no se desplaza.
+ *
+ * Es una clase en `<html>` y no un `style.overflow` escrito desde JavaScript porque así se
+ * devuelve exactamente como estaba: quitar la clase no puede equivocarse de valor anterior.
+ */
+.inv-gate-locked {
+  overflow: hidden;
+}
+
+/*
+ * El telón sube. La curva y la duración las pone el tema (`motion.gate`).
+ *
+ * Sube en lugar de desvanecerse porque son dos mensajes distintos: algo que se desvanece
+ * *desaparece* —y deja la sensación de que había una capa de más—, y algo que sube *se aparta*,
+ * que es lo que hace un telón y lo que convierte el clic en la apertura de la invitación y no
+ * en el cierre de un aviso.
+ *
+ * La opacidad solo entra en el último tramo. Con el panel ya casi fuera de la pantalla apenas se
+ * nota, y es el seguro para el caso en el que el telón no esté recortado por nada —la
+ * previsualización del panel, dentro de su recuadro— donde sin ella se vería pasar por encima.
+ */
+@keyframes inv-gate-lift {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(0, -101%, 0);
+    opacity: 0;
+  }
+}
+
+/*
+ * El contenido se va antes y más corto que el telón.
+ *
+ * Es la única parte de todo esto que hay que ver dos veces para entender por qué funciona: al
+ * moverse el texto más deprisa que el papel que lo lleva, el ojo lee peso —el telón *pesa*, el
+ * texto no— y el gesto deja de parecer una diapositiva. Sin este desfase, la subida es correcta
+ * y plana.
+ */
+@keyframes inv-gate-content-out {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(0, -2.25rem, 0);
+    opacity: 0;
+  }
+}
+
+.inv-gate[data-state='leaving'] {
+  animation: inv-gate-lift var(--inv-motion-gate, 0.95s cubic-bezier(0.76, 0, 0.24, 1)) forwards;
+  /* La sombra solo existe mientras sube: es lo que hace que el telón pase por delante de la
+     invitación en lugar de convivir con ella en el mismo plano. */
+  box-shadow: 0 34px 64px -26px rgb(0 0 0 / 0.45);
+}
+
+.inv-gate[data-state='leaving'] .inv-gate__content {
+  animation: inv-gate-content-out 0.42s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+}
+
+/*
+ * El vaivén de la flecha de `welcome.spotlight`.
+ *
+ * Seis píxeles y dos segundos y medio. Es la diferencia entre sugerir el gesto y reclamarlo: un
+ * recorrido más largo o más rápido convierte una indicación discreta en un elemento que pide
+ * atención en la primera pantalla de una invitación.
+ */
+@keyframes inv-bob {
+  from,
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+.inv-bob {
+  animation: inv-bob 2.4s ease-in-out infinite;
+}
+
+/* El fundido de respaldo para quien pide menos movimiento. Se define aquí, junto al resto del
+   telón, y se usa abajo en el bloque de `prefers-reduced-motion`. */
+@keyframes inv-gate-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/*
+ * La cinta de texto del pie.
+ *
+ * La tira lleva DOS copias idénticas del contenido y se desplaza exactamente la mitad: al
+ * terminar, la segunda copia está justo donde estaba la primera, así que el reinicio cae en un
+ * fotograma en el que la pantalla enseña lo mismo. Es el mismo principio que la pasarela de la
+ * galería, pero aquí no hay que arrastrar ni medir nada, así que se resuelve con CSS y sin una
+ * línea de JavaScript.
+ */
+@keyframes inv-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.inv-marquee {
+  animation: inv-marquee var(--inv-marquee-duration, 34s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-rise {
+    animation: none;
+  }
+  /* La cinta se queda quieta. No se oculta: el texto sigue ahí, simplemente deja de correr. */
+  .inv-marquee {
+    animation: none;
+  }
+  /*
+   * Los pétalos se quedan quietos, no desaparecen: son parte de la composición de la portada y
+   * quitarlos cambiaría el diseño, no solo el movimiento. Como la animación arranca y termina en
+   * la posición de reposo, pararla los deja exactamente donde están colocados.
+   */
+  .inv-float {
+    animation: none;
+  }
+  /*
+   * La puerta se va con un fundido corto en lugar de subir.
+   *
+   * No se quita la animación entera: el componente espera el `animationend` para dejar de
+   * ocupar la pantalla, y sin animación ese aviso no llegaría nunca —la invitación se quedaría
+   * detrás de un telón inmóvil, que es el peor fallo posible de este bloque—. El respaldo por
+   * temporizador la salvaría, pero un segundo y medio de pantalla congelada no es una
+   * experiencia, es una avería.
+   */
+  .inv-gate[data-state='leaving'] {
+    animation: inv-gate-fade-out 0.22s ease-out forwards;
+    box-shadow: none;
+  }
+  .inv-gate[data-state='leaving'] .inv-gate__content {
+    animation: none;
+  }
+  .inv-bob {
+    animation: none;
+  }
+  /*
+   * El visor sí conserva su transición, reducida a la mitad. No se anula como la entrada de los
+   * bloques: un cambio instantáneo a pantalla completa negra es exactamente el tipo de salto
+   * brusco que molesta a quien pide menos movimiento.
+   */
+  .inv-fade {
+    animation-duration: 0.09s;
+  }
+}

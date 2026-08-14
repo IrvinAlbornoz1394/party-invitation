@@ -14,6 +14,19 @@ dist-ssr
 /.claude/
 /CLAUDE.md
 
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+.vercel
+tsconfig.tsbuildinfo
+
+# Secretos. `*.local` ya cubre .env.local, pero el resto se enumera explícito
+# para que nadie suba credenciales de Postgres por descuido.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

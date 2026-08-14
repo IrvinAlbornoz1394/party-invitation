@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import { Cake, Camera, Candy, type LucideIcon, Music, PartyPopper, Sparkles } from 'lucide-react';
 import event from '../../../data/event.json';
@@ -15,7 +17,7 @@ const cast = [saja1, saja2, saja3, saja4, saja5];
 /** Entra cuando su pareja aparece en pantalla, así se van revelando uno por uno al bajar. */
 function Char({ index }: { index: number }) {
   return <motion.div className={`fiesta-char char-${index + 1}`} aria-hidden="true" initial={{ opacity: 0, y: 24, scale: .9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, amount: .35 }} transition={{ duration: .55, ease: 'easeOut' }}>
-    <img src={cast[index]} alt="" loading="lazy" />
+    <img src={cast[index].src} alt="" loading="lazy" />
   </motion.div>;
 }
 

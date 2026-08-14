@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { ChevronUp, Heart, Music2, Pause } from 'lucide-react';
 import { useBackgroundMusic } from '../../hooks/useBackgroundMusic';

@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Eventos que el navegador considera interacción y por tanto desbloquean el audio. */

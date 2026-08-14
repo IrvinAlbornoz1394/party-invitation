@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import event from '../../../data/event.json';
 import { Section } from '../../shared/Section';
