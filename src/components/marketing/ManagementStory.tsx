@@ -1,3 +1,7 @@
+import { Armchair, BellRing, MailCheck, Users } from 'lucide-react';
+import Image from 'next/image';
+import { MARKETING_PHOTOS } from './photos';
+
 /**
  * Lo que pasa después de enviar la invitación.
  *
@@ -6,34 +10,46 @@
  * atención por los ojos, y solo entonces alguien está dispuesto a leer por qué esto no es otra
  * página bonita.
  *
- * ## Por qué no son tarjetas
+ * ## Cuatro entradas con dibujo, y por qué ya no son números
  *
- * Cuatro tarjetas con icono y título es el patrón por defecto de cualquier página de producto, y
- * dice «esto lo montó alguien con una plantilla». Aquí son cuatro entradas numeradas separadas
- * por filetes: se leen en orden, ocupan menos y se parecen a un índice —que es exactamente lo que
- * son—. El número hace el trabajo que haría un icono, sin inventarse una metáfora por cada idea.
+ * Antes eran cuatro entradas numeradas, con el argumento de que un icono por idea obliga a
+ * inventarse una metáfora por cada una. Sigue siendo cierto en general y no lo es aquí, porque
+ * las cuatro tienen dibujo evidente: un sobre con visto, un grupo, una silla y una campana. El
+ * número ordenaba una secuencia que en realidad no existe —las mesas no van «después» de los
+ * invitados—, y el trazo fino da el registro de papelería que el resto de la página tiene.
  *
- * Cada entrada nombra **el trabajo que te quita**, no la funcionalidad. «Panel de confirmaciones»
- * no le dice nada a quien organiza una boda; «dejas de perseguir a nadie por WhatsApp», sí.
+ * Lo que no ha cambiado: cada entrada nombra **el trabajo que te quita**, no la funcionalidad.
+ * «Panel de confirmaciones» no le dice nada a quien organiza una boda; «dejas de perseguir a
+ * nadie por WhatsApp», sí.
+ *
+ * ## La fotografía es vertical y va anclada
+ *
+ * Vertical porque la lista es alta y una foto apaisada al lado deja una columna de aire muerto
+ * debajo. Anclada (`sticky`) porque acompaña a las cuatro entradas mientras se leen, en vez de
+ * desaparecer en la primera — que es lo que la convertiría en un adorno de la primera línea.
  */
 
-const MOMENTS = [
+const SERVICES = [
   {
-    title: 'Las confirmaciones llegan y se cuentan solas',
+    icon: MailCheck,
+    title: 'Las confirmaciones se cuentan solas',
     detail:
       'Cada quien confirma desde su invitación. Tú abres el panel y ves el número, no una conversación de doscientos mensajes.',
   },
   {
+    icon: Users,
     title: 'Los invitados, por familia',
     detail:
       'Con su cupo de adultos y niños. Sabes quién confirmó, quién falta y quién ya dijo que no puede, sin llevar la cuenta en una libreta.',
   },
   {
+    icon: Armchair,
     title: 'Las mesas, resueltas',
     detail:
       'Creas las mesas, asignas a cada familia y sacas la vista para imprimir. Se acabó la hoja de cálculo con nombres arrastrados.',
   },
   {
+    icon: BellRing,
     title: 'Los recordatorios se mandan solos',
     detail:
       'Siete días antes, tres, uno y el mismo día. Tú los configuras una vez; a partir de ahí, salen sin que te acuerdes.',
@@ -41,51 +57,68 @@ const MOMENTS = [
 ] as const;
 
 export function ManagementStory() {
+  const photo = MARKETING_PHOTOS.services;
+
   return (
-    <section className="border-t border-line">
+    <section className="bg-blush/40">
       <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
-          {/*
-            El encabezado se ancla en escritorio: la lista es larga, y sin anclarlo el argumento
-            —«esto es lo que de verdad compras»— desaparece antes de que se lea el tercer punto.
-          */}
-          <header className="flex flex-col gap-5 lg:sticky lg:top-12 lg:self-start">
+        <div className="grid gap-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-20">
+          {/* La fotografía va primera en escritorio y segunda en móvil: ahí lo que importa es
+              llegar antes al texto, y una imagen alta empujaría el argumento fuera de pantalla. */}
+          <div className="order-2 lg:sticky lg:top-16 lg:order-1 lg:self-start">
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-blush">
+              <Image
+                src={photo.url}
+                alt={photo.alt}
+                fill
+                sizes="(min-width: 1024px) 42vw, 92vw"
+                className="object-cover"
+              />
+            </div>
+          </div>
+
+          <div className="order-1 lg:order-2">
             <p className="m-0 flex items-center gap-3 text-[11px] tracking-[0.3em] text-accent uppercase">
               <span aria-hidden="true" className="h-px w-8 bg-accent/50" />
               Después de enviarla
             </p>
-            <h2 className="m-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-light text-plum">
-              Lo difícil no era la invitación.
+
+            <h2 className="mt-7 mb-0 max-w-lg font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-light text-plum">
+              Lo difícil no era
+              <span className="block italic">la invitación</span>
             </h2>
-            <p className="m-0 max-w-md text-[16px] leading-relaxed text-ink/70">
+
+            <p className="mt-7 mb-0 max-w-md text-[16px] leading-relaxed text-ink/70">
               Era saber cuántos van a llegar. Eso es lo que esta herramienta te quita de encima.
             </p>
-          </header>
 
-          <ol className="m-0 grid list-none gap-0 border-t border-line p-0">
-            {MOMENTS.map((moment, index) => (
-              <li
-                key={moment.title}
-                className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-b border-line py-8 sm:gap-x-8 sm:py-10"
-              >
-                <span
-                  aria-hidden="true"
-                  className="font-display text-[1.35rem] leading-none text-accent tabular-nums"
+            <ul className="mt-12 grid list-none gap-0 border-t border-line p-0">
+              {SERVICES.map(({ icon: Icon, title, detail }) => (
+                <li
+                  key={title}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-b border-line py-8 sm:gap-x-7"
                 >
-                  {String(index + 1).padStart(2, '0')}
-                </span>
+                  {/* Trazo fino y sin medallón: a este tamaño un círculo alrededor lo convierte
+                      en un icono de interfaz, y lo que se busca es un dibujo de papelería. */}
+                  <Icon
+                    size={30}
+                    strokeWidth={0.9}
+                    aria-hidden="true"
+                    className="mt-1 shrink-0 text-accent"
+                  />
 
-                <div>
-                  <h3 className="m-0 font-display text-[clamp(1.35rem,2.6vw,1.75rem)] leading-snug font-light text-plum">
-                    {moment.title}
-                  </h3>
-                  <p className="mt-3 mb-0 max-w-lg text-[15px] leading-relaxed text-ink/70">
-                    {moment.detail}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
+                  <div>
+                    <h3 className="m-0 font-display text-[clamp(1.3rem,2.6vw,1.7rem)] leading-snug font-light text-plum">
+                      {title}
+                    </h3>
+                    <p className="mt-3 mb-0 max-w-lg text-[15px] leading-relaxed text-ink/70">
+                      {detail}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

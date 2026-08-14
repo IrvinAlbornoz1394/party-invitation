@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { LandingAbout } from '@/components/marketing/LandingAbout';
 import { LandingHero } from '@/components/marketing/LandingHero';
 import { ManagementStory } from '@/components/marketing/ManagementStory';
 import { PlansSection } from '@/components/marketing/PlansSection';
@@ -29,9 +30,13 @@ interface PageProps {
  *
  * ## El orden es el argumento
  *
- * Portada → plantillas → lo que pasa después → planes → cierre. No es el orden habitual de una
- * página de producto, que suele poner las funcionalidades antes que el diseño; aquí va al revés
- * a propósito.
+ * Portada → quiénes somos → plantillas → lo que pasa después → planes → cierre. No es el orden
+ * habitual de una página de producto, que suele poner las funcionalidades antes que el diseño;
+ * aquí va al revés a propósito.
+ *
+ * La sección del estudio es corta y va segunda por una razón concreta: responde en cinco líneas
+ * a «¿esto qué es?» antes de pedirle a nadie que abra una plantilla. Lo que **no** hace es
+ * retrasar el escaparate — de ahí que sean cinco líneas y tres cifras, y no una historia.
  *
  * Quien busca una invitación digital decide primero **por los ojos**. Si lo que ve no le gusta,
  * ninguna lista de funcionalidades lo va a convencer, así que las plantillas van segundas y se
@@ -65,10 +70,24 @@ export default async function LandingPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      <SiteHeader />
+      {/* El ancla del enlace de salto es la portada y no este `main`: la cabecera ahora vive
+          dentro, así que saltar aquí dejaría al teclado justo antes de la navegación —o sea, sin
+          saltar nada—. Ver `LandingHero`. */}
+      <main>
+        {/*
+          La cabecera vive dentro de la portada, no encima de ella: se apoya sobre la fotografía
+          en lugar de robarle una franja de papel. El contenedor es el que la ancla, y va aquí y
+          no dentro de `LandingHero` para que la portada siga siendo solo la portada.
+        */}
+        <div className="relative">
+          <SiteHeader tone="overlay" />
+          <LandingHero />
+        </div>
 
-      <main id="contenido">
-        <LandingHero />
+        <LandingAbout
+          themeCount={showcase.themes.length}
+          eventTypeCount={showcase.eventTypes.length}
+        />
         <TemplateShowcase />
         <ManagementStory />
         <PlansSection plans={showcase.plans} eventTypes={showcase.eventTypes} />

@@ -29,15 +29,20 @@ export function TemplateShowcase() {
   if (!featured) return null;
 
   return (
-    <section id="plantillas" className="border-t border-line bg-white">
+    <section id="plantillas" className="bg-white">
       <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
-        <header className="flex max-w-2xl flex-col gap-5">
-          <p className="m-0 flex items-center gap-3 text-[11px] tracking-[0.3em] text-accent uppercase">
-            <span aria-hidden="true" className="h-px w-8 bg-accent/50" />
+        {/* Centrado, como el resto de los encabezados de la página. En una sección cuyo contenido
+            es una retícula simétrica, un encabezado alineado a la izquierda deja la composición
+            coja por un lado. */}
+        <header className="mx-auto flex max-w-2xl flex-col items-center gap-5 text-center">
+          <p className="m-0 flex items-center gap-4 text-[11px] tracking-[0.3em] text-accent uppercase">
+            <span aria-hidden="true" className="h-px w-8 bg-accent/45" />
             Plantillas
+            <span aria-hidden="true" className="h-px w-8 bg-accent/45" />
           </p>
           <h2 className="m-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-light text-plum">
-            Míralas por dentro antes de decidir.
+            Míralas por dentro
+            <span className="block italic">antes de decidir</span>
           </h2>
           <p className="m-0 text-[16px] leading-relaxed text-ink/70">
             Cada una se abre completa y se puede cambiar en vivo: el tema y el diseño de cada
@@ -73,7 +78,9 @@ function TemplateCard({
      */
     <Link
       href={`/plantillas/${template.key}`}
-      className="group flex h-full flex-col overflow-hidden border border-line bg-ivory transition-colors hover:border-accent/40 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+      /* Sin filete alrededor: la tarjeta es la fotografía y su pie, montados sobre el papel de
+         color. Un borde de un píxel la convertía en una ficha de catálogo. */
+      className="group flex h-full flex-col overflow-hidden bg-blush/50 transition-colors hover:bg-blush focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       <div
         className={
