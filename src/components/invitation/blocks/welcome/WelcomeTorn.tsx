@@ -1,7 +1,7 @@
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockImage } from '../../shared/BlockImage';
+import { TornEdge } from '../../shared/paper-ornaments';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
-import { TornEdge } from './welcome-ornaments';
 
 /**
  * `welcome.torn` — el papel rasgado que deja ver la fotografía debajo.

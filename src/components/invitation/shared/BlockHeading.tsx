@@ -19,6 +19,7 @@ export function BlockHeading({
   align = 'left',
   tone = 'default',
   titleFont = 'display',
+  titleCase = 'normal',
   className,
 }: {
   readonly eyebrow?: string | null;
@@ -43,10 +44,25 @@ export function BlockHeading({
    * lo que este componente existe.
    */
   readonly titleFont?: 'display' | 'script';
+  /**
+   * Si el título va en **versalitas espaciadas** en lugar de en caja mixta.
+   *
+   * Es un recurso de papelería grabada —«DRESS CODE», «CONTACTS»— y no un detalle de gusto: al
+   * poner el título en mayúsculas hay que **bajarle el cuerpo y abrirle el tracking**, porque una
+   * línea de mayúsculas del mismo tamaño que un título en caja mixta pesa el doble y con el
+   * espaciado por defecto se lee como un rótulo apretado. Esas tres decisiones van juntas
+   * siempre, así que van en un solo interruptor y no en tres clases repetidas por cada variante
+   * que quiera el efecto.
+   *
+   * No se compone con `titleFont: 'script'`: una manuscrita en mayúsculas es ilegible, y por eso
+   * el caso se ignora en lugar de producir un título que nadie puede leer.
+   */
+  readonly titleCase?: 'normal' | 'caps';
   readonly className?: string;
 }) {
   const centered = align === 'center';
   const inverse = tone === 'inverse';
+  const caps = titleCase === 'caps' && titleFont !== 'script';
 
   return (
     <header className={clsx(centered && 'text-center', className)}>
@@ -71,7 +87,9 @@ export function BlockHeading({
           'mt-5 mb-0 leading-tight font-light',
           titleFont === 'script'
             ? 'font-inv-script text-[clamp(2.4rem,6vw,3.6rem)]'
-            : 'font-inv-display text-[clamp(1.9rem,4.5vw,3rem)]',
+            : caps
+              ? 'font-inv-display text-[clamp(1.35rem,3.4vw,2.05rem)] tracking-[0.22em] uppercase'
+              : 'font-inv-display text-[clamp(1.9rem,4.5vw,3rem)]',
           inverse ? 'text-inv-on-primary' : 'text-inv-primary',
         )}
       >

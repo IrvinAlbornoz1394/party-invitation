@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import type { RegisteredComponent } from '../registry/component-registry';
+import { CALENDAR_SAMPLES } from './calendar-samples';
 import { CLOSING_SAMPLES } from './closing-samples';
 import { DETAILS_SAMPLES } from './details-samples';
+import { DRESSCODE_SAMPLES } from './dresscode-samples';
 import { FOOTER_SAMPLES } from './footer-samples';
 import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
@@ -72,9 +74,23 @@ export function BlockDemo({
       return sample ? <Variant content={sample.content} /> : null;
     }
 
+    case 'calendar': {
+      const Variant = entry.component;
+      const sample = pickSample(CALENDAR_SAMPLES, sampleKey);
+
+      return sample ? <Variant content={sample.content} /> : null;
+    }
+
     case 'details': {
       const Variant = entry.component;
       const sample = pickSample(DETAILS_SAMPLES, sampleKey);
+
+      return sample ? <Variant content={sample.content} /> : null;
+    }
+
+    case 'dresscode': {
+      const Variant = entry.component;
+      const sample = pickSample(DRESSCODE_SAMPLES, sampleKey);
 
       return sample ? <Variant content={sample.content} /> : null;
     }

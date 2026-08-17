@@ -29,12 +29,18 @@ export const BLOCK_READING_ORDER: readonly string[] = [
   'welcome',
   'hero',
   'story',
+  /* Justo detrás de la portada y antes de los datos: la fecha es lo primero que se busca al abrir
+     una invitación, y el calendario es la fecha en grande. */
+  'calendar',
   'details',
   'party',
   'schedule',
   'gallery',
   'messages',
   'location',
+  /* Después de la ubicación, que es el orden en que uno se pregunta las cosas: cuándo, dónde, y
+     entonces de qué me visto. */
+  'dresscode',
   'rsvp',
   'closing',
   'footer',

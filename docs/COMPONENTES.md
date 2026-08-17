@@ -16,7 +16,9 @@ src/domain/invitation/
     hero.ts             Contrato del bloque portada (Zod). Es a la vez la forma de
                         event_blocks.config y lo que recibe toda variante.
     story.ts            Contrato del bloque historia.
+    calendar.ts         Contrato del calendario: el instante, y de él sale el mes entero.
     details.ts          Contrato del bloque detalles: lista de detalles con icono.
+    dresscode.ts        Contrato del código de vestimenta: la instrucción y su paleta.
     schedule.ts         Contrato del bloque cronograma: hitos con hora e icono, sin fotos.
     gallery.ts          Contrato del bloque galería: fotos con medidas y pie opcional.
     location.ts         Contrato del bloque ubicación: lista de sedes con mapa y foto.
@@ -27,6 +29,8 @@ src/domain/invitation/
     block-order.ts      Orden de lectura de una invitación, de la portada al pie.
   theme.ts              Tokens de un tema, con papeles semánticos y valores por defecto.
   countdown.ts          Aritmética de la cuenta regresiva, sin React.
+  event-date.ts         La fecha partida en piezas, leída de la cadena ISO sin zonas horarias.
+  month-grid.ts         El mes en la retícula de siete columnas de un calendario. Sin React.
 
 src/components/invitation/
   theme/
@@ -37,7 +41,8 @@ src/components/invitation/
     welcome-parts.tsx     WelcomeShell (todo el comportamiento) y WelcomeOpenButton.
     WelcomeStageScope.tsx Marca la previsualización del panel para que no secuestre la pantalla.
     welcome-name.ts       Iniciales y parejas: de dónde salen los monogramas.
-    welcome-ornaments.tsx Filigrana, rama, alianzas y canto rasgado, en SVG con currentColor.
+    welcome-ornaments.tsx Filigrana, rama y alianzas, en SVG con currentColor. El canto
+                          rasgado se fue a shared/paper-ornaments.tsx al compartirlo.
     WelcomeVeil.tsx       welcome.veil      — papelería: filete doble, sin depender de la foto.
     WelcomeEnvelope.tsx   welcome.envelope  — tarjeta con sello de lacre; el sello es el botón.
     WelcomeSpotlight.tsx  welcome.spotlight — foto a sangre, manuscrita y flecha hacia arriba.
@@ -53,12 +58,20 @@ src/components/invitation/
     HeroClassic.tsx       hero.classic  — foto a sangre, contenido abajo.
     HeroCentered.tsx      hero.centered — todo al centro, dentro de un marco.
     HeroSplit.tsx         hero.split    — foto a un lado, texto sobre el papel del tema.
+    HeroPortrait.tsx      hero.portrait — el retrato se deshace en el papel con una máscara.
+    HeroFramed.tsx        hero.framed   — rótulo, retrato enmarcado y nombres a mano debajo.
   blocks/story/
     story-variant.ts      StoryVariantProps.
     story-parts.tsx       Encabezado, cuerpo, cita y firma: lo que las cuatro comparten.
     StorySplit.tsx        story.image-left y story.image-right (un componente, dos entradas).
     StoryCentered.tsx     story.centered — columna centrada, foto apaisada.
     StoryOverlay.tsx      story.overlay  — tarjeta de texto sobre la fotografía.
+  blocks/calendar/
+    calendar-variant.ts   CalendarVariantProps.
+    CalendarMonth.tsx     calendar.month — el mes en una lámina de color con cantos rasgados.
+  blocks/dresscode/
+    dresscode-variant.ts  DresscodeVariantProps.
+    DresscodePalette.tsx  dresscode.palette — la instrucción escrita y la paleta en muestras.
   blocks/details/
     details-variant.ts    DetailsVariantProps.
     DetailsCards.tsx      details.cards — una tarjeta por detalle, en rejilla.
@@ -74,6 +87,7 @@ src/components/invitation/
     ScheduleShowcase.tsx  schedule.showcase   — una franja por momento, hora en cuerpo grande.
     ScheduleRibbon.tsx    schedule.ribbon     — cinta vertical atada con lazos, con ilustraciones.
     ScheduleZigzag.tsx    schedule.zigzag     — hilo central y momentos alternos desfasados.
+    ScheduleItinerary.tsx schedule.itinerary  — iconos al margen, fuera del hilo; la más corta.
   blocks/gallery/
     gallery-parts.tsx     PhotoButton: la foto pulsable, igual en las cinco.
     GalleryParallax.tsx   gallery.parallax — la de Kamilah: fotos flotando y final desplegable.
@@ -88,6 +102,7 @@ src/components/invitation/
     LocationSingle.tsx        location.single       — la sede a sangre, datos encima.
     LocationSingleSplit.tsx   location.single-split — foto a un lado, datos al otro.
     LocationSingleCard.tsx    location.single-card  — tarjeta sobria centrada.
+    LocationSinglePlate.tsx   location.single-plate — foto a sangre como lámina, ficha debajo.
     LocationDualVenue.tsx     location.dual-venue   — dos columnas simétricas.
     LocationDualJourney.tsx   location.dual-journey — recorrido con conector.
     LocationDualStacked.tsx   location.dual-stacked — franjas alternas a ancho completo.
@@ -100,11 +115,13 @@ src/components/invitation/
     RsvpTicket.tsx        rsvp.ticket     — pase troquelado con talón, la lúdica.
     RsvpReplyCard.tsx     rsvp.reply-card — la tarjeta de respuesta del sobre, con doble filete.
     RsvpPostcard.tsx      rsvp.postcard   — el reverso de una postal, con sello y matasellos.
+    RsvpTorn.tsx          rsvp.torn       — franja de papel rasgado con un velo del color del tema.
   blocks/closing/
     closing-parts.tsx     ClosingMessage: la despedida, compuesta igual en los tres.
     ClosingSplit.tsx      closing.split   — foto a un lado, frase al otro.
     ClosingLetter.tsx     closing.letter  — una carta que se despliega, con su sello.
     ClosingHorizon.tsx    closing.horizon — la frase sola, a pantalla completa.
+    ClosingEnvelope.tsx   closing.envelope — un sobre con la tarjeta de contacto asomando.
   blocks/footer/
     footer-parts.tsx      Monograma, contactos, volver arriba y créditos.
     FooterCentered.tsx    footer.centered — clásico, todo en un eje.
@@ -113,13 +130,18 @@ src/components/invitation/
   shared/                 Lo que comparten todos los bloques: BlockSection, BlockHeading,
                           BlockImage, BlockNote, BlockOrnament, BlockCurve, ActionLink,
                           TextLink, IconBadge, Countdown, Lightbox + useLightbox,
-                          block-icons.ts, href.ts.
+                          paper-ornaments.tsx (canto rasgado y ramita), block-icons.ts,
+                          href.ts.
   registry/
     component-registry.ts EL registro. Único sitio que importa los componentes.
   demo/
     hero-samples.ts       Contenido de ejemplo, tres eventos imaginarios.
     story-samples.ts      Los mismos tres eventos, para poder comparar bloque a bloque.
     details-samples.ts    Los mismos tres, con tres, cinco y seis detalles.
+    calendar-samples.ts   Los mismos tres: un mes que empieza en jueves, otro en lunes con la
+                          semana abriendo en lunes, y la marca en la última columna.
+    dresscode-samples.ts  Los mismos tres: con nombres, con seis muestras y dos metálicas, y
+                          sin nombres con un marfil del color del papel.
     schedule-samples.ts   Los mismos tres: con iconos, en «solo puntos», y uno largo.
     gallery-samples.ts    Los mismos tres: proporciones mezcladas, todas iguales, con pies.
     location-samples.ts   Los mismos tres: dos sedes con foto, una sin foto, y mezclado.
@@ -156,7 +178,7 @@ Tres decisiones que sostienen esto:
   que alimentan la previsualización del panel, y lo que la define es qué variante lleva cada
   bloque y con qué tema se compone. Así el texto de la demo y el de las pruebas no se separan.
 - **Sin base de datos para el contenido.** Un visitante no dispara ni una consulta de datos de
-  nadie; del servidor solo llega el catálogo —qué variantes y qué temas existen—, y las tres
+  nadie; del servidor solo llega el catálogo —qué variantes y qué temas existen—, y las cinco
   demos se generan estáticas en el build.
 - **El catálogo se cruza con el registro del código.** La base de datos tiene variantes sin
   componente todavía; ofrecerlas en el selector daría un bloque en blanco. El nombre bonito lo
@@ -269,16 +291,18 @@ clases completas (`rotate-[-2.5deg]`) y no compuestos al vuelo: Tailwind genera 
 el código fuente, y una clase construida con una plantilla no aparece en ningún sitio que pueda
 leer, así que saldrían todas rectas.
 
-## Una sede o dos: seis componentes, un contrato
+## Una sede o dos: siete componentes, un contrato
 
-El bloque de ubicación tiene **tres componentes pensados para una sede y tres para dos**. Es
-una intención de diseño, no una restricción: los seis pintan todas las sedes que traiga el
+El bloque de ubicación tiene **cuatro componentes pensados para una sede y tres para dos**. Es
+una intención de diseño, no una restricción: los siete pintan todas las sedes que traiga el
 evento. Asignar `location.single` a una boda con templo y salón las enseña las dos, apiladas —
 nunca esconde una. Es la regla de la biblioteca: cambiar de componente jamás pierde contenido.
 
 El nombre es un consejo, y merece la pena comprobar el consejo al revés en el panel: abrir
 `location.single` con el ejemplo de dos sedes y `location.dual-venue` con el de una. Cómo se
-degradan es lo que dice si el nombre ayuda o engaña.
+degradan es lo que dice si el nombre ayuda o engaña. `single-plate` es el caso más claro: con dos
+sedes repite lámina y ficha, se lee perfectamente, y aun así lo que casi siempre se quiere con dos
+sitios es compararlos de un vistazo.
 
 **No se incrusta ningún mapa.** Un iframe de Google Maps pesa cientos de kilobytes, tarda en
 pintar, mete rastreadores de un tercero en una invitación privada y exige clave de API con
@@ -309,14 +333,22 @@ así que el seed **reapunta** primero los bloques que las usaran a `rsvp.card` y
 borra. Ese orden está en `RETIRED_VARIANTS`, y es el camino para dar de baja cualquier variante
 en el futuro.
 
-### Los cinco formatos
+### Los seis formatos
 
 `card` (sobria), `panel` (franja de color, la insistente), `ticket` (pase troquelado),
-`reply-card` (la tarjeta de respuesta que venía dentro del sobre, con doble filete y renglones) y
-`postcard` (el reverso de una postal, con sello torcido y matasellos).
+`reply-card` (la tarjeta de respuesta que venía dentro del sobre, con doble filete y renglones),
+`postcard` (el reverso de una postal, con sello torcido y matasellos) y `torn` (franja de papel
+rasgado con un velo del color del tema).
 
-Los tres últimos son papelería reproducida. Ninguno pide el nombre ni cuántos van, y eso es una
+Los cuatro últimos son papelería reproducida. Ninguno pide el nombre ni cuántos van, y eso es una
 decisión, no una carencia: ver abajo.
+
+`torn` y `panel` son la misma insistencia con dos volúmenes: aquella cambia el fondo al color pleno
+del tema, esta lo tiñe al 15 % y se rompe por los cantos. La segunda es la que conviene cuando la
+invitación ya lleva una franja de color —dos franjas plenas del mismo color se anulan y ninguna
+destaca—. El velo va como **capa** encima del `bg-inv-bg` de la sección y no como fondo de la
+sección: un color translúcido en el fondo se compondría contra el fondo del documento, no contra el
+papel del tema, y en un tema oscuro dejaría una franja clara entre secciones oscuras.
 
 ### La personalización por familia: dónde NO va
 
@@ -354,6 +386,12 @@ Los dos bloques finales son los únicos que se permiten un gesto, y cada uno el 
   X con el origen arriba: literalmente una hoja abatiéndose. Una invitación digital pierde el
   gesto de abrir la de papel, y este es el sitio donde devolverlo — al final, cuando ya se leyó
   todo lo demás.
+- **`closing.envelope`** no se mueve, y es el otro extremo del mismo problema: recupera el sobre.
+  La solapa abierta se dibuja detrás, la tarjeta encima y el cuerpo del sobre encima de la tarjeta,
+  y ese orden es lo que la mete *dentro* en lugar de *delante*. En la tarjeta va lo último que hace
+  falta de una invitación —a quién preguntar—, y por eso su acción no es el botón sólido de
+  `ActionLink`: dentro de una tarjeta de papel se vería como un elemento de interfaz pegado en una
+  ilustración, y lo que se quiere de un teléfono es que se lea grande y se pueda copiar.
 - **`footer.marquee`** repite el nombre en cuerpo de cartel dentro de una cinta que se desplaza.
   Dos copias y un desplazamiento de la mitad, **en CSS**: sin JavaScript, sin hidratación, y el
   pie sigue siendo un componente de servidor. La cinta va marcada como decorativa y el nombre se
@@ -447,6 +485,76 @@ apertura más lenta sin tocar un componente. Con `prefers-reduced-motion` se cam
 fundido de 220 ms — reducido, **no** anulado: sin animación no llegaría el `animationend` y la
 puerta se quedaría puesta.
 
+## La plantilla Botanical: el calendario, la vestimenta y el papel rasgado
+
+`botanical` es la quinta estructura del catálogo y la que trajo dos bloques nuevos. Es la
+invitación de **papelería**: informa —cuándo, a qué hora, dónde, de qué vestirse— y no cuenta
+nada. Es la única de las cinco sin historia y sin galería, y eso la define tanto como sus
+variantes: se lee entera de una pasada. Quien quiere narrar tiene `storytelling`; quien quiere
+enseñar fotos, `cinematic`.
+
+Su composición, en orden: puerta rasgada → portada enmarcada → **calendario** → itinerario →
+sede con lámina → **código de vestimenta** → confirmación en papel rasgado → sobre → pie.
+
+### Los dos bloques nuevos, y por qué son bloques
+
+Ninguno de los dos cabía en un bloque existente, y la frontera entre bloques es siempre la misma:
+**el contrato de contenido**, no el tamaño de la sección ni el sitio de la página.
+
+- **`calendar`** guarda un instante y una frase, y de ese instante sale el mes entero. En el
+  bloque de detalles habría obligado a que `DetailsContent` llevara una fecha que las otras cuatro
+  variantes no usan, y a que quien configura entendiera que un «detalle» a veces pinta un mes. El
+  mes **no se escribe**: `domain/invitation/month-grid.ts` lo calcula, porque un `monthLabel` a
+  mano se desincroniza el primer día que el evento cambia de fecha, y entonces el cronograma dice
+  junio y el calendario sigue marcando mayo.
+- **`dresscode`** guarda una lista de colores, y los colores no caben en `DetailItem`. Con el
+  bloque de detalles quedaban dos salidas y las dos malas: escribir los tonos en la descripción
+  —o sea, otra vez palabras, que es justo lo que la sección viene a resolver— o meter una paleta en
+  un contrato que comparten cuatro variantes que no la pintarían. El código de vestimenta que **sí**
+  es un detalle —«Etiqueta rigurosa» con su icono de camisa— sigue siendo un detalle.
+
+Los dos comparten una decisión sobre accesibilidad que conviene no deshacer:
+
+- La retícula del mes va marcada como **decorativa** y la fecha se anuncia como la frase que el
+  organizador escribió (`dateLabel`). Leídos en voz alta, treinta y un números seguidos no son
+  información: son ruido del que hay que salir para llegar a la sección siguiente. Es el mismo
+  criterio que la retícula de fecha de `hero.portrait`.
+- La fila de muestras es información **solo si los colores tienen nombre**, y entonces cada
+  muestra anuncia el suyo. Sin nombres se marca decorativa: un lector de pantalla no puede decir
+  «#7d8b6a» de forma útil. Por eso `label` está en el contrato aunque casi ninguna papelería nombre
+  sus colores — es la diferencia entre una sección que informa a todo el mundo y una que informa a
+  quien puede verla.
+
+### El canto rasgado es del componente, no del tema
+
+Las franjas de esta plantilla —el calendario y `rsvp.torn`— no se despiden del papel con la onda
+de `BlockCurve`: se rompen. El dibujo está en `shared/paper-ornaments.tsx` y lo coloca el
+componente, **no** el tema, y esa es la excepción a la regla de que el canto de una franja es un
+token:
+
+- La onda de `BlockCurve` es una preferencia del tema —«este tema redondea»— y se aplica a los
+  cuatro bloques que cambian el fondo de la sección.
+- La rasgadura es la **firma de estas variantes**. Un `rsvp.torn` con el canto recto no es un
+  `rsvp.torn`: es un `rsvp.panel` con otro color. Igual que el lazo de `schedule.ribbon`, que
+  tampoco depende del tema.
+
+De ahí que el tema `olive` lleve `edge.height: 0px`. No es el corte a escuadra de «elegance»: es
+que si la onda del tema y la rasgadura del componente se pintaran en el mismo borde, saldrían dos
+cantos peleándose. Cada franja tiene un canto, y lo elige quien lo dibuja.
+
+Es además el mismo dibujo arriba y abajo, girado media vuelta —al contrario que `BlockCurve`, que
+tiene dos trazos distintos a propósito—. Al girar, la rasgadura se refleja en los dos ejes y los
+picos no coinciden: un troquel simétrico se notaría, una rasgadura reflejada no.
+
+### Versalitas espaciadas: `titleCase`
+
+El registro tipográfico de esta plantilla son los rótulos grabados —«DRESS CODE», «CONTACTS»— y
+eso vive en `BlockHeading` (`titleCase: 'caps'`) y en `VenueFacts` (`nameCase: 'caps'`), no en cada
+variante. Son tres decisiones inseparables: mayúsculas, cuerpo más bajo y tracking abierto. Una
+línea de mayúsculas del mismo cuerpo que un título en caja mixta pesa el doble, y sin espaciar se
+lee como señalética. Escritas como clases sueltas en seis variantes, la sexta habría acabado con
+otro tracking.
+
 ## Añadir un bloque
 
 Un bloque nuevo —galería, ubicación— cuesta más que una variante, y a propósito: es un
@@ -489,7 +597,9 @@ cuánto y el código decide qué**.
 
 A cero no hay onda, y es como «elegance», «minimal», «royal» y «corporate» conservan su corte a
 escuadra sin una sola condición en el código. La curvan «floral», «dreamy» y el tema base — el
-mismo criterio que sus radios: quien redondea las esquinas quiere el canto blando.
+mismo criterio que sus radios: quien redondea las esquinas quiere el canto blando. «olive» también
+la deja a cero, pero por otro motivo: sus franjas se rompen con el canto rasgado que dibuja el
+propio componente, y dos cantos en el mismo borde se pelearían. Ver «La plantilla Botanical».
 
 Dos consecuencias prácticas:
 

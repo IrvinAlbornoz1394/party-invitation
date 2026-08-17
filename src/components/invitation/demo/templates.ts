@@ -1,7 +1,9 @@
 import type { BlockImage } from '@/domain/invitation/blocks/shared';
 import type { RegisteredBlockKey } from '../registry/component-registry';
+import { CALENDAR_SAMPLES } from './calendar-samples';
 import { CLOSING_SAMPLES } from './closing-samples';
 import { DETAILS_SAMPLES } from './details-samples';
+import { DRESSCODE_SAMPLES } from './dresscode-samples';
 import { FOOTER_SAMPLES } from './footer-samples';
 import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
@@ -11,8 +13,10 @@ import { pickSample } from './samples';
 import { SCHEDULE_SAMPLES } from './schedule-samples';
 import { STORY_SAMPLES } from './story-samples';
 import { WELCOME_SAMPLES } from './welcome-samples';
+import type { CalendarContent } from '@/domain/invitation/blocks/calendar';
 import type { ClosingContent } from '@/domain/invitation/blocks/closing';
 import type { DetailsContent } from '@/domain/invitation/blocks/details';
+import type { DresscodeContent } from '@/domain/invitation/blocks/dresscode';
 import type { FooterContent } from '@/domain/invitation/blocks/footer';
 import type { GalleryContent } from '@/domain/invitation/blocks/gallery';
 import type { HeroContent } from '@/domain/invitation/blocks/hero';
@@ -53,7 +57,9 @@ export type TemplateBlockContent =
   | { readonly blockKey: 'welcome'; readonly content: WelcomeContent }
   | { readonly blockKey: 'hero'; readonly content: HeroContent }
   | { readonly blockKey: 'story'; readonly content: StoryContent }
+  | { readonly blockKey: 'calendar'; readonly content: CalendarContent }
   | { readonly blockKey: 'details'; readonly content: DetailsContent }
+  | { readonly blockKey: 'dresscode'; readonly content: DresscodeContent }
   | { readonly blockKey: 'schedule'; readonly content: ScheduleContent }
   | { readonly blockKey: 'gallery'; readonly content: GalleryContent }
   | { readonly blockKey: 'location'; readonly content: LocationContent }
@@ -125,13 +131,13 @@ interface TemplateDefinition {
 }
 
 /**
- * Las cuatro demos: una por estructura del catálogo.
+ * Las cinco demos: una por estructura del catálogo.
  *
- * Cada una corresponde a una plantilla real —`classic`, `editorial`, `storytelling`,
- * `cinematic`— y repite su composición de bloques y sus variantes. Dos de ellas usan el **mismo
- * contenido** (la boda), y eso es deliberado: comparar `editorial` y `cinematic` con el mismo
- * texto y las mismas fotos es la única forma de ver qué hace una plantilla, sin que la diferencia
- * la ponga el contenido.
+ * Cada una corresponde a una plantilla real —`classic`, `editorial`, `storytelling`, `cinematic`,
+ * `botanical`— y repite su composición de bloques y sus variantes. Tres de ellas usan el **mismo
+ * contenido** (la boda), y eso es deliberado: comparar `editorial`, `cinematic` y `botanical` con
+ * el mismo texto y las mismas fotos es la única forma de ver qué hace una plantilla, sin que la
+ * diferencia la ponga el contenido.
  *
  * ## Deuda conocida
  *
@@ -250,6 +256,42 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'footer', registryId: 'footer.ribbon' },
     ],
   },
+  {
+    key: 'botanical',
+    name: 'Botanical',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Papelería de algodón: retrato enmarcado, el mes en una lámina rasgada y la paleta de vestimenta a la vista.',
+    themeKey: 'olive',
+    cover: {
+      url: unsplash('photo-1606216794074-735e91aa2c92', 1200, 900),
+      alt: 'Pareja de novios caminando de la mano al atardecer',
+    },
+    sampleKey: 'boda',
+    /*
+     * La única de las cinco **sin historia y sin galería**, y es lo que la define tanto como sus
+     * variantes. Es la invitación de papelería: informa de lo que hay que saber —cuándo, a qué
+     * hora, dónde, de qué vestirse— y no cuenta nada. Quien quiere contar tiene `storytelling`;
+     * quien quiere enseñar fotos, `cinematic`. Aquí el argumento es que se lee entera de una
+     * pasada, y añadirle dos bloques largos sería quitarle exactamente eso.
+     *
+     * Los dos bloques nuevos van donde el papel los pone: el calendario justo después de la
+     * portada —la fecha es lo primero que se busca— y el código de vestimenta después de la
+     * ubicación, que es el orden en que uno se pregunta las cosas: cuándo, dónde, cómo voy.
+     */
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.torn', removable: true },
+      { blockKey: 'hero', registryId: 'hero.framed' },
+      { blockKey: 'calendar', registryId: 'calendar.month' },
+      { blockKey: 'schedule', registryId: 'schedule.itinerary' },
+      { blockKey: 'location', registryId: 'location.single-plate' },
+      { blockKey: 'dresscode', registryId: 'dresscode.palette' },
+      { blockKey: 'rsvp', registryId: 'rsvp.torn' },
+      { blockKey: 'closing', registryId: 'closing.envelope' },
+      { blockKey: 'footer', registryId: 'footer.centered' },
+    ],
+  },
 ];
 
 /**
@@ -276,8 +318,18 @@ function contentFor(blockKey: RegisteredBlockKey, sampleKey: string): TemplateBl
 
       return sample ? { blockKey, content: sample.content } : null;
     }
+    case 'calendar': {
+      const sample = pickSample(CALENDAR_SAMPLES, sampleKey);
+
+      return sample ? { blockKey, content: sample.content } : null;
+    }
     case 'details': {
       const sample = pickSample(DETAILS_SAMPLES, sampleKey);
+
+      return sample ? { blockKey, content: sample.content } : null;
+    }
+    case 'dresscode': {
+      const sample = pickSample(DRESSCODE_SAMPLES, sampleKey);
 
       return sample ? { blockKey, content: sample.content } : null;
     }

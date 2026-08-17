@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 
 /**
- * Los dibujos de las puertas: filigrana, ramas y el borde rasgado.
+ * Los dibujos de las puertas: filigrana, ramas y alianzas.
  *
  * Son SVG en línea y no archivos, y la razón es la misma que sostiene todo el catálogo: **el
  * color lo pone el tema**. Un PNG con la filigrana en dorado se vería mal en cuanto alguien
@@ -11,6 +11,11 @@ import clsx from 'clsx';
  * Van sin fondo y sin tamaño propio: el que los coloca decide cuánto miden con clases. Todos
  * llevan `aria-hidden`, porque un ornamento no dice nada que no diga el texto de al lado y
  * anunciarlo interrumpe la lectura.
+ *
+ * Aquí solo quedan los que **únicamente la bienvenida** usa. El canto rasgado se fue a
+ * `shared/paper-ornaments.tsx` en cuanto lo pidieron también el calendario y la confirmación: un
+ * ornamento compartido que vive en la carpeta de un bloque acaba retocado para ese bloque, y con
+ * él se mueven los otros dos sin que nadie lo pida.
  */
 
 /**
@@ -113,33 +118,6 @@ export function RingsGlyph({ className }: { readonly className?: string }) {
       <circle cx="41" cy="22" r="14" />
       {/* El destello del engaste: lo único que distingue dos aros de dos círculos. */}
       <path d="M25 4.5 22.5 8h5L25 4.5Z" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-/**
- * El borde rasgado que separa el papel de la fotografía.
- *
- * Se pinta como una figura del color del papel encima de la foto, no como un recorte de la foto:
- * así el «papel» conserva su color aunque el tema cambie, y la irregularidad del canto queda del
- * lado correcto. `preserveAspectRatio="none"` deja que se estire a lo ancho —una rasgadura no
- * tiene proporción que respetar— manteniendo el alto en píxeles, que es lo que hace que en un
- * móvil no se convierta en una sierra gigante.
- */
-export function TornEdge({ className }: { readonly className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 1200 40"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      className={clsx('pointer-events-none', className)}
-    >
-      <path
-        /* Sube y baja sin ritmo: los picos regulares se leen como un zigzag decorativo y no como
-           un papel roto. Cierra por arriba para que la figura tape todo lo que queda encima. */
-        d="M0 0h1200v14l-38 7-52-9-46 12-61-6-49 11-58-8-44 10-63-5-51 12-47-9-56 7-42-11-64 6-53-10-45 9-57-4-48 12-41-8-62 5-53-11-40 9V0Z"
-        fill="currentColor"
-      />
     </svg>
   );
 }

@@ -1,3 +1,6 @@
+import { CalendarMonth } from '../blocks/calendar/CalendarMonth';
+import type { CalendarVariant } from '../blocks/calendar/calendar-variant';
+import { ClosingEnvelope } from '../blocks/closing/ClosingEnvelope';
 import { ClosingHorizon } from '../blocks/closing/ClosingHorizon';
 import { ClosingLetter } from '../blocks/closing/ClosingLetter';
 import { ClosingSplit } from '../blocks/closing/ClosingSplit';
@@ -7,6 +10,8 @@ import { DetailsList } from '../blocks/details/DetailsList';
 import { DetailsPanel } from '../blocks/details/DetailsPanel';
 import { DetailsSplit } from '../blocks/details/DetailsSplit';
 import type { DetailsVariant } from '../blocks/details/details-variant';
+import { DresscodePalette } from '../blocks/dresscode/DresscodePalette';
+import type { DresscodeVariant } from '../blocks/dresscode/dresscode-variant';
 import { FooterCentered } from '../blocks/footer/FooterCentered';
 import { FooterMarquee } from '../blocks/footer/FooterMarquee';
 import { FooterRibbon } from '../blocks/footer/FooterRibbon';
@@ -22,6 +27,7 @@ import { GalleryPolaroid } from '../blocks/gallery/GalleryPolaroid';
 import type { GalleryVariant } from '../blocks/gallery/gallery-parts';
 import { HeroCentered } from '../blocks/hero/HeroCentered';
 import { HeroClassic } from '../blocks/hero/HeroClassic';
+import { HeroFramed } from '../blocks/hero/HeroFramed';
 import { HeroPortrait } from '../blocks/hero/HeroPortrait';
 import { HeroSplit } from '../blocks/hero/HeroSplit';
 import type { HeroVariant } from '../blocks/hero/hero-variant';
@@ -30,6 +36,7 @@ import { LocationDualStacked } from '../blocks/location/LocationDualStacked';
 import { LocationDualVenue } from '../blocks/location/LocationDualVenue';
 import { LocationSingle } from '../blocks/location/LocationSingle';
 import { LocationSingleCard } from '../blocks/location/LocationSingleCard';
+import { LocationSinglePlate } from '../blocks/location/LocationSinglePlate';
 import { LocationSingleSplit } from '../blocks/location/LocationSingleSplit';
 import type { LocationVariant } from '../blocks/location/location-parts';
 import { RsvpCard } from '../blocks/rsvp/RsvpCard';
@@ -37,8 +44,10 @@ import { RsvpPanel } from '../blocks/rsvp/RsvpPanel';
 import { RsvpPostcard } from '../blocks/rsvp/RsvpPostcard';
 import { RsvpReplyCard } from '../blocks/rsvp/RsvpReplyCard';
 import { RsvpTicket } from '../blocks/rsvp/RsvpTicket';
+import { RsvpTorn } from '../blocks/rsvp/RsvpTorn';
 import type { RsvpVariant } from '../blocks/rsvp/rsvp-parts';
 import { ScheduleAgenda } from '../blocks/schedule/ScheduleAgenda';
+import { ScheduleItinerary } from '../blocks/schedule/ScheduleItinerary';
 import { ScheduleRail } from '../blocks/schedule/ScheduleRail';
 import { ScheduleRibbon } from '../blocks/schedule/ScheduleRibbon';
 import { ScheduleShowcase } from '../blocks/schedule/ScheduleShowcase';
@@ -95,7 +104,9 @@ export type RegisteredComponent =
   | { readonly blockKey: 'welcome'; readonly component: WelcomeVariant }
   | { readonly blockKey: 'hero'; readonly component: HeroVariant }
   | { readonly blockKey: 'story'; readonly component: StoryVariant }
+  | { readonly blockKey: 'calendar'; readonly component: CalendarVariant }
   | { readonly blockKey: 'details'; readonly component: DetailsVariant }
+  | { readonly blockKey: 'dresscode'; readonly component: DresscodeVariant }
   | { readonly blockKey: 'schedule'; readonly component: ScheduleVariant }
   | { readonly blockKey: 'gallery'; readonly component: GalleryVariant }
   | { readonly blockKey: 'location'; readonly component: LocationVariant }
@@ -131,6 +142,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'hero.split': { blockKey: 'hero', component: HeroSplit },
   /* La única que no vela la foto: la deshace en el papel y empieza el texto ahí. */
   'hero.portrait': { blockKey: 'hero', component: HeroPortrait },
+  /* Y la única que no parte de la foto: la enmarca sobre el papel, como una lámina pegada. */
+  'hero.framed': { blockKey: 'hero', component: HeroFramed },
 
   /*
    * Las dos partidas apuntan a componentes distintos que envuelven al mismo: el lado de la
@@ -141,10 +154,20 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'story.centered': { blockKey: 'story', component: StoryCentered },
   'story.overlay': { blockKey: 'story', component: StoryOverlay },
 
+  /*
+   * El calendario y el código de vestimenta traen **un** componente cada uno, y no es una lista a
+   * medio hacer: son bloques nuevos, y el segundo diseño de un bloque se escribe cuando se sabe
+   * qué es lo que de verdad cambia entre dos —si no, salen dos variaciones de lo mismo, que es
+   * como el catálogo engorda sin crecer—.
+   */
+  'calendar.month': { blockKey: 'calendar', component: CalendarMonth },
+
   'details.cards': { blockKey: 'details', component: DetailsCards },
   'details.list': { blockKey: 'details', component: DetailsList },
   'details.split': { blockKey: 'details', component: DetailsSplit },
   'details.panel': { blockKey: 'details', component: DetailsPanel },
+
+  'dresscode.palette': { blockKey: 'dresscode', component: DresscodePalette },
 
   'schedule.vertical': { blockKey: 'schedule', component: ScheduleTimeline },
   'schedule.horizontal': { blockKey: 'schedule', component: ScheduleRail },
@@ -154,6 +177,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La única que alterna también en el móvil: hitos desfasados medio paso a los dos lados de un
      hilo que no se parte. Pide etiquetas cortas — ver su archivo. */
   'schedule.zigzag': { blockKey: 'schedule', component: ScheduleZigzag },
+  /* La única que saca los iconos del hilo y los pone al margen, sin medallón: el itinerario
+     impreso. Ver su archivo para por qué eso la hace la más corta en un móvil. */
+  'schedule.itinerary': { blockKey: 'schedule', component: ScheduleItinerary },
 
   'gallery.parallax': { blockKey: 'gallery', component: GalleryParallax },
   'gallery.grid': { blockKey: 'gallery', component: GalleryGrid },
@@ -173,6 +199,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'location.single': { blockKey: 'location', component: LocationSingle },
   'location.single-split': { blockKey: 'location', component: LocationSingleSplit },
   'location.single-card': { blockKey: 'location', component: LocationSingleCard },
+  'location.single-plate': { blockKey: 'location', component: LocationSinglePlate },
   'location.dual-venue': { blockKey: 'location', component: LocationDualVenue },
   'location.dual-journey': { blockKey: 'location', component: LocationDualJourney },
   'location.dual-stacked': { blockKey: 'location', component: LocationDualStacked },
@@ -186,10 +213,14 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'rsvp.ticket': { blockKey: 'rsvp', component: RsvpTicket },
   'rsvp.reply-card': { blockKey: 'rsvp', component: RsvpReplyCard },
   'rsvp.postcard': { blockKey: 'rsvp', component: RsvpPostcard },
+  /* La franja de papel rasgado: la misma insistencia que `panel` sin cambiar el registro de la
+     página. Ver su archivo para por qué el tono es un velo y no un color propio. */
+  'rsvp.torn': { blockKey: 'rsvp', component: RsvpTorn },
 
   'closing.split': { blockKey: 'closing', component: ClosingSplit },
   'closing.letter': { blockKey: 'closing', component: ClosingLetter },
   'closing.horizon': { blockKey: 'closing', component: ClosingHorizon },
+  'closing.envelope': { blockKey: 'closing', component: ClosingEnvelope },
 
   'footer.centered': { blockKey: 'footer', component: FooterCentered },
   'footer.ribbon': { blockKey: 'footer', component: FooterRibbon },
@@ -228,6 +259,20 @@ export function resolveStoryVariant(registryId: string): StoryVariant | null {
   const entry = resolveComponent(registryId);
 
   return entry?.blockKey === 'story' ? entry.component : null;
+}
+
+/** El componente de un calendario, o `null` si el identificador no es un calendario. */
+export function resolveCalendarVariant(registryId: string): CalendarVariant | null {
+  const entry = resolveComponent(registryId);
+
+  return entry?.blockKey === 'calendar' ? entry.component : null;
+}
+
+/** El componente de un código de vestimenta, o `null` si el identificador no lo es. */
+export function resolveDresscodeVariant(registryId: string): DresscodeVariant | null {
+  const entry = resolveComponent(registryId);
+
+  return entry?.blockKey === 'dresscode' ? entry.component : null;
 }
 
 /** El componente de unos detalles, o `null` si el identificador no es unos detalles. */

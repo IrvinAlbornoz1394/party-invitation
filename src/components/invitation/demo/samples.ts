@@ -1,6 +1,8 @@
 import type { RegisteredBlockKey } from '../registry/component-registry';
+import { CALENDAR_SAMPLES } from './calendar-samples';
 import { CLOSING_SAMPLES } from './closing-samples';
 import { DETAILS_SAMPLES } from './details-samples';
+import { DRESSCODE_SAMPLES } from './dresscode-samples';
 import { FOOTER_SAMPLES } from './footer-samples';
 import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
@@ -26,7 +28,9 @@ const SAMPLES: Readonly<Record<RegisteredBlockKey, readonly DemoSample<unknown>[
   welcome: WELCOME_SAMPLES,
   hero: HERO_SAMPLES,
   story: STORY_SAMPLES,
+  calendar: CALENDAR_SAMPLES,
   details: DETAILS_SAMPLES,
+  dresscode: DRESSCODE_SAMPLES,
   schedule: SCHEDULE_SAMPLES,
   gallery: GALLERY_SAMPLES,
   location: LOCATION_SAMPLES,

@@ -74,6 +74,7 @@ export function VenueFacts({
   tone = 'onSurface',
   align = 'left',
   emphasis = 'card',
+  nameCase = 'normal',
   className,
 }: {
   readonly venue: LocationVenue;
@@ -81,10 +82,21 @@ export function VenueFacts({
   readonly align?: 'left' | 'center';
   /** `hero` agranda el nombre para las composiciones donde la sede ocupa la sección entera. */
   readonly emphasis?: 'card' | 'hero';
+  /**
+   * Si el nombre del lugar va en **versalitas espaciadas**.
+   *
+   * Es el mismo recurso de papelería grabada que `BlockHeading.titleCase`, y va junto porque las
+   * tres decisiones son inseparables: mayúsculas, cuerpo más bajo y tracking abierto. Una línea de
+   * mayúsculas del mismo cuerpo que un nombre en caja mixta pesa el doble, y un nombre largo
+   * —«Ex convento de San Antonio de Padua»— en mayúsculas sin espaciar se lee como un rótulo de
+   * señalética.
+   */
+  readonly nameCase?: 'normal' | 'caps';
   readonly className?: string;
 }) {
   const onImage = tone === 'onImage';
   const centered = align === 'center';
+  const caps = nameCase === 'caps';
 
   return (
     <div className={clsx(centered && 'text-center', onImage && 'text-inv-on-primary', className)}>
@@ -105,9 +117,14 @@ export function VenueFacts({
       <h3
         className={clsx(
           'mt-4 mb-0 font-inv-display leading-tight font-light',
+          caps && 'tracking-[0.18em] uppercase',
           emphasis === 'hero'
-            ? 'text-[clamp(1.9rem,4.5vw,3rem)]'
-            : 'text-[clamp(1.45rem,2.6vw,1.9rem)]',
+            ? caps
+              ? 'text-[clamp(1.3rem,3.4vw,2rem)]'
+              : 'text-[clamp(1.9rem,4.5vw,3rem)]'
+            : caps
+              ? 'text-[clamp(1.05rem,2.2vw,1.35rem)]'
+              : 'text-[clamp(1.45rem,2.6vw,1.9rem)]',
           onImage ? 'text-inv-on-primary' : 'text-inv-primary',
         )}
       >

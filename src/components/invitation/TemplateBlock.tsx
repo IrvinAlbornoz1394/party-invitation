@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 import type { DemoTemplateBlock } from './demo/templates';
 import {
+  resolveCalendarVariant,
   resolveClosingVariant,
   resolveDetailsVariant,
+  resolveDresscodeVariant,
   resolveFooterVariant,
   resolveGalleryVariant,
   resolveHeroVariant,
@@ -66,8 +68,20 @@ export function TemplateBlock({
       return Variant ? <Variant content={block.content} /> : null;
     }
 
+    case 'calendar': {
+      const Variant = resolveCalendarVariant(chosen);
+
+      return Variant ? <Variant content={block.content} /> : null;
+    }
+
     case 'details': {
       const Variant = resolveDetailsVariant(chosen);
+
+      return Variant ? <Variant content={block.content} /> : null;
+    }
+
+    case 'dresscode': {
+      const Variant = resolveDresscodeVariant(chosen);
 
       return Variant ? <Variant content={block.content} /> : null;
     }

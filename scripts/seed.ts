@@ -228,7 +228,17 @@ const BLOCKS = [
   { key: 'welcome', name: 'Pantalla de bienvenida', featureKey: 'pantalla_bienvenida' },
   { key: 'hero', name: 'Portada', featureKey: 'plantilla' },
   { key: 'story', name: 'Historia', featureKey: 'historia' },
+  /*
+   * El calendario cuelga de `plantilla` —o sea, lo tienen los dos planes— y no de
+   * `cuenta_regresiva`, que es lo que parecía a mano. Son dos cosas distintas: la cuenta regresiva
+   * es un reloj que corre y este bloque es una fecha señalada en un mes. Colgarlo de aquella
+   * habría atado dos funcionalidades que un cliente puede querer por separado.
+   */
+  { key: 'calendar', name: 'Calendario', featureKey: 'plantilla' },
   { key: 'details', name: 'Detalles del evento', featureKey: 'plantilla' },
+  /* Este sí tiene su funcionalidad propia desde el principio (`codigo_vestimenta`), y está en los
+     dos planes. */
+  { key: 'dresscode', name: 'Código de vestimenta', featureKey: 'codigo_vestimenta' },
   { key: 'party', name: 'Fiesta temática', featureKey: 'plantilla' },
   { key: 'schedule', name: 'Cronograma', featureKey: 'cronograma' },
   { key: 'gallery', name: 'Galería', featureKey: 'galeria' },
@@ -272,14 +282,17 @@ const VARIANTS: {
   { blockKey: 'hero', variantKey: 'centered', name: 'Portada centrada' },
   { blockKey: 'hero', variantKey: 'split', name: 'Portada a dos columnas' },
   { blockKey: 'hero', variantKey: 'portrait', name: 'Portada con retrato difuminado' },
+  { blockKey: 'hero', variantKey: 'framed', name: 'Portada con retrato enmarcado' },
   { blockKey: 'story', variantKey: 'image-left', name: 'Historia con imagen a la izquierda' },
   { blockKey: 'story', variantKey: 'image-right', name: 'Historia con imagen a la derecha' },
   { blockKey: 'story', variantKey: 'centered', name: 'Historia centrada' },
   { blockKey: 'story', variantKey: 'overlay', name: 'Historia sobre la imagen' },
+  { blockKey: 'calendar', variantKey: 'month', name: 'Calendario del mes' },
   { blockKey: 'details', variantKey: 'cards', name: 'Detalles en tarjetas' },
   { blockKey: 'details', variantKey: 'list', name: 'Detalles en lista' },
   { blockKey: 'details', variantKey: 'split', name: 'Detalles a dos columnas' },
   { blockKey: 'details', variantKey: 'panel', name: 'Detalles en panel de color' },
+  { blockKey: 'dresscode', variantKey: 'palette', name: 'Vestimenta con paleta de color' },
   { blockKey: 'party', variantKey: 'themed', name: 'Fiesta temática con personajes' },
   { blockKey: 'schedule', variantKey: 'vertical', name: 'Línea de tiempo alternada' },
   { blockKey: 'schedule', variantKey: 'horizontal', name: 'Cinta horizontal', minPlanRank: 2 },
@@ -287,6 +300,7 @@ const VARIANTS: {
   { blockKey: 'schedule', variantKey: 'showcase', name: 'Momentos destacados' },
   { blockKey: 'schedule', variantKey: 'ribbon', name: 'Cinta con lazos' },
   { blockKey: 'schedule', variantKey: 'zigzag', name: 'Momentos en zigzag' },
+  { blockKey: 'schedule', variantKey: 'itinerary', name: 'Itinerario con iconos al margen' },
   { blockKey: 'gallery', variantKey: 'parallax', name: 'Galería con parallax' },
   { blockKey: 'gallery', variantKey: 'grid', name: 'Galería en cuadrícula' },
   { blockKey: 'gallery', variantKey: 'carousel', name: 'Pasarela infinita' },
@@ -299,6 +313,7 @@ const VARIANTS: {
   { blockKey: 'location', variantKey: 'single', name: 'Sede a pantalla completa' },
   { blockKey: 'location', variantKey: 'single-split', name: 'Sede con foto al lado' },
   { blockKey: 'location', variantKey: 'single-card', name: 'Sede en tarjeta' },
+  { blockKey: 'location', variantKey: 'single-plate', name: 'Sede con lámina fotográfica' },
   { blockKey: 'location', variantKey: 'dual-venue', name: 'Dos sedes en columnas' },
   { blockKey: 'location', variantKey: 'dual-journey', name: 'Dos sedes como recorrido' },
   { blockKey: 'location', variantKey: 'dual-stacked', name: 'Dos sedes en franjas' },
@@ -313,9 +328,11 @@ const VARIANTS: {
   { blockKey: 'rsvp', variantKey: 'ticket', name: 'Confirmación con forma de pase' },
   { blockKey: 'rsvp', variantKey: 'reply-card', name: 'Tarjeta de respuesta R.S.V.P.' },
   { blockKey: 'rsvp', variantKey: 'postcard', name: 'Confirmación en postal' },
+  { blockKey: 'rsvp', variantKey: 'torn', name: 'Confirmación en papel rasgado' },
   { blockKey: 'closing', variantKey: 'split', name: 'Cierre a dos columnas' },
   { blockKey: 'closing', variantKey: 'letter', name: 'Cierre como carta que se abre' },
   { blockKey: 'closing', variantKey: 'horizon', name: 'Cierre a pantalla completa' },
+  { blockKey: 'closing', variantKey: 'envelope', name: 'Cierre en sobre con tarjeta' },
   { blockKey: 'footer', variantKey: 'centered', name: 'Pie centrado' },
   { blockKey: 'footer', variantKey: 'ribbon', name: 'Pie en cinta de color' },
   { blockKey: 'footer', variantKey: 'marquee', name: 'Pie con rótulo en movimiento' },
@@ -352,9 +369,10 @@ const RETIRED_VARIANTS = {
  *      `editorial` no se parezcan en nada: una encuadra planos a pantalla completa y la otra
  *      maqueta un pliego con folios y pies de foto.
  *
- * El tema va aparte y encima: cualquiera de las cuatro se puede vestir con los seis temas. Esa
- * separación es la que evita que el catálogo crezca por multiplicación —cuatro estructuras por
- * seis temas son veinticuatro invitaciones distintas con veintiocho piezas de código—.
+ * El tema va aparte y encima: cualquiera de las cinco se puede vestir con cualquiera de los siete
+ * temas. Esa separación es la que evita que el catálogo crezca por multiplicación —cinco
+ * estructuras por siete temas son treinta y cinco invitaciones distintas, y ni una pieza de código
+ * de más—.
  *
  * `party` y `messages` no aparecen en ninguna: están dados de alta en el catálogo pero todavía
  * no tienen componente, y una plantilla que los incluyera le daría al evento un bloque que no
@@ -460,6 +478,39 @@ const TEMPLATES: {
     ],
   },
   {
+    key: 'botanical',
+    name: 'Botanical',
+    description:
+      'Papelería de algodón: retrato enmarcado, el mes en una lámina rasgada y la paleta de vestimenta a la vista.',
+    /*
+     * Los cuatro tipos de evento donde la papelería impresa es la referencia. Se queda fuera lo
+     * empresarial —un calendario con un corazón y una paleta de vestimenta no es el registro de
+     * una convención— y las fiestas infantiles, que piden color y no papel de algodón.
+     */
+    eventTypes: ['wedding', 'quince', 'baptism', 'presentation'],
+    isActive: true,
+    /*
+     * La única estructura del catálogo **sin historia y sin galería**, y eso es lo que la define
+     * tanto como sus variantes: informa —cuándo, a qué hora, dónde, de qué vestirse— y no cuenta
+     * nada. Se lee entera de una pasada, que es su argumento; añadirle dos bloques largos sería
+     * quitarle exactamente eso. Para contar está `storytelling`, y para enseñar fotos,
+     * `cinematic`.
+     */
+    blocks: [
+      /* Sin `isRequired`: la bienvenida es de Premium, y un bloque obligatorio que el plan del
+         cliente no incluye sería una plantilla que no se puede montar. */
+      { blockKey: 'welcome', variantKey: 'torn' },
+      { blockKey: 'hero', variantKey: 'framed', isRequired: true },
+      { blockKey: 'calendar', variantKey: 'month' },
+      { blockKey: 'schedule', variantKey: 'itinerary' },
+      { blockKey: 'location', variantKey: 'single-plate' },
+      { blockKey: 'dresscode', variantKey: 'palette' },
+      { blockKey: 'rsvp', variantKey: 'torn', isRequired: true },
+      { blockKey: 'closing', variantKey: 'envelope' },
+      { blockKey: 'footer', variantKey: 'centered', isRequired: true },
+    ],
+  },
+  {
     key: 'presentacion-infantil',
     name: 'Presentación infantil',
     description: 'Personalización de cliente: misa de acción de gracias más fiesta temática.',
@@ -507,11 +558,11 @@ const TEMPLATES: {
  * claro.
  */
 /**
- * Los temas de la biblioteca: seis direcciones de arte, no seis paletas.
+ * Los temas de la biblioteca: siete direcciones de arte, no siete paletas.
  *
  * La forma de los tokens la define `src/domain/invitation/theme.ts`. Los colores se nombran por
  * el **papel que cumplen** —`primary`, `ink`, `surface`— y no por lo que son, que es lo que
- * permite que una variante escrita una vez sirva para los seis y para los que vengan.
+ * permite que una variante escrita una vez sirva para los siete y para los que vengan.
  *
  * ## Qué hace que dos temas se vean distintos de verdad
  *
@@ -742,6 +793,55 @@ const THEMES = [
       /* Marca cuadrada: geometría, no adorno. */
       ornament: { line: '2rem', node: '4px', nodeRadius: '0px', nodeRotate: '0deg', opacity: '0.5' },
       /* Geometría, no adorno: las franjas se cortan rectas. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'olive',
+    name: 'Olive',
+    description: 'Oliva, marfil y oro viejo. Botánica y de papel de algodón, para bodas de jardín.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* Marfil cálido, no blanco: es el papel de algodón, y es lo que hace que el oro de al lado
+           se lea como oro viejo y no como amarillo. */
+        background: '#f6f1e8',
+        surface: '#fffdf8',
+        ink: '#3b3a30',
+        inkSoft: '#7a7768',
+        primary: '#5a6350',
+        onPrimary: '#f7f4ec',
+        accent: '#b79a63',
+        line: '#e2dbcb',
+        overlay: 'rgba(34, 38, 28, 0.44)',
+      },
+      fonts: {
+        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        script: "var(--font-sacramento, 'Sacramento'), cursive",
+      },
+      /* Cantos casi vivos: este tema imita papel troquelado, y el redondeo es justo el detalle que
+         delata que algo se diseñó para una app. El 3px del radio medio es para las tarjetas —la del
+         sobre del cierre—, donde a cero se ven como recortadas con tijera. */
+      radii: { sm: '2px', md: '3px', lg: '4px' },
+      shadows: { soft: '0 18px 44px -30px rgba(50, 54, 38, 0.5)' },
+      motion: { reveal: '0.85s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.5rem, 10vw, 8rem)' },
+      /* Verde de jardín a media tarde: un punto más de calidez y algo lavada, como una fotografía
+         impresa en papel de algodón. */
+      photo: { filter: 'saturate(0.94) contrast(0.98) sepia(0.05)' },
+      /* Punto redondo y muy tenue: la botánica de este tema la ponen las ramitas dibujadas de los
+         bloques, y un rombo dorado al lado de cada rótulo sería un ornamento de más. */
+      ornament: { line: '2rem', node: '4px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
+      /*
+       * Canto recto, y aquí la razón no es la de «elegance».
+       *
+       * Las franjas de esta plantilla —el calendario y la confirmación— se rompen con un canto
+       * **rasgado** que dibuja el propio componente (`shared/paper-ornaments.tsx`), porque el papel
+       * roto es la firma de la plantilla y no una opción del tema. Con la onda de `BlockCurve`
+       * encima saldrían dos cantos distintos peleándose en el mismo borde, así que la onda se deja
+       * a cero: cada franja tiene un solo canto, y es el que su componente eligió.
+       */
       edge: { height: '0px' },
     },
   },

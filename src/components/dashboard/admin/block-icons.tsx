@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import {
   BookOpen,
   CalendarClock,
+  CalendarHeart,
   CircleCheck,
   Component,
   DoorOpen,
@@ -13,6 +14,7 @@ import {
   PanelBottom,
   PanelTop,
   PartyPopper,
+  Shirt,
 } from 'lucide-react';
 
 /**
@@ -38,7 +40,11 @@ const ICONS: Readonly<Record<string, IconComponent>> = {
   welcome: DoorOpen,
   hero: PanelTop,
   story: BookOpen,
+  /* Un calendario con corazón, no el mismo reloj del cronograma: los dos bloques hablan de tiempo
+     y son lo más fácil de confundir en la lista de pestañas. */
+  calendar: CalendarHeart,
   details: Info,
+  dresscode: Shirt,
   party: PartyPopper,
   schedule: CalendarClock,
   gallery: Images,
