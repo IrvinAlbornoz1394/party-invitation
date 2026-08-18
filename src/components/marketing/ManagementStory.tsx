@@ -83,7 +83,7 @@ export function ManagementStory() {
               Después de enviarla
             </p>
 
-            <h2 className="mt-7 mb-0 max-w-lg font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-light text-plum">
+            <h2 className="mt-7 mb-0 max-w-lg font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-medium tracking-[-0.03em] text-ink">
               Lo difícil no era
               <span className="block italic">la invitación</span>
             </h2>
@@ -108,7 +108,7 @@ export function ManagementStory() {
                   />
 
                   <div>
-                    <h3 className="m-0 font-display text-[clamp(1.3rem,2.6vw,1.7rem)] leading-snug font-light text-plum">
+                    <h3 className="m-0 font-display text-[clamp(1.3rem,2.6vw,1.7rem)] leading-snug font-medium tracking-[-0.02em] text-ink">
                       {title}
                     </h3>
                     <p className="mt-3 mb-0 max-w-lg text-[15px] leading-relaxed text-ink/70">

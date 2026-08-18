@@ -52,7 +52,7 @@ export function LandingAbout({
               El estudio
             </p>
 
-            <h2 className="mt-7 mb-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-light text-plum">
+            <h2 className="mt-7 mb-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-medium tracking-[-0.03em] text-ink">
               Una invitación cuidada,
               <span className="block italic">y un panel detrás</span>
             </h2>

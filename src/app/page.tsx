@@ -62,7 +62,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
   const showcase = await browseShowcase.execute();
 
   return (
-    <div className="min-h-svh bg-ivory">
+    <div className="marketing min-h-svh bg-ivory">
       {acceso === 'limite' && (
         <div role="status" className="bg-plum px-5 py-3 text-center text-sm text-white/90">
           Demasiados intentos desde tu conexión. Espera unos minutos y vuelve a abrir el enlace

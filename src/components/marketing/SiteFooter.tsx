@@ -51,7 +51,7 @@ export function SiteFooter() {
             <span aria-hidden="true" className="h-px w-8 bg-white/40" />
           </p>
 
-          <h2 className="mt-8 mb-0 font-display text-[clamp(2.2rem,6vw,3.75rem)] leading-[1.06] font-light text-white">
+          <h2 className="mt-8 mb-0 font-display text-[clamp(2.2rem,6vw,3.75rem)] leading-[1.06] font-medium tracking-[-0.03em] text-white">
             Cuéntanos qué celebras
             <span className="block italic">y qué día</span>
           </h2>

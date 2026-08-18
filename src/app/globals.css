@@ -64,6 +64,42 @@
   --font-poster: var(--font-bebas, 'Bebas Neue'), Impact, sans-serif;
 }
 
+/* ── La portada de promoción: el lenguaje visual de Nupia ─────────────────────
+ *
+ * La paleta de arriba la comparten tres consumidores —`App.css`, el seed y esta hoja—, así
+ * que repintarla ahí teñiría también la invitación y el panel. Estos tokens se redefinen
+ * únicamente dentro de `.marketing`, que envuelve la portada del producto y nada más: las
+ * utilidades de Tailwind v4 compilan a `var(--color-…)`, de modo que heredan el valor del
+ * ámbito sin tener que tocar una sola clase de los componentes.
+ *
+ * Los valores vienen del «próximamente» de Nupia: papel marfil cálido en lugar del marfil
+ * rosado, vino en lugar de ciruela, y dorado quemado para el microtexto en versalitas. Es
+ * un giro de temperatura, no de estructura — el amarillo del papel es lo que hace que todo
+ * lo demás se lea como papelería y no como software.
+ */
+.marketing {
+  --color-ivory: #fffaf7;
+  --color-ink: #51363a;
+  --color-plum: #7e4650;
+  --color-plum-dark: #653840;
+  --color-accent: #a27248;
+  --color-blush: #f1d6d4;
+  --color-line: #ecdcd6;
+
+  /* La segunda acuarela. Antes las dos manchas eran del mismo rosa; la crema de Nupia es lo
+     que le da a la composición su diagonal cálida en vez de un eco. */
+  --color-sand: #f4e4cd;
+
+  /*
+   * Playfair en lugar de Cormorant, y solo aquí.
+   *
+   * Cormorant es más fino y más callado, que es lo correcto en la invitación, donde el
+   * titular acompaña a la fotografía. En la portada el titular ES el argumento, y la didona
+   * de Playfair sostiene el tamaño con un contraste de trazo que Cormorant pierde al crecer.
+   */
+  --font-display: var(--font-playfair, 'Playfair Display'), Georgia, serif;
+}
+
 /*
  * Reset propio. Deliberadamente mínimo: solo lo que el diseño necesita.
  *

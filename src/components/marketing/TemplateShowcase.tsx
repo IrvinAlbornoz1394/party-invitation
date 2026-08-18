@@ -40,7 +40,7 @@ export function TemplateShowcase() {
             Plantillas
             <span aria-hidden="true" className="h-px w-8 bg-accent/45" />
           </p>
-          <h2 className="m-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-light text-plum">
+          <h2 className="m-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-medium tracking-[-0.03em] text-ink">
             Míralas por dentro
             <span className="block italic">antes de decidir</span>
           </h2>

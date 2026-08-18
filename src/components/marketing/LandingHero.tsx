@@ -62,6 +62,10 @@ export function LandingHero() {
         Los dos velos de color son el equivalente de las acuarelas de una papelería: manchas
         difusas en las esquinas, no un dibujo. Hechas con degradados radiales y no con imágenes
         porque no tienen que ser nítidas — de hecho no deben serlo.
+
+        No son del mismo color a propósito: rosado arriba a la izquierda, crema abajo a la
+        derecha. Dos manchas iguales se leen como un marco simétrico, y lo que se busca es una
+        diagonal cálida que cruce la portada.
       */}
       <div
         aria-hidden="true"
@@ -69,7 +73,7 @@ export function LandingHero() {
       />
       <div
         aria-hidden="true"
-        className="absolute -right-32 -bottom-28 -z-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,var(--color-blush),transparent_70%)] opacity-60"
+        className="absolute -right-32 -bottom-28 -z-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,var(--color-sand),transparent_70%)] opacity-70"
       />
 
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center px-6 pt-32 pb-20 text-center sm:px-10 sm:pt-36 sm:pb-24">
@@ -79,7 +83,7 @@ export function LandingHero() {
           <span aria-hidden="true" className="h-px w-10 bg-accent/45" />
         </p>
 
-        <h1 className="mt-9 mb-0 font-display text-[clamp(2.6rem,8.5vw,5rem)] leading-[1.05] font-light text-plum">
+        <h1 className="mt-9 mb-0 font-display text-[clamp(2.9rem,9vw,5.6rem)] leading-[0.98] font-medium tracking-[-0.045em] text-ink">
           Que tu celebración
           <span className="mt-1 block italic">empiece al abrirla</span>
         </h1>
