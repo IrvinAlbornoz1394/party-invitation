@@ -88,7 +88,15 @@ export function StoryHighlight({
   );
 }
 
-/** La firma manuscrita del final. Es el único sitio del bloque con la tipografía `script`. */
+/**
+ * La firma manuscrita del final. Es el único sitio del bloque con la tipografía `script`.
+ *
+ * `leading-[1.15]` y no `leading-none`, que es lo que tenía. Una manuscrita tiene descendentes
+ * largas —la «g» de «Diego», la «y» de «tus papás»— y con el interlineado a cero la caja de línea
+ * mide menos que el glifo: el rabo se sale por abajo y lo recorta lo que venga detrás, o se mete
+ * en el margen de la pieza siguiente. Con una manuscrita el interlineado ajustado no es elegante,
+ * es un recorte.
+ */
 export function StorySignature({
   signature,
   className,
@@ -99,7 +107,7 @@ export function StorySignature({
   return (
     <p
       className={clsx(
-        'm-0 font-inv-script text-[clamp(1.6rem,3.5vw,2.1rem)] leading-none text-inv-accent',
+        'm-0 font-inv-script text-[clamp(1.6rem,3.5vw,2.1rem)] leading-[1.15] text-inv-accent',
         className,
       )}
     >

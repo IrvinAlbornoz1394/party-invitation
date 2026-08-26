@@ -1,9 +1,9 @@
 import clsx from 'clsx';
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
+import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import type { StoryVariantProps } from './story-variant';
 
 /**
@@ -28,6 +28,8 @@ import type { StoryVariantProps } from './story-variant';
  * lectura para un lector de pantalla es el mismo en las dos variantes.
  */
 function StorySplit({ content, side }: StoryVariantProps & { readonly side: 'left' | 'right' }) {
+  const highlight = visibleHighlight(content);
+
   return (
     <BlockSection block="story" variant={`image-${side}`}>
       <BlockContainer>
@@ -46,15 +48,22 @@ function StorySplit({ content, side }: StoryVariantProps & { readonly side: 'lef
           {/* Sin foto, el texto se queda solo en un contenedor de mil píxeles y las líneas
               llegan a los cien caracteres. La medida se acota aquí, no en el contenedor, porque
               con foto la columna ya está acotada por la retícula. */}
-          <div className={clsx('space-y-7', !content.image && 'mx-auto max-w-2xl')}>
+          {/*
+            Márgenes explícitos y no `space-y`, que es lo que tenía y lo que apretaba el remate.
+            Un `space-y` reparte **el mismo** hueco entre piezas de peso muy distinto: el que va
+            bien entre el encabezado y el cuerpo deja la cita, la firma y lo que venga detrás
+            pegados en un bloque, y en un móvil eso se lee como un párrafo con tres tipografías.
+            Aquí el aire crece hacia abajo, que es donde la sección remata.
+          */}
+          <div className={!content.image ? 'mx-auto max-w-2xl' : undefined}>
             <BlockHeading eyebrow={content.eyebrow} title={content.title} subtitle={content.subtitle} />
-            <StoryProse body={content.body} />
-            {content.highlight && <StoryHighlight highlight={content.highlight} />}
-            {content.signature && <StorySignature signature={content.signature} />}
-            {content.action && (
-              <div>
-                <ActionLink label={content.action.label} href={content.action.href} />
-              </div>
+            <StoryProse body={content.body} className="mt-7" />
+            {/* La cita y la firma comparten la sangría del filete de la cita. Sin ella la firma
+                arrancaba en el margen, justo encima del filete, y las dos piezas se leían
+                descuadradas — se ve en cualquier móvil. */}
+            {highlight && <StoryHighlight highlight={highlight} className="mt-9" />}
+            {content.signature && (
+              <StorySignature signature={content.signature} className={highlight ? 'mt-8 pl-5' : 'mt-8'} />
             )}
           </div>
         </div>

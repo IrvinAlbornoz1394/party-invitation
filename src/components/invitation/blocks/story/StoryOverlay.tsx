@@ -1,8 +1,8 @@
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
+import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import type { StoryVariantProps } from './story-variant';
 
 /**
@@ -27,6 +27,8 @@ import type { StoryVariantProps } from './story-variant';
  * como una nota, que es exactamente lo que es.
  */
 export function StoryOverlay({ content }: StoryVariantProps) {
+  const highlight = visibleHighlight(content);
+
   return (
     <BlockSection block="story" variant="overlay" className="relative isolate py-24 sm:py-32">
       {content.image && (
@@ -39,15 +41,14 @@ export function StoryOverlay({ content }: StoryVariantProps) {
       )}
 
       <BlockContainer>
-        <article className="mx-auto max-w-2xl space-y-7 rounded-inv-lg bg-inv-surface p-8 shadow-inv-soft sm:p-12">
+        {/* Márgenes explícitos y no `space-y`, por lo mismo que en `StorySplit`: el hueco que va
+            bien entre encabezado y cuerpo deja la cita y la firma apretadas contra el texto. */}
+        <article className="mx-auto max-w-2xl rounded-inv-lg bg-inv-surface p-8 shadow-inv-soft sm:p-12">
           <BlockHeading eyebrow={content.eyebrow} title={content.title} subtitle={content.subtitle} />
-          <StoryProse body={content.body} />
-          {content.highlight && <StoryHighlight highlight={content.highlight} />}
-          {content.signature && <StorySignature signature={content.signature} />}
-          {content.action && (
-            <div>
-              <ActionLink label={content.action.label} href={content.action.href} />
-            </div>
+          <StoryProse body={content.body} className="mt-7" />
+          {highlight && <StoryHighlight highlight={highlight} className="mt-9" />}
+          {content.signature && (
+            <StorySignature signature={content.signature} className={highlight ? 'mt-8 pl-5' : 'mt-8'} />
           )}
         </article>
       </BlockContainer>

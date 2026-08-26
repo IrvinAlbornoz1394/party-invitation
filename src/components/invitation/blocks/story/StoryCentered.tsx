@@ -1,8 +1,8 @@
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
+import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import type { StoryVariantProps } from './story-variant';
 
 /**
@@ -26,6 +26,8 @@ import type { StoryVariantProps } from './story-variant';
  * párrafos, la variante que le toca es otra.
  */
 export function StoryCentered({ content }: StoryVariantProps) {
+  const highlight = visibleHighlight(content);
+
   return (
     <BlockSection block="story" variant="centered">
       <BlockContainer className="max-w-3xl">
@@ -44,18 +46,10 @@ export function StoryCentered({ content }: StoryVariantProps) {
 
         <StoryProse body={content.body} className="mx-auto mt-10 max-w-[54ch] text-center" />
 
-        {content.highlight && (
-          <StoryHighlight highlight={content.highlight} align="center" className="mt-10" />
-        )}
+        {highlight && <StoryHighlight highlight={highlight} align="center" className="mt-10" />}
 
         {content.signature && (
           <StorySignature signature={content.signature} className="mt-10 text-center" />
-        )}
-
-        {content.action && (
-          <div className="mt-10 text-center">
-            <ActionLink label={content.action.label} href={content.action.href} />
-          </div>
         )}
       </BlockContainer>
     </BlockSection>
