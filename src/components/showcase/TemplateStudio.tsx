@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { RsvpDemoGateway } from '@/components/invitation/demo/RsvpDemoGateway';
+import { InvitationChrome } from '@/components/invitation/InvitationChrome';
 import type { DemoTemplate } from '@/components/invitation/demo/templates';
 import { TemplateBlock } from '@/components/invitation/TemplateBlock';
 import { ThemeScope } from '@/components/invitation/theme/ThemeScope';
@@ -65,17 +66,34 @@ export interface StudioTheme {
 export interface StudioTemplateOption {
   readonly key: string;
   readonly name: string;
+  readonly eventTypeKey: string;
   readonly eventTypeName: string;
+}
+
+export interface StudioEventType {
+  readonly key: string;
+  readonly name: string;
+  /**
+   * A qué demo se salta al elegir este tipo.
+   *
+   * Lo resuelve el servidor con `findSiblingTemplate` —la misma estructura contada para el otro
+   * tipo— y llega ya calculado. Así el gestor no necesita importar el catálogo entero de demos, que
+   * arrastraría al navegador el contenido de las seis para usar una.
+   */
+  readonly templateKey: string;
 }
 
 export function TemplateStudio({
   template,
   templates,
+  eventTypes,
   blocks,
   themes,
 }: {
   readonly template: DemoTemplate;
   readonly templates: readonly StudioTemplateOption[];
+  /** Los tipos de evento que el escaparate enseña. El primer mando del panel. */
+  readonly eventTypes: readonly StudioEventType[];
   readonly blocks: readonly StudioBlock[];
   readonly themes: readonly StudioTheme[];
 }) {
@@ -96,6 +114,28 @@ export function TemplateStudio({
 
   const launcherRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  /**
+   * Cambiar algo cierra el panel.
+   *
+   * El panel ocupa un tercio de la pantalla en un escritorio y casi toda en un teléfono, así que
+   * quien cambiaba el tema **no veía lo que acababa de cambiar**: tenía que cerrarlo a mano cada
+   * vez, y con cuatro mandos eso son cuatro cierres para comparar dos cosas.
+   *
+   * Se cierra desde aquí y no desde cada mando para que ninguno se quede sin hacerlo el día que se
+   * añada el quinto. El foco vuelve a la pestaña que lo abrió, que es donde estaría la mano.
+   */
+  const applyAndClose = (change: () => void) => {
+    change();
+    setOpen(false);
+    launcherRef.current?.focus();
+  };
+
+  /* Las plantillas del tipo que se está viendo. Ofrecer una boda desde unos XV es enseñar el
+     producto equivocado, y es exactamente lo que hacía el selector cuando las listaba todas. */
+  const sameTypeTemplates = templates.filter(
+    (option) => option.eventTypeKey === template.eventTypeKey,
+  );
 
   /*
    * Escape cierra, y al cerrar el foco vuelve a la pestaña que lo abrió. Sin eso, quien navega
@@ -139,6 +179,23 @@ export function TemplateStudio({
           {template.blocks.map((block) => (
             <TemplateBlock key={block.blockKey} block={block} registryId={choices[block.blockKey]} />
           ))}
+
+          {/*
+            Los mandos flotantes, los mismos que monta `InvitationRenderer` en una invitación de
+            verdad. El escaparate no los tenía, y por eso las demos eran las únicas invitaciones
+            **mudas** del producto: la música es de Plus en adelante y es de las cosas que más se
+            notan al abrir una invitación, así que no enseñarla en la página donde alguien decide
+            si paga era esconder justo lo que se vende.
+
+            Van **dentro** del `ThemeScope`: el mando se pinta con el papel y la tinta del tema
+            (`bg-inv-surface`, `text-inv-ink`), así que fuera del ámbito saldría sin color. Y `key`
+            en el tema no hace falta: la pista no cambia al cambiar de tema, y remontar el audio
+            reiniciaría la canción cada vez que alguien prueba una paleta.
+
+            No se remonta al cambiar de variante por la misma razón. Sí al cambiar de plantilla —el
+            `key` está arriba, en el propio estudio—, que es correcto: es otra demo y otra pista.
+          */}
+          <InvitationChrome musicUrl={template.music.url} musicTitle={template.music.title} />
         </ThemeScope>
       </RsvpDemoGateway>
 
@@ -213,13 +270,33 @@ export function TemplateStudio({
             </header>
 
             <div className="flex-1 overflow-y-auto px-6 py-6">
+              {/*
+                El tipo de evento va primero porque es la primera decisión que toma quien mira:
+                nadie compara plantillas de boda si viene a organizar unos XV. Al cambiarlo se
+                salta a la misma estructura contada para el otro tipo — ver `findSiblingTemplate`.
+              */}
+              <StudioGroup label="Tipo de evento">
+                <StudioSelect
+                  value={template.eventTypeKey}
+                  onChange={(value) => {
+                    const target = eventTypes.find((option) => option.key === value);
+
+                    if (target) applyAndClose(() => router.push(`/plantillas/${target.templateKey}`));
+                  }}
+                  options={eventTypes.map((option) => ({
+                    value: option.key,
+                    label: option.name,
+                  }))}
+                />
+              </StudioGroup>
+
               <StudioGroup label="Plantilla">
                 <StudioSelect
                   value={template.key}
-                  onChange={(value) => router.push(`/plantillas/${value}`)}
-                  options={templates.map((option) => ({
+                  onChange={(value) => applyAndClose(() => router.push(`/plantillas/${value}`))}
+                  options={sameTypeTemplates.map((option) => ({
                     value: option.key,
-                    label: `${option.name} · ${option.eventTypeName}`,
+                    label: option.name,
                   }))}
                 />
               </StudioGroup>
@@ -227,7 +304,7 @@ export function TemplateStudio({
               <StudioGroup label="Tema">
                 <StudioSelect
                   value={themeKey}
-                  onChange={setThemeKey}
+                  onChange={(value) => applyAndClose(() => setThemeKey(value))}
                   options={themes.map((option) => ({ value: option.key, label: option.name }))}
                 />
               </StudioGroup>
@@ -242,7 +319,9 @@ export function TemplateStudio({
                     <StudioSelect
                       value={choices[block.key] ?? ''}
                       onChange={(value) =>
-                        setChoices((current) => ({ ...current, [block.key]: value }))
+                        applyAndClose(() =>
+                          setChoices((current) => ({ ...current, [block.key]: value })),
+                        )
                       }
                       options={[
                         /*

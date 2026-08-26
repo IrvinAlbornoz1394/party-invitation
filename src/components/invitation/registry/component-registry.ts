@@ -1,5 +1,6 @@
 import { CalendarMonth } from '../blocks/calendar/CalendarMonth';
 import type { CalendarVariant } from '../blocks/calendar/calendar-variant';
+import { ClosingAlbum } from '../blocks/closing/ClosingAlbum';
 import { ClosingEnvelope } from '../blocks/closing/ClosingEnvelope';
 import { ClosingHorizon } from '../blocks/closing/ClosingHorizon';
 import { ClosingLetter } from '../blocks/closing/ClosingLetter';
@@ -8,13 +9,20 @@ import type { ClosingVariant } from '../blocks/closing/closing-parts';
 import { DetailsCards } from '../blocks/details/DetailsCards';
 import { DetailsList } from '../blocks/details/DetailsList';
 import { DetailsPanel } from '../blocks/details/DetailsPanel';
+import { DetailsProgram } from '../blocks/details/DetailsProgram';
 import { DetailsSplit } from '../blocks/details/DetailsSplit';
 import type { DetailsVariant } from '../blocks/details/details-variant';
+import { DresscodeBands } from '../blocks/dresscode/DresscodeBands';
+import { DresscodeCards } from '../blocks/dresscode/DresscodeCards';
+import { DresscodeChart } from '../blocks/dresscode/DresscodeChart';
 import { DresscodePalette } from '../blocks/dresscode/DresscodePalette';
+import { DresscodeThread } from '../blocks/dresscode/DresscodeThread';
 import type { DresscodeVariant } from '../blocks/dresscode/dresscode-variant';
 import { FooterCentered } from '../blocks/footer/FooterCentered';
+import { FooterColophon } from '../blocks/footer/FooterColophon';
 import { FooterMarquee } from '../blocks/footer/FooterMarquee';
 import { FooterRibbon } from '../blocks/footer/FooterRibbon';
+import { FooterSprig } from '../blocks/footer/FooterSprig';
 import type { FooterVariant } from '../blocks/footer/footer-parts';
 import { GalleryCarousel } from '../blocks/gallery/GalleryCarousel';
 import { GalleryCinematic } from '../blocks/gallery/GalleryCinematic';
@@ -23,12 +31,14 @@ import { GalleryGrid } from '../blocks/gallery/GalleryGrid';
 import { GalleryMasonry } from '../blocks/gallery/GalleryMasonry';
 import { GalleryMosaic } from '../blocks/gallery/GalleryMosaic';
 import { GalleryParallax } from '../blocks/gallery/GalleryParallax';
+import { GalleryPlates } from '../blocks/gallery/GalleryPlates';
 import { GalleryPolaroid } from '../blocks/gallery/GalleryPolaroid';
 import type { GalleryVariant } from '../blocks/gallery/gallery-parts';
 import { HeroCentered } from '../blocks/hero/HeroCentered';
 import { HeroClassic } from '../blocks/hero/HeroClassic';
 import { HeroFramed } from '../blocks/hero/HeroFramed';
 import { HeroPortrait } from '../blocks/hero/HeroPortrait';
+import { HeroQuince } from '../blocks/hero/HeroQuince';
 import { HeroSplit } from '../blocks/hero/HeroSplit';
 import type { HeroVariant } from '../blocks/hero/hero-variant';
 import { LocationDualJourney } from '../blocks/location/LocationDualJourney';
@@ -56,11 +66,13 @@ import { ScheduleZigzag } from '../blocks/schedule/ScheduleZigzag';
 import type { ScheduleVariant } from '../blocks/schedule/schedule-variant';
 import { StoryCentered } from '../blocks/story/StoryCentered';
 import { StoryOverlay } from '../blocks/story/StoryOverlay';
+import { StoryPressed } from '../blocks/story/StoryPressed';
 import { StoryImageLeft, StoryImageRight } from '../blocks/story/StorySplit';
 import type { StoryVariant } from '../blocks/story/story-variant';
 import { WelcomeBand } from '../blocks/welcome/WelcomeBand';
 import { WelcomeBotanical } from '../blocks/welcome/WelcomeBotanical';
 import { WelcomeCountdown } from '../blocks/welcome/WelcomeCountdown';
+import { WelcomeCrown } from '../blocks/welcome/WelcomeCrown';
 import { WelcomeEnvelope } from '../blocks/welcome/WelcomeEnvelope';
 import { WelcomeFiligree } from '../blocks/welcome/WelcomeFiligree';
 import { WelcomeLuminous } from '../blocks/welcome/WelcomeLuminous';
@@ -136,6 +148,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'welcome.torn': { blockKey: 'welcome', component: WelcomeTorn },
   'welcome.band': { blockKey: 'welcome', component: WelcomeBand },
   'welcome.countdown': { blockKey: 'welcome', component: WelcomeCountdown },
+  /* La hermana de `luminous` sin alianzas: aquellas son un símbolo nupcial incrustado y sobre unos
+     XV prometen una boda. La diferencia se resuelve en el catálogo, no con una condición. */
+  'welcome.crown': { blockKey: 'welcome', component: WelcomeCrown },
 
   'hero.classic': { blockKey: 'hero', component: HeroClassic },
   'hero.centered': { blockKey: 'hero', component: HeroCentered },
@@ -144,6 +159,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'hero.portrait': { blockKey: 'hero', component: HeroPortrait },
   /* Y la única que no parte de la foto: la enmarca sobre el papel, como una lámina pegada. */
   'hero.framed': { blockKey: 'hero', component: HeroFramed },
+  /* La única con un titular que no es el nombre: las cifras romanas a cuerpo de cartel. Es lo que
+     identifica unos XV antes de leer una palabra, y no cabía como parámetro de otra. */
+  'hero.quince': { blockKey: 'hero', component: HeroQuince },
 
   /*
    * Las dos partidas apuntan a componentes distintos que envuelven al mismo: el lado de la
@@ -153,6 +171,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'story.image-right': { blockKey: 'story', component: StoryImageRight },
   'story.centered': { blockKey: 'story', component: StoryCentered },
   'story.overlay': { blockKey: 'story', component: StoryOverlay },
+  /* La única en que el texto **envuelve** la fotografía en vez de ponerse al lado o encima: la
+     lámina montada al margen y la caja ajustándose a ella. Ver su archivo. */
+  'story.pressed': { blockKey: 'story', component: StoryPressed },
 
   /*
    * El calendario y el código de vestimenta traen **un** componente cada uno, y no es una lista a
@@ -166,8 +187,22 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'details.list': { blockKey: 'details', component: DetailsList },
   'details.split': { blockKey: 'details', component: DetailsSplit },
   'details.panel': { blockKey: 'details', component: DetailsPanel },
+  /* La única con retícula de dos columnas contra un filete central: el programa de mano. Las
+     otras cuatro apilan icono, rótulo y texto de izquierda a derecha. Ver su archivo. */
+  'details.program': { blockKey: 'details', component: DetailsProgram },
 
+  /*
+   * Cinco formas de enseñar una paleta, una por plantilla. No son variaciones de la misma fila de
+   * muestras: cambia qué ES una muestra —círculo suelto, ficha de catálogo, tramo de una carta de
+   * imprenta, cuenta de un hilo, franja a sangre— y con ello qué invita a hacer la sección.
+   * Lo que no cambia —el brillo del metálico, el filete, cuándo la lista deja de ser información—
+   * vive en `dresscode-parts.tsx`.
+   */
   'dresscode.palette': { blockKey: 'dresscode', component: DresscodePalette },
+  'dresscode.cards': { blockKey: 'dresscode', component: DresscodeCards },
+  'dresscode.chart': { blockKey: 'dresscode', component: DresscodeChart },
+  'dresscode.thread': { blockKey: 'dresscode', component: DresscodeThread },
+  'dresscode.bands': { blockKey: 'dresscode', component: DresscodeBands },
 
   'schedule.vertical': { blockKey: 'schedule', component: ScheduleTimeline },
   'schedule.horizontal': { blockKey: 'schedule', component: ScheduleRail },
@@ -191,6 +226,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
      película. Ver sus archivos para en qué se diferencian de las seis anteriores. */
   'gallery.editorial': { blockKey: 'gallery', component: GalleryEditorial },
   'gallery.cinematic': { blockKey: 'gallery', component: GalleryCinematic },
+  /* La de papelería: láminas montadas con filete, a escuadra y rotuladas en versalitas. Es la
+     hermana precisa de `polaroid` —aquella va torcida y escrita a mano—. Ver su archivo. */
+  'gallery.plates': { blockKey: 'gallery', component: GalleryPlates },
 
   /*
    * Tres pensadas para una sede y tres para dos. La intención está en el nombre, no en una
@@ -221,10 +259,18 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'closing.letter': { blockKey: 'closing', component: ClosingLetter },
   'closing.horizon': { blockKey: 'closing', component: ClosingHorizon },
   'closing.envelope': { blockKey: 'closing', component: ClosingEnvelope },
+  /* La única que trata la fotografía como un objeto pegado y no como fondo ni como columna:
+     montada con esquineras sobre la hoja. Ver su archivo. */
+  'closing.album': { blockKey: 'closing', component: ClosingAlbum },
 
   'footer.centered': { blockKey: 'footer', component: FooterCentered },
   'footer.ribbon': { blockKey: 'footer', component: FooterRibbon },
   'footer.marquee': { blockKey: 'footer', component: FooterMarquee },
+  /* Los dos con lenguaje de plantilla, como pasa en la galería: uno cierra una revista
+     —doble filete y corondeles— y el otro una papelería —otra hoja, rasgada, con el
+     monograma grabado entre dos ramitas—. Ver sus archivos. */
+  'footer.colophon': { blockKey: 'footer', component: FooterColophon },
+  'footer.sprig': { blockKey: 'footer', component: FooterSprig },
 };
 
 /**

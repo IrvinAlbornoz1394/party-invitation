@@ -1,3 +1,4 @@
+import type { BlockContent } from '@/domain/invitation/blocks/block-content';
 import type { BlockImage } from '@/domain/invitation/blocks/shared';
 import type { RegisteredBlockKey } from '../registry/component-registry';
 import { CALENDAR_SAMPLES } from './calendar-samples';
@@ -9,22 +10,11 @@ import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
 import { LOCATION_SAMPLES } from './location-samples';
 import { RSVP_SAMPLES } from './rsvp-samples';
+import { demoImage, QUINCE_PHOTOS, WEDDING_PHOTOS } from './photos';
 import { pickSample } from './samples';
 import { SCHEDULE_SAMPLES } from './schedule-samples';
 import { STORY_SAMPLES } from './story-samples';
 import { WELCOME_SAMPLES } from './welcome-samples';
-import type { CalendarContent } from '@/domain/invitation/blocks/calendar';
-import type { ClosingContent } from '@/domain/invitation/blocks/closing';
-import type { DetailsContent } from '@/domain/invitation/blocks/details';
-import type { DresscodeContent } from '@/domain/invitation/blocks/dresscode';
-import type { FooterContent } from '@/domain/invitation/blocks/footer';
-import type { GalleryContent } from '@/domain/invitation/blocks/gallery';
-import type { HeroContent } from '@/domain/invitation/blocks/hero';
-import type { LocationContent } from '@/domain/invitation/blocks/location';
-import type { RsvpContent } from '@/domain/invitation/blocks/rsvp';
-import type { ScheduleContent } from '@/domain/invitation/blocks/schedule';
-import type { StoryContent } from '@/domain/invitation/blocks/story';
-import type { WelcomeContent } from '@/domain/invitation/blocks/welcome';
 
 /**
  * Las plantillas de demostración: invitaciones completas, armadas y **sin base de datos**.
@@ -52,20 +42,14 @@ import type { WelcomeContent } from '@/domain/invitation/blocks/welcome';
  * exactamente esto: qué variante lleva cada bloque y con qué tema se compone.
  */
 
-/** El contenido de un bloque, emparejado con su tipo. Igual de estricto que el registro. */
-export type TemplateBlockContent =
-  | { readonly blockKey: 'welcome'; readonly content: WelcomeContent }
-  | { readonly blockKey: 'hero'; readonly content: HeroContent }
-  | { readonly blockKey: 'story'; readonly content: StoryContent }
-  | { readonly blockKey: 'calendar'; readonly content: CalendarContent }
-  | { readonly blockKey: 'details'; readonly content: DetailsContent }
-  | { readonly blockKey: 'dresscode'; readonly content: DresscodeContent }
-  | { readonly blockKey: 'schedule'; readonly content: ScheduleContent }
-  | { readonly blockKey: 'gallery'; readonly content: GalleryContent }
-  | { readonly blockKey: 'location'; readonly content: LocationContent }
-  | { readonly blockKey: 'rsvp'; readonly content: RsvpContent }
-  | { readonly blockKey: 'closing'; readonly content: ClosingContent }
-  | { readonly blockKey: 'footer'; readonly content: FooterContent };
+/**
+ * El contenido de un bloque, emparejado con su tipo.
+ *
+ * Es el tipo del dominio, no uno propio de la demo. Lo fue durante un tiempo, y esa era la
+ * dependencia al revés: la invitación real necesita exactamente la misma unión —contenido que
+ * sabe de qué bloque es— y no puede depender de que un archivo de ejemplos la declare.
+ */
+export type TemplateBlockContent = BlockContent;
 
 /** Un bloque de una plantilla: su contenido, con qué variante se enseña y si se puede quitar. */
 export type DemoTemplateBlock = TemplateBlockContent & {
@@ -84,9 +68,34 @@ export type DemoTemplateBlock = TemplateBlockContent & {
   readonly removable?: boolean;
 };
 
+/**
+ * La pista de fondo de una demo.
+ *
+ * Va en la plantilla y no como una constante suelta del escaparate porque la música es parte del
+ * registro: un cartel a pantalla completa y una papelería de algodón no piden la misma canción. Hoy
+ * las seis comparten pista —hay un solo archivo en `public/music`— y el día que haya más, cambiarlo
+ * es una línea por demo y no una refactorización.
+ *
+ * En una invitación de verdad esto sale de `events.music_url`, que ya existe. Aquí es contenido
+ * local, como las fotos: el escaparate no consulta la base de datos.
+ */
+export interface DemoMusic {
+  readonly url: string;
+  /** Qué suena, para el `title` del mando. Es lo único que el visitante puede leer de la pista. */
+  readonly title: string;
+}
+
 export interface DemoTemplate {
   readonly key: string;
   readonly name: string;
+  /**
+   * La estructura de la que sale, compartida con su hermana del otro tipo de evento.
+   *
+   * `botanical` y `botanical-xv` tienen la misma `structureKey`, y es lo que permite que el
+   * selector de tipo del gestor salte de una a otra conservando la composición: cambiar de boda a
+   * XV no debe cambiarte también la plantilla que estabas mirando.
+   */
+  readonly structureKey: string;
   /** Coincide con `event_types.key` en la base de datos. */
   readonly eventTypeKey: string;
   readonly eventTypeName: string;
@@ -95,11 +104,10 @@ export interface DemoTemplate {
   readonly themeKey: string;
   /** La imagen de la tarjeta en la página pública. */
   readonly cover: BlockImage;
+  /** La pista que suena al entrar. Ver {@link DemoMusic}. */
+  readonly music: DemoMusic;
   readonly blocks: readonly DemoTemplateBlock[];
 }
-
-const unsplash = (id: string, width: number, height: number): string =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
 
 /**
  * Un bloque de la plantilla: cuál es y con qué variante se enseña.
@@ -120,24 +128,33 @@ interface TemplateBlockChoice {
 interface TemplateDefinition {
   readonly key: string;
   readonly name: string;
+  readonly structureKey: string;
   readonly eventTypeKey: string;
   readonly eventTypeName: string;
   readonly tagline: string;
   readonly themeKey: string;
   readonly cover: BlockImage;
+  readonly music: DemoMusic;
   /** Qué evento imaginario de `*-samples.ts` la alimenta. */
   readonly sampleKey: string;
   readonly blocks: readonly TemplateBlockChoice[];
 }
 
 /**
- * Las cinco demos: una por estructura del catálogo.
+ * Las seis demos: tres estructuras contadas dos veces, una para boda y otra para XV.
  *
- * Cada una corresponde a una plantilla real —`classic`, `editorial`, `storytelling`, `cinematic`,
- * `botanical`— y repite su composición de bloques y sus variantes. Tres de ellas usan el **mismo
- * contenido** (la boda), y eso es deliberado: comparar `editorial`, `cinematic` y `botanical` con
- * el mismo texto y las mismas fotos es la única forma de ver qué hace una plantilla, sin que la
- * diferencia la ponga el contenido.
+ * Cada una corresponde a una estructura del catálogo y repite su composición de bloques y sus
+ * variantes. Las tres de boda usan el **mismo contenido** y las tres de XV también, y eso es
+ * deliberado: comparar dos estructuras con el mismo texto y las mismas fotos es la única forma de
+ * ver qué hace una plantilla, sin que la diferencia la ponga el contenido.
+ *
+ * ## Por qué cada tipo de evento tiene su propia entrada
+ *
+ * Podría ser un parámetro —la misma demo con otro contenido— y sería peor de dos maneras: la URL
+ * dejaría de prerenderizarse y, sobre todo, boda y XV no se distinguen solo por el texto. Se
+ * distinguen por qué variantes componen la plantilla, y eso es una composición distinta, no un
+ * ajuste. Con entradas propias, `/plantillas/botanical-xv` se comparte por WhatsApp con su propia
+ * vista previa y se puede enseñar en el catálogo como lo que es: otro producto.
  *
  * ## Deuda conocida
  *
@@ -146,33 +163,199 @@ interface TemplateDefinition {
  * `template_blocks`—. Mientras tanto, si se cambia una estructura hay que cambiarla en los dos
  * sitios.
  */
+/**
+ * La única pista que hay hoy en `public/music`, compartida por las seis demos.
+ *
+ * Es una limitación de material, no de diseño: el campo es por plantilla justamente para que cada
+ * una pueda tener la suya. Mientras haya un solo archivo, escribirlo una vez y referenciarlo es
+ * mejor que repetir la ruta seis veces y que se desincronice al renombrarlo.
+ */
+const DEMO_MUSIC: DemoMusic = {
+  url: '/music/musica-fondo.mp3',
+  /* El título sale de las etiquetas ID3 del propio archivo, no de una descripción escrita a mano:
+     lo que el mando enseña al pasar el ratón es lo que de verdad está sonando. */
+  title: 'Canon en Re mayor · Johann Pachelbel',
+};
+
 const DEFINITIONS: readonly TemplateDefinition[] = [
+  /* ── Boda ─────────────────────────────────────────────────────────────── */
   {
-    key: 'classic',
-    name: 'Classic',
-    eventTypeKey: 'presentation',
-    eventTypeName: 'Presentación',
-    tagline: 'La estructura completa y en el orden esperado: presenta, cuenta, informa y despide.',
-    themeKey: 'floral',
-    cover: {
-      url: unsplash('photo-1607344645866-009c320b63e0', 1200, 900),
-      alt: 'Mesa de dulces decorada con globos y flores',
-    },
-    sampleKey: 'presentacion',
+    key: 'botanical',
+    name: 'Botanical',
+    structureKey: 'botanical',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Papelería de algodón: retrato enmarcado, el mes en una lámina rasgada y la paleta de vestimenta a la vista.',
+    themeKey: 'olive',
+    cover: demoImage(WEDDING_PHOTOS.couple, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    /*
+     * La papelería completa: lámina, relato y láminas de la sesión. Fue la única sin historia y
+     * sin galería —su argumento era leerse entera de una pasada— y los dos bloques se añadieron a
+     * propósito, con dos variantes escritas para ella: `story.pressed`, donde el texto envuelve
+     * una lámina montada, y `gallery.plates`, con las fotos a escuadra y rotuladas en versalitas.
+     * De las que había libres ninguna era papelería.
+     *
+     * El orden es lo que la sigue separando de `storytelling`: el calendario va justo después de
+     * la portada —la fecha es lo primero que se busca—, el relato y las fotos vienen detrás, y el
+     * código de vestimenta después de la ubicación. Es el orden en que uno se pregunta las cosas:
+     * cuándo, qué se celebra, dónde, cómo voy.
+     */
     blocks: [
       /*
-       * La bienvenida está en las CUATRO demos aunque en el catálogo (`scripts/seed.ts`) solo la
-       * lleve `cinematic`, y la diferencia es deliberada: una plantilla del catálogo es lo que un
+       * La bienvenida está en las seis demos aunque en el catálogo (`scripts/seed.ts`) solo la
+       * lleven algunas, y la diferencia es deliberada: una plantilla del catálogo es lo que un
        * cliente se encuentra montado, y el escaparate es donde se prueba lo que se puede añadir.
-       * Es la pieza que distingue a Premium, así que hay que poder ponerla, cambiarla y quitarla
-       * sobre cualquier estructura — de ahí `removable`.
+       * Es la pieza que distingue al plan de en medio, así que hay que poder ponerla, cambiarla y
+       * quitarla sobre cualquier estructura — de ahí `removable`.
        *
-       * Cada demo abre con una variante distinta para que las tres se vean sin ir a buscarlas.
+       * Cada demo abre con una variante distinta para que se vean sin ir a buscarlas.
        */
-      { blockKey: 'welcome', registryId: 'welcome.veil', removable: true },
+      /* La misma puerta que su hermana de XV, que es lo que una plantilla promete: que entre un
+         tipo de evento y otro solo cambie el tema. La guirnalda vale para las dos; el papel
+         rasgado que había aquí y la corona que había allí no — ver `WelcomeVeil` y el seed. */
+      { blockKey: 'welcome', registryId: 'welcome.botanical', removable: true },
+      { blockKey: 'hero', registryId: 'hero.framed' },
+      { blockKey: 'calendar', registryId: 'calendar.month' },
+      /* El relato y la sesión, después de la fecha. La demo de boda es además la que trae pies de
+         foto —la de XV no, ver `gallery-samples.ts`—, así que entre las dos se ve `gallery.plates`
+         rotulada y sin rotular, que es la diferencia que hay que poder comprobar. */
+      { blockKey: 'story', registryId: 'story.pressed' },
+      { blockKey: 'gallery', registryId: 'gallery.plates' },
+      { blockKey: 'schedule', registryId: 'schedule.itinerary' },
+      { blockKey: 'location', registryId: 'location.single-plate' },
+      /* «Dónde → qué hay que saber → cómo voy». El programa de mano: dos columnas contra un
+         filete central, que es la retícula que no hacía ninguna de las otras cuatro. */
+      { blockKey: 'details', registryId: 'details.program' },
+      { blockKey: 'dresscode', registryId: 'dresscode.palette' },
+      { blockKey: 'rsvp', registryId: 'rsvp.torn' },
+      { blockKey: 'closing', registryId: 'closing.envelope' },
+      /* La última hoja de la papelería: rasgada por arriba, con el monograma entre dos ramitas.
+         El mismo material que la bienvenida, el calendario y la confirmación de esta plantilla. */
+      { blockKey: 'footer', registryId: 'footer.sprig' },
+    ],
+  },
+  {
+    key: 'editorial',
+    name: 'Editorial',
+    structureKey: 'editorial',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline: 'Lenguaje de revista: maqueta de pliego, folios y pies de foto a la vista.',
+    themeKey: 'elegance',
+    cover: demoImage(WEDDING_PHOTOS.arch, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.envelope', removable: true },
+      /* El retrato deshecho en el papel, con la fecha partida entre filetes: composición de
+         estudio, que es de donde sale el lenguaje de esta estructura. */
+      { blockKey: 'hero', registryId: 'hero.portrait' },
+      { blockKey: 'story', registryId: 'story.image-right' },
+      { blockKey: 'gallery', registryId: 'gallery.editorial' },
+      { blockKey: 'details', registryId: 'details.list' },
+      /* La carta de imprenta: los tonos pegados, sin calle entre ellos, y numerados al pie.
+         La demo de boda no trae nombres de color —ver `dresscode-samples.ts`—, así que aquí se
+         ve el caso en que el folio es lo único que identifica a cada tono. */
+      { blockKey: 'dresscode', registryId: 'dresscode.chart' },
+      { blockKey: 'schedule', registryId: 'schedule.agenda' },
+      { blockKey: 'location', registryId: 'location.single-split' },
+      { blockKey: 'rsvp', registryId: 'rsvp.reply-card' },
+      { blockKey: 'closing', registryId: 'closing.letter' },
+      /* El colofón: doble filete, mancheta y corondeles. La cinta de color es interfaz, no papel
+         impreso, y es el pie que le toca a `cinematic`. */
+      { blockKey: 'footer', registryId: 'footer.colophon' },
+    ],
+  },
+  {
+    key: 'cinematic',
+    name: 'Cinematic',
+    structureKey: 'cinematic',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline: 'Todo a pantalla completa: planos panorámicos y muy poco texto por vista.',
+    themeKey: 'royal',
+    cover: demoImage(WEDDING_PHOTOS.exit, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.spotlight', removable: true },
       { blockKey: 'hero', registryId: 'hero.classic' },
+      { blockKey: 'gallery', registryId: 'gallery.cinematic' },
+      { blockKey: 'story', registryId: 'story.overlay' },
+      { blockKey: 'schedule', registryId: 'schedule.showcase' },
+      { blockKey: 'details', registryId: 'details.panel' },
+      { blockKey: 'dresscode', registryId: 'dresscode.bands' },
+      { blockKey: 'location', registryId: 'location.single' },
+      { blockKey: 'rsvp', registryId: 'rsvp.panel' },
+      { blockKey: 'closing', registryId: 'closing.horizon' },
+      { blockKey: 'footer', registryId: 'footer.ribbon' },
+    ],
+  },
+
+  /* ── XV años ──────────────────────────────────────────────────────────── */
+  {
+    key: 'botanical-xv',
+    name: 'Botanical',
+    structureKey: 'botanical',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'La misma papelería, contada para unos XV: el mes en lámina, el itinerario y la paleta de la noche.',
+    /*
+     * Otro tema que su hermana de boda, y esa es media diferencia: el olivo es campo y algodón, y
+     * unos XV de noche piden el marfil y el oro de «elegance». La estructura no cambia — lo hace
+     * el color, la tipografía y la densidad, que es exactamente lo que un tema decide.
+     */
+    themeKey: 'elegance',
+    cover: demoImage(QUINCE_PHOTOS.portrait, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    blocks: [
+      /* La misma puerta que su hermana de boda. Llevó corona, y la corona es de unos XV igual
+         que las alianzas de `welcome.luminous` son de una boda: puesta en la de boda prometería
+         otra celebración, así que no se podía compartir. La guirnalda sí. */
+      { blockKey: 'welcome', registryId: 'welcome.botanical', removable: true },
+      { blockKey: 'hero', registryId: 'hero.framed' },
+      { blockKey: 'calendar', registryId: 'calendar.month' },
+      /* La misma composición que su hermana de boda: lo que cambia entre las dos es el tema y la
+         bienvenida, no la estructura. Aquí las fotos llegan **sin pie**, que es el otro caso que
+         `gallery.plates` tiene que sostener. */
+      { blockKey: 'story', registryId: 'story.pressed' },
+      { blockKey: 'gallery', registryId: 'gallery.plates' },
+      { blockKey: 'schedule', registryId: 'schedule.itinerary' },
+      { blockKey: 'location', registryId: 'location.single-plate' },
+      /* «Dónde → qué hay que saber → cómo voy». El programa de mano: dos columnas contra un
+         filete central, que es la retícula que no hacía ninguna de las otras cuatro. */
+      { blockKey: 'details', registryId: 'details.program' },
+      { blockKey: 'dresscode', registryId: 'dresscode.palette' },
+      { blockKey: 'rsvp', registryId: 'rsvp.torn' },
+      { blockKey: 'closing', registryId: 'closing.envelope' },
+      { blockKey: 'footer', registryId: 'footer.sprig' },
+    ],
+  },
+  {
+    key: 'classic-xv',
+    name: 'Classic',
+    structureKey: 'classic',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline: 'La estructura completa y en el orden esperado: presenta, cuenta, informa y despide.',
+    themeKey: 'floral',
+    cover: demoImage(QUINCE_PHOTOS.cake, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.veil', removable: true },
+      /* La participación centrada dentro de su marco. `hero.classic` —la foto a sangre— se lee
+         como un cartel y es la de `cinematic`; la coincidencia de nombre con esta estructura es
+         de vocabulario y no un vínculo. */
+      { blockKey: 'hero', registryId: 'hero.centered' },
       { blockKey: 'story', registryId: 'story.image-left' },
       { blockKey: 'details', registryId: 'details.cards' },
+      { blockKey: 'dresscode', registryId: 'dresscode.cards' },
       { blockKey: 'schedule', registryId: 'schedule.vertical' },
       { blockKey: 'gallery', registryId: 'gallery.grid' },
       { blockKey: 'location', registryId: 'location.dual-venue' },
@@ -182,117 +365,85 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
     ],
   },
   {
-    key: 'editorial',
-    name: 'Editorial',
-    eventTypeKey: 'wedding',
-    eventTypeName: 'Boda',
-    tagline: 'Lenguaje de revista: maqueta de pliego, folios y pies de foto a la vista.',
-    themeKey: 'elegance',
-    cover: {
-      url: unsplash('photo-1560421683-6856ea585c78', 1200, 900),
-      alt: 'Mesa larga montada al aire libre para una boda',
-    },
-    sampleKey: 'boda',
-    blocks: [
-      { blockKey: 'welcome', registryId: 'welcome.envelope', removable: true },
-      { blockKey: 'hero', registryId: 'hero.centered' },
-      { blockKey: 'story', registryId: 'story.image-right' },
-      { blockKey: 'gallery', registryId: 'gallery.editorial' },
-      { blockKey: 'details', registryId: 'details.list' },
-      { blockKey: 'schedule', registryId: 'schedule.agenda' },
-      { blockKey: 'location', registryId: 'location.single-split' },
-      { blockKey: 'rsvp', registryId: 'rsvp.reply-card' },
-      { blockKey: 'closing', registryId: 'closing.letter' },
-      { blockKey: 'footer', registryId: 'footer.ribbon' },
-    ],
-  },
-  {
-    key: 'storytelling',
+    key: 'storytelling-xv',
     name: 'Storytelling',
+    structureKey: 'storytelling',
     eventTypeKey: 'quince',
     eventTypeName: 'XV Años',
     tagline: 'El orden narra: la historia y las fotos van antes que los datos.',
     themeKey: 'dreamy',
-    cover: {
-      url: unsplash('photo-1530103862676-de8c9debad1d', 1200, 900),
-      alt: 'Salón iluminado con luces cálidas durante una celebración',
-    },
-    sampleKey: 'xv-anios',
+    cover: demoImage(QUINCE_PHOTOS.night, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
     blocks: [
       { blockKey: 'welcome', registryId: 'welcome.band', removable: true },
-      { blockKey: 'hero', registryId: 'hero.split' },
-      { blockKey: 'story', registryId: 'story.overlay' },
+      /* La portada con las cifras: en la estructura que narra, el número a cuerpo de cartel es la
+         entrada, y el resto de la invitación lo desarrolla. */
+      { blockKey: 'hero', registryId: 'hero.quince' },
+      /* La prosa en una columna, no en una tarjeta sobre la foto: en la estructura que narra el
+         texto manda, y el superpuesto acota lo que se puede contar a un párrafo. */
+      { blockKey: 'story', registryId: 'story.centered' },
       { blockKey: 'gallery', registryId: 'gallery.polaroid' },
-      { blockKey: 'schedule', registryId: 'schedule.showcase' },
+      { blockKey: 'schedule', registryId: 'schedule.zigzag' },
       { blockKey: 'details', registryId: 'details.split' },
-      { blockKey: 'location', registryId: 'location.dual-stacked' },
+      /* Las dos demos de XV sí traen nombres de color, así que entre `cards` y `thread` se ve
+         la paleta rotulada — el otro caso que las cinco variantes tienen que sostener. */
+      { blockKey: 'dresscode', registryId: 'dresscode.thread' },
+      /* «Primero aquí, después allá»: un orden que narra, que es lo que hace esta estructura. */
+      { blockKey: 'location', registryId: 'location.dual-journey' },
       { blockKey: 'rsvp', registryId: 'rsvp.postcard' },
-      { blockKey: 'closing', registryId: 'closing.horizon' },
+      /* La página final del álbum, que es donde termina un relato contado con instantáneas. */
+      { blockKey: 'closing', registryId: 'closing.album' },
       { blockKey: 'footer', registryId: 'footer.marquee' },
     ],
   },
-  {
-    key: 'cinematic',
-    name: 'Cinematic',
-    eventTypeKey: 'wedding',
-    eventTypeName: 'Boda',
-    tagline: 'Todo a pantalla completa: planos panorámicos y muy poco texto por vista.',
-    themeKey: 'royal',
-    cover: {
-      url: unsplash('photo-1513151233558-d860c5398176', 1200, 900),
-      alt: 'Confeti de colores lanzado al aire durante una celebración',
-    },
-    sampleKey: 'boda',
-    blocks: [
-      { blockKey: 'welcome', registryId: 'welcome.spotlight', removable: true },
-      { blockKey: 'hero', registryId: 'hero.classic' },
-      { blockKey: 'gallery', registryId: 'gallery.cinematic' },
-      { blockKey: 'story', registryId: 'story.overlay' },
-      { blockKey: 'schedule', registryId: 'schedule.showcase' },
-      { blockKey: 'details', registryId: 'details.panel' },
-      { blockKey: 'location', registryId: 'location.single' },
-      { blockKey: 'rsvp', registryId: 'rsvp.panel' },
-      { blockKey: 'closing', registryId: 'closing.horizon' },
-      { blockKey: 'footer', registryId: 'footer.ribbon' },
-    ],
-  },
-  {
-    key: 'botanical',
-    name: 'Botanical',
-    eventTypeKey: 'wedding',
-    eventTypeName: 'Boda',
-    tagline:
-      'Papelería de algodón: retrato enmarcado, el mes en una lámina rasgada y la paleta de vestimenta a la vista.',
-    themeKey: 'olive',
-    cover: {
-      url: unsplash('photo-1606216794074-735e91aa2c92', 1200, 900),
-      alt: 'Pareja de novios caminando de la mano al atardecer',
-    },
-    sampleKey: 'boda',
-    /*
-     * La única de las cinco **sin historia y sin galería**, y es lo que la define tanto como sus
-     * variantes. Es la invitación de papelería: informa de lo que hay que saber —cuándo, a qué
-     * hora, dónde, de qué vestirse— y no cuenta nada. Quien quiere contar tiene `storytelling`;
-     * quien quiere enseñar fotos, `cinematic`. Aquí el argumento es que se lee entera de una
-     * pasada, y añadirle dos bloques largos sería quitarle exactamente eso.
-     *
-     * Los dos bloques nuevos van donde el papel los pone: el calendario justo después de la
-     * portada —la fecha es lo primero que se busca— y el código de vestimenta después de la
-     * ubicación, que es el orden en que uno se pregunta las cosas: cuándo, dónde, cómo voy.
-     */
-    blocks: [
-      { blockKey: 'welcome', registryId: 'welcome.torn', removable: true },
-      { blockKey: 'hero', registryId: 'hero.framed' },
-      { blockKey: 'calendar', registryId: 'calendar.month' },
-      { blockKey: 'schedule', registryId: 'schedule.itinerary' },
-      { blockKey: 'location', registryId: 'location.single-plate' },
-      { blockKey: 'dresscode', registryId: 'dresscode.palette' },
-      { blockKey: 'rsvp', registryId: 'rsvp.torn' },
-      { blockKey: 'closing', registryId: 'closing.envelope' },
-      { blockKey: 'footer', registryId: 'footer.centered' },
-    ],
-  },
 ];
+
+/**
+ * En desarrollo: avisa si dos demos **del mismo tipo de evento** enseñan la misma variante.
+ *
+ * Es la misma regla que `assertTemplateVariantsAreExclusive()` en `scripts/seed.ts`, y está aquí
+ * también porque estas seis composiciones no son las de allí: llevan la bienvenida en las seis
+ * —que en el catálogo solo tienen dos— y la de XV cambia la portada por `hero.quince`. O sea que
+ * el escaparate puede repetir una variante sin que el catálogo lo haga, y es en el escaparate
+ * donde se nota: es la página donde alguien compara antes de comprar.
+ *
+ * ## Por qué avisa y no rompe
+ *
+ * Porque romper significaría aquí una página de venta en blanco, y una demo que repite un pie es
+ * un defecto de catálogo, no un fallo de render. En el seed sí se lanza —allí no hay nadie
+ * mirando y lo que se está escribiendo es el catálogo de verdad—; aquí basta con que aparezca en
+ * la consola de quien lo está tocando.
+ *
+ * El bloque entero desaparece del paquete de producción: `process.env.NODE_ENV` lo sustituye el
+ * empaquetador por una constante, así que la condición se resuelve al compilar y esto no llega
+ * al navegador de ningún invitado.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  const claimedByEventType = new Map<string, Map<string, string>>();
+
+  for (const definition of DEFINITIONS) {
+    let claimed = claimedByEventType.get(definition.eventTypeKey);
+
+    if (!claimed) {
+      claimed = new Map<string, string>();
+      claimedByEventType.set(definition.eventTypeKey, claimed);
+    }
+
+    for (const block of definition.blocks) {
+      const owner = claimed.get(block.registryId);
+
+      if (owner) {
+        console.warn(
+          `[demo] ${definition.eventTypeKey}: «${owner}» y «${definition.key}» comparten ${block.registryId}`,
+        );
+        continue;
+      }
+
+      claimed.set(block.registryId, definition.key);
+    }
+  }
+}
 
 /**
  * El contenido de un bloque para un evento imaginario, o `null` si ese bloque no tiene ejemplo.
@@ -399,14 +550,117 @@ function assemble(definition: TemplateDefinition): readonly DemoTemplateBlock[] 
 export const DEMO_TEMPLATES: readonly DemoTemplate[] = DEFINITIONS.map((definition) => ({
   key: definition.key,
   name: definition.name,
+  structureKey: definition.structureKey,
   eventTypeKey: definition.eventTypeKey,
   eventTypeName: definition.eventTypeName,
   tagline: definition.tagline,
   themeKey: definition.themeKey,
   cover: definition.cover,
+  music: definition.music,
   blocks: assemble(definition),
 }));
 
 export function findDemoTemplate(key: string): DemoTemplate | undefined {
   return DEMO_TEMPLATES.find((template) => template.key === key);
+}
+
+/**
+ * Los tipos de evento que el escaparate enseña, en el orden en que se ofrecen.
+ *
+ * Sale de las propias demos y no de una lista escrita aparte: así, el día que se añada un tipo,
+ * aparece solo en cuanto tenga una demo, y nunca se ofrece uno que no tenga nada que enseñar —que
+ * es la única forma de fallar aquí.
+ */
+export function demoEventTypes(): readonly { key: string; name: string }[] {
+  const seen = new Map<string, string>();
+
+  for (const template of DEMO_TEMPLATES) {
+    if (!seen.has(template.eventTypeKey)) seen.set(template.eventTypeKey, template.eventTypeName);
+  }
+
+  return [...seen].map(([key, name]) => ({ key, name }));
+}
+
+/**
+ * La demo hermana: la misma estructura contada para otro tipo de evento.
+ *
+ * Es lo que usa el selector de tipo del gestor. Si esa estructura no existe para el tipo pedido
+ * —porque no todas encajan en todos—, se cae a la primera demo de ese tipo: cambiar de boda a XV
+ * siempre lleva a unos XV, aunque a veces no sea la misma plantilla.
+ */
+export function findSiblingTemplate(
+  template: DemoTemplate,
+  eventTypeKey: string,
+): DemoTemplate | undefined {
+  return (
+    DEMO_TEMPLATES.find(
+      (candidate) =>
+        candidate.eventTypeKey === eventTypeKey && candidate.structureKey === template.structureKey,
+    ) ?? DEMO_TEMPLATES.find((candidate) => candidate.eventTypeKey === eventTypeKey)
+  );
+}
+
+/**
+ * Una estructura del escaparate, con todos los tipos de evento para los que existe.
+ *
+ * ## Qué corrige
+ *
+ * `DEMO_TEMPLATES` tiene una entrada por estructura **y** tipo de evento, y eso es correcto para
+ * las URLs: `/plantillas/botanical` y `/plantillas/botanical-xv` son composiciones distintas, cada
+ * una se prerenderiza y cada una se comparte por WhatsApp con su propia vista previa.
+ *
+ * Lo que no es correcto es listar esas entradas como si fueran productos distintos. En la portada
+ * salían dos tarjetas llamadas «Botanical» sin nada que las separase salvo un rótulo pequeño, y
+ * eso contaba una mentira sobre el modelo: `templates` perdió su columna `event_type_key`
+ * justamente porque una estructura **no es de un tipo de evento** —`editorial` o `cinematic` son
+ * formas de componer, y la misma sirve para varias celebraciones—.
+ *
+ * Esta función agrupa por `structureKey` y devuelve, para cada estructura, la demo con la que se
+ * abre y la lista de tipos para los que existe. Así la tarjeta puede decir «Boda · XV Años» en
+ * lugar de fingir que son dos plantillas, y el visitante llega a la demo donde el selector de tipo
+ * ya le deja saltar de una a otra sin perder la estructura que estaba mirando.
+ *
+ * El orden se conserva: manda la primera aparición de cada estructura en `DEMO_TEMPLATES`.
+ */
+export interface DemoStructure {
+  readonly structureKey: string;
+  readonly name: string;
+  readonly tagline: string;
+  readonly cover: BlockImage;
+  /** La demo que abre la tarjeta. Es la primera de esa estructura. */
+  readonly entryKey: string;
+  /** Todos los tipos de evento para los que esta estructura tiene demo. */
+  readonly eventTypeNames: readonly string[];
+}
+
+export function demoStructures(): readonly DemoStructure[] {
+  const porEstructura = new Map<string, DemoStructure>();
+
+  for (const template of DEMO_TEMPLATES) {
+    const existente = porEstructura.get(template.structureKey);
+
+    if (!existente) {
+      porEstructura.set(template.structureKey, {
+        structureKey: template.structureKey,
+        name: template.name,
+        tagline: template.tagline,
+        cover: template.cover,
+        entryKey: template.key,
+        eventTypeNames: [template.eventTypeName],
+      });
+      continue;
+    }
+
+    /* Solo se acumula el tipo. El nombre, el gancho y la portada son los de la primera: son la
+       misma estructura, y enseñar dos ganchos distintos para una sola tarjeta sería volver al
+       problema que esto arregla. */
+    if (!existente.eventTypeNames.includes(template.eventTypeName)) {
+      porEstructura.set(template.structureKey, {
+        ...existente,
+        eventTypeNames: [...existente.eventTypeNames, template.eventTypeName],
+      });
+    }
+  }
+
+  return [...porEstructura.values()];
 }

@@ -4,15 +4,42 @@
  * Carga, en este orden:
  *   1. Catálogos de plataforma (funcionalidades, planes, tipos de evento)
  *   2. Component Registry (bloques, variantes, plantillas, temas)
- *   3. Dos clientes: la de la plataforma (con el superadministrador) y un cliente
- *   4. El evento de Kamilah, migrado desde src/data/event.json
+ *   3. La cuenta de plataforma (superadministrador)
  *
- * Corre con el rol DUEÑO, que no está sujeto a RLS. Es el único camino legítimo
- * para insertar datos de varios tenants desde un mismo proceso.
+ * Corre con el rol DUEÑO, que no está sujeto a RLS. Es el único camino legítimo para escribir el
+ * catálogo y la cuenta de plataforma desde un proceso.
+ *
+ * ## Cero clientes, y no es una carencia
+ *
+ * `clients`, `events` y todo lo que cuelga de ellos quedan **vacías**, y `users` con una sola fila:
+ * la cuenta de plataforma, que no pertenece a ningún cliente. Es el estado correcto de una base
+ * recién levantada, y es el estado en el que se queda: aquí no hay un indicador que meta clientes
+ * de prueba.
+ *
+ * La razón es que **no hacen falta para nada de lo que se enseña**. Lo que un visitante ve en
+ * `/plantillas` es contenido local —`components/invitation/demo/`, seis composiciones armadas con
+ * los mismos `*-samples.ts` que alimentan la previsualización del panel— y se prerenderiza en el
+ * build sin abrir una conexión a Postgres. Un cliente sembrado no aparece en ninguna de esas
+ * páginas.
+ *
+ * Lo que sí hacía era ensuciar: dos clientes ficticios en `/admin`, un dueño inventado con correo
+ * `.test` que puede pedir un código de acceso, y dos eventos publicados con su URL viva. Nada de
+ * eso se distingue de un cliente real mirando la pantalla, y lo primero que hay que hacer antes de
+ * dar de alta a alguien de verdad es acordarse de borrarlo.
+ *
+ * ## Qué se pierde y de dónde sale ahora
+ *
+ * Dos cosas se ejercitaban con esos datos, y las dos tienen otro sitio:
+ *
+ *   · **El motor de render sobre datos reales.** Sale de `/plantillas`, que recorre las mismas
+ *     variantes por el mismo `TemplateBlock`. Lo que no cubre es la proyección desde el evento
+ *     (`domain/invitation/event-content.ts`), y eso se cubrirá cuando `/admin` sepa crear un
+ *     evento — que es lo que falta para poder crear uno de verdad en dos minutos.
+ *   · **El aislamiento entre inquilinos**, que pedía dos clientes para poder comprobarse. Eso ya
+ *     no depende de que haya datos: `npm run db:check` lo verifica contra el catálogo de Postgres
+ *     —qué tablas tienen RLS, qué políticas, con qué rol se conecta la aplicación— y con la base
+ *     vacía da exactamente el mismo veredicto.
  */
-import { readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { config as loadDotenv } from 'dotenv';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -22,7 +49,6 @@ import { PLATFORM_ADMIN } from './platform.js';
 
 loadDotenv({ path: ['.env.local', '.env'], quiet: true });
 
-const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const url = process.env.DATABASE_MIGRATION_URL ?? process.env.DATABASE_URL;
 
 if (!url) {
@@ -32,63 +58,6 @@ if (!url) {
 
 const pool = new Pool({ connectionString: url, max: 1 });
 const db = drizzle(pool, { schema: s, casing: 'snake_case' });
-
-/**
- * Mérida está en UTC-6 todo el año: México eliminó el horario de verano en 2022.
- * Las horas de event.json vienen sin zona ('2026-10-17T12:00:00'), y si se dejaran
- * así Node las interpretaría en la zona del servidor, que en Vercel es UTC. La cuenta
- * regresiva se desviaría seis horas. Por eso el desplazamiento va explícito.
- */
-const MERIDA_OFFSET = '-06:00';
-const TIME_ZONE = 'America/Merida';
-
-const KAMILAH_SLUG = 'kamilah-3-anios';
-
-/**
- * Código de acceso del evento de ejemplo, fijo a propósito.
- *
- * En producción cada evento recibe uno generado con `generateAccessCode()` del dominio,
- * pero el seed necesita un valor estable: si cambiara en cada ejecución, la URL que ya
- * se compartió dejaría de funcionar. Por eso el upsert de abajo tampoco lo sobreescribe.
- */
-const KAMILAH_ACCESS_CODE = 'q7mt4x';
-
-const localInstant = (naiveIso: string): Date => new Date(`${naiveIso}${MERIDA_OFFSET}`);
-
-/** Combina el día del evento con una hora 'HH:MM' del cronograma. */
-const scheduleInstant = (eventDate: string, timeLabel: string): Date | null => {
-  const day = eventDate.slice(0, 10);
-  const match = /^(\d{1,2}):(\d{2})$/.exec(timeLabel.trim());
-  if (!match) return null;
-  const hour = match[1].padStart(2, '0');
-  return new Date(`${day}T${hour}:${match[2]}:00${MERIDA_OFFSET}`);
-};
-
-type EventJson = {
-  name: string;
-  fullName: string;
-  lastName: string;
-  eventType: string;
-  tagline: string;
-  date: string;
-  dateLabel: string;
-  timeLabel: string;
-  city: string;
-  parents: { label: string; father: string; mother: string };
-  godparents: { label: string; names: string[] };
-  storyImage: string;
-  finalImage: string;
-  story: string;
-  church: { label: string; name: string; address: string; detail: string; mapUrl: string };
-  location: { label: string; name: string; address: string; detail: string; mapUrl: string };
-  party: Record<string, unknown>;
-  schedule: { time: string; title: string; description: string }[];
-  music: { src: string; title: string };
-  giftTable: { name: string; detail: string; url: string };
-  gallery: string[];
-  messages: { quote: string; author: string; role: string; group: string }[];
-  contact: { phone: string; instagram: string; whatsapp: string };
-};
 
 // ════════════════════════════════════════════════════════════════════════════
 // 1. Catálogos de plataforma
@@ -112,40 +81,84 @@ const FEATURES = [
   { key: 'gestion_mesas', name: 'Gestión de mesas', category: 'gestion' },
   { key: 'panel_administrativo', name: 'Panel administrativo completo', category: 'gestion' },
   { key: 'recordatorios', name: 'Recordatorios automáticos', category: 'automatizacion' },
+  /*
+   * Las dos que vende Plus. Sin ellas, la tarjeta de Plus en la página de precios no diría
+   * lo que de verdad separa a Plus de Esencial: en Esencial el cliente elige plantilla y
+   * tema y ahí acaba, mientras que en Plus la plantilla es un punto de partida.
+   *
+   * El mecanismo no es nuevo —lo hace `minPlanRank` en las variantes—, pero el catálogo de
+   * funcionalidades es lo que la página de precios enumera, así que tiene que constar aquí.
+   */
+  { key: 'variantes_intercambiables', name: 'Intercambiar variantes de cada bloque', category: 'invitacion' },
+  { key: 'reordenar_secciones', name: 'Reordenar las secciones', category: 'invitacion' },
   { key: 'libro_firmas', name: 'Libro de firmas', category: 'extras' },
   { key: 'album_colaborativo', name: 'Álbum colaborativo', category: 'extras' },
   { key: 'ia_contenido', name: 'Generación de contenido con IA', category: 'extras' },
 ] as const;
 
+/**
+ * Los tres planes.
+ *
+ * El `rank` no es decorativo: es lo que compara `minPlanRank` de cada variante, así que
+ * insertar un plan intermedio **recorre** a Premium del 2 al 3. Es justo lo que se quería —
+ * las variantes marcadas con `minPlanRank: 2` pasan a ser de Plus en adelante en lugar de
+ * exclusivas de Premium— pero conviene tenerlo presente antes de tocar estos números.
+ */
 const PLANS = [
   { key: 'esencial', name: 'Plan Esencial', rank: 1, priceCents: 0 },
-  { key: 'premium', name: 'Plan Premium', rank: 2, priceCents: 0 },
+  { key: 'plus', name: 'Plan Plus', rank: 2, priceCents: 0 },
+  { key: 'premium', name: 'Plan Premium', rank: 3, priceCents: 0 },
 ] as const;
 
-/** Configuración base de cada plan. `limitValue` null = sin tope. */
+/**
+ * Configuración base de cada plan. `limitValue` null = sin tope.
+ *
+ * ## La frontera no está donde parece
+ *
+ * Lo que separa los planes **no** es cuántas secciones bonitas trae la invitación: Esencial ya
+ * trae casi todas. La frontera es la **gestión**, y cae entre Plus y Premium.
+ *
+ * Esencial y Plus reparten **una sola URL**, igual para todos los invitados, y su botón de
+ * confirmar no hace más que abrir WhatsApp con el mensaje escrito. No hay lista de invitados,
+ * así que no hay nada que gestionar: por eso ninguno de los dos tiene `rsvp`,
+ * `panel_confirmaciones` ni `recordatorios`. Un panel vacío sería peor que no tenerlo.
+ *
+ * Premium es el único que da acceso al panel, carga invitados por familia y le entrega a cada
+ * familia **su propio enlace** `/<slug>/<código>`.
+ */
 const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number | null }[] = [
-  // Esencial: todo lo de la invitación, RSVP, panel básico y 1 recordatorio.
+  /*
+   * Esencial: el cliente elige plantilla y tema, y ahí acaba su intervención.
+   *
+   * Sin `pantalla_bienvenida`, sin `codigo_vestimenta`, sin `mesa_regalos` y sin `musica`: esas
+   * cuatro son exactamente el argumento del salto a Plus.
+   *
+   * La música tuvo aquí un catálogo de cinco pistas y se retiró: una invitación que suena es de las
+   * cosas que más se notan al abrirla, así que sirve mejor de argumento para subir de plan que de
+   * cortesía en el más barato. Ahora Esencial es silencio, y eso es una diferencia que se **oye**
+   * al comparar dos demos — que es exactamente lo que tiene que hacer un escaparate.
+   */
   ...[
     'plantilla',
     'historia',
-    'musica',
     'cuenta_regresiva',
     'cronograma',
-    'codigo_vestimenta',
-    'mesa_regalos',
     'galeria',
     'ubicacion',
     'compartir_whatsapp',
-    'rsvp',
-    'panel_confirmaciones',
   ].map((featureKey) => ({ planKey: 'esencial', featureKey, limitValue: null })),
-  { planKey: 'esencial', featureKey: 'recordatorios', limitValue: 1 },
 
-  // Premium: todo lo anterior sin tope, más gestión, mesas y extras.
+  /*
+   * Plus: todo lo de Esencial, más las tres secciones reservadas, la música —que en Esencial ya no
+   * existe— y, lo que de verdad lo vende, poder intercambiar variantes y reordenar las secciones.
+   *
+   * Sigue sin panel: misma URL única que Esencial.
+   */
   ...[
     'plantilla',
-    /* La puerta de bienvenida es de Premium y de nadie más. Es la única funcionalidad de la
-       invitación que no está en Esencial, y por eso se ve: es lo primero que abre el invitado. */
+    /* La puerta de bienvenida bajó a Plus el 2026-08-19. Nació como el gancho de Premium, pero
+       Premium ya no se vende por una sección bonita sino por la gestión, así que la puerta hace
+       de argumento para el salto de Esencial a Plus, que es donde faltaba uno. */
     'pantalla_bienvenida',
     'historia',
     'musica',
@@ -156,6 +169,25 @@ const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number |
     'galeria',
     'ubicacion',
     'compartir_whatsapp',
+    'variantes_intercambiables',
+    'reordenar_secciones',
+  ].map((featureKey) => ({ planKey: 'plus', featureKey, limitValue: null })),
+
+  // Premium: todo lo de Plus sin tope, más la gestión completa, las mesas y los extras.
+  ...[
+    'plantilla',
+    'pantalla_bienvenida',
+    'historia',
+    'musica',
+    'cuenta_regresiva',
+    'cronograma',
+    'codigo_vestimenta',
+    'mesa_regalos',
+    'galeria',
+    'ubicacion',
+    'compartir_whatsapp',
+    'variantes_intercambiables',
+    'reordenar_secciones',
     'rsvp',
     'panel_confirmaciones',
     'gestion_invitados',
@@ -165,8 +197,8 @@ const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number |
     'album_colaborativo',
     'ia_contenido',
   ].map((featureKey) => ({ planKey: 'premium', featureKey, limitValue: null })),
-  // Los 4 recordatorios configurables: 7 días, 3 días, 1 día y el día del evento.
-  { planKey: 'premium', featureKey: 'recordatorios', limitValue: 4 },
+  // Los 3 recordatorios del modelo acordado, contados por familia y no por evento.
+  { planKey: 'premium', featureKey: 'recordatorios', limitValue: 3 },
 ];
 
 /**
@@ -229,31 +261,45 @@ const BLOCKS = [
   { key: 'hero', name: 'Portada', featureKey: 'plantilla' },
   { key: 'story', name: 'Historia', featureKey: 'historia' },
   /*
-   * El calendario cuelga de `plantilla` —o sea, lo tienen los dos planes— y no de
+   * El calendario cuelga de `plantilla` —o sea, lo tienen los tres planes— y no de
    * `cuenta_regresiva`, que es lo que parecía a mano. Son dos cosas distintas: la cuenta regresiva
    * es un reloj que corre y este bloque es una fecha señalada en un mes. Colgarlo de aquella
    * habría atado dos funcionalidades que un cliente puede querer por separado.
    */
   { key: 'calendar', name: 'Calendario', featureKey: 'plantilla' },
   { key: 'details', name: 'Detalles del evento', featureKey: 'plantilla' },
-  /* Este sí tiene su funcionalidad propia desde el principio (`codigo_vestimenta`), y está en los
-     dos planes. */
+  /* Este sí tiene su funcionalidad propia desde el principio (`codigo_vestimenta`), y desde los
+     tres planes es de Plus en adelante: Esencial no lo trae. */
   { key: 'dresscode', name: 'Código de vestimenta', featureKey: 'codigo_vestimenta' },
-  { key: 'party', name: 'Fiesta temática', featureKey: 'plantilla' },
   { key: 'schedule', name: 'Cronograma', featureKey: 'cronograma' },
   { key: 'gallery', name: 'Galería', featureKey: 'galeria' },
-  { key: 'messages', name: 'Mensajes', featureKey: 'plantilla' },
   { key: 'location', name: 'Ubicación', featureKey: 'ubicacion' },
   { key: 'rsvp', name: 'Confirmación de asistencia', featureKey: 'rsvp' },
   { key: 'closing', name: 'Mensaje final', featureKey: 'plantilla' },
   { key: 'footer', name: 'Pie de página', featureKey: 'plantilla' },
 ] as const;
 
+/*
+ * `party` y `messages` estuvieron aquí y se dieron de baja.
+ *
+ * Eran bloques del catálogo **sin componente**: la base los ofrecía, el registro no sabía
+ * pintarlos y asignárselos a un evento dejaba un hueco en blanco. `party` además era la fiesta
+ * temática de un cliente concreto, que es lo que `docs/PROJECT.md` llama personalización y
+ * excluye del núcleo.
+ *
+ * La tabla `event_messages` se queda en el esquema: las dedicatorias son una idea del producto
+ * que volverá con su bloque y sus variantes, y entonces se da de alta otra vez aquí.
+ */
+
 /**
  * Variantes registradas. `registry_id` ('hero.classic') lo genera Postgres a partir
  * de block_key y variant_key, así que no se inserta aquí.
  *
- * `minPlanRank` 2 = solo Premium. Es el mecanismo para vender variantes sin tocar código.
+ * `minPlanRank` 2 = de Plus en adelante. Es el mecanismo para vender variantes sin tocar código.
+ *
+ * Ese 2 significaba «solo Premium» cuando había dos planes. Al entrar Plus en el rank 2 y
+ * desplazar a Premium al 3, estas variantes pasaron a ser de Plus y Premium sin tocar una línea
+ * — que es exactamente lo que se quería, porque intercambiar variantes es lo que Plus vende.
  */
 const VARIANTS: {
   blockKey: string;
@@ -263,8 +309,8 @@ const VARIANTS: {
   isActive?: boolean;
 }[] = [
   /*
-   * Las tres llevan `minPlanRank: 2`. El bloque ya cuelga de una funcionalidad que solo tiene
-   * Premium, y aun así se marcan una por una: son dos cierres distintos —qué bloques ofrece el
+   * Todas llevan `minPlanRank: 2`. El bloque ya cuelga de una funcionalidad que Esencial no
+   * tiene, y aun así se marcan una por una: son dos cierres distintos —qué bloques ofrece el
    * plan y qué variantes ofrece el catálogo— y dejar el segundo abierto haría que la pantalla de
    * componentes las enseñara como disponibles para Esencial.
    */
@@ -278,22 +324,50 @@ const VARIANTS: {
   { blockKey: 'welcome', variantKey: 'torn', name: 'Bienvenida con papel rasgado', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'band', name: 'Bienvenida con banda de color', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'countdown', name: 'Bienvenida con cuenta regresiva', minPlanRank: 2 },
+  { blockKey: 'welcome', variantKey: 'crown', name: 'Bienvenida con corona (XV)', minPlanRank: 2 },
   { blockKey: 'hero', variantKey: 'classic', name: 'Portada clásica' },
   { blockKey: 'hero', variantKey: 'centered', name: 'Portada centrada' },
   { blockKey: 'hero', variantKey: 'split', name: 'Portada a dos columnas' },
   { blockKey: 'hero', variantKey: 'portrait', name: 'Portada con retrato difuminado' },
   { blockKey: 'hero', variantKey: 'framed', name: 'Portada con retrato enmarcado' },
+  /* Las dos primeras variantes pensadas para un tipo de evento concreto. No preguntan por él —
+     ningún componente lo hace— pero su composición solo tiene sentido en unos XV, y quien arma la
+     plantilla las elige a sabiendas. Es como el catálogo crece para cubrir un tipo nuevo: con
+     entradas propias y no con condiciones dentro de los componentes que ya existen. */
+  { blockKey: 'hero', variantKey: 'quince', name: 'Portada con cifras de XV' },
   { blockKey: 'story', variantKey: 'image-left', name: 'Historia con imagen a la izquierda' },
   { blockKey: 'story', variantKey: 'image-right', name: 'Historia con imagen a la derecha' },
   { blockKey: 'story', variantKey: 'centered', name: 'Historia centrada' },
   { blockKey: 'story', variantKey: 'overlay', name: 'Historia sobre la imagen' },
+  /* La quinta, y la que hizo falta para darle historia a `botanical`: las otras cuatro estaban
+     repartidas una por plantilla, y la regla de exclusividad no deja reusar ninguna. Es la única
+     en que el texto envuelve la fotografía en lugar de ponerse al lado o encima. */
+  { blockKey: 'story', variantKey: 'pressed', name: 'Historia con lámina montada al margen' },
   { blockKey: 'calendar', variantKey: 'month', name: 'Calendario del mes' },
   { blockKey: 'details', variantKey: 'cards', name: 'Detalles en tarjetas' },
   { blockKey: 'details', variantKey: 'list', name: 'Detalles en lista' },
   { blockKey: 'details', variantKey: 'split', name: 'Detalles a dos columnas' },
   { blockKey: 'details', variantKey: 'panel', name: 'Detalles en panel de color' },
+  /* La quinta, y la que hizo falta para darle detalles a `botanical`: las otras cuatro estaban
+     repartidas una por plantilla y la regla de exclusividad no deja reusar ninguna. */
+  { blockKey: 'details', variantKey: 'program', name: 'Detalles en programa de mano' },
+  /*
+   * Cinco formas de enseñar una paleta, una por plantilla.
+   *
+   * El bloque tenía una sola —`palette`— y por eso solo `botanical` lo llevaba: darlo a las otras
+   * cuatro obligaba a que compartieran variante, que es justo lo que la regla de exclusividad
+   * impide. Las cuatro nuevas no son variaciones de la fila de círculos: cambia qué es una
+   * muestra, y con ello qué invita a hacer la sección.
+   *
+   * Ninguna lleva `minPlanRank`. El bloque ya cuelga de `codigo_vestimenta`, que es de Plus en
+   * adelante, y además son la composición de partida de cinco plantillas del catálogo: una
+   * variante de pago ahí las volvería imposibles de montar.
+   */
   { blockKey: 'dresscode', variantKey: 'palette', name: 'Vestimenta con paleta de color' },
-  { blockKey: 'party', variantKey: 'themed', name: 'Fiesta temática con personajes' },
+  { blockKey: 'dresscode', variantKey: 'cards', name: 'Vestimenta en fichas de muestrario' },
+  { blockKey: 'dresscode', variantKey: 'chart', name: 'Vestimenta en carta de imprenta' },
+  { blockKey: 'dresscode', variantKey: 'thread', name: 'Vestimenta en hilo de cuentas' },
+  { blockKey: 'dresscode', variantKey: 'bands', name: 'Vestimenta en franjas a sangre' },
   { blockKey: 'schedule', variantKey: 'vertical', name: 'Línea de tiempo alternada' },
   { blockKey: 'schedule', variantKey: 'horizontal', name: 'Cinta horizontal', minPlanRank: 2 },
   { blockKey: 'schedule', variantKey: 'agenda', name: 'Programa impreso' },
@@ -309,7 +383,11 @@ const VARIANTS: {
   { blockKey: 'gallery', variantKey: 'polaroid', name: 'Galería polaroid' },
   { blockKey: 'gallery', variantKey: 'editorial', name: 'Galería de pliego editorial' },
   { blockKey: 'gallery', variantKey: 'cinematic', name: 'Galería cinematográfica' },
-  { blockKey: 'messages', variantKey: 'carousel', name: 'Mensajes en carrusel' },
+  /* La novena, por lo mismo que `story.pressed`: de las cuatro que quedaban libres, ninguna era
+     papelería —todas son retículas de interfaz— y junto a `hero.framed` se leían como la sección
+     de otra invitación. Sin `minPlanRank`: es la galería de partida de una plantilla del catálogo,
+     y una variante de Plus ahí la volvería imposible de montar para un cliente de Esencial. */
+  { blockKey: 'gallery', variantKey: 'plates', name: 'Galería de láminas montadas' },
   { blockKey: 'location', variantKey: 'single', name: 'Sede a pantalla completa' },
   { blockKey: 'location', variantKey: 'single-split', name: 'Sede con foto al lado' },
   { blockKey: 'location', variantKey: 'single-card', name: 'Sede en tarjeta' },
@@ -333,9 +411,18 @@ const VARIANTS: {
   { blockKey: 'closing', variantKey: 'letter', name: 'Cierre como carta que se abre' },
   { blockKey: 'closing', variantKey: 'horizon', name: 'Cierre a pantalla completa' },
   { blockKey: 'closing', variantKey: 'envelope', name: 'Cierre en sobre con tarjeta' },
+  { blockKey: 'closing', variantKey: 'album', name: 'Cierre en página de álbum' },
   { blockKey: 'footer', variantKey: 'centered', name: 'Pie centrado' },
   { blockKey: 'footer', variantKey: 'ribbon', name: 'Pie en cinta de color' },
   { blockKey: 'footer', variantKey: 'marquee', name: 'Pie con rótulo en movimiento' },
+  /*
+   * Sin `minPlanRank`, igual que las otras dos del bloque y a diferencia de las galerías o
+   * los cronogramas de pago. No es un descuido: son el pie **por defecto** de dos plantillas
+   * del catálogo, y una variante de Plus en la composición de una plantilla base la volvería
+   * imposible de montar para un cliente de Esencial.
+   */
+  { blockKey: 'footer', variantKey: 'colophon', name: 'Pie en colofón editorial' },
+  { blockKey: 'footer', variantKey: 'sprig', name: 'Pie en hoja rasgada con ramitas' },
 ];
 
 /**
@@ -374,19 +461,57 @@ const RETIRED_VARIANTS = {
  * estructuras por siete temas son treinta y cinco invitaciones distintas, y ni una pieza de código
  * de más—.
  *
- * `party` y `messages` no aparecen en ninguna: están dados de alta en el catálogo pero todavía
- * no tienen componente, y una plantilla que los incluyera le daría al evento un bloque que no
- * pinta nada.
+ * Cada una declara además el **tema con el que se diseñó** (`defaultThemeKey`). No lo impone: la
+ * tipografía, el color y la densidad son del tema, y cualquiera de las cinco se puede vestir con
+ * cualquiera de los siete. Lo que hace es que al crear un evento el tema llegue ya elegido, y que
+ * quien no quiera pensarlo se lleve la combinación que el catálogo enseña.
  */
+/**
+ * Con qué texto nace cada bloque al crear un evento.
+ *
+ * Es lo que separa una plantilla **preconstruida** de una lista de huecos. Un rótulo de sección
+ * —«Nuestra historia», «Confirma tu asistencia»— no se puede derivar del evento porque no es un
+ * dato del evento: es cómo la plantilla lo cuenta. Y sin él el bloque no valida, así que un
+ * evento recién creado se quedaría sin esa sección hasta que alguien la escribiera a mano.
+ *
+ * Aquí están los comunes; cada plantilla sobreescribe los que le dan carácter. El contenido de
+ * verdad —nombres, fecha, sedes, fotos— no está ni puede estar aquí: vive en el evento y lo
+ * proyecta `domain/invitation/event-content.ts`.
+ */
+const BASE_BLOCK_CONFIG: Readonly<Record<string, Record<string, unknown>>> = {
+  hero: { intro: 'Con mucha alegría te invitamos a celebrar' },
+  story: { eyebrow: 'Nuestra historia', title: 'Cómo llegamos hasta aquí' },
+  calendar: { eyebrow: 'Reserva la fecha', title: 'El gran día' },
+  details: { eyebrow: 'Detalles', title: 'Lo que necesitas saber' },
+  dresscode: { eyebrow: 'Código de vestimenta', title: 'Cómo vestir' },
+  schedule: { eyebrow: 'Programa', title: 'Cómo será el día', marker: 'icon' },
+  gallery: { eyebrow: 'Recuerdos', title: 'Momentos' },
+  location: { eyebrow: 'Ubicación', title: 'Dónde nos vemos' },
+  rsvp: {
+    eyebrow: 'R.S.V.P.',
+    title: 'Confirma tu asistencia',
+    confirmLabel: 'Confirmar por WhatsApp',
+  },
+  closing: { eyebrow: 'Con cariño', title: 'Tu presencia hará este día aún más especial.' },
+};
+
 const TEMPLATES: {
   key: string;
   name: string;
   description: string;
   /** Para qué tipos de evento se sugiere. Vacío sería «para ninguno». */
   eventTypes: readonly string[];
+  /** El tema con el que se diseñó. Preselecciona; no impide ninguna combinación. */
+  defaultThemeKey: string;
   isActive: boolean;
   /** Bloques en orden. La posición se deduce del índice: el orden ES la estructura. */
-  blocks: readonly { blockKey: string; variantKey: string; isRequired?: boolean }[];
+  blocks: readonly {
+    blockKey: string;
+    variantKey: string;
+    isRequired?: boolean;
+    /** Lo que esta plantilla dice distinto del resto. Se mezcla sobre `BASE_BLOCK_CONFIG`. */
+    config?: Record<string, unknown>;
+  }[];
 }[] = [
   {
     key: 'classic',
@@ -404,13 +529,26 @@ const TEMPLATES: {
       'gender_reveal',
       'corporate',
     ],
+    defaultThemeKey: 'floral',
     isActive: true,
     blocks: [
-      { blockKey: 'hero', variantKey: 'classic', isRequired: true },
+      /*
+       * La portada centrada y no `hero.classic`, aunque los dos nombres inviten a lo contrario.
+       * Que la variante se llame «classic» y la plantilla también es una coincidencia de
+       * vocabulario, no un vínculo: `hero.classic` es la foto a sangre con el texto apoyado
+       * abajo —el registro de un cartel, y por eso es la portada de `cinematic`—, mientras que
+       * `hero.centered` es el eje central dentro de un marco de filete, que es la retórica de una
+       * participación impresa. Esta estructura es la que se elige cuando no se quiere pensar, y
+       * lo que se espera entonces es la participación.
+       */
+      { blockKey: 'hero', variantKey: 'centered', isRequired: true },
       { blockKey: 'story', variantKey: 'image-left' },
       { blockKey: 'details', variantKey: 'cards' },
+      { blockKey: 'dresscode', variantKey: 'cards' },
       { blockKey: 'schedule', variantKey: 'vertical' },
       { blockKey: 'gallery', variantKey: 'grid' },
+      /* Iglesia y salón, una al lado de la otra: la composición esperada de una boda, y la que
+         hace que esta sea la estructura por defecto. */
       { blockKey: 'location', variantKey: 'dual-venue' },
       { blockKey: 'rsvp', variantKey: 'card', isRequired: true },
       { blockKey: 'closing', variantKey: 'split' },
@@ -423,17 +561,24 @@ const TEMPLATES: {
     description:
       'Lenguaje de revista: maqueta de pliego, folios, pies de foto a la vista y papelería impresa.',
     eventTypes: ['wedding', 'quince', 'graduation', 'corporate'],
+    defaultThemeKey: 'elegance',
     isActive: true,
     blocks: [
-      { blockKey: 'hero', variantKey: 'centered', isRequired: true },
+      /* El retrato deshecho en el papel, con la fecha partida entre filetes. Es composición de
+         estudio —tipografía y filetes haciendo la retícula—, que es de donde sale el lenguaje de
+         esta estructura. La centrada, que estaba aquí, es más participación que revista. */
+      { blockKey: 'hero', variantKey: 'portrait', isRequired: true },
       { blockKey: 'story', variantKey: 'image-right' },
       { blockKey: 'gallery', variantKey: 'editorial' },
       { blockKey: 'details', variantKey: 'list' },
+      { blockKey: 'dresscode', variantKey: 'chart' },
       { blockKey: 'schedule', variantKey: 'agenda' },
       { blockKey: 'location', variantKey: 'single-split' },
       { blockKey: 'rsvp', variantKey: 'reply-card', isRequired: true },
       { blockKey: 'closing', variantKey: 'letter' },
-      { blockKey: 'footer', variantKey: 'ribbon', isRequired: true },
+      /* El colofón: doble filete, mancheta y corondeles. `footer.ribbon` —la franja de color— es
+         interfaz y no papel impreso, y es el pie que le corresponde a `cinematic`. */
+      { blockKey: 'footer', variantKey: 'colophon', isRequired: true },
     ],
   },
   {
@@ -442,16 +587,30 @@ const TEMPLATES: {
     description:
       'El orden narra: la historia y las fotos van antes que los datos, y el cierre remata.',
     eventTypes: ['wedding', 'quince', 'baptism', 'presentation', 'baby_shower'],
+    defaultThemeKey: 'dreamy',
     isActive: true,
     blocks: [
       { blockKey: 'hero', variantKey: 'split', isRequired: true },
-      { blockKey: 'story', variantKey: 'overlay' },
+      /* La historia en una columna con la foto de banda, y no sobre la fotografía: en la
+         estructura que narra manda la prosa, y `story.overlay` mete el texto en una tarjeta encima
+         de la imagen, que acota lo que se puede contar a un párrafo. Aquella es la de `cinematic`,
+         donde el límite de texto por vista es la regla. */
+      { blockKey: 'story', variantKey: 'centered' },
       { blockKey: 'gallery', variantKey: 'polaroid' },
-      { blockKey: 'schedule', variantKey: 'showcase' },
+      /* El zigzag pide etiquetas cortas —ver su archivo— y esta es la estructura que se las puede
+         dar: el cronograma llega después del relato y no tiene que explicar nada. */
+      { blockKey: 'schedule', variantKey: 'zigzag' },
       { blockKey: 'details', variantKey: 'split' },
-      { blockKey: 'location', variantKey: 'dual-stacked' },
+      { blockKey: 'dresscode', variantKey: 'thread' },
+      /* «Primero aquí, después allá» es literalmente un orden que narra. Las franjas alternas de
+         `dual-stacked` dicen lo mismo sin secuencia, y son las que encajan en una estructura que
+         reparte por franjas y no por relato. */
+      { blockKey: 'location', variantKey: 'dual-journey' },
       { blockKey: 'rsvp', variantKey: 'postcard', isRequired: true },
-      { blockKey: 'closing', variantKey: 'horizon' },
+      /* La página final del álbum: la foto montada con esquineras y la despedida escrita al pie.
+         Es donde termina un relato contado con instantáneas y cerrado con una postal; el cierre a
+         pantalla completa cambiaría de registro en la última pantalla. */
+      { blockKey: 'closing', variantKey: 'album' },
       { blockKey: 'footer', variantKey: 'marquee', isRequired: true },
     ],
   },
@@ -461,16 +620,20 @@ const TEMPLATES: {
     description:
       'Todo a pantalla completa: planos panorámicos, franjas de color y muy poco texto por vista.',
     eventTypes: ['wedding', 'quince', 'gender_reveal'],
+    defaultThemeKey: 'royal',
     isActive: true,
     blocks: [
-      /* Sin `isRequired`: es de Premium, y un bloque obligatorio que el plan del cliente no
-         incluye sería una plantilla que no se puede montar. */
+      /* Sin `isRequired`: Esencial no tiene la bienvenida, y un bloque obligatorio que el plan
+         del cliente no incluye sería una plantilla que no se puede montar. */
       { blockKey: 'welcome', variantKey: 'spotlight' },
       { blockKey: 'hero', variantKey: 'classic', isRequired: true },
       { blockKey: 'gallery', variantKey: 'cinematic' },
       { blockKey: 'story', variantKey: 'overlay' },
-      { blockKey: 'schedule', variantKey: 'showcase' },
+      /* Muy poco texto por vista es la regla de esta estructura: los momentos se distinguen por
+         la hora en cuerpo grande, así que los iconos sobran y estorban. */
+      { blockKey: 'schedule', variantKey: 'showcase', config: { marker: 'dot' } },
       { blockKey: 'details', variantKey: 'panel' },
+      { blockKey: 'dresscode', variantKey: 'bands' },
       { blockKey: 'location', variantKey: 'single' },
       { blockKey: 'rsvp', variantKey: 'panel', isRequired: true },
       { blockKey: 'closing', variantKey: 'horizon' },
@@ -488,54 +651,127 @@ const TEMPLATES: {
      * una convención— y las fiestas infantiles, que piden color y no papel de algodón.
      */
     eventTypes: ['wedding', 'quince', 'baptism', 'presentation'],
+    defaultThemeKey: 'olive',
     isActive: true,
     /*
-     * La única estructura del catálogo **sin historia y sin galería**, y eso es lo que la define
-     * tanto como sus variantes: informa —cuándo, a qué hora, dónde, de qué vestirse— y no cuenta
-     * nada. Se lee entera de una pasada, que es su argumento; añadirle dos bloques largos sería
-     * quitarle exactamente eso. Para contar está `storytelling`, y para enseñar fotos,
-     * `cinematic`.
+     * Fue la única estructura **sin historia y sin galería**, y era su argumento: informaba
+     * —cuándo, a qué hora, dónde, de qué vestirse— y no contaba nada, así que se leía entera de
+     * una pasada.
+     *
+     * Ya no. Los dos bloques se añadieron a propósito, y con ellos la plantilla deja de ser la
+     * corta: es la papelería **completa**, que es lo que de verdad se parece a una invitación
+     * impresa de boda —lámina, relato y láminas de la sesión—. Lo que la sigue separando de
+     * `storytelling` no es que cuente menos, es el orden: aquí la fecha va antes del relato,
+     * porque esta plantilla informa primero y narra después.
+     *
+     * Las dos variantes que estrenan —`story.pressed` y `gallery.plates`— se escribieron para
+     * esto: de las que había libres, ninguna era papelería. Ver sus archivos.
      */
     blocks: [
-      /* Sin `isRequired`: la bienvenida es de Premium, y un bloque obligatorio que el plan del
-         cliente no incluye sería una plantilla que no se puede montar. */
-      { blockKey: 'welcome', variantKey: 'torn' },
+      /* Sin `isRequired`: la bienvenida es de Plus en adelante, y un bloque obligatorio que el
+         plan del cliente no incluye sería una plantilla que no se puede montar.
+
+         `botanical` y no `torn`: la guirnalda es el ornamento de esta plantilla —la misma familia
+         que la ramita de `hero.framed` y del pie— y, a diferencia del papel rasgado, **no está
+         atada a un tipo de evento**, así que la boda y los XV pueden compartir puerta. Que la
+         misma plantilla abriera de dos maneras distintas según se celebrara una cosa u otra era
+         justo lo contrario de lo que una plantilla promete: que solo cambie el tema. */
+      { blockKey: 'welcome', variantKey: 'botanical' },
       { blockKey: 'hero', variantKey: 'framed', isRequired: true },
-      { blockKey: 'calendar', variantKey: 'month' },
-      { blockKey: 'schedule', variantKey: 'itinerary' },
-      { blockKey: 'location', variantKey: 'single-plate' },
-      { blockKey: 'dresscode', variantKey: 'palette' },
+      /* El registro de esta plantilla son los rótulos grabados de la papelería impresa —cortos,
+         en un solo sustantivo—, no las frases de las otras cuatro. */
+      { blockKey: 'calendar', variantKey: 'month', config: { eyebrow: 'Save the date', title: null } },
+      /* El relato y la sesión van **después del calendario** y no tras la portada. La fecha es lo
+         primero que se busca en una invitación, y esta plantilla se organiza por eso: informa y
+         luego cuenta. Puestos antes, esto sería `storytelling` con otro papel. */
+      { blockKey: 'story', variantKey: 'pressed', config: { eyebrow: 'Nosotros', title: 'La historia' } },
+      { blockKey: 'gallery', variantKey: 'plates', config: { eyebrow: 'Recuerdos', title: 'Las fotos' } },
+      { blockKey: 'schedule', variantKey: 'itinerary', config: { eyebrow: 'Itinerario', title: 'El día' } },
+      { blockKey: 'location', variantKey: 'single-plate', config: { eyebrow: 'Dónde', title: 'La sede' } },
+      /* «Dónde → qué hay que saber → cómo voy»: los detalles entran entre la sede y la vestimenta
+         porque es el orden en que se preguntan, y porque el estacionamiento o la mesa de regalos
+         se consultan junto al lugar y no junto a la fecha. */
+      { blockKey: 'details', variantKey: 'program', config: { eyebrow: 'Detalles', title: 'Lo que hay que saber' } },
+      { blockKey: 'dresscode', variantKey: 'palette', config: { eyebrow: 'Dress code', title: 'Etiqueta' } },
       { blockKey: 'rsvp', variantKey: 'torn', isRequired: true },
       { blockKey: 'closing', variantKey: 'envelope' },
-      { blockKey: 'footer', variantKey: 'centered', isRequired: true },
-    ],
-  },
-  {
-    key: 'presentacion-infantil',
-    name: 'Presentación infantil',
-    description: 'Personalización de cliente: misa de acción de gracias más fiesta temática.',
-    eventTypes: ['presentation'],
-    /*
-     * Inactiva, por lo mismo que el tema «saja-boys»: es la plantilla de un evento concreto y
-     * `docs/PROJECT.md` reserva el catálogo para lo que sirve a todos. No se borra porque el
-     * evento de Kamilah la tiene asignada con `ON DELETE RESTRICT`.
-     */
-    isActive: false,
-    blocks: [
-      { blockKey: 'hero', variantKey: 'classic', isRequired: true },
-      { blockKey: 'story', variantKey: 'image-left' },
-      { blockKey: 'details', variantKey: 'cards' },
-      { blockKey: 'party', variantKey: 'themed' },
-      { blockKey: 'schedule', variantKey: 'vertical' },
-      { blockKey: 'gallery', variantKey: 'parallax' },
-      { blockKey: 'messages', variantKey: 'carousel' },
-      { blockKey: 'location', variantKey: 'dual-venue' },
-      { blockKey: 'rsvp', variantKey: 'card', isRequired: true },
-      { blockKey: 'closing', variantKey: 'split' },
-      { blockKey: 'footer', variantKey: 'centered', isRequired: true },
+      /* La última hoja de la papelería: otra hoja, de un tono distinto y rasgada por el canto de
+         arriba, con el monograma grabado entre dos ramitas. Es el mismo material que la
+         bienvenida, la franja del calendario y la confirmación de esta plantilla, y por eso
+         cierra. El pie centrado, que estaba aquí, es el de `classic`. */
+      { blockKey: 'footer', variantKey: 'sprig', isRequired: true },
     ],
   },
 ];
+
+/**
+ * Ninguna plantilla del catálogo repite una variante de otra plantilla **del mismo tipo de
+ * evento**.
+ *
+ * Es la regla que sostiene el plan Esencial. Ahí el cliente no intercambia nada: se lleva la
+ * plantilla como está, así que lo único que separa una de otra es su composición. Dos plantillas
+ * de boda que comparten el cronograma y el pie son, para quien las compara en el escaparate, la
+ * misma invitación con otra foto — y el catálogo aparenta un tamaño que no tiene.
+ *
+ * ## Por qué el alcance es el tipo de evento y no el catálogo entero
+ *
+ * Porque nadie compara una plantilla de boda con una de XV: quien entra a elegir ya sabe qué
+ * celebra, y solo ve las suyas. Que `botanical` y su hermana de XV compartan el calendario en
+ * lámina no le quita nada a ninguna de las dos, y prohibirlo obligaría a duplicar la biblioteca
+ * entera por tipo de evento — que es exactamente lo que `docs/PROJECT.md` no quiere.
+ *
+ * La consecuencia práctica es que una plantilla ofrecida para varios tipos entra en varias
+ * comparaciones a la vez: las cinco de aquí se ofrecen todas para boda y para XV, así que en la
+ * práctica tienen que ser disjuntas entre sí. Cuando llegue una solo para «corporate», podrá
+ * reutilizar lo que quiera de las demás siempre que ningún otro candidato de «corporate» lo use.
+ *
+ * ## Por qué es una comprobación y no una convención
+ *
+ * Porque la duplicación no se ve leyendo el archivo. Estas composiciones ya llegaron a repetir
+ * seis variantes —`cinematic` compartía cinco con sus vecinas— y nadie lo notó en varias
+ * revisiones: hay que cruzar cinco listas de nueve líneas mentalmente. Aquí falla al sembrar, con
+ * el nombre de las dos plantillas y la variante, y antes de escribir nada en la base.
+ *
+ * Esto **no** limita a Plus ni a Premium. Ahí intercambiar variantes es precisamente lo que se
+ * vende, y cualquier plantilla puede acabar con cualquier variante del bloque: lo que se protege
+ * es la composición **de partida** del catálogo.
+ */
+function assertTemplateVariantsAreExclusive(): void {
+  /* Por tipo de evento, qué plantilla reclamó cada `registry_id`. */
+  const claimedByEventType = new Map<string, Map<string, string>>();
+  const collisions: string[] = [];
+
+  for (const template of TEMPLATES) {
+    for (const eventTypeKey of template.eventTypes) {
+      let claimed = claimedByEventType.get(eventTypeKey);
+
+      if (!claimed) {
+        claimed = new Map<string, string>();
+        claimedByEventType.set(eventTypeKey, claimed);
+      }
+
+      for (const block of template.blocks) {
+        const registryId = `${block.blockKey}.${block.variantKey}`;
+        const owner = claimed.get(registryId);
+
+        if (owner) {
+          collisions.push(
+            `${eventTypeKey}: «${owner}» y «${template.key}» comparten ${registryId}`,
+          );
+          continue;
+        }
+
+        claimed.set(registryId, template.key);
+      }
+    }
+  }
+
+  if (collisions.length > 0) {
+    throw new Error(
+      `Plantillas que repiten variante dentro de un mismo tipo de evento:\n  ${collisions.join('\n  ')}`,
+    );
+  }
+}
 
 /**
  * Los temas de la biblioteca.
@@ -579,11 +815,11 @@ const TEMPLATES: {
  * Los cuatro se aplican en piezas compartidas —`BlockSection`, `BlockImage`, `BlockOrnament`—,
  * así que un tema nuevo no toca ni un componente de bloque.
  *
- * ## Sobre `saja-boys`
+ * ## Los siete son del catálogo, y ninguno de un cliente
  *
- * Queda **inactivo**. Es la paleta de la fiesta de un cliente concreto, y `docs/PROJECT.md` es
- * explícito: lo que solo beneficia a un cliente es una personalización, no parte del núcleo. No
- * se borra porque su evento lo tiene asignado; deja de ofrecerse en el catálogo público.
+ * Hubo un octavo, `saja-boys`, que era la paleta de la fiesta de un cliente concreto. Se retiró:
+ * `docs/PROJECT.md` es explícito en que lo que solo beneficia a un cliente es una personalización
+ * y no parte del núcleo, y un catálogo con la paleta de una fiesta dentro deja de ser un catálogo.
  */
 const THEMES = [
   {
@@ -845,37 +1081,6 @@ const THEMES = [
       edge: { height: '0px' },
     },
   },
-  {
-    key: 'saja-boys',
-    name: 'Saja Boys',
-    description: 'Personalización de cliente: morado, rosa y brillo. Fuera del catálogo público.',
-    isActive: false,
-    tokens: {
-      colors: {
-        background: '#fdf6fc',
-        surface: '#ffffff',
-        ink: '#42304a',
-        inkSoft: '#7a6a80',
-        primary: '#6b2d7b',
-        onPrimary: '#fff8fd',
-        accent: '#c0559f',
-        line: '#eddbe9',
-        overlay: 'rgba(38, 12, 44, 0.5)',
-      },
-      fonts: {
-        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
-        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
-        script: "var(--font-sacramento, 'Sacramento'), cursive",
-      },
-      radii: { sm: '4px', md: '10px', lg: '22px' },
-      shadows: { soft: '0 18px 46px -28px rgba(40, 16, 46, 0.55)' },
-      motion: { reveal: '0.7s cubic-bezier(0.22, 1, 0.36, 1)' },
-      space: { block: 'clamp(4rem, 9vw, 7rem)' },
-      photo: { filter: 'none' },
-      ornament: { line: '1.75rem', node: '4px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
-      edge: { height: 'clamp(1.5rem, 4.5vw, 3rem)' },
-    },
-  },
 ] as const;
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -915,13 +1120,22 @@ async function seedCatalogs(): Promise<void> {
       set: { name: sql`excluded.name`, rank: sql`excluded.rank` },
     });
 
-  await db
-    .insert(s.planFeatures)
-    .values(PLAN_FEATURES)
-    .onConflictDoUpdate({
-      target: [s.planFeatures.planKey, s.planFeatures.featureKey],
-      set: { isIncluded: sql`excluded.is_included`, limitValue: sql`excluded.limit_value` },
-    });
+  /*
+   * Reemplazo completo, no upsert.
+   *
+   * Un upsert solo sabe añadir y corregir: al **quitarle** una funcionalidad a un plan, la fila
+   * vieja se quedaba en la base y el plan seguía anunciándola. Es el fallo más caro que puede
+   * tener este script, porque la página de precios lee de aquí — prometería algo que el producto
+   * ya no da, que es exactamente lo que esa página existe para evitar.
+   *
+   * Se notó al pasar de dos planes a tres: Esencial perdió la mesa de regalos, el código de
+   * vestimenta y todo el plano de gestión, y sin este borrado los habría conservado.
+   *
+   * Borrar es seguro: `plan_features` es configuración del catálogo y nada apunta a estas filas
+   * con clave ajena. Quien las consulta —`resolvePlanBlocks` y la portada— lee por `plan_key`.
+   */
+  await db.delete(s.planFeatures);
+  await db.insert(s.planFeatures).values(PLAN_FEATURES);
 
   await db
     .insert(s.eventTypes)
@@ -933,7 +1147,11 @@ async function seedCatalogs(): Promise<void> {
   );
 }
 
-async function seedRegistry(): Promise<{ templateId: string; themeId: string }> {
+async function seedRegistry(): Promise<void> {
+  /* Antes de tocar la base: si dos plantillas del mismo tipo de evento comparten una variante, el
+     catálogo que se va a sembrar está mal y es mejor no sembrarlo a medias. */
+  assertTemplateVariantsAreExclusive();
+
   await db
     .insert(s.blocks)
     .values(BLOCKS.map((b) => ({ ...b })))
@@ -954,7 +1172,7 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
       },
     });
 
-  const themeRows = await db
+  await db
     .insert(s.themes)
     .values(THEMES.map((t) => ({ ...t, tokens: t.tokens as Record<string, unknown> })))
     .onConflictDoUpdate({
@@ -965,15 +1183,7 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
         tokens: sql`excluded.tokens`,
         isActive: sql`excluded.is_active`,
       },
-    })
-    .returning({ id: s.themes.id, key: s.themes.key });
-
-  /*
-   * El evento de ejemplo se queda con el tema con el que se diseñó. Se busca por clave y no
-   * por posición: `RETURNING` no garantiza el orden de los valores insertados, y con un
-   * `ORDER BY` implícito equivocado la invitación de Kamilah amanecería en azul noche.
-   */
-  const theme = themeRows.find((row) => row.key === 'saja-boys');
+    });
 
   /*
    * Las plantillas: una fila por estructura, más sus tipos de evento y su composición.
@@ -986,8 +1196,6 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
     .from(s.componentVariants);
   const variantByRegistryId = new Map(variantRows.map((v) => [v.registryId, v.id]));
 
-  const templateIdByKey = new Map<string, string>();
-
   for (const definition of TEMPLATES) {
     const [row] = await db
       .insert(s.templates)
@@ -995,6 +1203,7 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
         key: definition.key,
         name: definition.name,
         description: definition.description,
+        defaultThemeKey: definition.defaultThemeKey,
         isActive: definition.isActive,
       })
       .onConflictDoUpdate({
@@ -1002,14 +1211,13 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
         set: {
           name: sql`excluded.name`,
           description: sql`excluded.description`,
+          defaultThemeKey: sql`excluded.default_theme_key`,
           isActive: sql`excluded.is_active`,
         },
       })
       .returning({ id: s.templates.id });
 
     if (!row) throw new Error(`No se pudo crear la plantilla ${definition.key}`);
-
-    templateIdByKey.set(definition.key, row.id);
 
     /*
      * Reemplazo completo, igual que la composición: los tipos de una plantilla se corrigen
@@ -1025,6 +1233,7 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
       .insert(s.templatePlans)
       .values([
         { templateId: row.id, planKey: 'esencial' },
+        { templateId: row.id, planKey: 'plus' },
         { templateId: row.id, planKey: 'premium' },
       ])
       .onConflictDoNothing();
@@ -1050,22 +1259,19 @@ async function seedRegistry(): Promise<{ templateId: string; themeId: string }> 
           // La posición se deduce del orden de la lista: el orden ES la estructura.
           position: index + 1,
           isRequired: block.isRequired ?? false,
+          /* Lo común primero y lo de la plantilla encima: así cambiar un rótulo para todas es
+             una línea, y una plantilla que quiere el suyo no tiene que repetir los otros once. */
+          defaultConfig: { ...BASE_BLOCK_CONFIG[block.blockKey], ...block.config },
         };
       }),
     );
   }
-
-  const template = { id: templateIdByKey.get('presentacion-infantil') as string };
-
-  if (!theme || !template.id) throw new Error('No se pudo crear la plantilla o el tema');
 
   await retireVariants(variantByRegistryId);
 
   console.log(
     `  ${BLOCKS.length} bloques, ${VARIANTS.length} variantes, ${TEMPLATES.length} plantillas, ${THEMES.length} temas`,
   );
-
-  return { templateId: template.id, themeId: theme.id };
 }
 
 /**
@@ -1102,25 +1308,19 @@ async function retireVariants(variantByRegistryId: Map<string, string>): Promise
 }
 
 /**
- * Cuentas y clientes.
+ * La cuenta de plataforma: la **única** fila de `users` que deja este seed.
  *
- * Se siembran tres cosas y cada una responde a una pregunta distinta:
+ * Va sin cliente (`client_id` NULL) y es con la que se entra a `/admin`. No se siembra ninguna
+ * cuenta de cliente, y por tanto tampoco ningún cliente: ver la nota de cabecera del archivo.
  *
- *   · **La cuenta de plataforma**, sin cliente (`client_id` NULL). Es con la que se entra a
- *     `/admin`.
- *   · **Un cliente con dos eventos**, para poder ver el desplegable de la cabecera de
- *     `/panel`, que solo aparece cuando hay más de uno.
- *   · **Un segundo cliente**, con su propio dueño y sin eventos.
+ * `platform_role` se escribe aquí, con el rol DUEÑO. La aplicación no puede tocar esa columna
+ * —está revocada en `sql/0001_security.sql`— justamente para que conceder ese rol sea una
+ * operación deliberada de la plataforma y no algo que salga de una pantalla del panel.
  *
- * El segundo cliente no es adorno: sin al menos dos tenants no se puede comprobar que el
- * aislamiento funciona. Un seed con un solo cliente hace que todo parezca correcto
- * precisamente porque no hay nada de lo que aislarse.
- *
- * `platform_role` se escribe aquí, con el rol DUEÑO. La aplicación no puede tocar esa
- * columna —está revocada en sql/0001_security.sql— justamente para que conceder ese rol sea
- * una operación deliberada de la plataforma y no algo que salga de una pantalla del panel.
+ * Para dar de alta o revocar más cuentas de plataforma sin volver a sembrar está
+ * `npm run db:platform-admin`.
  */
-async function seedAccounts(): Promise<{ clientId: string; userId: string }> {
+async function seedPlatformAccount(): Promise<void> {
   const [platformAdmin] = await db
     .insert(s.users)
     .values({
@@ -1143,331 +1343,20 @@ async function seedAccounts(): Promise<{ clientId: string; userId: string }> {
 
   if (!platformAdmin) throw new Error('No se pudo crear la cuenta de plataforma');
 
-  const [client] = await db
-    .insert(s.clients)
-    .values({
-      name: 'Familia Albornoz',
-      slug: 'familia-albornoz',
-      contactEmail: 'contacto@familiaalbornoz.test',
-    })
-    .onConflictDoUpdate({ target: s.clients.slug, set: { name: sql`excluded.name` } })
-    .returning({ id: s.clients.id });
-
-  if (!client) throw new Error('No se pudo crear el cliente de demostración');
-
-  // Dominio `.test`, reservado por el RFC 2606 y que nunca resuelve. Con un dominio real
-  // inventado, un correo de prueba podría acabar saliendo hacia el buzón de un extraño.
-  const [owner] = await db
-    .insert(s.users)
-    .values({
-      clientId: client.id,
-      email: 'dueno@familiaalbornoz.test',
-      name: 'Dueña de la cuenta',
-      role: 'owner',
-    })
-    .onConflictDoUpdate({ target: s.users.email, set: { name: sql`excluded.name` } })
-    .returning({ id: s.users.id });
-
-  if (!owner) throw new Error('No se pudo crear el dueño del cliente');
-
-  const [second] = await db
-    .insert(s.clients)
-    .values({
-      name: 'Eventos Demo',
-      slug: 'eventos-demo',
-      contactEmail: 'contacto@eventosdemo.test',
-    })
-    .onConflictDoUpdate({ target: s.clients.slug, set: { name: sql`excluded.name` } })
-    .returning({ id: s.clients.id });
-
-  if (!second) throw new Error('No se pudo crear el segundo cliente');
-
-  await db
-    .insert(s.users)
-    .values({
-      clientId: second.id,
-      email: 'dueno@eventosdemo.test',
-      name: 'Dueña de Eventos Demo',
-      role: 'owner',
-    })
-    .onConflictDoUpdate({ target: s.users.email, set: { name: sql`excluded.name` } });
-
-  console.log('  1 cuenta de plataforma, 2 clientes, 2 dueños');
-  return { clientId: client.id, userId: owner.id };
-}
-
-
-/**
- * Un segundo evento del MISMO cliente, en borrador.
- *
- * Existe por una razón concreta: el selector de evento de la cabecera de `/panel` solo
- * aparece cuando hay más de uno, así que con un único evento sembrado esa rama de la
- * interfaz nunca se ejecutaría en desarrollo — y el primero en verla sería un cliente real.
- *
- * Va sin contenido: ni sedes, ni cronograma, ni galería. Un evento recién creado se ve así,
- * y sembrarlo vacío obliga a que las pantallas aguanten ese estado en vez de dar por hecho
- * que todo evento viene relleno.
- */
-async function seedSecondEvent(ids: {
-  clientId: string;
-  userId: string;
-  templateId: string;
-  themeId: string;
-}): Promise<void> {
-  await db
-    .insert(s.events)
-    .values({
-      clientId: ids.clientId,
-      eventTypeKey: 'quince',
-      planKey: 'esencial',
-      templateId: ids.templateId,
-      themeId: ids.themeId,
-      slug: 'sofia-xv',
-      // Código fijo solo porque es un dato de desarrollo. Los de verdad los genera
-      // `domain/events/access-code.ts` con un CSPRNG: aquí no protege nada.
-      accessCode: 'dev001',
-      title: 'XV años de Sofía',
-      celebrantName: 'Sofía',
-      eventTypeLabel: 'XV años',
-      startsAt: localInstant('2026-11-22T19:00:00'),
-      timeZone: TIME_ZONE,
-      city: 'Mérida',
-      status: 'draft',
-      createdBy: ids.userId,
-    })
-    .onConflictDoUpdate({
-      target: s.events.slug,
-      set: { title: sql`excluded.title`, startsAt: sql`excluded.starts_at` },
-    });
-}
-
-async function seedKamilahEvent(
-  data: EventJson,
-  ids: { clientId: string; userId: string; templateId: string; themeId: string },
-): Promise<void> {
-  const startsAt = localInstant(data.date);
-
-  const [event] = await db
-    .insert(s.events)
-    .values({
-      clientId: ids.clientId,
-      eventTypeKey: 'presentation',
-      planKey: 'premium',
-      templateId: ids.templateId,
-      themeId: ids.themeId,
-      slug: KAMILAH_SLUG,
-      accessCode: KAMILAH_ACCESS_CODE,
-      title: `Presentación de ${data.fullName}`,
-      celebrantName: data.name,
-      celebrantFullName: data.fullName,
-      celebrantLastName: data.lastName,
-      eventTypeLabel: data.eventType,
-      tagline: data.tagline,
-      story: data.story,
-      startsAt,
-      timeZone: TIME_ZONE,
-      city: data.city,
-      status: 'published',
-      publishedAt: new Date(),
-      // Vigencia de un año a partir del evento, según la duración del plan.
-      expiresAt: new Date(startsAt.getTime() + 365 * 24 * 60 * 60 * 1000),
-      rsvpDeadline: '2026-10-01',
-      musicUrl: data.music.src,
-      musicTitle: data.music.title,
-      heroImageUrl: '/assets/fondo.jpg',
-      storyImageUrl: data.storyImage,
-      closingImageUrl: data.finalImage,
-      contactPhone: data.contact.phone,
-      contactWhatsapp: data.contact.whatsapp.replace(/\D/g, ''),
-      contactInstagram: data.contact.instagram,
-      createdBy: ids.userId,
-    })
-    .onConflictDoUpdate({
-      target: s.events.slug,
-      // access_code queda fuera adrede: re-ejecutar el seed no debe invalidar una URL
-      // que ya se compartió con los invitados.
-      set: {
-        title: sql`excluded.title`,
-        tagline: sql`excluded.tagline`,
-        story: sql`excluded.story`,
-        startsAt: sql`excluded.starts_at`,
-        status: sql`excluded.status`,
-      },
-    })
-    .returning({ id: s.events.id });
-
-  if (!event) throw new Error('No se pudo crear el evento');
-
-  const scope = { eventId: event.id, clientId: ids.clientId };
-
-  /*
-   * Las listas ordenadas se reemplazan completas en lugar de hacer upsert fila por
-   * fila. Un upsert por posición deja filas huérfanas si el cronograma se acorta, y
-   * reordenar choca con la única (event_id, position).
-   */
-  await db.delete(s.eventVenues).where(eq(s.eventVenues.eventId, event.id));
-  await db.insert(s.eventVenues).values([
-    {
-      ...scope,
-      kind: 'church' as const,
-      label: data.church.label,
-      name: data.church.name,
-      address: data.church.address,
-      detail: data.church.detail,
-      mapUrl: data.church.mapUrl,
-      startsAt,
-      position: 0,
-    },
-    {
-      ...scope,
-      kind: 'reception' as const,
-      label: data.location.label,
-      name: data.location.name,
-      address: data.location.address,
-      detail: data.location.detail,
-      mapUrl: data.location.mapUrl,
-      startsAt: scheduleInstant(data.date, '14:00'),
-      position: 1,
-    },
-  ]);
-
-  await db.delete(s.eventScheduleItems).where(eq(s.eventScheduleItems.eventId, event.id));
-  await db.insert(s.eventScheduleItems).values(
-    data.schedule.map((item, index) => ({
-      ...scope,
-      position: index,
-      timeLabel: item.time,
-      startsAt: scheduleInstant(data.date, item.time),
-      title: item.title,
-      description: item.description,
-    })),
-  );
-
-  await db.delete(s.eventGalleryItems).where(eq(s.eventGalleryItems.eventId, event.id));
-  await db.insert(s.eventGalleryItems).values(
-    data.gallery.map((imageUrl, index) => ({
-      ...scope,
-      position: index,
-      url: imageUrl,
-      altText: `Recuerdo de celebración ${index + 1}`,
-    })),
-  );
-
-  await db.delete(s.eventMessages).where(eq(s.eventMessages.eventId, event.id));
-  await db.insert(s.eventMessages).values(
-    data.messages.map((message, index) => ({
-      ...scope,
-      position: index,
-      quote: message.quote,
-      author: message.author,
-      authorRole: message.role,
-      groupLabel: message.group,
-    })),
-  );
-
-  await db.delete(s.eventGiftRegistries).where(eq(s.eventGiftRegistries.eventId, event.id));
-  await db.insert(s.eventGiftRegistries).values([
-    {
-      ...scope,
-      position: 0,
-      name: data.giftTable.name,
-      detail: data.giftTable.detail,
-      url: data.giftTable.url,
-    },
-  ]);
-
-  // ── Bloques del evento ────────────────────────────────────────────────────────
-  // Se copia la composición de la plantilla y se le añade el contenido que solo
-  // el bloque sabe renderizar. Esto es lo que el Template Renderer va a consumir.
-  const blockConfig: Record<string, Record<string, unknown>> = {
-    hero: { intro: 'Con la bendición de Dios te invitamos a celebrar', dateLabel: data.dateLabel, timeLabel: data.timeLabel },
-    story: { parents: data.parents, godparents: data.godparents, signature: data.name },
-    party: data.party,
-    rsvp: {
-      deadlineText: 'Nos encantará contar contigo. Confirma antes del 1 de octubre.',
-      helperText: 'Cuéntanos cuántos adultos y niños vienen antes de enviarlo.',
-    },
-    closing: {
-      eyebrow: 'Con mucho cariño',
-      title: 'Tu presencia hará este día aún más especial.',
-      text: `Gracias por acompañarnos a dar gracias por la vida de ${data.name} y a celebrar sus tres años.`,
-    },
-  };
-
-  const templateBlockRows = await db
-    .select({
-      blockKey: s.templateBlocks.blockKey,
-      variantId: s.templateBlocks.defaultVariantId,
-      position: s.templateBlocks.position,
-    })
-    .from(s.templateBlocks)
-    .where(eq(s.templateBlocks.templateId, ids.templateId));
-
-  await db
-    .insert(s.eventBlocks)
-    .values(
-      templateBlockRows.map((row) => ({
-        ...scope,
-        blockKey: row.blockKey,
-        variantId: row.variantId,
-        position: row.position,
-        isEnabled: true,
-        config: blockConfig[row.blockKey] ?? {},
-      })),
-    )
-    .onConflictDoUpdate({
-      target: [s.eventBlocks.eventId, s.eventBlocks.blockKey],
-      set: {
-        variantId: sql`excluded.variant_id`,
-        position: sql`excluded.position`,
-        config: sql`excluded.config`,
-      },
-    });
-
-  // ── Recordatorios ─────────────────────────────────────────────────────────────
-  await db
-    .insert(s.reminderSchedules)
-    .values(
-      [7, 3, 1, 0].map((offsetDays) => ({
-        ...scope,
-        offsetDays,
-        channel: 'whatsapp' as const,
-        isEnabled: offsetDays === 3,
-        messageTemplate: null,
-      })),
-    )
-    .onConflictDoNothing();
-
-  console.log(
-    `  evento "${data.fullName}": ${data.schedule.length} pasos de cronograma, ` +
-      `${data.gallery.length} fotos, ${data.messages.length} mensajes, ` +
-      `${templateBlockRows.length} bloques`,
-  );
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001';
-  console.log(`\n  URL para compartir:\n  ${siteUrl}/${KAMILAH_SLUG}/${KAMILAH_ACCESS_CODE}`);
+  console.log(`  cuenta de plataforma: ${PLATFORM_ADMIN.email}`);
 }
 
 async function main(): Promise<void> {
-  const raw = await readFile(resolve(projectRoot, 'src/data/event.json'), 'utf8');
-  const data = JSON.parse(raw) as EventJson;
-
   console.log('▸ Catálogos de plataforma…');
   await seedCatalogs();
 
   console.log('▸ Component Registry…');
-  const { templateId, themeId } = await seedRegistry();
+  await seedRegistry();
 
-  console.log('▸ Cuentas y clientes…');
-  const { clientId, userId } = await seedAccounts();
+  console.log('▸ Cuenta de plataforma…');
+  await seedPlatformAccount();
 
-  console.log('▸ Evento de Kamilah…');
-  await seedKamilahEvent(data, { clientId, userId, templateId, themeId });
-
-  console.log('▸ Segundo evento del mismo cliente…');
-  await seedSecondEvent({ clientId, userId, templateId, themeId });
-
-  console.log('\n✓ Seed completo');
+  console.log('\n✓ Seed completo. Catálogo y cuenta de plataforma; cero clientes.');
 }
 
 main()
