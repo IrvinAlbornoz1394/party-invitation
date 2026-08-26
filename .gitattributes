@@ -1,0 +1,35 @@
+# Fines de línea, fijados de una vez.
+#
+# ## Qué problema resuelve
+#
+# El proyecto vive en `/mnt/c` bajo WSL2, así que lo abren herramientas de Windows y de Linux a la
+# vez. Sin este archivo y con `core.autocrlf` sin definir, cualquier editor de Windows que guarde
+# un archivo lo convierte a CRLF, y git lo cuenta como modificado aunque el contenido sea idéntico:
+# se llegó a 249 archivos «cambiados» sin una sola línea distinta, que es ruido que tapa los
+# cambios de verdad y hace imposible revisar un diff.
+#
+# `text=auto` le dice a git que detecte qué es texto y lo normalice a LF **en el repositorio**;
+# `eol=lf` que lo deje también en LF **en el disco**. Con las dos, un archivo guardado con CRLF
+# deja de aparecer como modificado: git compara la versión normalizada.
+#
+# Que la convención viaje en el repositorio y no en la configuración de cada máquina es lo
+# importante. `core.autocrlf` hay que acordarse de ponerlo en cada equipo nuevo; esto lo hereda
+# quien clone.
+* text=auto eol=lf
+
+# Los binarios se marcan explícitamente. No hace falta para que funcione —git los detecta— pero sí
+# para que nunca se intente normalizar uno: un salto de línea «corregido» dentro de un MP3 o de un
+# JPEG lo corrompe, y el daño no se ve hasta que alguien intenta abrirlo.
+*.mp3 binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# El SVG es texto, aunque esté entre los formatos de imagen: se edita a mano y conviene verlo en
+# un diff.
+*.svg text
