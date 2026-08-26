@@ -20,9 +20,13 @@ import { couple } from './welcome-name';
  *
  * ## Por qué la cuenta es la compartida y no una propia
  *
- * Porque el formato, el latido y el hueco antes del primer tic ya están resueltos en
- * `shared/Countdown` para las tres portadas que la usan. Una copia aquí serían dos relojes que
+ * Porque el cálculo, el latido y el hueco antes del primer tic ya están resueltos en
+ * `shared/Countdown` para las seis portadas que la usan. Una copia aquí serían dos relojes que
  * arreglar por separado — y este es el que se ve al abrir, o sea el que más se mira.
+ *
+ * Lo que sí elige esta bienvenida es la **forma**: las casillas, que son las más rotundas de las
+ * cinco. Aquí no es un dato más de una portada —es la pantalla entera y su único motivo—, así que
+ * la forma discreta que le va a una participación sería quedarse sin bloque.
  */
 export function WelcomeCountdown({ content }: WelcomeVariantProps) {
   const pair = couple(content.celebrantName);
@@ -31,7 +35,7 @@ export function WelcomeCountdown({ content }: WelcomeVariantProps) {
     <WelcomeShell
       variant="countdown"
       label={`Bienvenida a la invitación de ${content.celebrantName}`}
-      className="text-inv-on-primary"
+      className="text-inv-on-primary inv-on-photo"
       contentClassName="items-center justify-center px-7 py-12 text-center"
       backdrop={
         <>
@@ -42,7 +46,7 @@ export function WelcomeCountdown({ content }: WelcomeVariantProps) {
           )}
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-linear-to-b from-inv-overlay/45 via-inv-overlay/25 to-inv-overlay/80"
+            className="absolute inset-0 -z-10 inv-scrim" data-from="bottom"
           />
         </>
       }
@@ -69,7 +73,7 @@ export function WelcomeCountdown({ content }: WelcomeVariantProps) {
         {content.startsAt && (
           <>
             <p className="mt-8 mb-3 text-[10.5px] tracking-[0.42em] uppercase opacity-70">Faltan</p>
-            <Countdown startsAt={content.startsAt} tone="onImage" />
+            <Countdown startsAt={content.startsAt} variant="boxes" tone="onImage" />
           </>
         )}
 
