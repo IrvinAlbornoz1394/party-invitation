@@ -3,109 +3,118 @@ import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
 
 /**
- * `welcome.band` — la fotografía arriba y una franja de color abajo. La forma nativa del móvil.
+ * `welcome.band` — el retrato a sangre y la postal apoyada encima.
  *
- * Es la más parecida a lo que la gente ya reconoce como «invitación digital»: el retrato ocupando
- * casi toda la pantalla, los datos sobre el propio retrato, y una banda de color al pie con la
- * frase y el botón. Sirve igual para unos XV que para una boda —lo único que cambia es el
- * contenido y el tema— y es la que mejor aguanta un teléfono pequeño, porque no hay dos columnas
- * ni nada que reflowear: es una pila.
+ * Es la puerta de `storytelling`, y habla el idioma que esa estructura ya usa en el resto de la
+ * invitación: la confirmación es una postal (`rsvp.postcard`) y el cierre, una página de álbum
+ * (`closing.album`). Aquí la pantalla de entrada es lo mismo — una tarjeta dejada sobre la
+ * fotografía— y no una interfaz partida en dos.
  *
- * ## Por qué el texto va sobre la foto y no dentro de la banda
+ * ## Qué se rehízo, y por qué la versión anterior se veía apagada
  *
- * Porque la banda tiene que quedarse corta. Metiendo ahí el nombre, la fecha y la frase, en un
- * teléfono de 640 px de alto la franja se come la mitad de la pantalla y el retrato —que es lo
- * que se ha venido a ver— queda reducido a una tira. Con el nombre encima de la imagen, la banda
- * puede medir lo que mide una frase.
+ * Antes eran dos zonas pegadas: la foto arriba y una franja lisa de `primary` abajo, a todo el
+ * ancho y con el canto recto. Tres cosas la hundían a la vez, y las tres se ven en cuanto se mira
+ * en un móvil:
  *
- * ## El degradado no es decoración
+ *   1. **El corte recto de canto a canto.** Una arista horizontal que cruza la pantalla entera es
+ *      lo más plano que se puede dibujar: parte la puerta en dos rectángulos y ninguno de los dos
+ *      se lee como pieza principal.
+ *   2. **El color plano y saturado.** `primary` a superficie completa es el color del tema en su
+ *      forma más cruda —una losa lavanda de un tercio de pantalla— y hace que la fotografía, que
+ *      es lo que se ha venido a ver, parezca el accesorio.
+ *   3. **Ninguna profundidad.** Dos planos al mismo nivel, sin sombra, sin filete y sin margen.
  *
- * Sin él, el nombre en blanco encima de un vestido claro desaparece. Va solo en el tercio
- * inferior de la fotografía, que es donde hay letras, y deja el rostro intacto: velar la imagen
- * entera para proteger tres líneas es el error que hace que estas pantallas parezcan apagadas.
+ * La postal corrige las tres con una sola decisión: la tarjeta se **separa de los bordes**, así
+ * que la fotografía la rodea por los tres lados y ya no hay arista que cruce nada; va en papel
+ * (`surface`) con un filete tenue en vez de en color plano; y flota con sombra y un desenfoque de
+ * fondo, que es lo que la convierte en un objeto apoyado encima y no en una zona de la pantalla.
+ *
+ * ## El texto vuelve a la tarjeta, y ahora sí cabe
+ *
+ * La versión anterior tenía que poner el nombre **sobre la foto** porque su franja crecía a lo
+ * ancho de la pantalla: metiendo ahí los datos, en un teléfono de 640px se comía media pantalla.
+ * Una tarjeta con márgenes es más estrecha, así que el mismo texto ocupa menos alto y cabe entero
+ * dentro — y el retrato conserva la parte de arriba, que es donde está la cara.
+ *
+ * De paso desaparece el velo sobre la fotografía: no hay letras encima que proteger. Queda solo un
+ * degradado suave al pie, para que el canto inferior de la tarjeta no flote sobre un fondo claro
+ * sin ninguna separación.
  */
 export function WelcomeBand({ content }: WelcomeVariantProps) {
   return (
     <WelcomeShell
       variant="band"
       label={`Bienvenida a la invitación de ${content.celebrantName}`}
-      contentClassName="justify-end"
+      contentClassName="justify-end px-5 pb-6 sm:px-8 sm:pb-9"
+      backdrop={
+        <>
+          {content.image ? (
+            /*
+             * Centrada, no anclada arriba: con `object-top` el recorte empieza por el borde
+             * superior, y en una foto de estudio eso es casi siempre aire. El sujeto de un retrato
+             * vive en el centro, que es donde lo pone quien encuadra.
+             */
+            <BlockImage image={content.image} priority className="-z-20 object-center" />
+          ) : (
+            <div aria-hidden="true" className="absolute inset-0 -z-20 bg-inv-primary" />
+          )}
+
+          {/* El degradado del pie. No protege texto —ya no hay ninguno sobre la foto—: separa el
+              canto de la tarjeta del fondo cuando la fotografía es clara, que es la mitad de los
+              retratos de XV. */}
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="bottom" />
+        </>
+      }
     >
       {/*
-        El retrato, **en su propia caja**. Estaba como fondo de la puerta entera y la banda le
-        tapaba el pie: `object-cover` encuadraba contra la pantalla completa, así que la parte de
-        la foto que quedaba a la vista no era la que el encuadre había elegido. Ahora la imagen
-        ocupa exactamente el hueco que se ve, y `flex-1` se lo reparte con la banda: si la frase
-        de abajo crece, la foto cede alto en lugar de quedar recortada por sorpresa.
+        La postal. `surface` y no `primary`: es papel apoyado sobre la fotografía, y el color del
+        tema entra por el filete, por el ornamento y por el botón —que es donde un color se lee
+        como decisión y no como relleno—.
+
+        `backdrop-blur` con la opacidad justo por debajo del opaco: deja intuir la fotografía
+        detrás del papel, que es lo que hace que la tarjeta se vea **encima de** la foto y no
+        recortada contra ella.
       */}
-      <div className="relative flex min-h-0 w-full flex-1 flex-col justify-end overflow-hidden">
-        {content.image ? (
-          /*
-           * Centrada, no anclada arriba.
-           *
-           * Con `object-top` el recorte empieza por el borde superior de la fotografía, y en una
-           * foto de estudio eso es casi siempre aire: la caja se llenaba de cielo o de techo y la
-           * pareja quedaba arrinconada abajo. El sujeto de un retrato vive en el centro —es donde
-           * lo pone quien encuadra—, así que un recorte centrado es el que más veces acierta con
-           * fotografías que nadie va a revisar una por una.
-           */
-          <BlockImage image={content.image} priority className="object-center" />
-        ) : (
-          <div aria-hidden="true" className="absolute inset-0 bg-inv-primary" />
+      <div className="relative mx-auto w-full max-w-sm rounded-inv-lg border border-inv-line/70 bg-inv-surface/95 px-7 py-8 text-center shadow-inv-soft backdrop-blur-[3px] sm:px-8">
+        {content.eventTypeLabel && (
+          <p className="m-0 text-[10.5px] tracking-[0.3em] text-inv-ink-soft uppercase">
+            {content.eventTypeLabel}
+          </p>
         )}
 
-        <div className="relative w-full px-7 pb-7 text-center text-inv-on-primary">
-          {/* El velo, atado al bloque de texto y no a la pantalla: crece con él si el nombre ocupa
-              dos líneas, en lugar de quedarse corto. */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 -top-24 bottom-0 -z-10 bg-linear-to-t from-inv-overlay/85 via-inv-overlay/55 to-transparent"
-          />
+        <h2 className="mt-3 mb-0 font-inv-script text-[clamp(2.5rem,13vw,3.6rem)] leading-[0.95] font-normal text-inv-primary">
+          {content.celebrantName}
+        </h2>
 
-          {content.eventTypeLabel && (
-            <p className="m-0 text-[13px] tracking-[0.24em] uppercase">{content.eventTypeLabel}</p>
-          )}
+        {content.celebrantLastName && (
+          <p className="mt-2.5 mb-0 text-[10px] tracking-[0.3em] text-inv-ink-soft uppercase">
+            {content.celebrantLastName}
+          </p>
+        )}
 
-          <h2 className="mt-1 mb-0 font-inv-script text-[clamp(3rem,16vw,4.5rem)] leading-[0.95] font-normal">
-            {content.celebrantName}
-          </h2>
+        {/* El filete con el corazón encajado: es el remate de una postal impresa, y sustituye al
+            corazón suelto que antes flotaba en mitad de la franja sin nada que lo sostuviera. */}
+        <p aria-hidden="true" className="mt-6 mb-0 flex items-center justify-center gap-3">
+          <span className="h-px w-10 bg-inv-line" />
+          <Heart size={13} className="fill-inv-accent text-inv-accent" strokeWidth={0} />
+          <span className="h-px w-10 bg-inv-line" />
+        </p>
 
-          {content.celebrantLastName && (
-            <p className="mt-1 mb-0 text-[11px] tracking-[0.32em] uppercase opacity-90">
-              {content.celebrantLastName}
-            </p>
-          )}
+        {content.dateLabel && (
+          <p className="mt-5 mb-0 text-[11.5px] tracking-[0.22em] text-inv-ink uppercase">
+            {content.dateLabel}
+          </p>
+        )}
 
-          {content.dateLabel && (
-            <p className="mt-2 mb-0 text-[15px] font-medium tracking-[0.16em] uppercase">
-              {content.dateLabel}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/*
-        La banda. `bg-inv-primary` y no un color propio: es la pieza que le da a esta pantalla el
-        color del tema, y con el morado de «saja-boys» o el azul de «corporate» funciona igual.
-      */}
-      <div className="w-full bg-inv-primary px-7 pt-7 pb-9 text-center text-inv-on-primary">
         {content.note && (
-          <p className="m-0 mx-auto max-w-[20rem] text-[14.5px] leading-relaxed">{content.note}</p>
+          <p className="mt-4 mb-0 text-[13.5px] leading-relaxed text-inv-ink-soft">{content.note}</p>
         )}
 
-        <Heart
-          size={16}
-          aria-hidden="true"
-          className="mx-auto mt-4 fill-current opacity-90"
-          strokeWidth={0}
-        />
-
-        {/* `onImage` aunque no haya foto debajo: la banda es del color principal del tema, y el
-            botón sólido de `onSurface` es de ese mismo color — se volvería invisible. El tono no
-            dice «hay una fotografía», dice «esto se apoya en algo con color». */}
+        {/* `onSurface`: la tarjeta es papel, así que el botón sólido del tema se lee sobre ella.
+            En la franja de color anterior tenía que ser `onImage` o desaparecía. */}
         <WelcomeOpenButton
           label={content.openLabel}
-          tone="onImage"
+          tone="onSurface"
           className="mt-7 w-full sm:w-auto"
         />
       </div>

@@ -1,6 +1,6 @@
 import { CalendarDays, MapPin } from 'lucide-react';
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
+import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
 
@@ -74,7 +74,12 @@ export function HeroSplit({ content }: HeroVariantProps) {
 
         <p className="mt-8 mb-0 flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px] tracking-[0.06em]">
           <span className="inline-flex items-center gap-2">
-            <CalendarDays size={16} strokeWidth={1.6} aria-hidden="true" className="text-inv-accent" />
+            <CalendarDays
+              size={16}
+              strokeWidth={1.6}
+              aria-hidden="true"
+              className="text-inv-accent"
+            />
             {content.dateLabel}
           </span>
           {content.city && (
@@ -85,18 +90,18 @@ export function HeroSplit({ content }: HeroVariantProps) {
           )}
         </p>
 
+        {/* La manuscrita, igual que `hero.quince`: las dos son la portada de `storytelling`. Ver
+            allí por qué la comparten a propósito. */}
         {content.showCountdown && (
-          <Countdown startsAt={content.startsAt} tone="onSurface" className="mt-9" />
-        )}
-
-        {content.action && (
-          <ActionLink
-            label={content.action.label}
-            href={content.action.href}
-            className="mt-10 self-start"
+          <Countdown
+            startsAt={content.startsAt}
+            variant="script"
+            tone="onSurface"
+            className="mt-9"
           />
         )}
       </div>
+      <ScrollHint tone="onSurface" />
     </section>
   );
 }

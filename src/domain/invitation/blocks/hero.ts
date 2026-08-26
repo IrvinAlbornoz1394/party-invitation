@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { blockActionSchema, blockImageSchema, isoInstant, line } from './shared';
+import { blockImageSchema, isoInstant, line } from './shared';
 
 /**
  * El contenido del bloque **portada**, y con él el contrato que toda variante cumple.
@@ -56,8 +56,25 @@ export const heroContentSchema = z.object({
   image: blockImageSchema.nullable().default(null),
   /** Si la portada muestra la cuenta regresiva. Es contenido, no diseño: el organizador decide. */
   showCountdown: z.boolean().default(true),
-  action: blockActionSchema.nullable().default(null),
 });
+
+/**
+ * ## Por qué la portada no tiene botón
+ *
+ * Lo tuvo, y decía «Ver la invitación» apuntando al primer bloque. Era un botón que prometía algo
+ * que ya estaba pasando: quien lo lee **está** viendo la invitación, y lo único que hacía era
+ * desplazar la página — que es lo que hace el dedo. Un botón cuya acción es la que el usuario ya
+ * sabe hacer no informa, ocupa.
+ *
+ * Lo que sí hacía falta es lo que ahora resuelve `shared/ScrollHint.tsx`: **decir que hay más
+ * abajo**. Una portada a pantalla completa no da ninguna pista de que la página siga, y esa es la
+ * duda real; se responde con una señal que se quita sola, no con un control permanente.
+ *
+ * Se quita del contrato y no solo del render, igual que en la historia: un campo que ninguna de
+ * las seis variantes pinta es una pregunta que el panel seguiría haciendo y que nadie responde.
+ * `event_blocks.config` puede traerlo de eventos ya guardados y no pasa nada — el esquema no es
+ * estricto, así que la clave sobrante se descarta al validar.
+ */
 
 /**
  * El contenido de una portada, ya validado.

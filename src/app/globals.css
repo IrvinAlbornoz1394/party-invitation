@@ -16,25 +16,28 @@
 /*
  * TailwindCSS v4, importado SIN preflight.
  *
- * Preflight es el reset de Tailwind, y aplicarlo ahora rompería el diseño existente:
- * la invitación está hecha con CSS a mano (App.css, Fiesta.css, Gallery.css) que se
- * apoya en los valores por defecto del navegador para márgenes, listas y tipografía.
- * El reset propio ya está más abajo en este archivo y cubre lo necesario.
+ * Lo estuvo por la invitación vieja, hecha con CSS a mano; esa ya no existe. Sigue estándolo por
+ * antd: preflight es el reset de Tailwind y esta hoja es la raíz, así que el reset le caería
+ * encima a los dos paneles y los descolocaría. El reset propio está más abajo y cubre lo
+ * necesario.
  *
- * Cuando la invitación se porte a Tailwind se puede adoptar preflight completo
- * cambiando estas dos líneas por `@import 'tailwindcss';`.
+ * Tiene una consecuencia en la invitación que conviene conocer antes de escribir un `<button>`
+ * nuevo: **sin preflight, un botón conserva el fondo y el relieve del sistema operativo**. Por
+ * eso los de la biblioteca empiezan por apagarlo (`appearance-none border-0 bg-transparent`).
+ * Ver «La trampa del `<button>` sin preflight» en `docs/COMPONENTES.md`.
  */
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 /*
- * Tokens del tema, en la sintaxis CSS-first de v4. Sustituyen al tailwind.config.js
+ * Tokens de **marca**, en la sintaxis CSS-first de v4. Sustituyen al tailwind.config.js
  * de v3, que ya no se lee.
  *
- * Los valores son los mismos que las variables CSS de App.css y que
- * SAJA_THEME_TOKENS en el seed: una sola paleta, tres consumidores. Cuando los temas
- * se sirvan desde la base de datos, estas variables pasarán a inyectarse por evento.
+ * Son los de la plataforma —la landing y los dos paneles—, y no tienen nada que ver con los de
+ * una invitación: aquellos los pone el tema del evento como variables `--inv-*` y viven en el
+ * ámbito de un `ThemeScope`, no aquí. Es la misma separación de siempre: esto es Nupia, eso es
+ * la fiesta de un cliente.
  */
 @theme {
   --color-plum: #6b2d7b;
@@ -66,8 +69,8 @@
 
 /* ── La portada de promoción: el lenguaje visual de Nupia ─────────────────────
  *
- * La paleta de arriba la comparten tres consumidores —`App.css`, el seed y esta hoja—, así
- * que repintarla ahí teñiría también la invitación y el panel. Estos tokens se redefinen
+ * La paleta de arriba la comparten la landing y los dos paneles, así que repintarla ahí teñiría
+ * también las pantallas de gestión. Estos tokens se redefinen
  * únicamente dentro de `.marketing`, que envuelve la portada del producto y nada más: las
  * utilidades de Tailwind v4 compilan a `var(--color-…)`, de modo que heredan el valor del
  * ámbito sin tener que tocar una sola clase de los componentes.
@@ -82,7 +85,19 @@
   --color-ink: #51363a;
   --color-plum: #7e4650;
   --color-plum-dark: #653840;
-  --color-accent: #a27248;
+  /*
+   * El dorado de Nupia, un 22% más oscuro. Su valor original, `#a27248`, no llega al mínimo
+   * legible en ninguna de las cuatro superficies donde aparece como texto pequeño en versalitas:
+   *
+   *   blanco 4.17:1 · marfil 4.01:1 · tarjeta 3.57:1 · tarjeta en hover 3.04:1
+   *
+   * El mínimo para texto de ese tamaño es 4.5:1, así que el microtexto de las secciones era
+   * decorativo antes que legible. `#7e5938` es el más claro de su misma familia de tono que pasa
+   * en las cuatro —el peor caso queda en 4.54:1— y a la vista sigue siendo el mismo bronce.
+   *
+   * Si algún día se prefiere la fidelidad al original por encima de la legibilidad, es esta línea.
+   */
+  --color-accent: #7e5938;
   --color-blush: #f1d6d4;
   --color-line: #ecdcd6;
 
@@ -232,6 +247,148 @@
 }
 
 /*
+ * ── Legibilidad del texto sobre fotografía ───────────────────────────────────
+ *
+ * ## El velo plano no puede ganar, y esto se mide
+ *
+ * La tinta clara del tema sobre el velo `rgba(28,12,32,.46)` compuesto contra el píxel más
+ * claro que una fotografía puede tener —un vestido blanco al sol— da **3.00:1**. El mínimo
+ * legible es 4.5:1, así que el titular de una portada se perdía sobre cualquier foto luminosa.
+ *
+ * Subir el velo no es la salida. Al 60% la foto clara ya pasa (4.72:1), pero con ese mismo velo
+ * una fotografía oscura queda en luminancia 0.0086: negra. Un velo uniforme tiene que elegir
+ * entre perder el texto en las fotos claras o perder la foto en las oscuras, y las dos son
+ * pérdidas.
+ *
+ * ## La salida es concentrar el velo donde está el texto
+ *
+ * `.inv-scrim` pinta un degradado denso —equivalente a un 76% de opacidad— justo en la banda
+ * donde va el texto, y transparente en el resto. La fotografía se ve donde no hay nada escrito y
+ * el texto tiene su fondo garantizado donde sí. `data-from` dice de qué lado entra, porque cada
+ * variante coloca su texto en un sitio distinto.
+ *
+ * La tinta del degradado sale de `--inv-color-overlay` con `color-mix`, no de un negro fijo: un
+ * tema cálido proyecta un velo cálido, y sigue siendo el tema quien manda sobre la fotografía.
+ */
+.inv-scrim {
+  /*
+   * La clase PINTA; el bloque COLOCA. No lleva `position`, `inset` ni `z-index` a propósito: cada
+   * variante tiene su propio apilado —la banda de `welcome.band` sobresale 24 por arriba, el velo
+   * de `hero.quince` va detrás de la cifra decorativa— y meter un plano aquí los pisaría a todos.
+   * Se descubrió al aplicarla: con `z-index:-1` dos velos se iban detrás de su propia fotografía.
+   */
+  pointer-events: none;
+  /*
+   * 70% del velo del tema + 30% de negro. Medido, no estimado:
+   *
+   *   mezcla   alfa efectiva   tinta clara sobre el píxel blanco
+   *    80%         0.568                4.45:1   (por debajo del mínimo)
+   *    70%         0.622                5.51:1   ← esto
+   *    45%         0.757                9.70:1   (tapa la fotografía)
+   *
+   * `color-mix` premultiplica por alfa, así que mezclar con negro no solo sube la opacidad:
+   * también arrastra el color hacia el negro. Una primera versión al 45% daba 9.70:1 —correcto de
+   * contraste y equivocado de diseño, porque a esa densidad la banda del texto deja de ser un velo
+   * y se vuelve una barra negra—. El 70% es el más suave que mantiene margen sobre el 4.5.
+   */
+  --inv-scrim-dense: color-mix(in srgb, var(--inv-color-overlay) 70%, #000);
+  --inv-scrim-mid: var(--inv-color-overlay);
+}
+
+/* Texto abajo: portadas donde el titular se apoya en el borde inferior. */
+.inv-scrim[data-from='bottom'] {
+  background: linear-gradient(
+    to top,
+    var(--inv-scrim-dense) 0%,
+    var(--inv-scrim-mid) 34%,
+    transparent 68%
+  );
+}
+
+/*
+ * Texto abajo, pero en COLUMNA ALTA.
+ *
+ * `bottom` es transparente a partir del 68%, y eso da por hecho que lo escrito abajo ocupa como
+ * mucho un tercio de la pantalla — cierto para un titular con su fecha, falso para una columna.
+ * `hero.quince` apila cifra de cartel, nombre, apellido, frase, fecha, cuenta regresiva y botón:
+ * en un móvil corto eso pasa del 68% y la cifra —lo más grande y lo más claro— acaba sobre
+ * fotografía sin velar. Es exactamente el fallo que ese rediseño venía a arreglar.
+ *
+ * Se estira la banda en vez de subir la densidad. Del 46% hacia arriba el velo se va apagando
+ * hasta desaparecer al 88%, así que el retrato sigue viéndose —tonalizado, no tapado— y la
+ * columna entera tiene fondo garantizado. La franja limpia de arriba es la que deja que la
+ * fotografía siga siendo la mitad del argumento de una portada de XV.
+ */
+.inv-scrim[data-from='bottom-tall'] {
+  background: linear-gradient(
+    to top,
+    var(--inv-scrim-dense) 0%,
+    var(--inv-scrim-mid) 46%,
+    transparent 88%
+  );
+}
+
+/* Texto arriba. */
+.inv-scrim[data-from='top'] {
+  background: linear-gradient(
+    to bottom,
+    var(--inv-scrim-dense) 0%,
+    var(--inv-scrim-mid) 34%,
+    transparent 68%
+  );
+}
+
+/*
+ * Texto centrado. Aquí el velo va en el centro a propósito, que es donde suele estar el sujeto
+ * de la foto: cuando el texto ocupa el medio, no hay forma de proteger uno sin tapar al otro, y
+ * entre perder el nombre de los novios o velar el centro de una fotografía, se vela la foto.
+ */
+.inv-scrim[data-from='center'] {
+  background: radial-gradient(
+    ellipse 84% 64% at 50% 50%,
+    var(--inv-scrim-dense) 0%,
+    var(--inv-scrim-mid) 46%,
+    transparent 78%
+  );
+}
+
+/*
+ * Texto por todas partes —una pantalla de bienvenida, por ejemplo—. Es el único caso en que el
+ * velo uniforme es correcto, y va a la densidad medida, no al 46% que fallaba.
+ */
+.inv-scrim[data-from='all'] {
+  background: var(--inv-scrim-dense);
+}
+
+/*
+ * La segunda línea de defensa, sobre el propio texto.
+ *
+ * El degradado resuelve la banda; esto resuelve el píxel. Una sombra ancha y suave del color del
+ * velo es invisible sobre una zona oscura y se convierte en separación sobre una clara, así que
+ * cubre justo lo que un degradado no puede prever: una farola, un reflejo o un cielo quemado
+ * cayendo exactamente detrás de una palabra.
+ *
+ * Van dos sombras y no una: la de 1px define el filo de la letra —crítico en una didona, cuyos
+ * remates son de un grosor de pelo— y la de 22px hace el halo que despega el bloque del fondo.
+ */
+
+.inv-on-photo {
+  --inv-on-photo-ink: color-mix(in srgb, var(--inv-color-overlay) 70%, #000);
+  text-shadow:
+    0 1px 2px var(--inv-on-photo-ink),
+    0 6px 22px var(--inv-on-photo-ink);
+}
+
+/*
+ * El texto de una superficie propia —una tarjeta sobre la foto— no lleva sombra: ahí el fondo ya
+ * está garantizado y la sombra solo ensucia. Se anula por si la tarjeta cuelga de un contenedor
+ * que sí la lleva.
+ */
+.inv-on-photo :where(.inv-on-surface) {
+  text-shadow: none;
+}
+
+/*
  * El ornamento. Filete · nodo · filete, con las medidas en tokens.
  *
  * `em` y no `rem` en la separación: el ornamento acompaña siempre a un rótulo, y así crece con
@@ -253,6 +410,10 @@
    valor del tema y no un caso especial en el componente. */
 .inv-ornament__node {
   display: block;
+  /* El nudo es una forma —rombo, punto, cuadro—, así que no cede ancho aunque el ornamento
+     entero se estreche: encogiéndolo, el rombo del tema sale aplastado en una pantalla angosta.
+     Lo que se acorta son los filetes, que para eso son filetes. */
+  flex-shrink: 0;
   width: var(--inv-ornament-node, 0);
   height: var(--inv-ornament-node, 0);
   border-radius: var(--inv-ornament-node-radius, 50%);

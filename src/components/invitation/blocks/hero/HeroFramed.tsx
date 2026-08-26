@@ -1,6 +1,6 @@
 import { eventDateParts } from '@/domain/invitation/event-date';
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
+import { ScrollHint } from '../../shared/ScrollHint';
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockOrnament } from '../../shared/BlockOrnament';
 import { Countdown } from '../../shared/Countdown';
@@ -60,12 +60,8 @@ export function HeroFramed({ content }: HeroVariantProps) {
         el papel no se lea como un fondo plano. Van fuera del flujo y recortadas por la sección, así
         que asoman por el canto como una guirnalda impresa que se sale del troquel.
       */}
-      <LeafSprig
-        className="absolute -top-6 -left-16 h-24 w-[16rem] -rotate-[14deg] text-inv-primary opacity-20 sm:-left-10 sm:h-32 sm:w-[22rem]"
-      />
-      <LeafSprig
-        className="absolute -right-16 -bottom-6 h-24 w-[16rem] rotate-[166deg] text-inv-primary opacity-15 sm:-right-10 sm:h-32 sm:w-[22rem]"
-      />
+      <LeafSprig className="absolute -top-6 -left-16 h-24 w-[16rem] -rotate-[14deg] text-inv-primary opacity-20 sm:-left-10 sm:h-32 sm:w-[22rem]" />
+      <LeafSprig className="absolute -right-16 -bottom-6 h-24 w-[16rem] rotate-[166deg] text-inv-primary opacity-15 sm:-right-10 sm:h-32 sm:w-[22rem]" />
 
       <div className="inv-rise relative z-10 flex w-full max-w-xl flex-col items-center text-center">
         {content.intro && (
@@ -149,10 +145,10 @@ export function HeroFramed({ content }: HeroVariantProps) {
           solo se usan para la hora, que esa frase no siempre trae.
         */}
         <p className="mt-8 mb-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] tracking-[0.24em] text-inv-ink uppercase">
-          <BlockOrnament className="text-inv-accent" />
+          <DateOrnament />
           {content.dateLabel}
           {parts?.time && <span className="tabular-nums">· {parts.time}</span>}
-          <BlockOrnament className="text-inv-accent" />
+          <DateOrnament />
         </p>
 
         {content.city && (
@@ -161,19 +157,44 @@ export function HeroFramed({ content }: HeroVariantProps) {
           </p>
         )}
 
+        {/* Grabada: cifra, filete y versalita, sin caja. Es la portada de `botanical`, donde todo
+            —la lámina, el calendario del mes, la confirmación— imita papelería impresa, y una
+            fila de cajas con desenfoque era lo único de la plantilla que se veía como interfaz. */}
         {content.showCountdown && (
-          <Countdown startsAt={content.startsAt} tone="onSurface" className="mt-9" />
-        )}
-
-        {content.action && (
-          <ActionLink
-            label={content.action.label}
-            href={content.action.href}
+          <Countdown
+            startsAt={content.startsAt}
+            variant="engraved"
             tone="onSurface"
             className="mt-9"
           />
         )}
       </div>
+      <ScrollHint tone="onSurface" />
     </section>
+  );
+}
+
+/**
+ * El filete que flanquea la fecha, o nada.
+ *
+ * Nada en el teléfono, y no por ahorrar adorno: «sábado 12 de junio, 2027 · 17:00» en versalitas
+ * con 0.24em de tracking mide casi el ancho útil de un móvil, y con un ornamento a cada lado la
+ * línea no cabe. Lo que hacía entonces el navegador era **comprimirlos**, porque un
+ * `inline-flex` sin `shrink-0` cede ancho antes que el texto: al de la izquierda le quedaba medio
+ * filete y al de la derecha ni eso. Dos adornos que deberían ser espejo salían distintos, que se
+ * lee como un defecto de maquetación y no como una decisión.
+ *
+ * Así que por debajo de `sm` no hay ninguno —cero es simétrico— y desde `sm` van los dos enteros,
+ * con `shrink-0` para que ninguna línea larga vuelva a estrujarlos.
+ *
+ * El `hidden` va en esta envoltura y no en el propio `BlockOrnament`: `.inv-ornament` declara su
+ * `display` en `globals.css` fuera de toda `@layer`, así que le gana a cualquier utilidad de
+ * Tailwind y un `hidden` puesto ahí no haría nada.
+ */
+function DateOrnament() {
+  return (
+    <span aria-hidden="true" className="hidden shrink-0 sm:block">
+      <BlockOrnament className="text-inv-accent" />
+    </span>
   );
 }

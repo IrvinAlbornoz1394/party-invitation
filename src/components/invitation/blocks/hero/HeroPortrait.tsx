@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react';
 import clsx from 'clsx';
 import { eventDateParts, type EventDateParts } from '@/domain/invitation/event-date';
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
+import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
 
@@ -125,19 +125,13 @@ export function HeroPortrait({ content }: HeroVariantProps) {
           </p>
         )}
 
+        {/* Cifras separadas por filetes, sin caja: el registro de revista del que sale esta
+            portada, y el mismo con el que `editorial` maqueta el resto de la invitación. */}
         {content.showCountdown && (
-          <Countdown startsAt={content.startsAt} tone="onSurface" className="mt-9" />
-        )}
-
-        {content.action && (
-          <ActionLink
-            label={content.action.label}
-            href={content.action.href}
-            tone="onSurface"
-            className="mt-9"
-          />
+          <Countdown startsAt={content.startsAt} variant="rule" tone="onSurface" className="mt-9" />
         )}
       </div>
+      <ScrollHint tone="onSurface" />
     </section>
   );
 }
@@ -150,7 +144,13 @@ export function HeroPortrait({ content }: HeroVariantProps) {
  * retícula va marcada como decorativa porque leída en voz alta sería «sábado, 09:00, 26,
  * diciembre, 2026», cinco fragmentos sueltos que hay que recomponer de memoria.
  */
-function EventDate({ parts, label }: { readonly parts: EventDateParts | null; readonly label: string }) {
+function EventDate({
+  parts,
+  label,
+}: {
+  readonly parts: EventDateParts | null;
+  readonly label: string;
+}) {
   if (!parts) {
     return (
       <p className="mt-8 mb-0 text-[13px] tracking-[0.22em] text-inv-ink-soft uppercase">{label}</p>
@@ -247,11 +247,81 @@ function PetalDrift() {
  * ensucia.
  */
 const PETALS = [
-  { left: '7%', top: '10%', size: 22, opacity: 0.5, duration: '15s', delay: '0s', x: '10px', y: '-16px', tilt: '12deg' },
-  { left: '86%', top: '16%', size: 16, opacity: 0.42, duration: '19s', delay: '-4s', x: '-12px', y: '-12px', tilt: '-24deg' },
-  { left: '15%', top: '34%', size: 12, opacity: 0.35, duration: '13s', delay: '-7s', x: '8px', y: '-10px', tilt: '38deg' },
-  { left: '91%', top: '42%', size: 26, opacity: 0.28, duration: '22s', delay: '-2s', x: '-9px', y: '-18px', tilt: '-8deg' },
-  { left: '4%', top: '62%', size: 14, opacity: 0.3, duration: '17s', delay: '-9s', x: '11px', y: '-13px', tilt: '20deg' },
-  { left: '80%', top: '76%', size: 18, opacity: 0.26, duration: '20s', delay: '-5s', x: '-10px', y: '-15px', tilt: '-32deg' },
-  { left: '22%', top: '88%', size: 10, opacity: 0.24, duration: '16s', delay: '-11s', x: '7px', y: '-9px', tilt: '16deg' },
+  {
+    left: '7%',
+    top: '10%',
+    size: 22,
+    opacity: 0.5,
+    duration: '15s',
+    delay: '0s',
+    x: '10px',
+    y: '-16px',
+    tilt: '12deg',
+  },
+  {
+    left: '86%',
+    top: '16%',
+    size: 16,
+    opacity: 0.42,
+    duration: '19s',
+    delay: '-4s',
+    x: '-12px',
+    y: '-12px',
+    tilt: '-24deg',
+  },
+  {
+    left: '15%',
+    top: '34%',
+    size: 12,
+    opacity: 0.35,
+    duration: '13s',
+    delay: '-7s',
+    x: '8px',
+    y: '-10px',
+    tilt: '38deg',
+  },
+  {
+    left: '91%',
+    top: '42%',
+    size: 26,
+    opacity: 0.28,
+    duration: '22s',
+    delay: '-2s',
+    x: '-9px',
+    y: '-18px',
+    tilt: '-8deg',
+  },
+  {
+    left: '4%',
+    top: '62%',
+    size: 14,
+    opacity: 0.3,
+    duration: '17s',
+    delay: '-9s',
+    x: '11px',
+    y: '-13px',
+    tilt: '20deg',
+  },
+  {
+    left: '80%',
+    top: '76%',
+    size: 18,
+    opacity: 0.26,
+    duration: '20s',
+    delay: '-5s',
+    x: '-10px',
+    y: '-15px',
+    tilt: '-32deg',
+  },
+  {
+    left: '22%',
+    top: '88%',
+    size: 10,
+    opacity: 0.24,
+    duration: '16s',
+    delay: '-11s',
+    x: '7px',
+    y: '-9px',
+    tilt: '16deg',
+  },
 ] as const;

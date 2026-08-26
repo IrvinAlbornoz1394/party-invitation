@@ -1,5 +1,5 @@
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
+import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
 
@@ -29,12 +29,12 @@ export function HeroCentered({ content }: HeroVariantProps) {
     <section
       data-block="hero"
       data-variant="centered"
-      className="relative isolate flex min-h-[var(--inv-viewport,100svh)] w-full items-center justify-center overflow-hidden bg-inv-bg text-center font-inv-body text-inv-on-primary"
+      className="relative isolate flex min-h-[var(--inv-viewport,100svh)] w-full items-center justify-center overflow-hidden bg-inv-bg text-center font-inv-body text-inv-on-primary inv-on-photo"
     >
       {content.image ? (
         <>
           <BlockImage image={content.image} priority className="-z-20" />
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-overlay" />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="center" />
         </>
       ) : (
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-primary" />
@@ -89,19 +89,14 @@ export function HeroCentered({ content }: HeroVariantProps) {
           </p>
         )}
 
+        {/* La línea corrida, y no las casillas: esta portada ya encierra el texto en un marco de
+            filete, y cuatro cajas dentro del marco compiten con él. En el cuerpo de la línea de
+            fecha, la cuenta regresiva es un renglón más de la participación. */}
         {content.showCountdown && (
-          <Countdown startsAt={content.startsAt} className="mt-10 mx-auto" />
-        )}
-
-        {content.action && (
-          <ActionLink
-            label={content.action.label}
-            href={content.action.href}
-            tone="onImage"
-            className="mt-10"
-          />
+          <Countdown startsAt={content.startsAt} variant="inline" className="mt-10 mx-auto" />
         )}
       </div>
+      <ScrollHint tone="onImage" />
     </section>
   );
 }

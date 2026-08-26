@@ -1,6 +1,6 @@
 import { CalendarDays, MapPin } from 'lucide-react';
-import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
+import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
 
@@ -46,15 +46,12 @@ export function HeroClassic({ content }: HeroVariantProps) {
     <section
       data-block="hero"
       data-variant="classic"
-      className="relative isolate flex min-h-[var(--inv-viewport,100svh)] w-full flex-col justify-center overflow-hidden bg-inv-bg font-inv-body text-inv-on-primary"
+      className="relative isolate flex min-h-[var(--inv-viewport,100svh)] w-full flex-col justify-center overflow-hidden bg-inv-bg font-inv-body text-inv-on-primary inv-on-photo"
     >
       {content.image ? (
         <>
           <BlockImage image={content.image} priority className="-z-20" />
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-linear-to-t from-inv-overlay from-15% via-inv-overlay/55 to-inv-overlay/5"
-          />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="bottom" />
         </>
       ) : (
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-primary" />
@@ -107,17 +104,14 @@ export function HeroClassic({ content }: HeroVariantProps) {
           )}
         </p>
 
-        {content.showCountdown && <Countdown startsAt={content.startsAt} className="mt-9" />}
-
-        {content.action && (
-          <ActionLink
-            label={content.action.label}
-            href={content.action.href}
-            tone="onImage"
-            className="mt-10"
-          />
+        {/* Las casillas con velo: es la portada de `cinematic` —la foto a sangre—, y sobre una
+            imagen la cuenta regresiva necesita una caja para leerse. Ver `shared/Countdown.tsx`
+            para por qué la forma la elige la variante y no el tema. */}
+        {content.showCountdown && (
+          <Countdown startsAt={content.startsAt} variant="boxes" className="mt-9" />
         )}
       </div>
+      <ScrollHint tone="onImage" />
     </section>
   );
 }
