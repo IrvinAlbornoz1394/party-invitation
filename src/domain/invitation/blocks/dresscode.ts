@@ -102,3 +102,27 @@ export type DresscodeContent = z.output<typeof dresscodeContentSchema>;
 
 /** Lo que se guarda en `event_blocks.config`, antes de aplicar los valores por defecto. */
 export type DresscodeContentInput = z.input<typeof dresscodeContentSchema>;
+
+/**
+ * ¿La paleta tiene nombres?
+ *
+ * De ahí depende si la lista de muestras es información o decoración, y es la única condición que
+ * comparten las cinco variantes:
+ *
+ *   · **Con nombre** —«Verde oliva», «Arena»—, cada muestra anuncia el suyo, así que la sección
+ *     funciona igual para quien no ve la pantalla, para quien no distingue esos dos verdes y para
+ *     quien la abre con el brillo al mínimo bajo el sol.
+ *   · **Sin nombre**, la fila entera se marca como decorativa. Es lo honesto: un lector de pantalla
+ *     no puede decir «#7d8b6a» de forma útil, y anunciar «lista de cinco elementos» vacíos solo
+ *     añade ruido entre el texto y lo que viene después.
+ *
+ * Basta con que UNA muestra tenga nombre: media paleta anunciada es más útil que ninguna, y quien
+ * nombró solo el color difícil sabía lo que hacía.
+ *
+ * Vive en el dominio y no en las piezas compartidas por lo mismo que `visibleHighlight` en la
+ * historia: son cinco componentes los que tienen que aplicarla, y el primero que se la saltara
+ * volvería a anunciar una lista de hexadecimales.
+ */
+export function paletteIsNamed(palette: DresscodeContent['palette']): boolean {
+  return palette.some((swatch) => swatch.label !== null);
+}
