@@ -397,8 +397,8 @@ revoke all on all tables in schema public from public;
 -- funciones que cambiaron de forma tienen que tirarse explícitamente antes.
 --
 -- · resolve_session y verify_otp perdieron la columna del cliente activo: sin
---   impersonación, una sesión de cliente trabaja siempre en `users.client_id` y una de
---   plataforma no trabaja en ninguno.
+--   impersonación, el alcance de una petición sale de la membresía que corresponda a la
+--   pantalla que se pide, y no de nada guardado en la sesión.
 -- · purge_expired_auth pasó de 3 a 4 (los intentos de auth se cuentan aparte de los de
 --   invitación).
 --
@@ -782,10 +782,10 @@ begin
 
   v_session_expires_at := now() + p_session_ttl;
 
-  -- La sesión no guarda ningún cliente. El tenant de una cuenta de cliente es
-  -- `users.client_id` y no cambia mientras la sesión viva; una cuenta de plataforma no
-  -- tiene tenant. El campo mutable que había antes era también la única vía por la que una
-  -- sesión podía acabar apuntando a datos que no le correspondían.
+  -- La sesión no guarda ningún cliente, y con las membresías ya no podría: una identidad
+  -- puede alcanzar varios. El alcance se resuelve por petición a partir de la URL que se
+  -- pide. El campo mutable que había antes era también la única vía por la que una sesión
+  -- podía acabar apuntando a datos que no le correspondían.
   insert into public.sessions
     (user_id, token_hash, expires_at, created_ip, created_user_agent)
   values
@@ -948,8 +948,7 @@ security definer
 set search_path = pg_catalog, public
 as $$
 declare
-  v_user_id   uuid;
-  v_client_id uuid;
+  v_user_id uuid;
 begin
   update public.sessions s
      set revoked_at = now()
@@ -961,13 +960,22 @@ begin
     return;
   end if;
 
-  -- El cliente sale de la cuenta, no de la sesión. Es NULL para una cuenta de plataforma,
-  -- igual que en la línea de apertura, de modo que las dos entradas del par abrir/cerrar
-  -- caen siempre en la misma bitácora.
-  select u.client_id into v_client_id from public.users u where u.id = v_user_id;
-
+  -- `client_id` va NULL, igual que en la línea de apertura que escribe `app.verify_otp()`:
+  -- las dos entradas del par abrir/cerrar tienen que caer en la misma bitácora, y cerrar
+  -- sesión no ocurre dentro de ningún cliente.
+  --
+  -- Aquí había un `select u.client_id ... from public.users u`, y era la pertenencia del
+  -- modelo viejo: cuando pasó a ser filas de `memberships`, esa columna desapareció de
+  -- `users` y esta consulta se quedó apuntando a la nada. No falló al reaplicar el archivo
+  -- —plpgsql resuelve los nombres de columna en la PRIMERA ejecución, no al crear la
+  -- función— así que el error solo aparecía al cerrar sesión de verdad. Es la misma trampa
+  -- que el parámetro de salida ambiguo de `app.verify_otp()`, y el mismo motivo por el que
+  -- una función de plpgsql no está probada hasta que se ha ejecutado una vez.
+  --
+  -- Y no se sustituye por una consulta a `memberships`: una identidad puede alcanzar varios
+  -- clientes, así que ya no existe «el cliente de esta sesión» que anotar.
   insert into public.audit_log (client_id, user_id, action, entity_type, entity_id)
-  values (v_client_id, v_user_id, 'auth.session.closed', 'user', v_user_id);
+  values (null, v_user_id, 'auth.session.closed', 'user', v_user_id);
 end;
 $$;
 
