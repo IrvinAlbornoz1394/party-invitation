@@ -31,7 +31,7 @@ export function WelcomeMonogram({ content }: WelcomeVariantProps) {
     <WelcomeShell
       variant="monogram"
       label={`Bienvenida a la invitación de ${content.celebrantName}`}
-      className="text-inv-on-primary"
+      className="text-inv-on-primary inv-on-photo"
       contentClassName="items-center justify-center px-6 py-14 text-center"
       backdrop={
         <>
@@ -42,7 +42,7 @@ export function WelcomeMonogram({ content }: WelcomeVariantProps) {
           )}
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-linear-to-b from-inv-overlay/70 via-inv-overlay/35 to-inv-overlay/75"
+            className="absolute inset-0 -z-10 inv-scrim" data-from="all"
           />
         </>
       }

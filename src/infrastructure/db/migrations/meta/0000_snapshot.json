@@ -1,5 +1,5 @@
 {
-  "id": "b4d1bc09-90ef-4f64-8473-68d96970c998",
+  "id": "354b50ee-a005-4a16-a023-91dd169fde07",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -554,12 +554,6 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "client_id": {
-          "name": "client_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "email": {
           "name": "email",
           "type": "text",
@@ -576,15 +570,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
-        },
-        "role": {
-          "name": "role",
-          "type": "user_role",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'admin'"
+          "notNull": false
         },
         "platform_role": {
           "name": "platform_role",
@@ -630,38 +616,8 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "users_client_id_idx": {
-          "name": "users_client_id_idx",
-          "columns": [
-            {
-              "expression": "client_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "users_client_id_clients_id_fk": {
-          "name": "users_client_id_clients_id_fk",
-          "tableFrom": "users",
-          "tableTo": "clients",
-          "columnsFrom": [
-            "client_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "users_email_unique": {
@@ -673,12 +629,7 @@
         }
       },
       "policies": {},
-      "checkConstraints": {
-        "users_client_xor_platform": {
-          "name": "users_client_xor_platform",
-          "value": "(\"users\".\"client_id\" is not null and \"users\".\"platform_role\" is null)\n          or (\"users\".\"client_id\" is null and \"users\".\"platform_role\" is not null)"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.guestbook_entries": {
@@ -1025,6 +976,12 @@
         },
         "alt_text": {
           "name": "alt_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "caption": {
+          "name": "caption",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1405,6 +1362,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1532,6 +1495,18 @@
         "starts_at": {
           "name": "starts_at",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_alt": {
+          "name": "image_alt",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1733,6 +1708,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'draft'"
+        },
+        "client_fills_content": {
+          "name": "client_fills_content",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "published_at": {
           "name": "published_at",
@@ -2441,6 +2423,216 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.memberships": {
+      "name": "memberships",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "membership_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "user_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "memberships_client_scope_idx": {
+          "name": "memberships_client_scope_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "event_id is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_event_scope_idx": {
+          "name": "memberships_event_scope_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "event_id is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_user_id_idx": {
+          "name": "memberships_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_client_id_idx": {
+          "name": "memberships_client_id_idx",
+          "columns": [
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_event_id_idx": {
+          "name": "memberships_event_id_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "memberships_user_id_users_id_fk": {
+          "name": "memberships_user_id_users_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memberships_client_id_clients_id_fk": {
+          "name": "memberships_client_id_clients_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "clients",
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memberships_event_fk": {
+          "name": "memberships_event_fk",
+          "tableFrom": "memberships",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id",
+            "client_id"
+          ],
+          "columnsTo": [
+            "id",
+            "client_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "memberships_role_scope": {
+          "name": "memberships_role_scope",
+          "value": "(\"memberships\".\"role\" in ('owner', 'admin') and \"memberships\".\"event_id\" is null)\n          or (\"memberships\".\"role\" = 'viewer' and \"memberships\".\"event_id\" is not null)\n          or \"memberships\".\"role\" = 'staff'"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.features": {
       "name": "features",
       "schema": "",
@@ -2638,6 +2830,299 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.prospect_touches": {
+      "name": "prospect_touches",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "prospect_id": {
+          "name": "prospect_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel": {
+          "name": "channel",
+          "type": "touch_channel",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "prospect_touches_prospect_idx": {
+          "name": "prospect_touches_prospect_idx",
+          "columns": [
+            {
+              "expression": "prospect_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at desc",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "prospect_touches_prospect_id_prospects_id_fk": {
+          "name": "prospect_touches_prospect_id_prospects_id_fk",
+          "tableFrom": "prospect_touches",
+          "tableTo": "prospects",
+          "columnsFrom": [
+            "prospect_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "prospect_touches_created_by_users_id_fk": {
+          "name": "prospect_touches_created_by_users_id_fk",
+          "tableFrom": "prospect_touches",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.prospects": {
+      "name": "prospects",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "contact_name": {
+          "name": "contact_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_phone": {
+          "name": "contact_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_type_key": {
+          "name": "event_type_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_date": {
+          "name": "event_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guest_range": {
+          "name": "guest_range",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "template_key": {
+          "name": "template_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan_key": {
+          "name": "plan_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submitted_ip": {
+          "name": "submitted_ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "prospect_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'new'"
+        },
+        "next_follow_up_at": {
+          "name": "next_follow_up_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lost_reason": {
+          "name": "lost_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "prospects_status_idx": {
+          "name": "prospects_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "next_follow_up_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "prospects_ip_idx": {
+          "name": "prospects_ip_idx",
+          "columns": [
+            {
+              "expression": "submitted_ip",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "prospects_client_id_idx": {
+          "name": "prospects_client_id_idx",
+          "columns": [
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "prospects_client_id_clients_id_fk": {
+          "name": "prospects_client_id_clients_id_fk",
+          "tableFrom": "prospects",
+          "tableTo": "clients",
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2909,6 +3394,13 @@
           "notNull": true,
           "default": false
         },
+        "default_config": {
+          "name": "default_config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -2982,6 +3474,67 @@
           "columns": [
             "template_id",
             "position"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.template_event_types": {
+      "name": "template_event_types",
+      "schema": "",
+      "columns": {
+        "template_id": {
+          "name": "template_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_type_key": {
+          "name": "event_type_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "template_event_types_template_id_templates_id_fk": {
+          "name": "template_event_types_template_id_templates_id_fk",
+          "tableFrom": "template_event_types",
+          "tableTo": "templates",
+          "columnsFrom": [
+            "template_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "template_event_types_event_type_key_event_types_key_fk": {
+          "name": "template_event_types_event_type_key_event_types_key_fk",
+          "tableFrom": "template_event_types",
+          "tableTo": "event_types",
+          "columnsFrom": [
+            "event_type_key"
+          ],
+          "columnsTo": [
+            "key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "template_event_types_pkey": {
+          "name": "template_event_types_pkey",
+          "nullsNotDistinct": false,
+          "columns": [
+            "template_id",
+            "event_type_key"
           ]
         }
       },
@@ -3079,14 +3632,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "event_type_key": {
-          "name": "event_type_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "preview_image_url": {
           "name": "preview_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_theme_key": {
+          "name": "default_theme_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3115,17 +3668,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "templates_event_type_key_event_types_key_fk": {
-          "name": "templates_event_type_key_event_types_key_fk",
+        "templates_default_theme_key_themes_key_fk": {
+          "name": "templates_default_theme_key_themes_key_fk",
           "tableFrom": "templates",
-          "tableTo": "event_types",
+          "tableTo": "themes",
           "columnsFrom": [
-            "event_type_key"
+            "default_theme_key"
           ],
           "columnsTo": [
             "key"
           ],
-          "onDelete": "restrict",
+          "onDelete": "set null",
           "onUpdate": "cascade"
         }
       },
@@ -3985,6 +4538,16 @@
         "verify"
       ]
     },
+    "public.membership_role": {
+      "name": "membership_role",
+      "schema": "public",
+      "values": [
+        "owner",
+        "admin",
+        "staff",
+        "viewer"
+      ]
+    },
     "public.otp_channel": {
       "name": "otp_channel",
       "schema": "public",
@@ -3999,15 +4562,6 @@
       "values": [
         "superadmin",
         "support"
-      ]
-    },
-    "public.user_role": {
-      "name": "user_role",
-      "schema": "public",
-      "values": [
-        "owner",
-        "admin",
-        "staff"
       ]
     },
     "public.user_status": {
@@ -4033,6 +4587,7 @@
       "schema": "public",
       "values": [
         "draft",
+        "review",
         "published",
         "archived"
       ]
@@ -4070,6 +4625,28 @@
         "pending",
         "confirmed",
         "declined"
+      ]
+    },
+    "public.prospect_status": {
+      "name": "prospect_status",
+      "schema": "public",
+      "values": [
+        "new",
+        "contacted",
+        "quoted",
+        "won",
+        "lost"
+      ]
+    },
+    "public.touch_channel": {
+      "name": "touch_channel",
+      "schema": "public",
+      "values": [
+        "whatsapp",
+        "call",
+        "email",
+        "meeting",
+        "other"
       ]
     },
     "public.delivery_status": {

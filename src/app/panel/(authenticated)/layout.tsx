@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ClientShell } from '@/components/dashboard/client/ClientShell';
 import { listClientEvents, loadOwnClient } from '@/infrastructure/container';
-import { requireClientActor } from '@/lib/auth/current-session';
+import { requireClientScope } from '@/lib/auth/current-session';
 
 /**
  * Frontera de `/panel`, y armazón común de todas sus pantallas.
@@ -11,7 +11,7 @@ import { requireClientActor } from '@/lib/auth/current-session';
  * Es la diferencia entre un permiso que se hereda y uno que se copia y pega: el segundo se
  * olvida.
  *
- * `requireClientActor()` hace dos cosas de una vez: rebota a `/acceso` si no hay sesión y
+ * `requireClientScope()` hace dos cosas de una vez: rebota a `/acceso` si no hay sesión y
  * responde 404 si la cuenta es de plataforma. Devuelve `ClientActor`, así que a partir de
  * aquí `actor.clientId` existe para el compilador — y ninguna página de este árbol puede
  * consultar nada sin él.
@@ -28,7 +28,7 @@ import { requireClientActor } from '@/lib/auth/current-session';
  * siendo `/panel`, no `/panel/authenticated`.
  */
 export default async function AuthenticatedClientLayout({ children }: { children: ReactNode }) {
-  const actor = await requireClientActor();
+  const actor = await requireClientScope();
 
   /*
    * Las dos consultas van en paralelo porque no dependen entre sí. En serie, cada carga de

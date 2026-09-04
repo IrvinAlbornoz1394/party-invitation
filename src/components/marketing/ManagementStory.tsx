@@ -88,7 +88,7 @@ export function ManagementStory() {
               <span className="block italic">la invitación</span>
             </h2>
 
-            <p className="mt-7 mb-0 max-w-md text-[16px] leading-relaxed text-ink/70">
+            <p className="mt-7 mb-0 max-w-md text-[16px] leading-relaxed text-ink/75">
               Era saber cuántos van a llegar. Eso es lo que esta herramienta te quita de encima.
             </p>
 
@@ -111,7 +111,7 @@ export function ManagementStory() {
                     <h3 className="m-0 font-display text-[clamp(1.3rem,2.6vw,1.7rem)] leading-snug font-medium tracking-[-0.02em] text-ink">
                       {title}
                     </h3>
-                    <p className="mt-3 mb-0 max-w-lg text-[15px] leading-relaxed text-ink/70">
+                    <p className="mt-3 mb-0 max-w-lg text-[15px] leading-relaxed text-ink/75">
                       {detail}
                     </p>
                   </div>

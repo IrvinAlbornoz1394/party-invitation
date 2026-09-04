@@ -21,7 +21,7 @@ import type { OtpMessage } from '@/domain/auth/otp-sender';
  *     phishing. Aquí el usuario vuelve a la pestaña que ya tenía abierta.
  */
 
-const PRODUCT_NAME = 'éclat';
+const PRODUCT_NAME = 'MiEvento';
 
 export function otpEmailSubject(code: string): string {
   /*

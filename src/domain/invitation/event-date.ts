@@ -116,3 +116,53 @@ export function eventDateParts(isoInstant: string): EventDateParts | null {
     time: hour && minute ? `${hour}:${minute}` : null,
   };
 }
+
+/**
+ * Un instante escrito en la hora local del evento: «2026-10-17T19:00:00-06:00».
+ *
+ * Es la frontera entre cómo se guarda un evento y cómo se lee. En la base, `starts_at` es un
+ * `timestamptz` —un instante absoluto— y `time_zone` dice en qué huso vive ese evento. Al servir
+ * la invitación hay que juntar los dos, y hacerlo mal tiene una consecuencia que se ve enseguida:
+ * una boda a las siete de la tarde en Mérida son la una de la madrugada del **día siguiente** en
+ * UTC, así que una invitación que formatee el instante en UTC anuncia el domingo una fiesta que
+ * es el sábado.
+ *
+ * Lo que sale de aquí es la hora de reloj del evento con su desfase pegado detrás, que es lo que
+ * `eventDateParts` sabe leer campo a campo y lo que la cuenta regresiva necesita para calcular el
+ * instante correcto. Las dos cosas de la misma cadena, sin que ninguna tenga que elegir un huso.
+ *
+ * El desfase no se escribe a mano ni se saca de una tabla: se **mide** comparando la hora de
+ * reloj en esa zona contra el instante. Así el horario de verano de las zonas que lo tienen sale
+ * bien sin ningún caso especial, y México —que lo eliminó en 2022— también.
+ */
+export function zonedIsoInstant(instant: Date, timeZone: string): string {
+  const fields = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    /* `hour12: false` deja pasar un «24» a medianoche en algunas versiones de Node; `h23` es el
+       ciclo que garantiza 00-23 y por tanto una cadena ISO válida. */
+    hourCycle: 'h23',
+  }).formatToParts(instant);
+
+  const read = (type: Intl.DateTimeFormatPartTypes): string =>
+    fields.find((part) => part.type === type)?.value ?? '00';
+
+  const [year, month, day] = [read('year'), read('month'), read('day')];
+  const [hour, minute, second] = [read('hour'), read('minute'), read('second')];
+
+  /* La hora de reloj leída como si fuera UTC, menos el instante real: eso es exactamente el
+     desfase de la zona en ese momento. Los segundos se descartan porque ningún huso los usa. */
+  const wallClock = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  const offsetMinutes = Math.round((wallClock - instant.getTime()) / 60_000);
+  const sign = offsetMinutes < 0 ? '-' : '+';
+  const pad = (value: number): string => String(Math.abs(value)).padStart(2, '0');
+
+  const offset = `${sign}${pad(Math.trunc(offsetMinutes / 60))}:${pad(offsetMinutes % 60)}`;
+
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}${offset}`;
+}

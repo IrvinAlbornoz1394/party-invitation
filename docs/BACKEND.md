@@ -45,10 +45,25 @@ evento, esa persona tendría dos identidades sin relación entre sí.
 El **plan** se vende por evento y no por cliente, así que vive en `events`: un cliente puede
 tener una boda Premium y unos XV Esencial al mismo tiempo.
 
-Las cuentas son de dos clases y viven en la misma tabla `users`, distinguidas por si
-`client_id` es NULL. Están juntas porque el correo tiene que ser único entre las dos: es la
-identidad con la que se pide el código y tiene que resolver a exactamente una cuenta. El
-invariante lo impone un CHECK, `users_client_xor_platform`, no la aplicación.
+**La identidad está separada de la pertenencia.** `users` guarda quién eres —el correo con el
+que se pide el código, el teléfono al que entregarlo, el estado de la cuenta— y `memberships`
+guarda qué alcanzas. Una membresía tiene dos alcances posibles: cliente entero (`event_id`
+NULL) o **un solo evento**, que es lo que permite que los novios vean su boda sin ver las
+demás del organizador que la produce.
+
+`users.client_id` fue una columna, y mientras el cliente era una familia con su boda no
+molestó. Dejó de servir con el organizador de eventos: una columna solo admite un cliente, no
+deja sitio para el alcance «un evento» y no da ninguna lista que consultar cuando alguien entra
+y hay que saber a dónde llevarlo. El modelo entero, con lo que costó y lo que queda, está en
+`docs/ACCESO.md`.
+
+El correo sigue siendo único en `users`, y ahora eso es lo correcto en vez de un estorbo: una
+persona, una identidad, un sitio donde pedir el código. Que ese correo haya sido dueño de un
+cliente hace años y hoy sea visor del evento de otro ya no es una contradicción.
+
+El CHECK `users_client_xor_platform` se fue con la columna. Lo sustituye un invariante que
+ninguna restricción de fila puede expresar —**una cuenta de plataforma no tiene membresías**— y
+que por eso verifica `npm run db:check`.
 
 
 ## Rutas
@@ -62,11 +77,20 @@ Hay **dos paneles** y una sola puerta.
 | `/admin`               | Panel de plataforma: resumen                               |
 | `/admin/clientes`      | Alta y listado de clientes                                 |
 | `/admin/eventos`       | Todos los eventos de todos los clientes                    |
-| `/panel`               | Panel del cliente: sus eventos                             |
-| `/panel/eventos/<id>`  | Un evento suyo                                             |
+| `/panel`               | Selector de entrada: a dónde puede entrar esta sesión      |
+| `/panel/inicio`        | Panel del cliente: sus eventos                             |
+| `/panel/eventos/<id>`  | Panel de un evento. Es lo que alcanza un visor             |
 | `/panel/equipo`        | Quién puede entrar a ese cliente                           |
 | `/<slug>/<code>`       | Invitación de un evento, protegida por código              |
 | `/<slug>`              | Sin código: redirige a `/`                                 |
+
+`/panel` tiene **tres** grupos de rutas y cada uno es una frontera distinta: `(select)` el
+selector —sin menú, porque el menú necesitaría el contexto que aún no se ha elegido—,
+`(authenticated)` las pantallas del cliente entero, y `(event)` las de un evento. El grupo aparte
+para el evento es lo que permite que un visor entre: el layout de `(authenticated)` exige alcance
+de cliente y un visor no lo tiene. Ver `docs/ACCESO.md`.
+
+Faltan dos, ya diseñadas: `/cotizar` y `/admin/prospectos` (`docs/PROSPECTOS.md`).
 
 `/admin` y `/panel` tienen cada uno un grupo `(authenticated)/` cuyo layout llama a
 `requirePlatformAdmin()` o a `requireClientActor()` respectivamente. Los paréntesis hacen que
@@ -134,16 +158,39 @@ arranca sin ellas — mejor eso que un login que acepta el formulario y no manda
 
 ```bash
 npm run db:migrate   # tablas + RLS + permisos + funciones de auth
-npm run db:seed      # catálogos, plantilla, tema y el evento de Kamilah
+npm run db:seed      # catálogos, bloques, variantes, plantillas y temas
 npm run db:check     # verifica que el aislamiento quedó puesto
 ```
 
+### Comprobar que el correo sale
+
+```bash
+npm run check:email -- tu@correo.com
+```
+
+Manda una prueba **con el mismo cliente que usa la aplicación** y dice qué falta si no sale. Existe
+porque la alternativa es recorrer un flujo entero —pedir un código, llenar el formulario público— y
+quedarse mirando una bandeja de entrada sin saber si el fallo está en la clave, en el dominio sin
+verificar o en el remitente.
+
+Sin destinatario usa `PROSPECT_NOTICE_EMAIL`. Que Resend acepte el envío no garantiza que llegue a
+la bandeja: si no aparece, el registro está en <https://resend.com/emails>.
+
+El script importa el cliente real, que lleva `import 'server-only'`; se sortea con
+`--conditions=react-server` en el script de npm, que es la misma condición que usa Next en el
+servidor. Escribir un `fetch` propio habría sido más corto y no comprobaría lo que importa: que la
+**aplicación** sabe hablar con el proveedor.
+
 ### 4. Crear la cuenta de plataforma
 
-En desarrollo `db:seed` ya la crea. En **producción** no se corre el seed —no se quieren los
-datos de demostración— así que hace falta este paso, y hace falta el primero de todos: sin
-ninguna cuenta no hay forma de entrar a `/admin`, y sin entrar a `/admin` no hay forma de
-crear clientes.
+`db:seed` crea una, pero es **la que está escrita en `scripts/platform.ts`** —un correo
+concreto—, así que en producción hace falta este paso igual. Y hace falta el primero de todos: sin
+ninguna cuenta no hay forma de entrar a `/admin`, y sin entrar a `/admin` no hay forma de crear
+clientes.
+
+El seed sí se corre en producción, a diferencia de antes: lo que carga es el **catálogo** —bloques,
+variantes, plantillas, temas, planes—, que es exactamente lo que una instalación necesita. Ya no
+siembra clientes ni eventos de prueba; ver [Cero clientes](#cero-clientes-en-el-seed).
 
 ```bash
 npm run db:platform-admin -- --email tu@correo.com --name "Tu Nombre"
@@ -161,20 +208,116 @@ desde un pipeline de despliegue sin escribir datos personales en el comando.
 
 ## Comandos
 
-| Comando               | Qué hace                                                       |
-| --------------------- | -------------------------------------------------------------- |
-| `npm run db:generate` | Genera una migración SQL a partir de cambios en el esquema TS   |
-| `npm run db:migrate`  | Aplica migraciones pendientes y reaplica el SQL de seguridad    |
-| `npm run db:seed`     | Carga catálogos y datos de ejemplo (idempotente)                |
-| `npm run db:platform-admin` | Crea, lista o revoca una cuenta de plataforma                 |
-
-| `npm run db:check`    | Audita RLS, permisos del rol de app y sellado del plano de auth |
-| `npm run db:studio`   | Explorador de datos de Drizzle                                  |
+| Comando               | Qué hace                                                        |
+| --------------------- | --------------------------------------------------------------- |
+| `npm run db:fresh`    | **Rehace la base entera**: vacía, migra, puebla y audita         |
+| `npm run db:generate` | Regenera la migración **única** a partir del esquema TS          |
+| `npm run db:reset`    | Vacía `public` y el esquema `app`. Destructivo                   |
+| `npm run db:migrate`  | Aplica la migración y reaplica el SQL de seguridad               |
+| `npm run db:seed`     | Carga catálogos y datos de ejemplo (idempotente)                 |
+| `npm run db:platform-admin` | Crea, lista o revoca una cuenta de plataforma              |
+| `npm run db:check`    | Audita RLS, permisos del rol de app y sellado del plano de auth  |
+| `npm run db:studio`   | Explorador de datos de Drizzle                                   |
 
 `db:generate` solo escribe el archivo; nunca toca la base. Después de generar, hay
 que revisar el SQL antes de aplicarlo.
 
+### Desde cero, en un comando
+
+```bash
+npm run db:fresh -- --force
+```
+
+Es `db:reset` + `db:migrate` + `db:seed` + `db:check` en ese orden, y el orden es la razón de que
+exista: `migrate` antes de `reset` deja las migraciones «al día» sobre tablas viejas, y `seed`
+antes de `migrate` falla con un «no existe la relación public.events» que no se parece a su causa.
+
+- **`--force` es obligatorio.** Sin él imprime qué base va a destruir y no hace nada. Es lo único
+  que separa un reinicio deliberado de un `npm run` en la terminal equivocada.
+- **Deja cero clientes.** Lo que se puebla es el catálogo y la cuenta de plataforma; `clients`,
+  `events` y todo lo que cuelga de ellos quedan vacías. Ver [Cero clientes](#cero-clientes-en-el-seed).
+- **Los roles se comprueban antes de borrar.** `mievento_owner` y `mievento_app` son del *cluster*
+  y los crea `sql/0000_bootstrap_roles.sql` como superusuario, una vez. `db:migrate` ya lo verifica,
+  pero lo hace en el paso dos — para entonces el paso uno ya vació el esquema, y el resultado sería
+  una base vacía que no se puede levantar sin acceso de superusuario, que es justo cuando uno no lo
+  tiene a mano. Por eso la comprobación se adelanta.
+
+Si una fase falla, la cadena para ahí y la base queda a medias. Se arregla el problema y se vuelve
+a correr el comando entero: es idempotente desde el principio y no hay estado que reconstruir a
+mano.
+
+### Cero clientes en el seed
+
+`db:seed` deja `clients` y `events` **vacías**, y `users` con una sola fila: la cuenta de
+plataforma, que no pertenece a ningún cliente. No hay ningún indicador para meter datos de prueba.
+
+Los hubo —dos clientes ficticios y dos eventos publicados con su URL viva— y se quitaron porque **no
+hacían falta para nada de lo que se enseña**. Lo que un visitante ve en `/plantillas` es contenido
+local de `components/invitation/demo/`: seis composiciones armadas con los mismos `*-samples.ts` que
+alimentan la previsualización del panel, prerenderizadas en el build sin abrir una conexión a
+Postgres. Un cliente sembrado no aparecía en ninguna de esas páginas.
+
+Lo que sí hacía era ensuciar: dos organizaciones inventadas en `/admin`, un dueño con correo `.test`
+que puede pedir un código de acceso, y dos invitaciones publicadas. Nada de eso se distingue de un
+cliente real mirando la pantalla, y lo primero que había que hacer antes de dar de alta a alguien de
+verdad era acordarse de borrarlo.
+
+Dos cosas se ejercitaban con esos datos y las dos tienen otro sitio:
+
+- **El motor de render.** Sale de `/plantillas`, que recorre las mismas variantes por el mismo
+  `TemplateBlock`. Lo que no cubre es la proyección desde el evento
+  (`domain/invitation/event-content.ts`), y para eso ya no hacen falta datos sembrados: `/admin` da
+  de alta un evento de verdad en dos minutos.
+- **El aislamiento entre inquilinos**, que pedía dos clientes para poder comprobarse. Ya no depende
+  de que haya datos: `npm run db:check` lo verifica contra el catálogo de Postgres —qué tablas
+  tienen RLS, qué políticas, con qué rol se conecta la aplicación— y con la base vacía da
+  exactamente el mismo veredicto.
+
+### Una sola migración, mientras no haya producción
+
+`src/infrastructure/db/migrations/` tiene **un archivo y solo uno**: `0000_initial_schema.sql`.
+`db:generate` no añade `0001` encima de lo que haya —que es lo que hace `drizzle-kit generate` por
+su cuenta—: borra la carpeta y la reescribe entera.
+
+Es deliberado, y la condición que lo justifica está escrita: **no hay ninguna base desplegada que
+conservar**. Una migración incremental existe para llevar una base con datos de un estado al
+siguiente sin perderlos; mientras la única base sea la de desarrollo, ese trabajo no lo aprovecha
+nadie y el coste es real —cada `0001` acumulado hay que mantenerlo aplicable para siempre, y el
+esquema deja de poder leerse de un tirón porque queda repartido en un archivo por decisión. Con una
+sola, el archivo **es** el esquema, y rehacer la base tarda lo mismo.
+
+**El día que haya una base en producción con datos de clientes, esto cambia.** A partir de ahí
+`0000` es intocable —Drizzle guarda su hash en `__drizzle_migrations` y una base que ya la aplicó
+rechaza la versión reescrita— y los cambios pasan a ser `0001`, `0002`… de verdad: se borra
+`scripts/generate.ts` y `db:generate` vuelve a ser `drizzle-kit generate` a secas.
+
+Hasta entonces no hay riesgo silencioso. Si alguien regenerase contra un esquema ya desplegado,
+`db:migrate` fallaría al intentar crear tablas que ya existen: falla ruidoso, no corrupción.
+
 ## Modelo de seguridad
+
+### Con qué rol se conecta la aplicación
+
+**RLS no se aplica a un superusuario, ni a quien tenga `BYPASSRLS`, ni al dueño de la tabla.** De
+ahí sale la trampa más cara de este modelo de seguridad: con `DATABASE_URL` apuntando a
+`postgres`, todo *parece* correcto —las políticas están puestas, `db:check` daba el visto bueno—
+y sin embargo la aplicación ve los datos de todos los clientes.
+
+Pasó en desarrollo, y el síntoma no se parecía a un problema de permisos: la ficha de **cada**
+cliente mostraba los eventos de **todos**. Lo primero que uno revisa entonces es el `where` de la
+consulta, y el `where` estaba bien — las consultas del panel no filtran por cliente **a
+propósito**, porque de eso se encarga RLS.
+
+Por eso:
+
+- `DATABASE_URL` va con **`mievento_app`**, nunca con un superusuario.
+- `DATABASE_MIGRATION_URL` va con **`mievento_owner`**, que además debe ser el **dueño** de
+  `public` (lo hace `sql/0000_bootstrap_roles.sql`). Si las tablas se crean con otro dueño, el
+  rol de la aplicación se queda sin los permisos que `0001_security.sql` reparte y el esquema
+  `app` acaba perteneciendo a quien no debe.
+- `npm run db:check` comprueba ahora **con qué rol se conecta la aplicación** y falla si es
+  superusuario o tiene `BYPASSRLS`. Es la única de sus comprobaciones que mira el
+  comportamiento efectivo y no la configuración declarada.
 
 ### Dos roles de Postgres
 
@@ -207,11 +350,31 @@ variable a nivel de sesión la dejaría pegada a la conexión, y la siguiente pe
 —de otro cliente— heredaría el contexto anterior. Ese sería justo el bug que RLS
 pretende evitar.
 
-Una consecuencia de que `users.client_id` sea nullable, y que conviene tener presente: las
-cuentas de plataforma tienen NULL ahí, y `NULL = <cualquier cosa>` nunca es TRUE, así que
-**ninguna política las alcanza jamás**. No es un efecto colateral que haya que vigilar, es la
-propiedad que se busca: un cliente no puede leer, listar ni modificar las cuentas de la
-plataforma desde su panel ni por un error de consulta.
+**El contexto tiene dos niveles desde que las membresías tienen dos alcances.** Junto a
+`app.current_client_id()` existe `app.current_event_id()`, y toda política de tenant compara las
+dos cosas:
+
+```sql
+client_id = app.current_client_id()
+and (app.current_event_id() is null or event_id = app.current_event_id())
+```
+
+El evento solo **estrecha**: sin él fijado la política se comporta como siempre y se ve todo el
+tenant. Con él, se ve un evento y nada más. Sin esa segunda dimensión un visor abriría el
+contexto de su cliente y vería todos los eventos de ese cliente, que en el caso que motivó el
+modelo son bodas de terceros. `clients`, `users` y `audit_log` se cierran del todo en contexto de
+evento: quien alcanza un evento no tiene por qué saber quién lo produce ni quién más entra.
+
+**Una garantía que había que reconstruir a mano.** Cuando `users.client_id` era nullable, las
+cuentas de plataforma tenían NULL ahí y `NULL = <cualquier cosa>` nunca es TRUE, así que
+**ninguna política las alcanzaba jamás** — un cliente no podía leerlas ni por un error de
+consulta. Al salir esa columna la propiedad desapareció, porque ya no hay nada en la fila que la
+excluya. La política de `users` la repone con un EXISTS: una identidad es visible solo si
+comparte membresía con el cliente del contexto. Una cuenta de plataforma no tiene ninguna, así
+que sigue siendo invisible.
+
+La diferencia es que antes era una imposibilidad estructural y ahora depende de un invariante
+que hay que vigilar. De ahí que sea el primero que comprueba `npm run db:check`.
 
 Cada tabla hija repite `client_id` para que las políticas no necesiten joins.
 Para que ese valor duplicado no pueda contradecir al del evento, las hijas usan una
@@ -235,8 +398,17 @@ No es posible insertar una fila cuyo tenant no coincida con el de su evento.
 | `app.list_events_for_platform(hash)`     | Listado global de eventos con su cliente            |
 | `app.authorize_client_context(...)`      | Autoriza abrir el contexto de un cliente concreto   |
 | `app.revoke_user_sessions(...)`          | Corta las sesiones de una cuenta al desactivarla    |
-| `app.create_client(...)`                 | Da de alta un cliente y su primer dueño             |
+| `app.create_client(...)`                 | Da de alta un cliente, su identidad y su membresía   |
+| `app.list_memberships(hash)`             | Qué alcanza esta sesión: alimenta el selector        |
+| `app.grant_membership(...)`              | Concede acceso: crea la identidad si hace falta      |
+| `app.pick_client_membership(user)`       | Puente hasta que exista el selector. No se concede a la app |
 | `app.resolve_invitation_access(...)`     | Resuelve una invitación pública con límite por IP   |
+| `app.submit_prospect(...)`               | Formulario público: la única escritura anónima       |
+| `app.list_prospects_for_platform(hash)`  | La bandeja de solicitudes                           |
+| `app.record_prospect_touch(...)`         | Anota un contacto y mueve el estado, en un acto     |
+| `app.link_prospect_to_client(...)`       | Vincula la solicitud con el cliente que contrató    |
+| `app.list_prospect_touches(...)`         | La bitácora de una solicitud                        |
+| `app.count_pending_prospects(hash)`      | El contador del menú: nuevas y vencidas             |
 | `app.purge_expired_auth(interval)`       | Limpia credenciales vencidas (job de mantenimiento) |
 
 Aunque alguien lograra ejecutar SQL arbitrario con el rol de la aplicación, no puede leer
@@ -351,6 +523,11 @@ Hay dos ejes de rol, y esa separación es la decisión más importante del model
 - `users.role` (`owner`, `admin`, `staff`) es el rol **dentro** de un cliente.
 - `users.platform_role` (`superadmin`, `support`) es el rol **sobre** la plataforma.
 
+De los dos ejes, el primero ya no vive en `users`: el rol es `memberships.role` y tiene un
+cuarto valor, `viewer`, porque un rol no significa nada sin el alcance al que aplica —«staff» de
+todo un cliente y «staff» de una sola boda son permisos distintos con el mismo nombre—.
+`platform_role` se queda en `users` justamente por lo que se explica a continuación.
+
 Si `superadmin` fuera un valor más de `role`, cada comprobación de "¿puede hacer esto en su
 cliente?" tendría que acordarse de excluirlo, y la primera que se olvidara convertiría a un
 `owner` cualquiera en administrador de la plataforma por una comparación mal escrita. Con dos
@@ -453,17 +630,34 @@ su propio reenvío y su propia revocación, a cambio de nada: el correo ya prueb
 dirección es de quien la usa. El correo que se manda no lleva ninguna credencial, así que se
 puede reenviar sin peligro y si no llega, la persona entra igual.
 
-**El alta de un cliente crea cliente y dueño juntos**, en una función SECURITY DEFINER.
-No se pueden separar: un cliente sin ninguna cuenta no la arregla nadie desde la
-aplicación, porque para entrar a un cliente hace falta tener cuenta en ella.
+**El alta de un cliente crea el cliente, la identidad de su dueño y la membresía que los
+une**, en una función SECURITY DEFINER. Los tres pasos no se pueden separar: un cliente que
+nadie alcanza no lo arregla nadie desde la aplicación, y una identidad sin membresía es una
+cuenta que puede pedir su código y entrar a ninguna parte.
 
-**Una fuga aceptada a conciencia.** Invitar un correo que ya existe en OTRO cliente responde
-"ese correo ya tiene una cuenta en la plataforma". Eso revela que la dirección existe. El
-único de `users.email` es global, así que el caso existe igualmente; lo que se elige es qué
-contar. Callarlo dejaría a quien invita ante un fallo sin explicación y sin nada que hacer, y
-el sondeo exige ser administrador de un cliente real, va de uno en uno y nunca dice de quién
-es. Dentro del propio equipo sí se responde con precisión ("ya está contigo"), porque ahí la
-información es del propio cliente.
+**Conceder acceso también va por función.** `app.grant_membership()` crea la identidad si el
+correo no existe y le añade la membresía. Tiene que ser una función porque crear una identidad
+es la única escritura del panel que RLS **no puede acotar**: un correo puede alcanzar dos
+clientes, así que no existe ningún `client_id` con el que decidir quién tiene derecho a crearlo.
+Una política permisiva dejaría a un cliente fabricar identidades ajenas; una restrictiva
+impediría invitar a nadie. Cuando RLS no puede expresar la regla, la aplica una función — y la
+aplicación se queda sin INSERT ni UPDATE sobre `users`.
+
+Lo que la aplicación sí escribe es la **membresía**: rol, estado y etiqueta. Ahí RLS acota bien,
+porque una membresía pertenece siempre a un cliente concreto. Retirar el acceso desactiva la
+membresía y no la identidad: quitarle el acceso a alguien en un cliente no puede dejarlo fuera
+de otro donde también entra.
+
+**Una fuga que desapareció al cambiar el modelo.** Invitar un correo que ya existía en OTRO
+cliente respondía "ese correo ya tiene una cuenta en la plataforma", y eso revelaba que la
+dirección existe. Era una fuga aceptada a conciencia: el único de `users.email` es global, así
+que el caso ocurría igual y lo único que se podía elegir era qué contar.
+
+Con las membresías ya no es un conflicto. Se reutiliza la identidad y se le añade una membresía
+a este cliente, así que la respuesta es la misma que para un correo nuevo y quien invita no
+averigua nada sobre en qué otros clientes está. La única respuesta que distingue algo es "ya
+está contigo", y esa es información del propio cliente. Se cerró quitando la causa, no el
+mensaje.
 
 ### Permisos por columna y ORM
 
@@ -526,6 +720,20 @@ contenido del evento.
 Ojo con no confundirlo con `guest_groups.invite_code`, que identifica a cada familia para
 el RSVP. El de aquí protege el evento entero.
 
+**Los dos van a compartir formato de URL.** La función devuelve ya una tercera columna,
+`guest_group_id`, hoy siempre `NULL`. El plan Premium reparte un enlace por familia y será
+`/<slug>/<código-de-la-familia>` —el mismo formato, resuelto por el mismo `WHERE`—, de modo que
+la invitación sepa quién la abrió sin un segundo parámetro. Cuando entre, lo único que cambia es
+esa consulta: ni la firma, ni el repositorio, ni la ruta. Al generar códigos de familia hay que
+comprobar que no coincidan con el `access_code` de su propio evento, o el par (slug, código)
+dejaría de identificar una sola cosa.
+
+**El contenido se lee en la misma transacción.** Una vez concedido el acceso, el repositorio fija
+`app.current_client_id` y desde ahí carga el evento, sus bloques, sus sedes, su cronograma y sus
+fotos con RLS puesta. Va todo junto porque ese contexto dura **una transacción** y se descarta
+solo: leerlo en una segunda llamada obligaría a volver a abrir la frontera de seguridad, y
+conviene que esté en un solo sitio.
+
 ## Decisiones de esquema
 
 **Columnas tipadas vs jsonb.** Lo que la plataforma consulta, ordena o valida va en
@@ -570,9 +778,10 @@ pero no de `UPDATE` ni `DELETE`: la aplicación no puede reescribir su historial
 ## Estilos
 
 TailwindCSS v4 está activo, configurado con sintaxis CSS-first en
-`src/app/globals.css`. El `tailwind.config.js` de v3 se eliminó: los tokens del tema
-viven en el bloque `@theme` y son los mismos valores que las variables CSS de `App.css`
-y que `SAJA_THEME_TOKENS` del seed — una sola paleta, tres consumidores.
+`src/app/globals.css`. El `tailwind.config.js` de v3 se eliminó: los tokens de **marca**
+viven en el bloque `@theme`, y son los de la plataforma —la landing y los dos paneles—.
+Los de una invitación no están ahí: los pone el tema del evento como variables `--inv-*`
+dentro de un `ThemeScope`.
 
 Se importa **sin preflight**:
 
@@ -581,9 +790,10 @@ Se importa **sin preflight**:
 @import 'tailwindcss/utilities.css' layer(utilities);
 ```
 
-Preflight es el reset de Tailwind, y aplicarlo ahora rompería la invitación: está hecha
-con CSS a mano que se apoya en los valores por defecto del navegador para márgenes,
-listas y tipografía.
+Lo estuvo por la invitación vieja, escrita en CSS a mano; esa ya no existe. Sigue estándolo
+por antd: esta hoja es la raíz y el reset le caería encima a los dos paneles. La consecuencia
+para quien escriba un `<button>` de invitación está en `docs/COMPONENTES.md` («La trampa del
+`<button>` sin preflight»): sin reset, un botón conserva el fondo del sistema operativo.
 
 **El reparto entre las dos herramientas es deliberado y no se mezcla:** antd en `/admin` y
 `/panel`, Tailwind en las invitaciones. Son dos problemas distintos. Un panel es tablas,
@@ -591,10 +801,9 @@ formularios y estados de carga —lo que antd ya resuelve y lo que no vale la pe
 construir—; una invitación es una pieza de diseño donde cada evento se ve distinto y los
 componentes de un sistema estorban más de lo que ayudan.
 
-De ahí sale una consecuencia práctica para cuando llegue el port: el `@import 'tailwindcss'`
-completo —con preflight— debe ir en una hoja que importe **solo el layout de la invitación**,
-no la raíz. Si va en la raíz, el reset le cae encima a antd y descoloca los dos paneles. Con
-el import acotado, la invitación puede tener su preflight y los paneles no se enteran.
+Si algún día se quiere preflight en la invitación, el `@import 'tailwindcss'` completo debe ir
+en una hoja que importe **solo el layout de la invitación**, nunca la raíz. Con el import
+acotado, la invitación tendría su reset y los paneles no se enterarían.
 
 Un detalle que ya mordió una vez y conviene no volver a descubrir: antd fija
 `line-height: 64px` en `.ant-layout-header`, y los hijos lo heredan. Una cabecera con título
@@ -603,21 +812,38 @@ primera se sale por arriba y se corta. `panel.css` lo neutraliza con `line-heigh
 
 ## Pendientes conocidos
 
-- **No se pueden crear ni editar eventos desde `/admin`.** Es lo siguiente y es lo que hoy
-  más se nota: los eventos entran por `db:seed`. Las pantallas de plataforma listan clientes
-  y eventos, y el alta de clientes ya funciona entera; la de eventos falta.
-- **`/admin/clientes/<id>` no existe todavía.** Hay listado y alta, pero no ficha de cliente
-  con su equipo y sus eventos. `ListEventsOfClient` y `withAuthorizedClientContext()` ya
-  están escritos y probados para sostenerla — falta la pantalla.
-- **`/panel/eventos/<id>` es solo la ficha de datos.** Sin invitados, sin confirmaciones y
-  sin el contenido de la invitación. Existe ya porque es el destino del selector de la
-  cabecera, y un selector que no lleva a ningún sitio no se puede probar.
-- **La invitación aún renderiza desde `src/data/event.json`.** El acceso ya se valida de
-  verdad contra Postgres, pero el contenido no sale de la base todavía. Falta mapear el
-  evento a los bloques de `event_blocks`.
-- **Port de la invitación a Tailwind.** Sigue en CSS a mano (`App.css`, `Fiesta.css`,
-  `Gallery.css`). Va junto con lo anterior. El reparto decidido es: **antd en los dos
-  paneles, Tailwind solo en la invitación**. Ver [Estilos](#estilos).
+- **No se pueden crear eventos desde `/admin`.** Es el hueco que más se nota: entran por
+  `db:seed`, así que se puede vender y no se puede entregar. El asistente por pasos que lo cierra
+  está diseñado en `docs/ALTA_DE_EVENTOS.md` — incluido que un evento tenga que poder existir a
+  medias, que hoy siete columnas `NOT NULL` impiden.
+- **`/panel/eventos/<id>` tiene resumen y contenido.** Faltan invitados, confirmaciones y mesas,
+  que son las secciones de Premium: están declaradas en `event-navigation.ts` con `pending: true`
+  y no se pintan hasta que existan sus pantallas.
+- **Los tres planes son datos, no comportamiento.** `esencial`, `plus` y `premium` ya están en el
+  seed con sus funcionalidades, `variantes_intercambiables` y `reordenar_secciones` incluidas. Lo
+  que no existe es nada que las consuma: ninguna pantalla permite todavía intercambiar una variante
+  ni reordenar secciones, así que hoy la diferencia entre Plus y Esencial no se puede ejercer.
+- **Del modelo de acceso falta el alta de visores.** Lo demás está: `memberships` con sus dos
+  alcances, RLS con la dimensión del evento, el selector de `/panel`, el panel por evento y su
+  menú por plan × rol (`docs/ACCESO.md`). Conceder un acceso hoy es llamar a
+  `app.grant_membership()`; falta la pantalla que lo haga desde el panel del cliente.
+- **No hay subida de archivos.** Las fotos —portada, historia, cierre y galería— se capturan como
+  URL. Las columnas de la subida (`storage_key`, `width`, `height`, `byte_size`, `content_type`)
+  existen en `event_gallery_items` y el guardado las respeta: actualiza por `id` en vez de borrar
+  y reinsertar, justamente para que sobrevivan.
+- **Guardar contenido son dos transacciones.** Los campos del evento y sus tres listas se
+  escriben por separado. Si la segunda falla, la primera queda guardada y la pantalla informa del
+  error; volver a guardar deja las dos al día, porque ninguna escritura depende del estado
+  anterior. Unirlas exigiría que la capa de aplicación manejara la transacción.
+- **Una identidad con dos membresías de alcance cliente recibe 404** en `/panel/equipo`,
+  `/panel/ajustes` y `/panel/inicio`: esas rutas no llevan el cliente en la URL y elegir uno por
+  defecto enseñaría los datos del cliente equivocado. No ocurre con los datos de hoy.
+- **El aviso de prospectos necesita `PROSPECT_NOTICE_EMAIL`.** Sin ella —o sin Resend— los dos
+  correos se escriben en la consola y el formulario sigue funcionando. Es deliberado: un aviso
+  perdido no debe convertirse en un prospecto perdido. En producción hay que ponerla.
+- **La mesa de regalos no se pinta.** `event_gift_registries` y la funcionalidad
+  `mesa_regalos` están en la base desde el principio, pero no hay bloque `gifts` ni
+  componentes. Es lo exclusivo del plan Plus junto con el código de vestimenta.
 - **Landing incompleta.** `/` es una versión mínima; sirve como destino de los rebotes
   pero no es la landing comercial definitiva.
 - **Content-Security-Policy.** `next.config.ts` trae el resto de las cabeceras de
@@ -650,8 +876,6 @@ primera se sale por arriba y se corta. `panel.css` lo neutraliza con `line-heigh
   global si el producto crece.
 - **`noUncheckedIndexedAccess`.** Desactivado. Es una buena opción de rigor, pero
   activarla ahora obliga a tocar código de la invitación que está fuera de alcance.
-- **Tailwind sin usar en la invitación.** `clsx` y `tailwind-merge` siguen instalados sin
-  consumidores, y `Container.tsx` es código muerto. Se resuelve con el port.
 - **Auditoría de `esbuild`.** `npm audit` reporta 4 hallazgos moderados en `esbuild`,
   transitivo de `drizzle-kit`. Es solo devDependency y el advisory aplica al dev
   server de esbuild, que nunca se levanta. `npm audit fix --force` degradaría

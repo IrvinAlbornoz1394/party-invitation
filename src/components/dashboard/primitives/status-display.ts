@@ -15,7 +15,15 @@
  * «esto es verde». Cambiar qué verde usa el panel es entonces una línea de CSS, en lugar de
  * un recorrido por las pantallas buscando quién puso ese valor a mano.
  */
-export type StatusTone = 'positive' | 'pending' | 'neutral' | 'danger';
+/**
+ * Los tonos de una pastilla de estado.
+ *
+ * `attention` se añadió con la revisión de eventos y no es un quinto color por gusto: `pending`
+ * ya significaba «esto todavía no está terminado» —un borrador— y hacía falta distinguir «esto
+ * espera a que **nosotros** hagamos algo». Con el mismo ámbar para los dos, la bandeja de
+ * revisión se perdía entre los borradores, que es justo lo que no puede pasar.
+ */
+export type StatusTone = 'positive' | 'pending' | 'neutral' | 'danger' | 'attention';
 
 export interface StatusAppearance {
   readonly label: string;
@@ -24,6 +32,10 @@ export interface StatusAppearance {
 
 const EVENT_STATUS: Record<string, StatusAppearance> = {
   draft: { label: 'Borrador', tone: 'pending' },
+  /* En ámbar y no en «pendiente» como el borrador: los dos esperan a alguien, pero este espera a
+     **nosotros** y con una fecha de evento corriendo. Es el único estado de esta tabla que pide
+     que alguien haga algo hoy. */
+  review: { label: 'En revisión', tone: 'attention' },
   published: { label: 'Publicado', tone: 'positive' },
   archived: { label: 'Archivado', tone: 'neutral' },
 };
@@ -43,6 +55,24 @@ const USER_STATUS: Record<string, StatusAppearance> = {
 };
 
 /**
+ * El embudo de una solicitud.
+ *
+ * Solo `new` lleva tono de aviso: es lo único de esta lista que pide algo hoy. «Contactado»,
+ * «Cotizado» y «Descartado» comparten el gris a propósito —ninguno de los tres reclama una acción
+ * inmediata— y quien los distingue es su texto, que es de todas formas lo que informa: el color
+ * acompaña, no comunica (ver `StatusPill`).
+ */
+const PROSPECT_STATUS: Record<string, StatusAppearance> = {
+  new: { label: 'Nueva', tone: 'pending' },
+  contacted: { label: 'Contactada', tone: 'neutral' },
+  quoted: { label: 'Cotizada', tone: 'neutral' },
+  won: { label: 'Cliente', tone: 'positive' },
+  // «Descartada» y no «Perdida»: describe lo que alguien hizo —cerrarla— en vez de un juicio
+  // sobre el resultado, y es la misma palabra que lleva el botón que la cierra.
+  lost: { label: 'Descartada', tone: 'neutral' },
+};
+
+/**
  * El acceso va por función y no por índice directo para que un valor inesperado —una
  * migración que añade un estado y una pantalla que todavía no lo conoce— se muestre tal cual
  * en gris, en vez de dejar la celda vacía y parecer un fallo de carga.
@@ -54,6 +84,7 @@ function lookup(map: Record<string, StatusAppearance>, value: string): StatusApp
 export const eventStatus = (value: string): StatusAppearance => lookup(EVENT_STATUS, value);
 export const clientStatus = (value: string): StatusAppearance => lookup(CLIENT_STATUS, value);
 export const userStatus = (value: string): StatusAppearance => lookup(USER_STATUS, value);
+export const prospectStatus = (value: string): StatusAppearance => lookup(PROSPECT_STATUS, value);
 
 /** Activo / inactivo, para las filas de catálogo. */
 export const activeStatus = (isActive: boolean): StatusAppearance =>

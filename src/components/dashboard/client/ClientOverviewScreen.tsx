@@ -69,22 +69,20 @@ export function ClientOverviewScreen({ events }: { readonly events: readonly Eve
         />
       </div>
 
-      <div style={{ marginTop: 'var(--dash-gap)' }}>
-        <SectionCard
-          title="Tus eventos"
-          action={events.length > 5 ? { label: 'Ver todos', href: '/panel/eventos' } : undefined}
-          flush
-        >
-          <DataTable
-            rows={events.slice(0, 5)}
-            rowKey="id"
-            minWidth={620}
-            columns={columns}
-            rowHref={(event) => `/panel/eventos/${event.id}`}
-            empty={{ title: 'Todavía no tienes ningún evento' }}
-          />
-        </SectionCard>
-      </div>
+      <SectionCard
+        title="Tus eventos"
+        action={events.length > 5 ? { label: 'Ver todos', href: '/panel/eventos' } : undefined}
+        flush
+      >
+        <DataTable
+          rows={events.slice(0, 5)}
+          rowKey="id"
+          minWidth={620}
+          columns={columns}
+          rowHref={(event) => `/panel/eventos/${event.id}`}
+          empty={{ title: 'Todavía no tienes ningún evento' }}
+        />
+      </SectionCard>
     </>
   );
 }

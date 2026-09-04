@@ -35,9 +35,9 @@ export const MARKETING_PHOTOS = {
   /**
    * La portada. Un pasillo de ceremonia montado, no una pareja.
    *
-   * Es deliberado: éclat no es solo bodas —hay presentaciones, XV, bautizos y cumpleaños—, y una
-   * pareja de novios a toda pantalla le dice a quien organiza los quince de su hija que esto no
-   * es para ella. Un montaje elegante sirve para las nueve celebraciones del catálogo.
+   * Es deliberado, y lo sigue siendo ahora que solo se venden bodas y XV: una pareja de novios a
+   * toda pantalla le dice a quien organiza los quince de su hija que esto no es para ella, y esa
+   * es justo la mitad del público. Un montaje elegante sirve para las dos.
    *
    * Además es horizontal y con el centro despejado, que es lo que un titular centrado necesita.
    */

@@ -1,0 +1,141 @@
+/* ============================================================================
+   Selector de entrada
+   ============================================================================
+   Hoja propia y tokens propios, y no es duplicación por descuido: los `--dash-*` los cuelga
+   `DashboardShell` del elemento raíz del armazón, y esta pantalla vive FUERA del armazón a
+   propósito —no tiene menú, porque el menú necesitaría un contexto que aquí todavía no se ha
+   elegido—. Sin `.dash` encima, heredar esas variables no es posible.
+
+   Los valores salen de la paleta `client` de `dashboard-palette.ts`. Si esa paleta cambia, este
+   bloque hay que cambiarlo a mano: es el precio de que la pantalla sea independiente, y es un
+   bloque de siete líneas contra el coste de sacar el armazón entero de su sitio. */
+
+.picker {
+  --picker-accent: #6b3a5e;
+  --picker-canvas: #faf6f4;
+  --picker-surface: #fff;
+  --picker-border: #ede5e9;
+  --picker-ink: #2c222a;
+  --picker-ink-soft: #6a5c66;
+  --picker-muted: #7a6c7a;
+
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 40px;
+  min-height: 100svh;
+  padding: 48px 24px;
+  background: var(--picker-canvas);
+  color: var(--picker-ink);
+}
+
+.picker__head {
+  display: grid;
+  gap: 8px;
+  max-width: 34rem;
+  text-align: center;
+}
+
+.picker__greeting {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--picker-muted);
+}
+
+.picker__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.125rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.picker__lede {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--picker-ink-soft);
+}
+
+/* `auto-fit` con un mínimo y no un número fijo de columnas: los destinos son 1, 2 o 7 según la
+   sesión, y una retícula de tres deja huecos raros con dos tarjetas. Con `auto-fit` una sola
+   tarjeta queda centrada y ocupa su ancho natural, que es justo lo que se pidió: tarjetas
+   pequeñas, no una lámina por evento. */
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 54rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.picker__card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  height: 100%;
+  padding: 18px 20px;
+  border: 1px solid var(--picker-border);
+  border-radius: 14px;
+  background: var(--picker-surface);
+  box-shadow: 0 1px 2px #241d290a;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.picker__card:hover {
+  border-color: color-mix(in srgb, var(--picker-accent) 35%, var(--picker-border));
+  box-shadow: 0 2px 6px #241d290f, 0 12px 28px #241d2912;
+  transform: translateY(-1px);
+}
+
+/* El foco se marca en el elemento entero y no solo en el texto: la tarjeta es el objetivo del
+   teclado, así que el anillo tiene que dibujar lo que se va a activar al pulsar Enter. */
+.picker__card:focus-visible {
+  outline: 2px solid var(--picker-accent);
+  outline-offset: 2px;
+}
+
+.picker__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--picker-accent) 10%, transparent);
+  color: var(--picker-accent);
+}
+
+.picker__body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.picker__card-title {
+  font-size: 15px;
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+.picker__card-meta {
+  font-size: 13px;
+  color: var(--picker-ink-soft);
+}
+
+.picker__card-label {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--picker-muted);
+}

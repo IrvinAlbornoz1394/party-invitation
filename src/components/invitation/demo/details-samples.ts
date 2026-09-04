@@ -4,26 +4,24 @@ import type { DemoSample } from './sample';
 /**
  * Contenido de ejemplo para ver los detalles sin tener que crear un evento.
  *
- * Mismas claves que los ejemplos de portada e historia —los mismos tres eventos imaginarios—,
- * para que al saltar de bloque en la previsualización no cambie el evento debajo.
+ * Mismas claves que los ejemplos de portada e historia, para que al saltar de bloque en la
+ * previsualización no cambie el evento debajo.
  *
- * Los tres tienen distinto número de detalles a propósito: **tres, cinco y seis**. Es el eje
- * en el que se rompen estas cuatro variantes —una rejilla con cinco elementos deja hueco, una
- * lista con tres se queda corta, el panel con seis empieza a apretar— y es lo que hay que ver
- * antes de asignar una a un evento, no después.
+ * Los dos tienen distinto número de detalles a propósito —**seis y cuatro**—. Es el eje en el que
+ * se rompen estas cuatro variantes: una rejilla con cuatro deja hueco, una lista con seis empieza
+ * a alargarse, y el panel de color con seis aprieta. Hay que verlo antes de asignar una a un
+ * evento, no después.
  *
- * El de XV Años va **sin fotografía**, igual que en el resto de bloques: es el ejemplo con el
- * que se comprueba que las cuatro variantes se sostienen antes de que el cliente mande las
- * fotos, que es como se arma la mayoría de los eventos.
+ * El de XV va **sin fotografía**, y es el único bloque donde se conserva ese caso: es con el que
+ * se comprueba que las cuatro variantes se sostienen antes de que el cliente mande las fotos, que
+ * es como se arma la mayoría de los eventos. En el escaparate no se nota, porque este bloque no
+ * enseña foto en ninguna de las plantillas de XV.
  */
-
-const unsplash = (id: string): string =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1600&q=80`;
 
 export const DETAILS_SAMPLES: readonly DemoSample<DetailsContent>[] = [
   {
-    key: 'presentacion',
-    name: 'Presentación',
+    key: 'boda',
+    name: 'Boda',
     content: detailsContentSchema.parse({
       eyebrow: 'Lo que necesitas saber',
       title: 'Detalles del día',
@@ -31,116 +29,81 @@ export const DETAILS_SAMPLES: readonly DemoSample<DetailsContent>[] = [
       items: [
         {
           icon: 'church',
-          title: 'Misa de acción de gracias',
-          description: 'Templo de Nuestra Señora de Guadalupe, 12:00 PM. Llega diez minutos antes.',
-          action: { label: 'Cómo llegar', href: 'https://maps.google.com/?q=Merida' },
+          title: 'Ceremonia',
+          description: 'Convento de San Antonio de Padua, 5:00 PM. Te pedimos llegar antes.',
+          action: { label: 'Cómo llegar', href: 'https://maps.google.com/?q=Convento+Izamal' },
         },
         {
-          icon: 'cake',
-          title: 'La fiesta',
-          description: 'En casa de la familia, a partir de las 2:00 PM. Habrá comida para todos.',
-        },
-        {
-          icon: 'gift',
-          title: 'Sugerencia de regalo',
-          description: 'Juguetes para tres años, libros o un detalle con cariño.',
-          action: { label: 'Ver ideas', href: 'https://www.google.com/search?q=juguetes+3+anios' },
-        },
-      ],
-      image: {
-        url: unsplash('photo-1607344645866-009c320b63e0'),
-        alt: 'Mesa de dulces decorada para la fiesta infantil',
-      },
-      note: 'Si vienes con niños, avísanos para tenerlos en cuenta en la mesa de dulces.',
-    }),
-  },
-  {
-    key: 'xv-anios',
-    name: 'XV Años',
-    content: detailsContentSchema.parse({
-      eyebrow: 'Antes de la fiesta',
-      title: 'Lo que hay que saber',
-      subtitle: null,
-      items: [
-        {
-          icon: 'calendar',
-          title: 'Sábado 6 de noviembre',
-          description: 'La recepción empieza a las 8:00 PM en punto.',
-        },
-        {
-          icon: 'location',
-          title: 'Hacienda San Isidro',
-          description: 'Carretera a Chichimilá km 3, Valladolid.',
-          action: { label: 'Abrir el mapa', href: 'https://maps.google.com/?q=Valladolid+Yucatan' },
+          icon: 'car',
+          title: 'Transporte',
+          description: 'Sale del centro a las 19:00 y regresa a las 2:00. Sin costo.',
+          action: null,
         },
         {
           icon: 'dress',
           title: 'Etiqueta',
-          description: 'Formal. Te pedimos reservar el color rojo para la festejada.',
+          description: 'Formal de jardín. El piso del patio es de piedra: tacón cómodo.',
+          action: null,
+        },
+        {
+          icon: 'guests',
+          title: 'Solo adultos',
+          description: 'Con mucho cariño, nos gustaría que esta noche fuera de los grandes.',
+          action: null,
+        },
+        {
+          icon: 'gift',
+          title: 'Mesa de regalos',
+          description: 'Tu presencia es más que suficiente, pero si insistes…',
+          action: { label: 'Ver la mesa', href: 'https://www.liverpool.com.mx' },
         },
         {
           icon: 'parking',
           title: 'Estacionamiento',
-          description: 'Gratuito dentro de la hacienda, con acomodadores desde las 7:30 PM.',
-        },
-        {
-          icon: 'gift',
-          title: 'Mesa de regalos',
-          description: 'Registrada a nombre de Renata Villanueva.',
-          action: { label: 'Ver mesa de regalos', href: 'https://www.liverpool.com.mx' },
+          description: 'Hay valet en la entrada principal de la hacienda.',
+          action: null,
         },
       ],
-      // Sin fotografía: el estado en el que se arma la mayoría de los eventos.
       image: null,
-      note: 'Confirma tu asistencia antes del 20 de octubre para apartar tu lugar.',
+      note: 'Si algo cambia, te avisamos por aquí mismo.',
     }),
   },
   {
-    key: 'boda',
-    name: 'Boda',
+    key: 'quince',
+    name: 'XV Años',
     content: detailsContentSchema.parse({
-      eyebrow: 'Nuestro día',
-      title: 'Detalles de la boda',
-      subtitle: 'Un par de cosas para que no tengas que preguntar nada.',
+      eyebrow: 'Detalles',
+      title: 'Lo que hay que saber',
+      subtitle: null,
       items: [
         {
           icon: 'church',
-          title: 'Ceremonia',
-          description: 'Ex convento de San Antonio, 5:00 PM.',
-          action: { label: 'Cómo llegar', href: 'https://maps.google.com/?q=Izamal' },
-        },
-        {
-          icon: 'clock',
-          title: 'Recepción',
-          description: 'A las 7:00 PM, a diez minutos de la ceremonia.',
-        },
-        {
-          icon: 'dress',
-          title: 'Código de vestimenta',
-          description: 'Formal de jardín. El piso es de piedra: tenlo en cuenta con los tacones.',
-        },
-        {
-          icon: 'camera',
-          title: 'Ceremonia sin celulares',
-          description: 'Nos encantaría verte a ti, no a tu pantalla. Después habrá fotos para todos.',
+          title: 'Misa',
+          description: 'Iglesia de San Servacio, 7:00 PM.',
+          action: { label: 'Cómo llegar', href: 'https://maps.google.com/?q=San+Servacio' },
         },
         {
           icon: 'music',
-          title: 'La fiesta',
-          description: 'Grupo en vivo hasta la una y música hasta que aguantemos.',
+          title: 'El vals',
+          description: 'A las 9:45. Es la parte que no me quiero perder contigo ahí.',
+          action: null,
+        },
+        {
+          icon: 'dress',
+          title: 'Etiqueta',
+          description: 'Formal. Te pido evitar el azul cielo, que es mi color esa noche.',
+          action: null,
         },
         {
           icon: 'gift',
-          title: 'Mesa de regalos',
-          description: 'Si quieres tener un detalle con nosotros, aquí están nuestras opciones.',
-          action: { label: 'Ver opciones', href: 'https://www.amazon.com.mx' },
+          title: 'Regalos',
+          description: 'Si quieres regalarme algo, un sobre me ayuda con el viaje de estudios.',
+          action: null,
         },
       ],
-      image: {
-        url: unsplash('photo-1560421683-6856ea585c78'),
-        alt: 'Mesa larga montada al aire libre para la recepción',
-      },
-      note: 'Por el tipo de recepción, esta invitación es para adultos. Gracias por entenderlo.',
+      /* Sin fotografía: el estado en el que las cuatro variantes tienen que sostenerse solas. */
+      image: null,
+      note: null,
     }),
   },
 ];

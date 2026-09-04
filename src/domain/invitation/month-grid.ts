@@ -99,3 +99,74 @@ export function monthGrid(isoInstant: string, weekStartsOn: WeekStart = 'sunday'
     })),
   };
 }
+
+/** Una casilla de la semana: el número, la inicial de su día y si es el del evento. */
+export interface EventWeekDay {
+  readonly day: number;
+  readonly initial: string;
+  readonly isEvent: boolean;
+}
+
+export interface EventWeek {
+  /** El nombre del mes del evento, capitalizado: «Julio». */
+  readonly monthLabel: string;
+  readonly year: string;
+  readonly days: readonly EventWeekDay[];
+}
+
+/**
+ * La **semana** en la que cae el evento: siete casillas con su inicial, de lunes a domingo o de
+ * domingo a sábado según lo que diga el contenido.
+ *
+ * Es la tercera forma de contar la misma fecha, y las tres responden a preguntas distintas —por
+ * eso conviven en vez de sobrar dos—:
+ *
+ *   `monthGrid`  el mes entero. «¿Qué día de la semana cae y cómo se reparte el mes?»
+ *   `dayStrip`   tres días antes y tres después. «¿Cuándo es, más o menos?»
+ *   `eventWeek`  la semana real, con las iniciales. «¿Es entre semana o fin de semana?»
+ *
+ * La diferencia con `dayStrip` no es cosmética aunque las dos pinten siete casillas: aquella
+ * centra el día del evento y no dice de qué día de la semana se trata; esta lo coloca **donde de
+ * verdad cae** —puede quedar el primero o el último— y por eso puede rotular las columnas. Para
+ * quien tiene que pedir el día libre, esa es la información.
+ *
+ * Como en `dayStrip`, la semana **cruza de mes** cuando toca: una boda en jueves 1 enseña el
+ * lunes 29, el martes 30 y el miércoles 31 del mes anterior. Recortar la semana para que quepa
+ * en el mes sería enseñar una semana que no existe.
+ */
+export function eventWeek(isoInstant: string, weekStartsOn: WeekStart = 'sunday'): EventWeek | null {
+  const parts = eventDateParts(isoInstant);
+  const fields = ISO_MONTH.exec(isoInstant.trim());
+
+  if (!parts || !fields) return null;
+
+  const year = Number(fields[1]);
+  const monthIndex = Number(fields[2]) - 1;
+  const eventDay = Number(parts.day);
+
+  const initials = weekStartsOn === 'monday' ? MONDAY_FIRST : SUNDAY_FIRST;
+  const weekStartIndex = weekStartsOn === 'monday' ? 1 : 0;
+
+  const eventWeekday = new Date(Date.UTC(year, monthIndex, eventDay)).getUTCDay();
+  /* Cuántos días hay que retroceder desde el evento hasta el día que abre la semana. El «+ 7»
+     antes del resto evita el negativo cuando el evento cae en domingo y la semana abre en lunes,
+     que es el mismo caso que `leadingBlanks` resuelve en la retícula del mes. */
+  const backwards = (eventWeekday - weekStartIndex + 7) % 7;
+
+  const monthLength = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+  const previousMonthLength = new Date(Date.UTC(year, monthIndex, 0)).getUTCDate();
+
+  return {
+    monthLabel: parts.month,
+    year: parts.year,
+    days: initials.map((initial, index) => {
+      const number = eventDay - backwards + index;
+
+      return {
+        day: number < 1 ? previousMonthLength + number : number > monthLength ? number - monthLength : number,
+        initial,
+        isEvent: number === eventDay,
+      };
+    }),
+  };
+}

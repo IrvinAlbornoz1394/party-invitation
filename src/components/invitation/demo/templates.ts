@@ -37,8 +37,8 @@ import { WELCOME_SAMPLES } from './welcome-samples';
  *
  * ## Por qué cada plantilla elige variantes distintas
  *
- * Porque si las tres usaran `hero.classic` y `gallery.grid`, la página de plantillas enseñaría
- * el mismo diseño tres veces con otras fotos. Lo que distingue a una plantilla de otra es
+ * Porque si todas usaran `hero.classic` y `gallery.grid`, la página de plantillas enseñaría el
+ * mismo diseño una vez tras otra con otras fotos. Lo que distingue a una plantilla de otra es
  * exactamente esto: qué variante lleva cada bloque y con qué tema se compone.
  */
 
@@ -73,7 +73,7 @@ export type DemoTemplateBlock = TemplateBlockContent & {
  *
  * Va en la plantilla y no como una constante suelta del escaparate porque la música es parte del
  * registro: un cartel a pantalla completa y una papelería de algodón no piden la misma canción. Hoy
- * las seis comparten pista —hay un solo archivo en `public/music`— y el día que haya más, cambiarlo
+ * todas comparten pista —hay un solo archivo en `public/music`— y el día que haya más, cambiarlo
  * es una línea por demo y no una refactorización.
  *
  * En una invitación de verdad esto sale de `events.music_url`, que ya existe. Aquí es contenido
@@ -141,10 +141,11 @@ interface TemplateDefinition {
 }
 
 /**
- * Las seis demos: tres estructuras contadas dos veces, una para boda y otra para XV.
+ * Las diez demos: nueve estructuras, y una de ellas —`botanical`— contada dos veces, una para
+ * boda y otra para XV.
  *
  * Cada una corresponde a una estructura del catálogo y repite su composición de bloques y sus
- * variantes. Las tres de boda usan el **mismo contenido** y las tres de XV también, y eso es
+ * variantes. Las de boda usan todas el **mismo contenido** y las de XV también, y eso es
  * deliberado: comparar dos estructuras con el mismo texto y las mismas fotos es la única forma de
  * ver qué hace una plantilla, sin que la diferencia la ponga el contenido.
  *
@@ -164,7 +165,7 @@ interface TemplateDefinition {
  * sitios.
  */
 /**
- * La única pista que hay hoy en `public/music`, compartida por las seis demos.
+ * La única pista que hay hoy en `public/music`, compartida por todas las demos.
  *
  * Es una limitación de material, no de diseño: el campo es por plantilla justamente para que cada
  * una pueda tener la suya. Mientras haya un solo archivo, escribirlo una vez y referenciarlo es
@@ -205,7 +206,7 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
      */
     blocks: [
       /*
-       * La bienvenida está en las seis demos aunque en el catálogo (`scripts/seed.ts`) solo la
+       * La bienvenida está en todas las demos aunque en el catálogo (`scripts/seed.ts`) solo la
        * lleven algunas, y la diferencia es deliberada: una plantilla del catálogo es lo que un
        * cliente se encuentra montado, y el escaparate es donde se prueba lo que se puede añadir.
        * Es la pieza que distingue al plan de en medio, así que hay que poder ponerla, cambiarla y
@@ -294,6 +295,123 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'footer', registryId: 'footer.ribbon' },
     ],
   },
+  {
+    key: 'silk',
+    name: 'Silk',
+    structureKey: 'silk',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Piezas de papel sobre fondo crema: la portada en una tarjeta encima de la foto, las telas en fichas y el cierre en una lámina oscura.',
+    themeKey: 'silk',
+    cover: demoImage(WEDDING_PHOTOS.ceremony, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    /*
+     * La estructura que se arma por planos: casi cada sección es una pieza de papel apoyada sobre
+     * otra cosa. Estrena ocho variantes —ver `scripts/seed.ts`— porque la regla de exclusividad ya
+     * no dejaba ninguna libre en esos bloques ni para boda ni para XV.
+     *
+     * Es además la demo donde se ve el caso difícil del muestrario: la paleta de la boda llega
+     * **sin nombres** (ver `dresscode-samples.ts`), así que aquí `dresscode.swatches` se compone
+     * con el retal a todo el ancho de la ficha, que es su otra maqueta.
+     */
+    blocks: [
+      /* La puerta con la cuenta atrás: es la sección que la referencia remata a pantalla completa,
+         y aquí abre en vez de cerrar, que es donde una cuenta regresiva se mira de verdad. */
+      { blockKey: 'welcome', registryId: 'welcome.countdown', removable: true },
+      { blockKey: 'hero', registryId: 'hero.card' },
+      { blockKey: 'story', registryId: 'story.mounted' },
+      { blockKey: 'schedule', registryId: 'schedule.cards' },
+      { blockKey: 'location', registryId: 'location.single-card' },
+      { blockKey: 'details', registryId: 'details.stack' },
+      { blockKey: 'dresscode', registryId: 'dresscode.swatches' },
+      /* El collage desfasado: dos columnas a distinta altura y una foto cruzando el ancho al
+         final, cada una con la sombra del tema. Es la misma idea que el resto de la plantilla
+         —piezas sueltas apoyadas sobre el fondo—, que es lo que el mosaico no hacía. */
+      { blockKey: 'gallery', registryId: 'gallery.offset' },
+      /* La confirmación va antes del cierre, como en las otras seis: la nota del final es el
+         remate de la carta y no puede quedar debajo de una petición. */
+      { blockKey: 'rsvp', registryId: 'rsvp.raised' },
+      { blockKey: 'closing', registryId: 'closing.note' },
+      { blockKey: 'footer', registryId: 'footer.seal' },
+    ],
+  },
+  {
+    key: 'monochrome',
+    name: 'Monochrome',
+    structureKey: 'monochrome',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Papel blanco, fotografía en blanco y negro y la caligrafía como único ornamento. Sin una sola caja en toda la invitación.',
+    themeKey: 'ink',
+    cover: demoImage(WEDDING_PHOTOS.rings, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    /*
+     * La estructura que se define por lo que quita. Es además la demo que mejor enseña lo que un
+     * **tema** puede hacer solo: las fotografías salen en blanco y negro sin que ningún componente
+     * lo sepa —lo hace `photo.filter` de «ink»— así que cambiando el tema en el gestor, la misma
+     * invitación vuelve a color de golpe. En las otras seis el tema cambia el color de la tinta;
+     * aquí cambia el material.
+     */
+    blocks: [
+      /* Las iniciales a cuerpo enorme sobre la fotografía: la puerta rima con la portada, que hace
+         el mismo gesto con los nombres. */
+      { blockKey: 'welcome', registryId: 'welcome.monogram', removable: true },
+      { blockKey: 'hero', registryId: 'hero.script' },
+      { blockKey: 'story', registryId: 'story.greeting' },
+      { blockKey: 'calendar', registryId: 'calendar.sheet' },
+      /* La pasarela continua: una tira de fotografías cruzando la pantalla es lo más cercano a la
+         banda a sangre que la referencia pone entre el saludo y el programa, y no necesitaba
+         componente nuevo. */
+      { blockKey: 'gallery', registryId: 'gallery.carousel' },
+      { blockKey: 'schedule', registryId: 'schedule.hours' },
+      { blockKey: 'location', registryId: 'location.single-open' },
+      { blockKey: 'dresscode', registryId: 'dresscode.discs' },
+      { blockKey: 'details', registryId: 'details.notes' },
+      { blockKey: 'rsvp', registryId: 'rsvp.hairline' },
+      { blockKey: 'closing', registryId: 'closing.script' },
+      { blockKey: 'footer', registryId: 'footer.rule' },
+    ],
+  },
+  {
+    key: 'sketch',
+    name: 'Sketch',
+    structureKey: 'sketch',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Ilustrada a mano: rótulos de letra vaciada, dibujos de línea en cada sección y manchas de color en vez de muestras.',
+    themeKey: 'cocoa',
+    cover: demoImage(WEDDING_PHOTOS.guests, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    /*
+     * La primera estructura ilustrada, y la única del escaparate donde el dibujo hace de
+     * ilustración y no de ornamento: el marco de la portada, el lazo del saludo, el candelabro de
+     * la vestimenta, la mesa puesta de la sede y los dos ramilletes del cierre. Todos son SVG del
+     * proyecto y todos toman el color del tema, así que cambiándolo en el gestor los dibujos
+     * cambian de tinta con el resto de la invitación.
+     */
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.band', removable: true },
+      { blockKey: 'hero', registryId: 'hero.frame' },
+      { blockKey: 'story', registryId: 'story.bow' },
+      { blockKey: 'calendar', registryId: 'calendar.week' },
+      /* El cronograma que ya era dibujado, con sus lazos y una ilustración por momento. Estaba
+         libre y es exactamente el registro de esta plantilla: no hizo falta escribir otro. */
+      { blockKey: 'schedule', registryId: 'schedule.ribbon' },
+      { blockKey: 'gallery', registryId: 'gallery.mosaic' },
+      { blockKey: 'location', registryId: 'location.single-scene' },
+      { blockKey: 'dresscode', registryId: 'dresscode.drops' },
+      { blockKey: 'details', registryId: 'details.stickers' },
+      { blockKey: 'rsvp', registryId: 'rsvp.ticket' },
+      { blockKey: 'closing', registryId: 'closing.bouquet' },
+      { blockKey: 'footer', registryId: 'footer.wave' },
+    ],
+  },
 
   /* ── XV años ──────────────────────────────────────────────────────────── */
   {
@@ -376,7 +494,11 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
     music: DEMO_MUSIC,
     sampleKey: 'quince',
     blocks: [
-      { blockKey: 'welcome', registryId: 'welcome.band', removable: true },
+      /* La puerta dorada: doble filete inscrito, guirnaldas en dos esquinas y la tiara sobre la
+         fotografía en penumbra. Sustituye a `welcome.band` —el retrato con la franja de color—,
+         que se fue a `sketch`, donde la mancha plena es el material de la plantilla. Aquí la
+         estructura narra, y una participación grabada es una entrada mejor que una franja. */
+      { blockKey: 'welcome', registryId: 'welcome.gilded', removable: true },
       /* La portada con las cifras: en la estructura que narra, el número a cuerpo de cartel es la
          entrada, y el resto de la invitación lo desarrolla. */
       { blockKey: 'hero', registryId: 'hero.quince' },
@@ -395,6 +517,44 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       /* La página final del álbum, que es donde termina un relato contado con instantáneas. */
       { blockKey: 'closing', registryId: 'closing.album' },
       { blockKey: 'footer', registryId: 'footer.marquee' },
+    ],
+  },
+  {
+    key: 'gala',
+    name: 'Gala',
+    structureKey: 'gala',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'Verde bosque y oro: la corona, el retrato enmarcado y la fecha grabada, todo en un eje y con guirnaldas de línea en los cantos.',
+    themeKey: 'emerald',
+    cover: demoImage(QUINCE_PHOTOS.church, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    /*
+     * La única demo que **solo existe para un tipo de evento**, y la única sin hermana posible:
+     * su portada lleva la corona escrita dentro, así que no se puede contar para una boda. El
+     * selector de tipo del gestor lo resuelve solo —sin hermana, se queda donde está— y es el
+     * caso que `findSiblingTemplate` cubre devolviendo la propia plantilla.
+     *
+     * Es además la primera oscura del escaparate que no es un cartel: aquí el fondo verde no
+     * enmarca fotografías a pantalla completa como en `cinematic`, sostiene una participación
+     * grabada. Todo lo que separa y destaca es el filete dorado.
+     */
+    blocks: [
+      /* La puerta de unos XV: la corona en vez de las alianzas. La misma que lleva la portada, y
+         por eso las dos primeras pantallas riman. */
+      { blockKey: 'welcome', registryId: 'welcome.crown', removable: true },
+      { blockKey: 'hero', registryId: 'hero.crown' },
+      { blockKey: 'calendar', registryId: 'calendar.band' },
+      { blockKey: 'location', registryId: 'location.single-plaque' },
+      { blockKey: 'schedule', registryId: 'schedule.leaders' },
+      { blockKey: 'gallery', registryId: 'gallery.parallax' },
+      { blockKey: 'details', registryId: 'details.column' },
+      { blockKey: 'dresscode', registryId: 'dresscode.label' },
+      { blockKey: 'rsvp', registryId: 'rsvp.engraved' },
+      { blockKey: 'closing', registryId: 'closing.wreath' },
+      { blockKey: 'footer', registryId: 'footer.frame' },
     ],
   },
 ];

@@ -109,10 +109,10 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
 
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-linear-to-t from-inv-overlay/75 via-inv-overlay/25 to-transparent"
+          className="absolute inset-0 inv-scrim" data-from="bottom"
         />
 
-        <div className="relative flex h-full flex-col items-center justify-end px-8 pb-10 text-inv-on-primary">
+        <div className="relative flex h-full flex-col items-center justify-end px-8 pb-10 text-inv-on-primary inv-on-photo">
           {content.note && (
             <p className="mb-5 max-w-xs text-center text-[13px] leading-snug">{content.note}</p>
           )}

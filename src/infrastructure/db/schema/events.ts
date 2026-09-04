@@ -19,7 +19,15 @@ import { plans } from './plans';
 import { blocks, componentVariants, eventTypes, templates, themes } from './registry';
 import { clients } from './clients';
 
-export const eventStatus = pgEnum('event_status', ['draft', 'published', 'archived']);
+/**
+ * El camino de un evento. Su significado y sus transiciones viven en el dominio
+ * (`domain/events/event-status.ts`); aquí solo está la forma que toma en Postgres.
+ *
+ * `review` se añadió después: es donde espera un evento que el cliente ya llenó y la plataforma
+ * todavía no ha mirado. Va en el enum y no como una columna aparte para que la bandeja de
+ * revisión sea una consulta por igualdad y no el cruce de dos campos.
+ */
+export const eventStatus = pgEnum('event_status', ['draft', 'review', 'published', 'archived']);
 export const venueKind = pgEnum('venue_kind', ['church', 'reception', 'other']);
 
 /**
@@ -92,6 +100,21 @@ export const events = pgTable(
     city: text('city'),
 
     status: eventStatus('status').notNull().default('draft'),
+    /**
+     * Si se espera que **el cliente** llene el contenido de este evento.
+     *
+     * Lo marca quien da de alta el evento, y con ello se le manda al cliente el enlace a su
+     * formulario. Después se apaga solo en cuanto la plataforma guarda contenido por su cuenta:
+     * si el admin ya escribió la información, seguir esperando al cliente sobra —y dejarle el
+     * formulario abierto invitaría a que sobrescribiera lo que el admin acaba de guardar—.
+     *
+     * Se puede volver a encender desde la lista de eventos («Enviar enlace al cliente»), que es
+     * el caso de un evento que empezó llenando la plataforma y termina llenando el cliente.
+     *
+     * Es una bandera de flujo, no un permiso: quién puede escribir en un evento lo decide la
+     * membresía y lo aplica la base de datos. Esta solo dice a quién le toca.
+     */
+    clientFillsContent: boolean('client_fills_content').notNull().default(false),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     /** Vigencia de la invitación; se calcula al publicar con `plans.duration_months`. */
     expiresAt: timestamp('expires_at', { withTimezone: true }),
@@ -177,6 +200,15 @@ export const eventVenues = pgTable(
     detail: text('detail'),
     mapUrl: text('map_url'),
     startsAt: timestamp('starts_at', { withTimezone: true }),
+    /**
+     * La fotografía de la sede.
+     *
+     * Es de la sede y no del bloque a propósito: cuatro de los siete componentes de ubicación la
+     * pintan y los otros tres no, así que guardarla en `event_blocks.config` la perdería al
+     * cambiar de variante — que es justo lo que el plan Plus vende poder hacer.
+     */
+    imageUrl: text('image_url'),
+    imageAlt: text('image_alt'),
     position: smallint('position').notNull().default(0),
     ...timestamps,
   },
@@ -204,6 +236,15 @@ export const eventScheduleItems = pgTable(
     startsAt: timestamp('starts_at', { withTimezone: true }),
     title: text('title').notNull(),
     description: text('description'),
+    /**
+     * El icono del hito, del vocabulario único de la invitación (`blockIconSchema`).
+     *
+     * Se guarda con el momento y no con el bloque porque es del momento: «misa» lleva su icono
+     * tanto si el cronograma se pinta en línea de tiempo como si se pinta en cinta, y el
+     * interruptor `marker` del bloque decide si se enseñan o se sustituyen por puntos — sin
+     * obligar a volver a elegir doce iconos.
+     */
+    icon: text('icon'),
     ...timestamps,
   },
   (t) => [
@@ -235,6 +276,14 @@ export const eventGalleryItems = pgTable(
     url: text('url').notNull(),
     storageKey: text('storage_key'),
     altText: text('alt_text'),
+    /**
+     * El pie visible de la foto, distinto del texto alternativo.
+     *
+     * `alt_text` describe la imagen para quien no puede verla y **siempre** debe existir; esto es
+     * un texto que se lee debajo y casi nunca existe. Fundirlos dejaría la descripción impresa
+     * bajo cada foto en las galerías que muestran pie.
+     */
+    caption: text('caption'),
     width: integer('width'),
     height: integer('height'),
     byteSize: integer('byte_size'),

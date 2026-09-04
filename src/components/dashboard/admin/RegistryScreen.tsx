@@ -1,13 +1,20 @@
 'use client';
 
-import { Tabs } from 'antd';
-import type { BlockSummary, PlanSummary } from '@/domain/catalog/catalog-repository';
+import { useState } from 'react';
+import { Tabs, Tooltip } from 'antd';
+import type { TableProps } from 'antd';
+import type {
+  BlockSummary,
+  ComponentVariantSummary,
+  PlanSummary,
+} from '@/domain/catalog/catalog-repository';
 import { compareBlockKeys } from '@/domain/invitation/blocks/block-order';
 import { pluralize } from '../format';
 import { blockIcon } from './block-icons';
-import { BlockPreviewButton, type PreviewTheme } from './BlockPreview';
+import { PhoneStage, type PreviewTheme } from './BlockPreview';
 import { previewableVariants } from './previewable-variants';
-import { CodeCell } from '../primitives/Cell';
+import { CodeCell, IdentityCell } from '../primitives/Cell';
+import { DataTable } from '../primitives/DataTable';
 import { EmptyState } from '../primitives/EmptyState';
 import { PageHeader } from '../primitives/PageHeader';
 import { SectionCard } from '../primitives/SectionCard';
@@ -15,41 +22,36 @@ import { StatusPill } from '../primitives/StatusPill';
 import { activeStatus } from '../primitives/status-display';
 
 /**
- * El Component Registry: qué bloques existen y qué variantes tiene cada uno.
+ * El Component Registry: los doce bloques y sus variantes, con el móvil al lado.
  *
- * Es la pantalla que materializa la regla central de la arquitectura —«el sistema nunca
- * conocerá directamente los componentes, únicamente sus identificadores»—. Lo que se lista
- * aquí son los `registry_id` (`hero.classic`, `gallery.masonry`) con los que el Template
- * Renderer resuelve qué componente pintar.
+ * ## Por qué una tabla y no tarjetas
  *
- * Se agrupa por bloque en lugar de dar una tabla plana de variantes porque la pregunta que
- * se trae aquí es «¿qué opciones tengo para la galería?», no «¿qué variantes hay en total?».
- * Una tabla ordenable por bloque respondería lo mismo con más pasos.
+ * Porque esto es un **índice**, no un escaparate. Las tarjetas se pusieron cuando el bloque más
+ * grande tenía cuatro variantes y se abarcaban de un vistazo; hoy la bienvenida tiene doce y las
+ * galerías diez, y una rejilla de doce tarjetas obliga a leer en zigzag para responder a la única
+ * pregunta que se hace aquí —«¿cuál es cuál y desde qué plan?»—. En columnas, la respuesta está
+ * alineada y se lee de arriba abajo.
  *
- * ## Por qué pestañas y no una lista de tarjetas
+ * La tabla es además la pieza que ya usan las otras seis pantallas del panel (`DataTable`), así
+ * que esta deja de ser la rara: paginación, estado vacío y teclado se comportan igual en todas.
  *
- * Los once bloques apilados hacían una página de varias pantallas en la que la portada —el
- * bloque con el que se empieza a armar cualquier invitación— caía cerca del final, porque la
- * base de datos los devuelve por nombre y «Portada» va después de «Galería» en el alfabeto.
- * Con pestañas, cada bloque es un destino y el orden es el de lectura de una invitación
- * (`domain/invitation/blocks/block-order.ts`): portada, historia, detalles… hasta el pie.
+ * ## Por qué el teléfono y no una ventana
  *
- * Es además la forma que aguanta el crecimiento: las variantes de un bloque van a pasar de dos
- * a seis, y en una lista apilada eso empuja el resto de bloques cada vez más abajo, mientras
- * que aquí solo hace más alto el panel que se está mirando.
+ * Antes, cada variante traía un botón que abría un modal. Para comparar dos había que abrir,
+ * mirar, cerrar y volver a abrir — y comparar es justo lo que se hace en esta pantalla, porque de
+ * eso va el catálogo. Con el marco puesto al lado, elegir una fila cambia lo que se ve y nada
+ * más: se recorre la tabla con las flechas y el teléfono va enseñando.
  *
- * `registry_id` es una columna GENERADA en la base de datos a partir del bloque y la
- * variante, así que es imposible que el identificador se desincronice de lo que nombra. Por
- * eso se muestra tal cual y en monoespaciada: es la cadena exacta que hay que registrar en el
- * mapa del frontend.
+ * La ventana grande no se retira: sigue en «Temas», donde lo que se compara es el tema y hace
+ * falta el ancho de escritorio.
  *
- * ## Catálogo y código no van al mismo paso
+ * ## Las pestañas van sin texto
  *
- * Una variante puede estar dada de alta aquí y no existir todavía como componente —así se
- * sembró el registro, con las veinte variantes previstas—, y esa diferencia importa: asignar a
- * un evento una variante sin componente deja su bloque sin pintar. La pantalla la enseña en
- * lugar de esconderla: las que ya se pueden ver llevan botón de ejemplo, y las que no,
- * ninguno.
+ * Doce bloques con su nombre no caben en una barra sin partirse en dos filas o abrir un
+ * desplegable de «más», y las dos salidas esconden la mitad del catálogo. Con el dibujo solo, los
+ * doce caben siempre y el nombre lo da el `title` al pasar por encima —y a los lectores de
+ * pantalla, un texto oculto que no depende del ratón, que es lo que un `tooltip` a secas no
+ * garantiza.
  */
 export function RegistryScreen({
   blocks,
@@ -58,38 +60,19 @@ export function RegistryScreen({
 }: {
   readonly blocks: readonly BlockSummary[];
   readonly plans: readonly PlanSummary[];
-  /** Los temas del catálogo, para poder cruzar variante y tema en la previsualización. */
   readonly themes: readonly PreviewTheme[];
 }) {
   const variantCount = blocks.reduce((total, block) => total + block.variants.length, 0);
-
-  /*
-   * Todas las previsualizables, no solo la de la tarjeta que se pulse. La ventana permite
-   * saltar de una variante a otra sin cerrarse, que es como se comparan de verdad:
-   * `hero.classic` y `hero.split` con el mismo contenido y el mismo tema, alternando.
-   */
   const previewVariants = previewableVariants(blocks);
   const registered = new Set(previewVariants.map((variant) => variant.registryId));
-
-  /*
-   * En orden de lectura de la invitación, no en el alfabético con el que llegan. Se copia
-   * antes de ordenar porque `sort` muta, y `blocks` es una propiedad: ordenarla en el sitio
-   * reordenaría el array que el servidor pasó, que es justo el tipo de efecto que aparece
-   * como un fallo intermitente cuando otro componente lee la misma referencia.
-   */
   const orderedBlocks = [...blocks].sort((a, b) => compareBlockKeys(a.key, b.key));
 
   /*
-   * Los rangos se traducen a nombres de plan. `min_plan_rank` es un número que solo significa
-   * algo comparado con `plans.rank`, y enseñar «rango 2» obliga a ir a otra pantalla a
-   * averiguar cuál es el plan 2. Se busca el plan MÁS BAJO que alcanza ese rango, que es
-   * exactamente lo que la regla de negocio quiere decir: «a partir de este plan».
+   * El tema vive aquí y no dentro del teléfono: se elige una vez y se mantiene al cambiar de
+   * variante y de bloque, que es como se usa —«a ver cómo queda todo esto en Emerald»—. Dentro
+   * del marco se reiniciaría en cada pestaña.
    */
-  const planForRank = (rank: number): string | null => {
-    const eligible = [...plans].sort((a, b) => a.rank - b.rank).find((plan) => plan.rank >= rank);
-
-    return eligible?.name ?? null;
-  };
+  const [themeKey, setThemeKey] = useState(themes[0]?.key ?? '');
 
   return (
     <>
@@ -113,12 +96,7 @@ export function RegistryScreen({
         </SectionCard>
       ) : (
         <Tabs
-          className="dash-tabs"
-          /*
-           * No controlada: la pestaña abierta no es un dato que nadie más necesite, y
-           * gobernarla con estado propio solo añadiría un `useState` que hace exactamente lo
-           * que antd ya hace. La primera es la portada, por el orden de lectura.
-           */
+          className="dash-tabs dash-tabs--icons"
           defaultActiveKey={orderedBlocks[0]?.key}
           items={orderedBlocks.map((block) => {
             const Icon = blockIcon(block.key);
@@ -126,74 +104,159 @@ export function RegistryScreen({
             return {
               key: block.key,
               label: (
-                <span className="dash-tab">
-                  <Icon size={15} strokeWidth={1.8} />
-                  {block.name}
-                </span>
+                <Tooltip title={block.name} placement="bottom">
+                  <span className="dash-tab dash-tab--icon">
+                    <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
+                    {/* El nombre, para quien no ve el dibujo ni puede pasar el ratón. */}
+                    <span className="dash-sr-only">{block.name}</span>
+                  </span>
+                </Tooltip>
               ),
               children: (
-                <SectionCard>
-                  {/* La descripción y el plan que exige el bloque van juntos y arriba: son lo
-                      que hay que saber ANTES de comparar variantes, no un pie de página. */}
-                  <div className="dash-block__intro">
-                    <p className="dash-block__description">
-                      {block.description ??
-                        'Sin descripción. Se añade en la tabla «blocks» de la base de datos.'}
-                    </p>
-                    <p className="dash-block__requirement">
-                      {block.featureName
-                        ? `Requiere la funcionalidad «${block.featureName}»`
-                        : 'Disponible en todos los planes'}
-                    </p>
-                  </div>
-
-                  {block.variants.length === 0 ? (
-                    <p className="dash-cell__secondary" style={{ margin: 0 }}>
-                      Este bloque todavía no tiene ninguna variante registrada, así que no se
-                      puede usar en una plantilla.
-                    </p>
-                  ) : (
-                    <ul className="dash-variants">
-                      {block.variants.map((variant) => {
-                        const planName = planForRank(variant.minPlanRank);
-
-                        return (
-                          <li className="dash-variant" key={variant.id}>
-                            <div className="dash-variant__head">
-                              <CodeCell>{variant.registryId}</CodeCell>
-                              <StatusPill appearance={activeStatus(variant.isActive)} />
-                            </div>
-                            <p className="dash-variant__name">{variant.name}</p>
-                            {variant.description && (
-                              <p className="dash-variant__description">{variant.description}</p>
-                            )}
-                            <p className="dash-variant__plan">
-                              {variant.minPlanRank === 0 || planName === null
-                                ? 'Desde el plan más básico'
-                                : `Desde ${planName}`}
-                            </p>
-
-                            {registered.has(variant.registryId) && (
-                              <div className="dash-variant__actions">
-                                <BlockPreviewButton
-                                  variants={previewVariants}
-                                  themes={themes}
-                                  initialRegistryId={variant.registryId}
-                                  block
-                                />
-                              </div>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </SectionCard>
+                <BlockPanel
+                  block={block}
+                  plans={plans}
+                  themes={themes}
+                  themeKey={themeKey}
+                  onThemeChange={setThemeKey}
+                  registered={registered}
+                />
               ),
             };
           })}
         />
       )}
     </>
+  );
+}
+
+/**
+ * Un bloque: su ficha, la tabla de variantes y el teléfono.
+ *
+ * Es un componente aparte y no el cuerpo de un `map` porque **tiene estado**: cuál es la variante
+ * elegida. Escrito dentro del `map`, el estado sería uno solo para los doce bloques y cambiar de
+ * pestaña dejaría seleccionada una variante que no está en la tabla que se está mirando.
+ */
+function BlockPanel({
+  block,
+  plans,
+  themes,
+  themeKey,
+  onThemeChange,
+  registered,
+}: {
+  readonly block: BlockSummary;
+  readonly plans: readonly PlanSummary[];
+  readonly themes: readonly PreviewTheme[];
+  readonly themeKey: string;
+  readonly onThemeChange: (key: string) => void;
+  readonly registered: ReadonlySet<string>;
+}) {
+  /* Se abre con la primera que se pueda ver, no con la primera de la lista: un teléfono vacío al
+     entrar en la pestaña no dice nada, y las variantes sin componente son la excepción. */
+  const firstRenderable = block.variants.find((variant) => registered.has(variant.registryId));
+  const [registryId, setRegistryId] = useState<string | null>(
+    firstRenderable?.registryId ?? null,
+  );
+
+  const planForRank = (rank: number): string | null => {
+    const eligible = [...plans].sort((a, b) => a.rank - b.rank).find((plan) => plan.rank >= rank);
+
+    return eligible?.name ?? null;
+  };
+
+  const columns: TableProps<ComponentVariantSummary>['columns'] = [
+    {
+      title: 'Variante',
+      dataIndex: 'name',
+      /* El nombre manda y el identificador va debajo: lo que se busca con la vista es «la de los
+         discos», y lo que luego se copia al configurar el evento es `dresscode.discs`. Los dos
+         hacen falta, en ese orden. */
+      render: (_value, variant) => (
+        <IdentityCell primary={variant.name} secondary={<CodeCell>{variant.registryId}</CodeCell>} />
+      ),
+    },
+    {
+      title: 'Desde',
+      dataIndex: 'minPlanRank',
+      width: 130,
+      render: (_value, variant) => {
+        const planName = planForRank(variant.minPlanRank);
+
+        return variant.minPlanRank === 0 || planName === null ? (
+          <span className="dash-cell__secondary">Todos los planes</span>
+        ) : (
+          <span className="dash-cell__secondary">{planName}</span>
+        );
+      },
+    },
+    {
+      /* Que una variante esté dada de alta y no tenga componente es el aviso más útil de esta
+         pantalla: asignarla a un evento dejaría el bloque en blanco. Antes se deducía de que no
+         hubiera botón de «ver ejemplo», que es enterarse por una ausencia. */
+      title: 'Componente',
+      dataIndex: 'registryId',
+      width: 130,
+      render: (_value, variant) =>
+        registered.has(variant.registryId) ? (
+          <span className="dash-cell__secondary">Registrado</span>
+        ) : (
+          <span className="dash-cell__warning">Sin componente</span>
+        ),
+    },
+    {
+      title: 'Estado',
+      dataIndex: 'isActive',
+      width: 110,
+      render: (_value, variant) => <StatusPill appearance={activeStatus(variant.isActive)} />,
+    },
+  ];
+
+  return (
+    <div className="dash-registry">
+      <div className="dash-registry__list">
+        <SectionCard
+          title={block.name}
+          subtitle={pluralize(block.variants.length, 'variante', 'variantes')}
+          flush
+        >
+          <div className="dash-block__intro">
+            <p className="dash-block__description">
+              {block.description ??
+                'Sin descripción. Se añade en la tabla «blocks» de la base de datos.'}
+            </p>
+            <p className="dash-block__requirement">
+              {block.featureName
+                ? `Requiere la funcionalidad «${block.featureName}»`
+                : 'Disponible en todos los planes'}
+            </p>
+          </div>
+
+          <DataTable
+            rows={block.variants}
+            rowKey="registryId"
+            minWidth={520}
+            columns={columns}
+            activeRowKey={registryId}
+            onRowSelect={(variant) => setRegistryId(variant.registryId)}
+            pageSize={50}
+            empty={{
+              title: 'Este bloque no tiene variantes',
+              description:
+                'Sin al menos una variante registrada, el bloque no se puede usar en ninguna plantilla.',
+            }}
+          />
+        </SectionCard>
+      </div>
+
+      <aside className="dash-registry__preview">
+        <PhoneStage
+          registryId={registryId}
+          themes={themes}
+          themeKey={themeKey}
+          onThemeChange={onThemeChange}
+        />
+      </aside>
+    </div>
   );
 }

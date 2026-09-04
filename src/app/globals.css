@@ -213,6 +213,7 @@
   --color-inv-ink-soft: var(--inv-color-ink-soft);
   --color-inv-primary: var(--inv-color-primary);
   --color-inv-on-primary: var(--inv-color-on-primary);
+  --color-inv-on-photo: var(--inv-color-on-photo);
   --color-inv-accent: var(--inv-color-accent);
   --color-inv-line: var(--inv-color-line);
   --color-inv-overlay: var(--inv-color-overlay);
@@ -373,6 +374,35 @@
  */
 
 .inv-on-photo {
+  /*
+   * La tinta, y no solo la sombra.
+   *
+   * Esta clase marca «lo que hay debajo es una fotografía velada», y ese fondo no es el color
+   * principal del tema: es el velo, que siempre es oscuro. Con `--inv-color-on-primary` —que es
+   * lo que pintaba aquí media biblioteca— el texto salía **negro** en los temas cuyo principal es
+   * un tono medio, porque ahí ese token se resuelve al color que contrasta con el principal y no
+   * con el velo. Ver `onPhoto` en `domain/invitation/theme.ts`.
+   *
+   * Se arregla en dos líneas y sin tocar un solo componente:
+   *
+   *   · el color propio, para lo que herede de aquí;
+   *   · y el **redireccionamiento de la variable**, que es lo que hace el trabajo de verdad. Las
+   *     utilidades apuntan a `var(--inv-color-on-primary)` y la resuelve el navegador contra el
+   *     ancestro más cercano que la declare —está explicado más arriba, en `@theme`—, así que
+   *     redefinirla aquí dentro reapunta de golpe todo lo que ya venía escrito: los
+   *     `text-inv-on-primary` de cada variante, el `tone="inverse"` de `BlockHeading`, el
+   *     `tone="onImage"` del botón y de la cuenta regresiva.
+   *
+   * Lo que **no** se toca es el acento: un dorado o un rosa sobre el velo se leen bien y son una
+   * decisión del diseño, no un accidente.
+   *
+   * Una tarjeta clara colocada encima de una fotografía no debe usar `text-inv-on-primary` —le
+   * tocan `ink` o `primary`, que aquí siguen intactos—, y por eso no hace falta deshacer esto en
+   * `.inv-on-surface`.
+   */
+  --inv-color-on-primary: var(--inv-color-on-photo);
+  color: var(--inv-color-on-photo);
+
   --inv-on-photo-ink: color-mix(in srgb, var(--inv-color-overlay) 70%, #000);
   text-shadow:
     0 1px 2px var(--inv-on-photo-ink),
@@ -386,6 +416,40 @@
  */
 .inv-on-photo :where(.inv-on-surface) {
   text-shadow: none;
+}
+
+/*
+ * El rótulo vaciado: la letra dibujada con su contorno y el interior transparente.
+ *
+ * Es el recurso de las invitaciones ilustradas —las letras de globo del rótulo de sección— y no
+ * se puede hacer con utilidades sueltas: hay que teñir el **trazo** y vaciar el **relleno**, y
+ * son dos propiedades distintas. Escrito con clases (`text-transparent`) se vaciaría también el
+ * contorno, porque el trazo hereda de `color` y el color sería transparente.
+ *
+ * Así que el color se deja en pie —lo pone quien la usa con `text-inv-primary`, y de ahí lo toma
+ * el contorno por `currentColor`— y lo que se vacía es solo el relleno, con
+ * `-webkit-text-fill-color`. Es una propiedad con prefijo y sin equivalente estándar, y la
+ * soportan todos los navegadores actuales, Firefox incluido.
+ *
+ * ## El respaldo cuando no la soporta
+ *
+ * `@supports not` devuelve la letra a maciza. Es la degradación correcta: un rótulo relleno se
+ * lee, y un rótulo sin relleno **ni** contorno sería un hueco. Nunca se llega ahí hoy, pero el
+ * coste de escribirlo es una regla.
+ *
+ * El grosor va en `em` para que crezca con el cuerpo: a 3rem un contorno de 1px se ve como un
+ * pelo y a 1rem uno de 3px cierra los contraojos de la «e».
+ */
+.inv-outline-text {
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke-width: 0.035em;
+  -webkit-text-stroke-color: currentColor;
+}
+
+@supports not (-webkit-text-stroke-width: 1px) {
+  .inv-outline-text {
+    -webkit-text-fill-color: currentColor;
+  }
 }
 
 /*

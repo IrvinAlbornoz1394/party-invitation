@@ -101,6 +101,7 @@ export class DrizzleCatalogRepository implements CatalogRepository {
           name: templates.name,
           description: templates.description,
           previewImageUrl: templates.previewImageUrl,
+          defaultThemeKey: templates.defaultThemeKey,
           isActive: templates.isActive,
         })
         .from(templates)

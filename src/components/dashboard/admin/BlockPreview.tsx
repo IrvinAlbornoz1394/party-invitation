@@ -1,13 +1,10 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button, Modal, Segmented, Select } from 'antd';
 import { Eye, Monitor, Smartphone } from 'lucide-react';
-import { BlockDemo } from '@/components/invitation/demo/BlockDemo';
 import { sampleOptions } from '@/components/invitation/demo/samples';
 import { resolveComponent } from '@/components/invitation/registry/component-registry';
-import { ThemeScope } from '@/components/invitation/theme/ThemeScope';
-import { parseInvitationTheme } from '@/domain/invitation/theme';
 
 /**
  * Ver un componente de verdad, dentro del panel, antes de ponérselo a nadie.
@@ -142,24 +139,17 @@ function PreviewStage({
   );
   const [themeKey, setThemeKey] = useState(initialThemeKey ?? themes[0]?.key ?? '');
   /*
-   * La clave del ejemplo se guarda suelta y no el ejemplo entero: los bloques comparten
-   * claves —`presentacion`, `xv-anios`, `boda`—, así que al saltar de una portada a una
-   * historia se sigue viendo el mismo evento imaginario en lugar de volver al primero.
+   * La clave del ejemplo se guarda suelta y no el ejemplo entero: los bloques comparten claves
+   * —hoy `boda` y `quince`—, así que al saltar de una portada a una historia se sigue viendo el
+   * mismo evento imaginario en lugar de volver al primero.
+   *
+   * Empieza sin elegir y se resuelve abajo contra los ejemplos del bloque: una clave escrita a
+   * mano aquí se queda vieja el día que se renombra un ejemplo, y entonces el conmutador aparece
+   * sin nada marcado. Pasó: decía `presentacion`, que ya no existe.
    */
-  const [sampleKey, setSampleKey] = useState('presentacion');
+  const [sampleKey, setSampleKey] = useState<string | null>(null);
   const [device, setDevice] = useState<DeviceKey>('escritorio');
 
-  /*
-   * Los tokens se interpretan una sola vez por tema y no en cada render. No es micro-optimizar:
-   * cambiar de dispositivo o de contenido vuelve a renderizar, y sin memoria cada uno de esos
-   * cambios revalidaría con Zod los tokens de todos los temas de la plataforma.
-   */
-  const parsedThemes = useMemo(
-    () => new Map(themes.map((theme) => [theme.key, parseInvitationTheme(theme.tokens)])),
-    [themes],
-  );
-
-  const theme = parsedThemes.get(themeKey) ?? parseInvitationTheme({});
   /*
    * La entrada del registro, no el componente: lleva consigo a qué bloque sirve, y es esa
    * pareja la que permite que esta ventana ofrezca los ejemplos correctos sin saber qué
@@ -167,7 +157,17 @@ function PreviewStage({
    */
   const entry = resolveComponent(registryId);
   const samples = entry ? sampleOptions(entry.blockKey) : [];
+  const activeSample = samples.find((sample) => sample.key === sampleKey) ?? samples[0];
   const deviceWidth = DEVICES[device].width;
+
+  /* Lo mismo que en `PhoneStage`, y por lo mismo: dentro de un `<iframe>` el marco **es** el
+     viewport, así que el conmutador de móvil enseña de verdad la maqueta de móvil. Montado aquí
+     dentro, «móvil» solo estrechaba la caja y las medias queries seguían diciendo «escritorio». */
+  const source = `/admin/componentes/vista?${new URLSearchParams({
+    variante: registryId,
+    tema: themeKey,
+    ...(activeSample ? { contenido: activeSample.key } : null),
+  }).toString()}`;
 
   /* Agrupadas por bloque, en el orden en que llegan —que es el de lectura de la invitación—. */
   const variantGroups = variants.reduce<{ label: string; options: PreviewVariant[] }[]>(
@@ -217,14 +217,16 @@ function PreviewStage({
           />
         </PreviewControl>
 
-        <PreviewControl label="Contenido">
-          <Segmented
-            size="small"
-            value={sampleKey}
-            onChange={setSampleKey}
-            options={samples.map((item) => ({ label: item.name, value: item.key }))}
-          />
-        </PreviewControl>
+        {activeSample && (
+          <PreviewControl label="Contenido">
+            <Segmented
+              size="small"
+              value={activeSample.key}
+              onChange={(value) => setSampleKey(String(value))}
+              options={samples.map((item) => ({ label: item.name, value: item.key }))}
+            />
+          </PreviewControl>
+        )}
 
         <PreviewControl label="Pantalla">
           <Segmented
@@ -245,25 +247,11 @@ function PreviewStage({
           className="dash-preview__device"
           style={deviceWidth ? { maxWidth: deviceWidth } : undefined}
         >
-          {entry ? (
-            /*
-             * `viewport` es lo que hace que un bloque pensado para ocupar la pantalla entera
-             * quepa aquí sin que la variante sepa que está en una previsualización. Ver
-             * `ThemeScope`.
-             *
-             * El `min()` es por los portátiles: 560px fijos más los mandos y el marco de la
-             * ventana no caben en una pantalla de 768px de alto, y la portada quedaría
-             * cortada justo por donde va la cuenta regresiva.
-             */
-            <ThemeScope theme={theme} viewport="min(560px, 58vh)">
-              <BlockDemo entry={entry} sampleKey={sampleKey} />
-            </ThemeScope>
-          ) : (
-            <p className="dash-preview__missing">
-              La variante <code>{registryId}</code> está dada de alta en el catálogo pero
-              todavía no tiene componente registrado, así que no se puede previsualizar.
-            </p>
-          )}
+          {/*
+            El marco explica solo el caso de la variante sin componente —lo hace la propia ruta—,
+            así que aquí no hay que decidir nada: se carga siempre y él enseña lo que toque.
+          */}
+          <iframe className="dash-preview__frame" src={source} title="Vista previa del componente" />
         </div>
       </div>
     </div>
@@ -286,6 +274,119 @@ function PreviewControl({
     <div className="dash-preview__control">
       <span className="dash-preview__control-label">{label}</span>
       {children}
+    </div>
+  );
+}
+
+/**
+ * El teléfono: un bloque real, servido en su propia página dentro de un `<iframe>`.
+ *
+ * Es la otra mitad de la pantalla de componentes —la tabla elige, esto enseña— y por eso no es
+ * una ventana como {@link BlockPreviewButton}: se queda puesto, y cambiar de fila cambia lo que
+ * hay dentro sin abrir ni cerrar nada. Un modal por variante obligaba a abrir, mirar, cerrar y
+ * volver a abrir para comparar dos, que es exactamente lo que se hace todo el rato aquí.
+ *
+ * ## Por qué un `<iframe>` y no el componente montado aquí mismo
+ *
+ * Porque un marco estrecho da el **ancho**, y solo el ancho. Las medias queries de Tailwind se
+ * resuelven contra el viewport del navegador, así que un bloque metido en una caja de 390px
+ * dentro de un escritorio de 1440 se sigue maquetando como escritorio: dos columnas estrujadas,
+ * rejillas de galería con fotos diminutas y rótulos partidos donde no toca. Enseñaba una
+ * composición que no existe en ningún dispositivo.
+ *
+ * Dentro del marco, el `<iframe>` **es** el viewport. A 390 píxeles las medias queries dicen 390,
+ * sin tocar un solo componente. La ruta que se carga es `/admin/componentes/vista`, y ahí está
+ * explicado el resto.
+ *
+ * ## Por qué solo móvil
+ *
+ * Porque es donde se abren las invitaciones. Lo que se quiere aquí es un ancho fijo, siempre el
+ * mismo, para poder comparar doce variantes sin que cambie ninguna otra variable.
+ *
+ * ## El coste: recarga a cada cambio
+ *
+ * Cambiar de variante, de tema o de ejemplo cambia la dirección del marco, y eso es una carga de
+ * página. En local es un parpadeo; a cambio, lo que se ve es exactamente lo que verá un invitado,
+ * con sus fuentes, su CSS y su viewport. La alternativa —mantener el árbol de React dentro del
+ * marco y hablarle por `postMessage`— es más rápida y bastante más frágil, y esta pantalla no es
+ * la que hay que optimizar.
+ */
+export function PhoneStage({
+  registryId,
+  themes,
+  themeKey,
+  onThemeChange,
+}: {
+  readonly registryId: string | null;
+  readonly themes: readonly PreviewTheme[];
+  readonly themeKey: string;
+  readonly onThemeChange: (key: string) => void;
+}) {
+  const [sampleKey, setSampleKey] = useState<string | null>(null);
+
+  const entry = registryId ? resolveComponent(registryId) : null;
+  const samples = entry ? sampleOptions(entry.blockKey) : [];
+
+  /*
+   * El ejemplo elegido, o el primero del bloque.
+   *
+   * No se guarda al cambiar de bloque, y es a propósito: los ejemplos son por bloque —«boda» y
+   * «XV años» en casi todos— y una clave que no existe en el bloque nuevo dejaría el conmutador
+   * sin nada marcado. Resuelto aquí, la elección se conserva mientras la clave siga existiendo y
+   * se cae al primero cuando no.
+   */
+  const activeSample = samples.find((sample) => sample.key === sampleKey) ?? samples[0];
+
+  const source = registryId
+    ? `/admin/componentes/vista?${new URLSearchParams({
+        variante: registryId,
+        tema: themeKey,
+        ...(activeSample ? { contenido: activeSample.key } : null),
+      }).toString()}`
+    : null;
+
+  return (
+    <div className="dash-phone-stage">
+      <div className="dash-phone-stage__controls">
+        <PreviewControl label="Tema">
+          <Select
+            size="small"
+            value={themeKey}
+            onChange={onThemeChange}
+            style={{ width: '100%' }}
+            options={themes.map((item) => ({ label: item.name, value: item.key }))}
+          />
+        </PreviewControl>
+        {samples.length > 1 && activeSample && (
+          <PreviewControl label="Contenido">
+            <Segmented
+              size="small"
+              block
+              value={activeSample.key}
+              onChange={(value) => setSampleKey(String(value))}
+              options={samples.map((item) => ({ label: item.name, value: item.key }))}
+            />
+          </PreviewControl>
+        )}
+      </div>
+
+      <div className="dash-phone">
+        {source ? (
+          <iframe
+            className="dash-phone__screen"
+            /*
+             * `src` y no `key`: cambiando la dirección, el navegador navega dentro del mismo
+             * marco. Con una `key` nueva, React desmonta el `<iframe>` y monta otro, y entre las
+             * dos cosas se ve el fondo blanco del documento vacío — un parpadeo por cada clic en
+             * la tabla.
+             */
+            src={source}
+            title="Vista previa del componente en un teléfono"
+          />
+        ) : (
+          <p className="dash-phone__empty">Elige una variante en la tabla para verla aquí.</p>
+        )}
+      </div>
     </div>
   );
 }

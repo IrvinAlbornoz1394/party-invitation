@@ -21,9 +21,28 @@ export interface ClientSummary {
 export interface NewClient {
   readonly name: string;
   readonly slug: string;
-  readonly contactEmail: string | null;
-  /** Primera cuenta del cliente. Nace como dueño y en estado `invited`. */
-  readonly ownerEmail: string;
+  /**
+   * El correo del cliente. Obligatorio, y **uno solo**.
+   *
+   * Hace dos trabajos a la vez: es la dirección a la que llegan los avisos del sistema —el alta
+   * de un evento, el enlace para llenar su información— y es la identidad con la que su
+   * responsable entra a `/acceso`, porque aquí no hay contraseñas.
+   *
+   * Fueron dos campos: uno de contacto, opcional, y otro para la cuenta. En la práctica quien
+   * daba de alta escribía el mismo en los dos, o dejaba el primero vacío y después no había a
+   * dónde mandar nada. Dos campos para una sola dirección es una pregunta de más y una manera
+   * de acabar con dos direcciones distintas sin que nadie lo decidiera.
+   */
+  readonly contactEmail: string;
+  /**
+   * El teléfono, que hoy se guarda y no se usa.
+   *
+   * Entra ya porque pedirlo cuesta un campo y conseguirlo después cuesta una llamada. Cuando
+   * WhatsApp esté integrado será el segundo canal de los mismos avisos que hoy salen por correo,
+   * sin tener que volver a preguntárselo a nadie.
+   */
+  readonly contactPhone: string | null;
+  /** Nombre de la primera cuenta del cliente. Nace como dueño y en estado `invited`. */
   readonly ownerName: string;
 }
 
@@ -40,6 +59,8 @@ export type CreateClientResult =
    * plataforma, va de uno en uno y nunca dice de quién es el correo.
    */
   | { readonly outcome: 'email-taken' }
+  /** Llegó sin correo. Lo comprueba también la base de datos: sin él, el cliente nace inaccesible. */
+  | { readonly outcome: 'invalid-email' }
   | { readonly outcome: 'forbidden' };
 
 /** Lo que un cliente sabe de sí mismo. Lo que ve en su propio panel. */

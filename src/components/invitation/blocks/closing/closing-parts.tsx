@@ -45,17 +45,23 @@ export function ClosingMessage({
 
   return (
     <div className={clsx(centered && 'text-center', onImage && 'text-inv-on-primary', className)}>
+      {/* Los filetes, uno a cada lado y también cuando el rótulo va alineado a un lado: con uno
+          solo delante quedaba descuadrado, por lo mismo que en `shared/BlockHeading.tsx`. Aquí
+          son dos filetes lisos de 24px y no el ornamento del tema, así que no hay nudo que
+          proteger; se acortan los dos juntos si hace falta sitio. */}
       {content.eyebrow && (
         <p
           className={clsx(
-            'm-0 flex items-center gap-3 text-[11px] tracking-[0.3em] uppercase',
+            /* El mismo escalón de móvil que en `shared/BlockHeading.tsx`: los dos rótulos son la
+               misma pieza a ojos de quien lee la invitación, y a distinto cuerpo se notaría. */
+            'm-0 flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase sm:gap-3 sm:text-[11px] sm:tracking-[0.3em]',
             onImage ? 'opacity-85' : 'text-inv-accent',
             centered && 'justify-center',
           )}
         >
-          <span aria-hidden="true" className="h-px w-6 bg-current opacity-60" />
+          <span aria-hidden="true" className="h-px w-6 min-w-3 bg-current opacity-60" />
           {content.eyebrow}
-          {centered && <span aria-hidden="true" className="h-px w-6 bg-current opacity-60" />}
+          <span aria-hidden="true" className="h-px w-6 min-w-3 bg-current opacity-60" />
         </p>
       )}
 

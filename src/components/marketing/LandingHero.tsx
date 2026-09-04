@@ -110,7 +110,7 @@ export function LandingHero() {
           </Link>
         </div>
 
-        <p className="mt-8 mb-0 text-[13px] leading-relaxed text-ink/55">
+        <p className="mt-8 mb-0 text-[13px] leading-relaxed text-ink/75">
           Las plantillas se abren completas y se pueden cambiar en vivo. Sin registro.
         </p>
       </div>

@@ -4,7 +4,12 @@ import { redirect } from 'next/navigation';
 import { maskEmail } from '@/domain/auth/email-address';
 import { type OtpChannel, isOtpChannel, otpChannelLabel } from '@/domain/auth/otp-channel';
 import { requestOtp, verifyOtp } from '@/infrastructure/container';
-import { getRequestIp, getRequestUserAgent, homePathFor } from '@/lib/auth/current-session';
+import {
+  getRequestIp,
+  getRequestUserAgent,
+  homePathFor,
+  safeReturnTo,
+} from '@/lib/auth/current-session';
 import { writeSessionCookie } from '@/lib/auth/session-cookie';
 import { INITIAL_LOGIN_STATE, type LoginState } from './login-state';
 
@@ -189,7 +194,15 @@ async function checkCode(previous: LoginState, formData: FormData): Promise<Logi
        * ni un `/panel` que redirija después: cada cuenta aterriza directamente en el único
        * panel que le corresponde.
        */
-      redirect(homePathFor(result.actor));
+      /*
+       * A donde iba, si venía de algún sitio; si no, a su inicio.
+       *
+       * `safeReturnTo` se vuelve a aplicar **aquí** aunque la pantalla ya lo hubiera filtrado:
+       * esto es una acción de servidor y cualquiera puede llamarla con el campo que quiera. Es la
+       * diferencia entre validar para no enseñar una tontería y validar para no abrir un redirect
+       * a un sitio ajeno justo después de crear la sesión.
+       */
+      redirect(safeReturnTo(readText(formData, 'volver')) ?? homePathFor(result.actor));
   }
 }
 

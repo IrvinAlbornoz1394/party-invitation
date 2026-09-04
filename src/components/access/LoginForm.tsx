@@ -5,7 +5,7 @@ import type { ComponentRef } from 'react';
 import { Alert, Button, ConfigProvider, Input, Segmented, Typography } from 'antd';
 import esES from 'antd/locale/es_ES';
 import { KeyRound, Mail, MessageCircle } from 'lucide-react';
-import { EclatWordmark } from '@/components/brand/EclatWordmark';
+import { MiEventoWordmark } from '@/components/brand/MiEventoWordmark';
 import type { OtpChannel } from '@/domain/auth/otp-channel';
 import { OTP_CODE_LENGTH } from '@/domain/auth/otp-code';
 import { submitLogin } from '@/app/acceso/actions';
@@ -25,7 +25,20 @@ const { Title, Text } = Typography;
  * Los dos pasos comparten el mismo `formAction`, que es lo que permite que «reenviar código»
  * y «verificar» sean formularios hermanos con distinto `intent` sin duplicar el estado.
  */
-export function LoginForm({ channels }: { readonly channels: readonly OtpChannel[] }) {
+export function LoginForm({
+  channels,
+  returnTo = null,
+}: {
+  readonly channels: readonly OtpChannel[];
+  /**
+   * A dónde llevar al entrar, cuando se llegó aquí desde un enlace directo.
+   *
+   * Viaja en el formulario de verificación —el único que termina en un redirect— y la acción lo
+   * vuelve a validar antes de usarlo: que venga de esta pantalla no lo hace de fiar, porque la
+   * acción es una dirección pública como cualquier otra.
+   */
+  readonly returnTo?: string | null;
+}) {
   const [state, formAction, isPending] = useActionState(submitLogin, INITIAL_LOGIN_STATE);
 
   return (
@@ -40,8 +53,8 @@ export function LoginForm({ channels }: { readonly channels: readonly OtpChannel
         <div className="access__card">
           <div className="access__brand">
             {/* Aquí el logotipo SÍ se anuncia: es lo único que identifica de quién es esta
-                pantalla, y no hay ningún otro texto que diga «éclat». */}
-            <EclatWordmark size="md" tone="light" title="éclat, invitaciones digitales" />
+                pantalla, y no hay ningún otro texto que diga «MiEvento». */}
+            <MiEventoWordmark size="md" tone="light" title="MiEvento, invitaciones digitales" />
           </div>
 
           {state.step === 'email' ? (
@@ -52,7 +65,12 @@ export function LoginForm({ channels }: { readonly channels: readonly OtpChannel
               channels={channels}
             />
           ) : (
-            <CodeStep state={state} formAction={formAction} isPending={isPending} />
+            <CodeStep
+              state={state}
+              formAction={formAction}
+              isPending={isPending}
+              returnTo={returnTo}
+            />
           )}
         </div>
       </main>
@@ -64,6 +82,11 @@ interface StepProps {
   readonly state: LoginState;
   readonly formAction: (formData: FormData) => void;
   readonly isPending: boolean;
+}
+
+/** El paso del código, que es el único que termina en un redirect y por eso sabe a dónde volver. */
+interface CodeStepProps extends StepProps {
+  readonly returnTo: string | null;
 }
 
 /**
@@ -175,7 +198,7 @@ function EmailStep({
   );
 }
 
-function CodeStep({ state, formAction, isPending }: StepProps) {
+function CodeStep({ state, formAction, isPending, returnTo }: CodeStepProps) {
   const [code, setCode] = useState('');
   const verifyForm = useRef<HTMLFormElement>(null);
   const otpInput = useRef<ComponentRef<typeof Input.OTP>>(null);
@@ -198,6 +221,25 @@ function CodeStep({ state, formAction, isPending }: StepProps) {
     otpInput.current?.focus();
   }, [state]);
 
+  /*
+   * Al completar los seis dígitos se envía solo: pedir además un clic no aporta nada, porque
+   * quien terminó de teclear ya expresó su intención.
+   *
+   * Que esto sea un efecto sobre `code` y no una llamada dentro de `onInput` **no es estilo, es
+   * corrección**. `Input.OTP` de antd avisa a `onInput` ANTES que a `onChange` y en el mismo
+   * tick (ver `antd/lib/input/OTP/index.js`), así que un `requestSubmit()` ahí dentro sale con
+   * el campo oculto todavía en su valor anterior —vacío— y el servidor recibe un código en
+   * blanco. Como un código malformado no llega siquiera a la base de datos, el intento no se
+   * registraba en ningún sitio y el error que volvía era «escribe el código»: imposible de
+   * entender para quien acababa de escribirlo, e imposible de superar, porque el efecto de
+   * error limpiaba las casillas y el ciclo empezaba de nuevo.
+   *
+   * Un efecto corre después del commit, cuando el `<input hidden>` ya lleva los seis dígitos.
+   */
+  useEffect(() => {
+    if (code.length === OTP_CODE_LENGTH) verifyForm.current?.requestSubmit();
+  }, [code]);
+
   return (
     <>
       <Title level={2}>Escribe tu código</Title>
@@ -207,6 +249,7 @@ function CodeStep({ state, formAction, isPending }: StepProps) {
 
       <form action={formAction} ref={verifyForm}>
         <input type="hidden" name="intent" value="verify" />
+        {returnTo && <input type="hidden" name="volver" value={returnTo} />}
         {/*
           El valor viaja en un campo oculto porque Input.OTP de antd pinta un input por dígito
           y no expone un único `name` al formulario. Controlar el valor y espejarlo aquí es lo
@@ -230,13 +273,6 @@ function CodeStep({ state, formAction, isPending }: StepProps) {
             size="large"
             autoFocus
             disabled={isPending}
-            onInput={(value) => {
-              // Al completar los seis dígitos se envía solo. Pedir además un clic en un botón
-              // no aporta nada: el usuario ya expresó su intención al terminar de teclear.
-              if (value.filter((digit) => digit !== '').length === OTP_CODE_LENGTH) {
-                verifyForm.current?.requestSubmit();
-              }
-            }}
           />
         </div>
 

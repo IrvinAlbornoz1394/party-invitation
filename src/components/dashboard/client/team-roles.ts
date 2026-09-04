@@ -17,7 +17,12 @@ export const ROLE_LABEL: Record<UserRole, string> = {
 };
 
 export const ROLE_HELP: Record<UserRole, string> = {
-  owner: 'Control total, incluido nombrar otros dueños.',
-  admin: 'Administra eventos e invita al equipo.',
-  staff: 'Trabaja en los eventos, sin gestionar personas.',
+  owner: 'Control total: gestiona el equipo y puede nombrar otro dueño.',
+  /*
+   * `admin` ya no se puede asignar —el formulario solo ofrece «Colaborador» y la tabla solo
+   * ofrece los otros dos— pero el texto se queda: sigue habiendo cuentas con este rol de antes
+   * del cambio, y su fila necesita algo que decir.
+   */
+  admin: 'Rol antiguo. Trabaja en los eventos, sin gestionar personas.',
+  staff: 'Ve el resumen y todos los eventos, y puede dar acceso a un evento suyo. No gestiona el equipo.',
 };

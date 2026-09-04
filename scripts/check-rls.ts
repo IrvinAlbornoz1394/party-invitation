@@ -53,6 +53,20 @@ async function checkTenantTablesHaveRls(): Promise<void> {
         -- que nombrarla explícitamente o se escaparía de esta comprobación.
         or c.relname = 'clients'
       )
+      -- ── La excepción, declarada y no silenciada ──────────────────────────────
+      --
+      -- La tabla "prospects" tiene client_id y NO lleva RLS, y es correcto: no es una tabla de
+      -- tenant. Su client_id es el RESULTADO de la conversión —a qué cliente acabó llegando esa
+      -- solicitud— y no su alcance; al nacer es NULL y una solicitud no pertenece a nadie.
+      --
+      -- Lo que la protege es más fuerte que RLS: el rol de la aplicación no tiene NINGÚN permiso
+      -- sobre ella, así que está en AUTH_PLANE_TABLES y esa comprobación falla si alguien le
+      -- concede uno. Una política de tenant aquí no protegería nada —no hay contexto de cliente
+      -- cuando alguien llena el formulario público— y daría la falsa impresión de que sí.
+      --
+      -- Los acentos graves están prohibidos en este comentario: vive dentro de un template
+      -- literal de JavaScript y cerrarían la cadena.
+      and c.relname <> 'prospects'
     order by c.relname
   `);
 
@@ -147,34 +161,104 @@ async function checkUserColumnsAreWithheld(): Promise<void> {
 }
 
 /**
- * El invariante que separa los dos paneles tiene que seguir impuesto por la base de datos.
+ * Los invariantes del modelo de membresías.
  *
- * `users_client_xor_platform` exige que una cuenta sea de un cliente o de la plataforma,
- * nunca las dos ni ninguna. Sin él, una fila con `client_id` Y `platform_role` sería un
- * cliente con acceso a `/admin`: un tenant propio más el privilegio de ver a todos los
- * demás, que es exactamente la escalada que el modelo evita.
+ * Sustituyen al CHECK `users_client_xor_platform`, que se fue con `users.client_id`. La
+ * diferencia importa: aquel era una imposibilidad estructural —una fila que la base de datos
+ * no dejaba escribir— y estos son condiciones sobre el CONJUNTO, que ningún CHECK puede
+ * expresar porque miran más de una fila a la vez. Por eso se verifican aquí, y por eso esta
+ * comprobación es más necesaria que la que reemplaza.
  *
- * Se comprueba aquí porque un CHECK se puede tirar con una línea de SQL y nada más lo
- * notaría: la aplicación seguiría funcionando igual hasta el día que alguien escribiera la
- * fila imposible.
+ * El primero es el que más pesa. Que las cuentas de plataforma fueran invisibles para el panel
+ * de cualquier cliente venía gratis cuando `users.client_id` era NULL en ellas: `NULL =
+ * <cualquier cosa>` nunca es TRUE, así que ninguna política las alcanzaba. Al salir esa
+ * columna, la garantía pasa a depender de que no tengan membresías — y de que la política de
+ * `users` exija compartir una. Si alguien le diera una membresía a la cuenta de plataforma,
+ * empezaría a aparecer en el equipo de ese cliente sin que nada más lo señalara.
  */
-async function checkAccountKindConstraint(): Promise<void> {
-  const { rows } = await pool.query<{ conname: string }>(
-    `select conname
-     from pg_constraint
-     where conrelid = 'public.users'::regclass
-       and contype = 'c'
-       and conname = 'users_client_xor_platform'`,
+async function checkMembershipInvariants(): Promise<void> {
+  const { rows: platformWithMembership } = await pool.query<{ email: string }>(
+    `select u.email
+     from public.users u
+     join public.memberships m on m.user_id = u.id
+     where u.platform_role is not null`,
   );
 
-  if (rows.length === 0) {
+  for (const row of platformWithMembership) {
     problems.push(
-      'users: falta el CHECK users_client_xor_platform; una cuenta podría ser de un ' +
-        'cliente y de la plataforma a la vez',
+      `${row.email} es cuenta de plataforma y tiene membresías; dejaría de ser invisible ` +
+        'para el panel del cliente al que alcanza',
     );
   }
 
-  console.log('  CHECK users_client_xor_platform revisado');
+  /*
+   * El CHECK `memberships_role_scope` sí es expresable por fila, y se comprueba que siga
+   * puesto por lo mismo que se comprobaba el anterior: se tira con una línea de SQL y nada
+   * más lo notaría hasta que alguien escribiera un visor sin evento —que alcanzaría el
+   * cliente entero— o un dueño de un solo evento.
+   */
+  const { rows: scopeCheck } = await pool.query<{ conname: string }>(
+    `select conname
+     from pg_constraint
+     where conrelid = 'public.memberships'::regclass
+       and contype = 'c'
+       and conname = 'memberships_role_scope'`,
+  );
+
+  if (scopeCheck.length === 0) {
+    problems.push(
+      'memberships: falta el CHECK memberships_role_scope; un visor sin evento alcanzaría ' +
+        'el cliente entero',
+    );
+  }
+
+  /*
+   * Los dos únicos parciales. Un `unique (user_id, client_id, event_id)` a secas NO sirve
+   * —dos NULL no son iguales en Postgres— así que si alguien los sustituyera por el único
+   * "obvio", la misma persona podría tener dos roles simultáneos sobre el mismo cliente y
+   * nada decidiría cuál gana.
+   */
+  const { rows: partialIndexes } = await pool.query<{ indexname: string }>(
+    `select indexname
+     from pg_indexes
+     where schemaname = 'public'
+       and tablename = 'memberships'
+       and indexname in ('memberships_client_scope_idx', 'memberships_event_scope_idx')`,
+  );
+
+  if (partialIndexes.length < 2) {
+    problems.push(
+      'memberships: faltan los únicos parciales por alcance; una identidad podría tener ' +
+        'dos membresías del mismo alcance sobre el mismo cliente',
+    );
+  }
+
+  /*
+   * Que la aplicación no escriba `users`. Es lo que obliga a que crear una identidad pase por
+   * `app.grant_membership()`, y no es un detalle de estilo: una identidad no es un dato de
+   * tenant, así que RLS no puede acotar quién tiene derecho a crearla. Con INSERT concedido,
+   * un cliente podría fabricar identidades ajenas.
+   */
+  const { rows: userWrites } = await pool.query<{ privilege_type: string }>(
+    `select distinct privilege_type
+     from information_schema.table_privileges
+     where table_schema = 'public'
+       and table_name = 'users'
+       and grantee = 'mievento_app'
+       and privilege_type in ('INSERT', 'UPDATE', 'DELETE')`,
+  );
+
+  for (const row of userWrites) {
+    problems.push(
+      `users: mievento_app tiene ${row.privilege_type} sobre la tabla; crear o editar una ` +
+        'identidad debe pasar por app.grant_membership()',
+    );
+  }
+
+  console.log(
+    '  invariantes de membresías revisados (plataforma sin membresías, alcance, únicos ' +
+      'parciales, users de solo lectura)',
+  );
 }
 
 async function checkAppRoleCannotCreate(): Promise<void> {
@@ -189,13 +273,63 @@ async function checkAppRoleCannotCreate(): Promise<void> {
   console.log('  privilegio CREATE del rol de aplicación revisado');
 }
 
+/**
+ * Con qué rol se conecta la APLICACIÓN, que es distinto de con cuál corre esta comprobación.
+ *
+ * Row-Level Security **no se aplica a un superusuario ni a quien tenga BYPASSRLS**, y tampoco al
+ * dueño de la tabla salvo que se fuerce. Así que todo lo que verifica este script —políticas
+ * puestas, permisos revocados— puede estar perfecto y aun así la aplicación verlo todo, si su
+ * cadena de conexión apunta a `postgres` en lugar de a `mievento_app`.
+ *
+ * No es hipotético: pasó en desarrollo y el síntoma fue el peor posible, porque no parecía un
+ * problema de permisos — la ficha de CADA cliente mostraba los eventos de TODOS, y lo primero que
+ * uno mira es el filtro de la consulta, que estaba bien. Las consultas del panel no llevan
+ * `where client_id` a propósito: confían en RLS.
+ */
+async function checkAppConnectionRespectsRls(): Promise<void> {
+  const appUrl = process.env.DATABASE_URL;
+
+  if (!appUrl) {
+    console.log('  DATABASE_URL sin definir: no se pudo revisar el rol de la aplicación');
+
+    return;
+  }
+
+  const appPool = new Pool({ connectionString: appUrl, max: 1 });
+
+  try {
+    const { rows } = await appPool.query<{ usuario: string; superusuario: boolean; bypassrls: boolean }>(
+      `select current_user as usuario,
+              rolsuper as superusuario,
+              rolbypassrls as bypassrls
+         from pg_roles where rolname = current_user`,
+    );
+    const role = rows[0];
+
+    if (!role) return;
+
+    if (role.superusuario || role.bypassrls) {
+      problems.push(
+        `DATABASE_URL se conecta como "${role.usuario}", que ${role.superusuario ? 'es superusuario' : 'tiene BYPASSRLS'}: ` +
+          'Row-Level Security NO se le aplica y la aplicación vería los datos de todos los clientes. ' +
+          'Debe conectarse con mievento_app.',
+      );
+    }
+
+    console.log(`  rol de la aplicación revisado (${role.usuario})`);
+  } finally {
+    await appPool.end();
+  }
+}
+
 async function main(): Promise<void> {
   console.log('▸ Verificando aislamiento entre clientes…');
   await checkTenantTablesHaveRls();
   await checkAuthPlaneIsSealed();
   await checkUserColumnsAreWithheld();
-  await checkAccountKindConstraint();
+  await checkMembershipInvariants();
   await checkAppRoleCannotCreate();
+  await checkAppConnectionRespectsRls();
 
   if (problems.length > 0) {
     console.error(`\n✗ ${problems.length} problema(s) de seguridad:\n`);

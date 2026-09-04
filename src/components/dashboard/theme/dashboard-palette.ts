@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
 /**
- * La paleta de éclat, definida UNA sola vez y consumida por los dos motores de estilo.
+ * La paleta de MiEvento, definida UNA sola vez y consumida por los dos motores de estilo.
  *
  * El panel se pinta con dos tecnologías a la vez: CSS a mano (`dashboard.css`) para el
  * armazón y las superficies, y los tokens de antd para los widgets interactivos. Antes cada

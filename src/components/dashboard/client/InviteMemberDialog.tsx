@@ -1,32 +1,38 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { Alert, Button, Input, Modal, Select } from 'antd';
+import { useActionState } from 'react';
+import { Alert, Button, Input, Modal } from 'antd';
 import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import { inviteUserAction } from '@/app/panel/(authenticated)/equipo/actions';
-import { hasRoleAtLeast, type ClientActor, type UserRole } from '@/domain/auth/actor';
-import { ROLE_HELP, ROLE_LABEL } from './team-roles';
+import { ROLE_HELP } from './team-roles';
 
 /**
- * Invitar a alguien al equipo del cliente.
+ * Invitar a un colaborador al equipo del cliente.
  *
  * No emite ningún token de invitación, y no le hace falta: con acceso por código de un solo
  * uso, la persona entra pidiendo el suyo y el correo ES la verificación. Un token añadiría
  * una segunda credencial que caduca, que hay que reenviar y que hay que poder revocar.
+ *
+ * ## Ya no pregunta el rol
+ *
+ * Solo lo abre el dueño y solo puede conceder uno, así que el desplegable ofrecía una opción:
+ * un control que no decide nada y que hay que leer igual. El valor viaja en un campo oculto
+ * porque la acción de servidor sigue recibiendo lo mismo y no tiene por qué enterarse de que
+ * en una pantalla hubo o dejó de haber un selector.
+ *
+ * Traspasar la cuenta a otro dueño sigue siendo posible, pero no desde aquí: se hace cambiando
+ * el rol de alguien que ya está en la lista. Es una operación bastante más grave que invitar, y
+ * ofrecerla en el mismo formulario donde se teclea un correo la abarataba de más.
  */
 export function InviteMemberDialog({
   open,
-  actor,
   onClose,
   onResult,
 }: {
   readonly open: boolean;
-  readonly actor: ClientActor;
   readonly onClose: () => void;
   readonly onResult: (state: ActionState) => void;
 }) {
-  const [role, setRole] = useState<UserRole>('staff');
-
   const [state, formAction, isPending] = useActionState(
     async (previous: ActionState, formData: FormData) => {
       const result = await inviteUserAction(previous, formData);
@@ -42,15 +48,6 @@ export function InviteMemberDialog({
       return result;
     },
     IDLE_ACTION_STATE,
-  );
-
-  /*
-   * Solo los roles que este actor puede conceder. La regla real la aplica el dominio en el
-   * servidor; esto evita ofrecer lo que va a ser rechazado — un administrador no ve la
-   * opción «Dueño» en lugar de elegirla y recibir un error.
-   */
-  const assignableRoles = (['owner', 'admin', 'staff'] as const).filter((candidate) =>
-    hasRoleAtLeast(actor, candidate),
   );
 
   return (
@@ -97,28 +94,8 @@ export function InviteMemberDialog({
           autoComplete="off"
         />
 
-        <label className="dash-form__label" htmlFor="invite-role">
-          Rol
-        </label>
-        <Select
-          id="invite-role"
-          value={role}
-          onChange={setRole}
-          size="large"
-          style={{ width: '100%' }}
-          options={assignableRoles.map((option) => ({
-            value: option,
-            label: ROLE_LABEL[option],
-            title: ROLE_HELP[option],
-          }))}
-        />
-        <p className="dash-form__help">{ROLE_HELP[role]}</p>
-        {/*
-          El Select de antd no expone un `name` al formulario, así que el valor viaja en un
-          campo oculto espejado desde el estado. Es el mismo patrón que el código OTP en la
-          pantalla de acceso.
-        */}
-        <input type="hidden" name="role" value={role} />
+        <p className="dash-form__help">Entra como colaborador. {ROLE_HELP.staff}</p>
+        <input type="hidden" name="role" value="staff" />
 
         <Button
           htmlType="submit"

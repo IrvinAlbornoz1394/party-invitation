@@ -21,6 +21,15 @@ de invitados, confirmaciones, recordatorios y organización del evento.
 
 # Planes
 
+> **Esta sección quedó atrás.** Describe dos planes; el modelo comercial son tres —Esencial, Plus
+> y Premium— y el reparto vigente vive como datos en `scripts/seed.ts` (`PLAN_FEATURES`), con el
+> razonamiento de cada frontera en su comentario. Varias cosas que aquí figuran en Esencial
+> —música, mesa de regalos, código de vestimenta, panel de confirmaciones, recordatorios— hoy son
+> de Plus o de Premium. Vale como registro de la intención original, no como referencia.
+>
+> Lo que sí cambió por decisión y no por deriva, el 2026-08-27: **todo plan tiene panel**, y en
+> Esencial ese panel sirve para capturar contenido. Ver `docs/PROJECT.md` y `docs/ACCESO.md`.
+
 ## Plan Esencial
 
 Incluye:

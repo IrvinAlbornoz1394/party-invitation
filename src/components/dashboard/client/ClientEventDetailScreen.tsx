@@ -29,7 +29,14 @@ import { siteUrl } from '../site-url';
  * que la funcionalidad existe y está en camino, en vez de dejar un hueco que se lee como que
  * falta algo.
  */
-export function ClientEventDetailScreen({ event }: { readonly event: EventSummary }) {
+export function ClientEventDetailScreen({
+  event,
+  canReachClient,
+}: {
+  readonly event: EventSummary;
+  /** Si quien mira alcanza el cliente entero y no solo este evento. */
+  readonly canReachClient: boolean;
+}) {
   const url = invitationUrl(siteUrl(), event.slug, event.accessCode);
 
   return (
@@ -37,12 +44,20 @@ export function ClientEventDetailScreen({ event }: { readonly event: EventSummar
       <PageHeader
         title={event.title}
         description={formatLongDate(event.startsAt)}
+        /*
+         * La vuelta a la lista solo existe para quien alcanza el cliente entero. A un visor esa
+         * ruta le responde con un rebote al selector, así que enseñarle el botón sería ofrecerle
+         * una salida que no lleva a ninguna parte — y el rebote se leería como un fallo del panel
+         * en lugar de como el límite de su acceso, que es lo que realmente es.
+         */
         actions={
-          <Link href="/panel/eventos">
-            <Button size="large" icon={<ArrowLeft size={16} strokeWidth={2} />}>
-              Todos tus eventos
-            </Button>
-          </Link>
+          canReachClient ? (
+            <Link href="/panel/eventos">
+              <Button size="large" icon={<ArrowLeft size={16} strokeWidth={2} />}>
+                Todos tus eventos
+              </Button>
+            </Link>
+          ) : undefined
         }
       />
 

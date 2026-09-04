@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { DEMO_TEMPLATES } from '@/components/invitation/demo/templates';
+import clsx from 'clsx';
+import { demoStructures } from '@/components/invitation/demo/templates';
 import { registeredIds } from '@/components/invitation/registry/component-registry';
 import { MARKETING_PHOTOS } from './photos';
 
@@ -12,9 +13,14 @@ import { MARKETING_PHOTOS } from './photos';
  * ## Las cifras son de verdad, y por eso se cuentan solas
  *
  * Es la decisión que sostiene esta sección. Toda página de este ramo enseña «1000 parejas
- * felices» y nadie se cree ninguna; aquí las tres salen de contar lo que hay —las plantillas
- * locales, las variantes dadas de alta en el registro y los tipos de evento del catálogo—, así
- * que no pueden envejecer ni mentir. Añadir una variante sube el número; quitarla lo baja.
+ * felices» y nadie se cree ninguna; aquí las dos salen de contar lo que hay —las plantillas
+ * locales y las variantes dadas de alta en el registro—, así que no pueden envejecer ni mentir.
+ * Añadir una variante sube el número; quitarla lo baja.
+ *
+ * Hubo una tercera, «tipos de celebración», y se quitó al estrechar el producto a bodas y XV.
+ * Contaba los tipos del catálogo, que son nueve, mientras que lo que se vende son dos: la cifra
+ * seguía siendo cierta y aun así prometía lo que no hay. Y contar «2» tampoco servía — presumir
+ * de dos es peor que no presumir de nada.
  *
  * Lo que **no** se enseña son clientes, eventos organizados ni testimonios. No porque queden mal
  * sino porque habría que inventarlos, y una cifra inventada en la página de venta es la primera
@@ -27,19 +33,24 @@ import { MARKETING_PHOTOS } from './photos';
  * lámina montada sobre cartulina, y es lo que evita que la imagen quede pegada al texto como una
  * captura. Cuesta un `div` y da la mitad del carácter de la sección.
  */
-export function LandingAbout({
-  themeCount,
-  eventTypeCount,
-}: {
-  readonly themeCount: number;
-  readonly eventTypeCount: number;
-}) {
+export function LandingAbout({ themeCount }: { readonly themeCount: number }) {
   const photo = MARKETING_PHOTOS.story;
 
+  /*
+    El rótulo viene partido en dos líneas a mano, y no es capricho tipográfico.
+
+    Escrito de corrido, cada columna lo rompía donde le cabía: «Plantillas / completas» en una y
+    «Diseños de / sección» en la otra, con la segunda línea de cada una empezando a distinta
+    altura según el ancho de pantalla. Dos cifras del mismo rango tienen que tener la misma
+    silueta, así que el corte se decide aquí y no lo decide el navegador.
+  */
   const figures = [
-    { value: DEMO_TEMPLATES.length, label: 'Plantillas completas' },
-    { value: registeredIds().length, label: 'Diseños de sección' },
-    { value: eventTypeCount, label: 'Tipos de celebración' },
+    /* Estructuras, no entradas de demo. `DEMO_TEMPLATES` tiene una por estructura Y tipo de
+       evento, así que contarlas decía «6 plantillas» mientras el escaparate de abajo enseñaba
+       cinco tarjetas. Una cifra que se cuenta sola no sirve de nada si cuenta la cosa
+       equivocada. */
+    { value: demoStructures().length, lines: ['Plantillas', 'completas'] },
+    { value: registeredIds().length, lines: ['Diseños de', 'sección'] },
   ].filter((figure) => figure.value > 0);
 
   return (
@@ -57,28 +68,64 @@ export function LandingAbout({
               <span className="block italic">y un panel detrás</span>
             </h2>
 
-            <p className="mt-7 mb-0 max-w-lg text-[16px] leading-relaxed text-ink/70">
+            <p className="mt-7 mb-0 max-w-lg text-[16px] leading-relaxed text-ink/75">
               Cada invitación se arma sección a sección con la plantilla y el tema que le van a tu
               celebración, y se abre en el teléfono de tus invitados tal como la ves aquí. Detrás
               queda lo que nadie enseña: el panel donde se cuentan las confirmaciones, se ordenan
               las familias y se reparten las mesas.
             </p>
 
-            <p className="mt-5 mb-0 max-w-lg text-[16px] leading-relaxed text-ink/70">
+            <p className="mt-5 mb-0 max-w-lg text-[16px] leading-relaxed text-ink/75">
               Trabajamos con {themeCount > 0 ? `${themeCount} paletas` : 'paletas'} distintas y con
               los diseños del catálogo, así que dos eventos nunca reciben la misma invitación.
             </p>
 
-            <dl className="mt-12 grid grid-cols-2 gap-x-8 gap-y-8 border-t border-line pt-10 sm:grid-cols-3">
-              {figures.map((figure) => (
-                <div key={figure.label}>
-                  <dt className="sr-only">{figure.label}</dt>
+            {/*
+              Todas en una sola fila, también en móvil. Son una **banda de datos**, que es lo que
+              son: hechos del mismo rango, no una lista. Cualquiera de ellas que caiga sola en
+              media fila se lee como un error de maquetación y no como una decisión.
+
+              Las columnas las pone `figures.length` y no un número escrito a mano, porque la
+              lista se filtra por `value > 0`: con las columnas fijas, una cifra en cero dejaba
+              un hueco vacío en la banda.
+
+              El rótulo baja a 10 px con menos tracking en móvil y recupera sus 11 px en cuanto
+              hay sitio. Y entre columna y columna va un filete: a ese ancho, dos bloques sin
+              separación se leen como uno solo.
+            */}
+            <dl
+              className={clsx(
+                'mt-12 grid items-start gap-x-4 border-t border-line pt-10 sm:gap-x-8',
+                figures.length === 2 ? 'grid-cols-2' : 'grid-cols-3',
+              )}
+            >
+              {figures.map((figure, index) => (
+                <div
+                  key={figure.lines.join(' ')}
+                  className={clsx('relative', index > 0 && 'pl-4 sm:pl-0')}
+                >
+                  {index > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-0.5 bottom-0.5 left-0 w-px bg-line sm:hidden"
+                    />
+                  )}
+                  <dt className="sr-only">{figure.lines.join(' ')}</dt>
                   <dd className="m-0">
-                    <span className="block font-display text-[clamp(2.2rem,5vw,3rem)] leading-none font-light text-plum tabular-nums">
+                    <span className="block font-display text-[clamp(2rem,5vw,3rem)] leading-[0.9] font-light text-plum tabular-nums">
                       {figure.value}
                     </span>
-                    <span className="mt-3 block text-[11px] tracking-[0.2em] text-ink/55 uppercase">
-                      {figure.label}
+                    {/*
+                      Cada línea es su propio bloque para que las dos del vecino caigan a la misma
+                      altura; `whitespace-nowrap` impide que «celebración» se vuelva a partir en el
+                      teléfono más estrecho.
+                    */}
+                    <span className="mt-2.5 block text-[10px] leading-[1.5] tracking-[0.12em] text-ink/75 uppercase sm:mt-3 sm:text-[11px] sm:tracking-[0.2em]">
+                      {figure.lines.map((line) => (
+                        <span key={line} className="block whitespace-nowrap">
+                          {line}
+                        </span>
+                      ))}
                     </span>
                   </dd>
                 </div>

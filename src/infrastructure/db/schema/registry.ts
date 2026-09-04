@@ -90,6 +90,21 @@ export const templates = pgTable('templates', {
   name: text('name').notNull(),
   description: text('description'),
   previewImageUrl: text('preview_image_url'),
+  /**
+   * El tema con el que se diseñó la plantilla. **Preselecciona, no impone.**
+   *
+   * La tipografía, el color y la densidad son del tema —`docs/PROJECT.md` lo dice y
+   * `domain/invitation/theme.ts` lo garantiza—, así que una plantilla no puede traer fuentes
+   * propias sin que dos capas se peleen por el mismo token. Lo que sí puede es decir con cuál se
+   * ve como se pensó, y eso es esto: al crear un evento se ofrece este tema ya elegido, y quien
+   * lo configure puede cambiarlo por cualquier otro. Ninguna combinación queda prohibida.
+   *
+   * `set null` al borrar el tema: una plantilla sin sugerencia sigue siendo perfectamente usable.
+   */
+  defaultThemeKey: text('default_theme_key').references(() => themes.key, {
+    onDelete: 'set null',
+    onUpdate: 'cascade',
+  }),
   isActive: boolean('is_active').notNull().default(true),
   ...timestamps,
 });
@@ -153,6 +168,19 @@ export const templateBlocks = pgTable(
     position: smallint('position').notNull(),
     /** Un bloque requerido no se puede desactivar (el hero de una invitación, por ejemplo). */
     isRequired: boolean('is_required').notNull().default(false),
+    /**
+     * Con qué nace el `config` de este bloque al crear un evento con esta plantilla.
+     *
+     * Es lo que hace que una plantilla esté de verdad **preconstruida** y no sea una lista de
+     * huecos: el rótulo de la sección, la introducción, el modo del cronograma. Todo eso no se
+     * puede derivar del evento —no es un dato del evento, es cómo esta plantilla lo cuenta— y sin
+     * esto un evento recién creado tendría los bloques sin título, que es exactamente la
+     * condición por la que el ensamblador los omite.
+     *
+     * El contenido real —nombres, fecha, sedes— no va aquí: eso vive en el evento y lo proyecta
+     * `domain/invitation/event-content.ts`.
+     */
+    defaultConfig: jsonb('default_config').notNull().default({}).$type<Record<string, unknown>>(),
     ...timestamps,
   },
   (t) => [

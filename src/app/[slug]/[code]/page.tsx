@@ -2,8 +2,11 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { Invitation } from '@/components/invitation/Invitation';
+import { InvitationRenderer } from '@/components/invitation/InvitationRenderer';
+import { InvitationUnavailable } from '@/components/marketing/InvitationUnavailable';
 import type { InvitationAccessResult } from '@/domain/events/invitation';
+import { assembleInvitation } from '@/domain/invitation/event-content';
+import { parseInvitationTheme } from '@/domain/invitation/theme';
 import { resolveInvitation } from '@/infrastructure/container';
 import { clientIpFromHeaders } from '@/lib/request-ip';
 
@@ -89,10 +92,30 @@ export default async function InvitationPage({ params }: PageProps) {
   }
 
   /*
-   * PENDIENTE: la invitación todavía renderiza desde src/data/event.json, no desde
-   * `access.invitation`. El acceso ya se valida de verdad contra la base de datos; lo
-   * que falta es mapear el contenido del evento a los bloques. Va en la siguiente tanda,
-   * junto con el port a Tailwind.
+   * El código es bueno pero la invitación no está a la vista todavía. Es el único caso en el que
+   * a quien llega se le cuenta algo: ver `InvitationUnavailable`.
    */
-  return <Invitation />;
+  if (access.outcome === 'unavailable') {
+    return <InvitationUnavailable reason={access.reason} />;
+  }
+
+  /*
+   * De aquí en adelante no hay ninguna decisión más que tomar sobre qué se ve: los bloques, su
+   * orden, sus variantes y el tema salen del evento. El motor los pinta.
+   *
+   * Las dos llamadas son puras y del dominio: una compone el contenido de cada bloque a partir
+   * del evento (`event-content.ts`) y la otra interpreta los tokens del tema reparando el
+   * contraste (`theme.ts`). Ninguna lanza — una invitación repartida no puede caerse porque un
+   * bloque esté a medio configurar.
+   */
+  const { content } = access;
+
+  return (
+    <InvitationRenderer
+      theme={parseInvitationTheme(content.themeTokens)}
+      blocks={assembleInvitation(content.source, content.blocks)}
+      musicUrl={content.musicUrl}
+      musicTitle={content.musicTitle}
+    />
+  );
 }

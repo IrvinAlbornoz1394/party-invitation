@@ -83,6 +83,14 @@ export interface TemplateSummary {
    */
   readonly eventTypes: readonly { readonly key: string; readonly name: string }[];
   readonly previewImageUrl: string | null;
+  /**
+   * El tema con el que se diseñó la plantilla. **Preselecciona, no impone.**
+   *
+   * Lo usa el alta de un evento para llegar con el tema ya elegido, que es lo que la columna
+   * `templates.default_theme_key` existe para hacer. `null` cuando la plantilla no sugiere
+   * ninguno; entonces hay que elegirlo a mano, y cualquiera vale.
+   */
+  readonly defaultThemeKey: string | null;
   readonly isActive: boolean;
   /** Cuántos bloques trae su composición por defecto. */
   readonly blockCount: number;

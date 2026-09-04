@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { PlatformActor } from '@/domain/auth/actor';
+import { type PlatformActor, displayNameOf } from '@/domain/auth/actor';
 import { DashboardShell } from '../layout/DashboardShell';
-import { ADMIN_NAVIGATION, ADMIN_ROOT_CRUMB } from '../navigation/admin-navigation';
+import { buildAdminNavigation, ADMIN_ROOT_CRUMB } from '../navigation/admin-navigation';
 
 /**
  * El armazón del panel de plataforma.
@@ -28,20 +28,23 @@ import { ADMIN_NAVIGATION, ADMIN_ROOT_CRUMB } from '../navigation/admin-navigati
  */
 export function AdminShell({
   actor,
+  pendingProspects,
   children,
 }: {
+  /** Solicitudes que piden atención hoy. Es el contador del menú. */
+  readonly pendingProspects: number;
   readonly actor: PlatformActor;
   readonly children: ReactNode;
 }) {
   return (
     <DashboardShell
       variant="admin"
-      navigation={ADMIN_NAVIGATION}
+      navigation={buildAdminNavigation(pendingProspects)}
       rootCrumb={ADMIN_ROOT_CRUMB}
       brandBadge="Plataforma"
-      identityTitle={actor.name}
+      identityTitle={displayNameOf(actor)}
       identityCaption={roleLabel(actor)}
-      userName={actor.name}
+      userName={displayNameOf(actor)}
     >
       {children}
     </DashboardShell>

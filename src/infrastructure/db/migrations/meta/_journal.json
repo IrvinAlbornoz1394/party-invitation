@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1786124769645,
+      "when": 1788477161511,
       "tag": "0000_initial_schema",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1786563340659,
-      "tag": "0001_open_shinobi_shaw",
       "breakpoints": true
     }
   ]

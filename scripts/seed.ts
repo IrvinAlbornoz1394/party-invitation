@@ -33,8 +33,8 @@
  *
  *   · **El motor de render sobre datos reales.** Sale de `/plantillas`, que recorre las mismas
  *     variantes por el mismo `TemplateBlock`. Lo que no cubre es la proyección desde el evento
- *     (`domain/invitation/event-content.ts`), y eso se cubrirá cuando `/admin` sepa crear un
- *     evento — que es lo que falta para poder crear uno de verdad en dos minutos.
+ *     (`domain/invitation/event-content.ts`), y para eso ya no hacen falta datos sembrados: se da
+ *     de alta un evento desde `/admin` en dos minutos y se mira el de verdad.
  *   · **El aislamiento entre inquilinos**, que pedía dos clientes para poder comprobarse. Eso ya
  *     no depende de que haya datos: `npm run db:check` lo verifica contra el catálogo de Postgres
  *     —qué tablas tienen RLS, qué políticas, con qué rol se conecta la aplicación— y con la base
@@ -213,16 +213,43 @@ const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number |
  * la otra una presentación en el templo— y fundirlas obligaba a que la plantilla de una sirviera
  * para la otra.
  */
+/**
+ * Los tipos de evento, y cuáles se pueden dar de alta **hoy**.
+ *
+ * Los nueve existen en el catálogo y solo dos están activos. No es una lista a medio hacer: es lo
+ * que la portada ya venía diciendo —«el catálogo tiene nueve tipos y hoy solo se venden bodas y
+ * XV», en `app/page.tsx`— y que hasta ahora no se cumplía en el único sitio donde importa. El
+ * formulario de alta ofrecía los nueve, así que se podía crear un bautizo y llegar a la pantalla
+ * siguiente para descubrir qué plantillas hay para un bautizo.
+ *
+ * ## Por qué desactivar y no borrar
+ *
+ * Porque un tipo no es una opción de un desplegable: es una clave a la que apuntan los eventos ya
+ * creados (`events.event_type_key`) y las plantillas (`template_event_types`). Borrar «bautizo»
+ * obligaría a decidir qué pasa con las plantillas que lo declaran —`classic`, `storytelling`,
+ * `botanical` y `sketch` lo hacen— y a perder ese trabajo. Desactivado, la asociación se queda
+ * escrita y volver a venderlo es cambiar un `false` por un `true`.
+ *
+ * ## Dónde se nota
+ *
+ * En los dos sitios donde el catálogo se ofrece: el alta de un evento
+ * (`LoadNewEventOptions.execute`) y el formulario público de cotización
+ * (`browse-showcase`). Los dos filtran ya por `isActive`, así que aquí no hace falta ni una línea
+ * de código nueva — solo dejar de mentir en los datos.
+ *
+ * Lo que **no** cambia es lo que ya existe: un evento dado de alta con un tipo que después se
+ * desactiva sigue funcionando. La clave sigue ahí y su invitación también.
+ */
 const EVENT_TYPES = [
-  { key: 'wedding', name: 'Boda' },
-  { key: 'quince', name: 'XV Años' },
-  { key: 'baptism', name: 'Bautizo' },
-  { key: 'presentation', name: 'Presentación' },
-  { key: 'graduation', name: 'Graduación' },
-  { key: 'baby_shower', name: 'Baby Shower' },
-  { key: 'birthday', name: 'Cumpleaños' },
-  { key: 'gender_reveal', name: 'Revelación de género' },
-  { key: 'corporate', name: 'Evento empresarial' },
+  { key: 'wedding', name: 'Boda', isActive: true },
+  { key: 'quince', name: 'XV Años', isActive: true },
+  { key: 'baptism', name: 'Bautizo', isActive: false },
+  { key: 'presentation', name: 'Presentación', isActive: false },
+  { key: 'graduation', name: 'Graduación', isActive: false },
+  { key: 'baby_shower', name: 'Baby Shower', isActive: false },
+  { key: 'birthday', name: 'Cumpleaños', isActive: false },
+  { key: 'gender_reveal', name: 'Revelación de género', isActive: false },
+  { key: 'corporate', name: 'Evento empresarial', isActive: false },
 ] as const;
 
 /**
@@ -325,6 +352,11 @@ const VARIANTS: {
   { blockKey: 'welcome', variantKey: 'band', name: 'Bienvenida con banda de color', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'countdown', name: 'Bienvenida con cuenta regresiva', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'crown', name: 'Bienvenida con corona (XV)', minPlanRank: 2 },
+  /* La duodécima, y la más cargada: doble filete inscrito, guirnaldas en dos esquinas y la tiara
+     ilustrada sobre la fotografía en penumbra. Es la participación grabada a dos tintas, que es
+     la pieza más vendida en unos XV y no la hacía ninguna. Lleva la corona escrita dentro, así
+     que es de ese tipo de evento — como `hero.crown`. */
+  { blockKey: 'welcome', variantKey: 'gilded', name: 'Bienvenida dorada con marco (XV)', minPlanRank: 2 },
   { blockKey: 'hero', variantKey: 'classic', name: 'Portada clásica' },
   { blockKey: 'hero', variantKey: 'centered', name: 'Portada centrada' },
   { blockKey: 'hero', variantKey: 'split', name: 'Portada a dos columnas' },
@@ -335,6 +367,19 @@ const VARIANTS: {
      plantilla las elige a sabiendas. Es como el catálogo crece para cubrir un tipo nuevo: con
      entradas propias y no con condiciones dentro de los componentes que ya existen. */
   { blockKey: 'hero', variantKey: 'quince', name: 'Portada con cifras de XV' },
+  /* La séptima, y la que estrena `silk`: la única de dos planos —la fotografía a sangre y una
+     tarjeta de papel apoyada encima—. Las seis anteriores estaban repartidas una por plantilla. */
+  { blockKey: 'hero', variantKey: 'card', name: 'Portada con tarjeta sobre la foto' },
+  /* La octava, para `monochrome`: la foto a pantalla completa, los nombres en caligrafía y el año
+     en una esquina. Es la única que no dice a qué te invitan: lo deja para la sección siguiente. */
+  { blockKey: 'hero', variantKey: 'script', name: 'Portada con nombres en caligrafía' },
+  /* La novena, para `sketch`, y la única ilustrada: el rótulo vaciado, el retrato dentro de un
+     marco dibujado a mano y las alianzas cuando el nombre trae una pareja. */
+  { blockKey: 'hero', variantKey: 'frame', name: 'Portada con marco dibujado' },
+  /* La décima, para `gala`, y la segunda pensada para unos XV. La corona va escrita en el
+     componente —como el «XV» de `hero.quince`—, así que es de ese tipo de evento: donde aquella
+     hace del número el titular, esta lo hace del nombre. */
+  { blockKey: 'hero', variantKey: 'crown', name: 'Portada con corona (XV)' },
   { blockKey: 'story', variantKey: 'image-left', name: 'Historia con imagen a la izquierda' },
   { blockKey: 'story', variantKey: 'image-right', name: 'Historia con imagen a la derecha' },
   { blockKey: 'story', variantKey: 'centered', name: 'Historia centrada' },
@@ -343,7 +388,28 @@ const VARIANTS: {
      repartidas una por plantilla, y la regla de exclusividad no deja reusar ninguna. Es la única
      en que el texto envuelve la fotografía en lugar de ponerse al lado o encima. */
   { blockKey: 'story', variantKey: 'pressed', name: 'Historia con lámina montada al margen' },
-  { blockKey: 'calendar', variantKey: 'month', name: 'Calendario del mes' },
+  /* La sexta, para `silk`: la copia torcida y con sombra, encabalgada sobre la hoja del relato.
+     Es la única en que la fotografía es un objeto encima del papel y no una columna, un fondo o
+     una lámina dentro del pliego. */
+  { blockKey: 'story', variantKey: 'mounted', name: 'Historia con instantánea montada' },
+  /* La séptima, para `monochrome`: la alocución centrada, con la entradilla en negrita y sin
+     fotografía. Es la única que ignora la imagen a propósito — ver su archivo. */
+  { blockKey: 'story', variantKey: 'greeting', name: 'Historia como saludo centrado' },
+  /* La octava, para `sketch`: el saludo con lazo, la foto de banda con el canto ondulado del tema
+     y el texto centrado. */
+  { blockKey: 'story', variantKey: 'bow', name: 'Historia con banda ondulada y lazo' },
+  { blockKey: 'calendar', variantKey: 'month', name: 'Calendario del mes en lámina' },
+  /* El segundo calendario, y el primero desde que existe el bloque. Se escribió al saber qué
+     cambia de verdad entre dos —la lámina impresa contra la hoja de agenda— y no antes, que es la
+     regla que evita que un bloque engorde con variaciones de lo mismo. */
+  { blockKey: 'calendar', variantKey: 'sheet', name: 'Fecha en tira de siete días' },
+  /* La tercera, para `sketch`: la semana real del evento, con las iniciales de los días. Es la
+     única que no centra el día del evento, y por eso puede decir en qué día de la semana cae. */
+  { blockKey: 'calendar', variantKey: 'week', name: 'Semana del evento, con iniciales' },
+  /* La cuarta, para `gala`, y la única sin retícula: la fecha compuesta como dato tipográfico,
+     con la cifra del día a cuerpo de cartel entre dos filetes. Un calendario sin calendario no es
+     una contradicción — el bloque guarda un instante y cada variante decide cómo se enseña. */
+  { blockKey: 'calendar', variantKey: 'band', name: 'Fecha en banda grabada' },
   { blockKey: 'details', variantKey: 'cards', name: 'Detalles en tarjetas' },
   { blockKey: 'details', variantKey: 'list', name: 'Detalles en lista' },
   { blockKey: 'details', variantKey: 'split', name: 'Detalles a dos columnas' },
@@ -351,16 +417,30 @@ const VARIANTS: {
   /* La quinta, y la que hizo falta para darle detalles a `botanical`: las otras cuatro estaban
      repartidas una por plantilla y la regla de exclusividad no deja reusar ninguna. */
   { blockKey: 'details', variantKey: 'program', name: 'Detalles en programa de mano' },
+  /* La sexta, para `silk`. La referencia de esa plantilla no tiene sección de detalles, así que
+     se compone con su propio material: una ficha por dato, a ancho completo y con la placa
+     cuadrada al margen. Se lee de arriba abajo, mientras que la rejilla de `cards` se abarca de
+     un vistazo. */
+  { blockKey: 'details', variantKey: 'stack', name: 'Detalles en fichas apiladas' },
+  /* La séptima, para `monochrome`, y la única sin ninguna pieza gráfica: icono suelto, rótulo en
+     acento y texto sobre el papel. */
+  { blockKey: 'details', variantKey: 'notes', name: 'Detalles como notas al margen' },
+  /* La octava, para `sketch`: cada dato en una pegatina con el icono dentro de una mancha
+     irregular, la misma forma que las muestras de su código de vestimenta. */
+  { blockKey: 'details', variantKey: 'stickers', name: 'Detalles en pegatinas' },
+  /* La novena, para `gala`, y la única centrada en un eje: el dibujo arriba, el rótulo en
+     versalitas y un filete corto entre un aviso y el siguiente. */
+  { blockKey: 'details', variantKey: 'column', name: 'Detalles en columna centrada' },
   /*
-   * Cinco formas de enseñar una paleta, una por plantilla.
+   * Seis formas de enseñar una paleta, una por plantilla.
    *
    * El bloque tenía una sola —`palette`— y por eso solo `botanical` lo llevaba: darlo a las otras
-   * cuatro obligaba a que compartieran variante, que es justo lo que la regla de exclusividad
-   * impide. Las cuatro nuevas no son variaciones de la fila de círculos: cambia qué es una
-   * muestra, y con ello qué invita a hacer la sección.
+   * obligaba a que compartieran variante, que es justo lo que la regla de exclusividad impide.
+   * Las cinco nuevas no son variaciones de la fila de círculos: cambia qué es una muestra, y con
+   * ello qué invita a hacer la sección.
    *
    * Ninguna lleva `minPlanRank`. El bloque ya cuelga de `codigo_vestimenta`, que es de Plus en
-   * adelante, y además son la composición de partida de cinco plantillas del catálogo: una
+   * adelante, y además son la composición de partida de seis plantillas del catálogo: una
    * variante de pago ahí las volvería imposibles de montar.
    */
   { blockKey: 'dresscode', variantKey: 'palette', name: 'Vestimenta con paleta de color' },
@@ -368,6 +448,19 @@ const VARIANTS: {
   { blockKey: 'dresscode', variantKey: 'chart', name: 'Vestimenta en carta de imprenta' },
   { blockKey: 'dresscode', variantKey: 'thread', name: 'Vestimenta en hilo de cuentas' },
   { blockKey: 'dresscode', variantKey: 'bands', name: 'Vestimenta en franjas a sangre' },
+  /* La sexta, para `silk`: el muestrario de telas, un retal apaisado por renglón. Sin nombres el
+     retal se lleva la ficha entera, que es lo que la salva con una paleta sin rotular. */
+  { blockKey: 'dresscode', variantKey: 'swatches', name: 'Vestimenta en muestrario de telas' },
+  /* La séptima, para `monochrome`: los discos grandes como una sola pieza y los nombres corridos
+     en un pie. Separa el color de su nombre a propósito — ver su archivo. */
+  { blockKey: 'dresscode', variantKey: 'discs', name: 'Vestimenta en discos de color' },
+  /* La octava, para `sketch`, y la única cuya muestra no es una figura geométrica: manchas de
+     contorno irregular, con el candelabro dibujado junto a la instrucción. */
+  { blockKey: 'dresscode', variantKey: 'drops', name: 'Vestimenta en manchas de color' },
+  /* La novena, para `gala`, y la única donde la paleta no manda: la instrucción a cuerpo de
+     rótulo —«FORMAL»— y los tonos en una fila de puntos. Es el caso que faltaba: el evento cuyo
+     código de vestimenta es una sola palabra y no una gama. */
+  { blockKey: 'dresscode', variantKey: 'label', name: 'Vestimenta en etiqueta' },
   { blockKey: 'schedule', variantKey: 'vertical', name: 'Línea de tiempo alternada' },
   { blockKey: 'schedule', variantKey: 'horizontal', name: 'Cinta horizontal', minPlanRank: 2 },
   { blockKey: 'schedule', variantKey: 'agenda', name: 'Programa impreso' },
@@ -375,6 +468,16 @@ const VARIANTS: {
   { blockKey: 'schedule', variantKey: 'ribbon', name: 'Cinta con lazos' },
   { blockKey: 'schedule', variantKey: 'zigzag', name: 'Momentos en zigzag' },
   { blockKey: 'schedule', variantKey: 'itinerary', name: 'Itinerario con iconos al margen' },
+  /* El octavo, para `silk`, y el único sin hilo: una ficha por momento con la hora en un
+     medallón. La columna de medallones es lo que hace de secuencia cuando no hay línea que
+     seguir. Sin `minPlanRank`: es el cronograma de partida de una plantilla del catálogo. */
+  { blockKey: 'schedule', variantKey: 'cards', name: 'Programa en fichas' },
+  /* El noveno, para `monochrome`: la cifra al margen y el filete solo bajo el texto. Sin
+     `minPlanRank`: es el cronograma de partida de una plantilla del catálogo. */
+  { blockKey: 'schedule', variantKey: 'hours', name: 'Programa por horas, sin retícula' },
+  /* El décimo, para `gala`: la hora en un margen, el rótulo en el otro y una guía punteada
+     cruzando el hilo. Sin `minPlanRank`: es el cronograma de partida de una plantilla. */
+  { blockKey: 'schedule', variantKey: 'leaders', name: 'Itinerario con guías punteadas' },
   { blockKey: 'gallery', variantKey: 'parallax', name: 'Galería con parallax' },
   { blockKey: 'gallery', variantKey: 'grid', name: 'Galería en cuadrícula' },
   { blockKey: 'gallery', variantKey: 'carousel', name: 'Pasarela infinita' },
@@ -388,6 +491,11 @@ const VARIANTS: {
      de otra invitación. Sin `minPlanRank`: es la galería de partida de una plantilla del catálogo,
      y una variante de Plus ahí la volvería imposible de montar para un cliente de Esencial. */
   { blockKey: 'gallery', variantKey: 'plates', name: 'Galería de láminas montadas' },
+  /* La décima, para `silk`: el collage de dos columnas desfasadas con remate a todo el ancho. El
+     mosaico que llevaba antes reparte por tamaño —una destacada y el resto—; este reparte por
+     altura, y es lo que hace que un puñado de fotos se lea como un montaje y no como una
+     cuadrícula. Sin `minPlanRank`: es la galería de partida de una plantilla del catálogo. */
+  { blockKey: 'gallery', variantKey: 'offset', name: 'Galería en columnas desfasadas' },
   { blockKey: 'location', variantKey: 'single', name: 'Sede a pantalla completa' },
   { blockKey: 'location', variantKey: 'single-split', name: 'Sede con foto al lado' },
   { blockKey: 'location', variantKey: 'single-card', name: 'Sede en tarjeta' },
@@ -395,6 +503,15 @@ const VARIANTS: {
   { blockKey: 'location', variantKey: 'dual-venue', name: 'Dos sedes en columnas' },
   { blockKey: 'location', variantKey: 'dual-journey', name: 'Dos sedes como recorrido' },
   { blockKey: 'location', variantKey: 'dual-stacked', name: 'Dos sedes en franjas' },
+  /* El octavo, para `monochrome`: la sede sin tarjeta, con la foto flotando y los datos sobre el
+     papel. Es a `single-card` lo que `calendar.sheet` es a `calendar.month`. */
+  { blockKey: 'location', variantKey: 'single-open', name: 'Sede al aire, sin tarjeta' },
+  /* La novena, para `sketch`: la mesa puesta dibujada ilustra la sección y la fotografía entra
+     debajo si la hay. Es la única donde la foto es opcional de verdad y no deja hueco. */
+  { blockKey: 'location', variantKey: 'single-scene', name: 'Sede con escena dibujada' },
+  /* La décima, para `gala`: la hora abre la ficha y el nombre va entre dos filetes, como una
+     placa. */
+  { blockKey: 'location', variantKey: 'single-plaque', name: 'Sede en placa grabada' },
   /*
    * Las cinco son FORMAS, no mecanismos. A dónde va el botón —al WhatsApp del organizador o a la
    * plataforma— es contenido del evento y lo limita el plan al guardarlo, no el catálogo: por
@@ -407,11 +524,32 @@ const VARIANTS: {
   { blockKey: 'rsvp', variantKey: 'reply-card', name: 'Tarjeta de respuesta R.S.V.P.' },
   { blockKey: 'rsvp', variantKey: 'postcard', name: 'Confirmación en postal' },
   { blockKey: 'rsvp', variantKey: 'torn', name: 'Confirmación en papel rasgado' },
+  /* La séptima, para `silk`, y la única de dos planos: la tarjeta encimada en la costura entre el
+     papel y la banda del final —la fotografía cuando la hay, el color principal cuando no—. */
+  { blockKey: 'rsvp', variantKey: 'raised', name: 'Confirmación en tarjeta encimada' },
+  /* La octava, para `monochrome`, y la única que no encierra la petición en ninguna pieza: un
+     filete, el rótulo y el botón. */
+  { blockKey: 'rsvp', variantKey: 'hairline', name: 'Confirmación al aire, con filete' },
+  /* La novena, para `gala`: doble filete alrededor y ningún fondo propio. Sobre un papel oscuro,
+     una tarjeta clara abre un agujero de luz; un cartucho grabado, no. */
+  { blockKey: 'rsvp', variantKey: 'engraved', name: 'Confirmación en cartucho grabado' },
   { blockKey: 'closing', variantKey: 'split', name: 'Cierre a dos columnas' },
   { blockKey: 'closing', variantKey: 'letter', name: 'Cierre como carta que se abre' },
   { blockKey: 'closing', variantKey: 'horizon', name: 'Cierre a pantalla completa' },
   { blockKey: 'closing', variantKey: 'envelope', name: 'Cierre en sobre con tarjeta' },
   { blockKey: 'closing', variantKey: 'album', name: 'Cierre en página de álbum' },
+  /* El sexto, para `silk`: la nota apoyada en el papel, con el medallón del icono encabalgado
+     sobre la fotografía. No dibuja ningún objeto, al revés que la carta y el sobre. */
+  { blockKey: 'closing', variantKey: 'note', name: 'Cierre en nota sobre tarjeta' },
+  /* El séptimo, para `monochrome`: la despedida entera en caligrafía y la firma en versalitas. Es
+     el único que invierte la jerarquía tipográfica del bloque. */
+  { blockKey: 'closing', variantKey: 'script', name: 'Cierre en caligrafía' },
+  /* El octavo, para `sketch`, y el único simétrico: dos ramilletes espejados a los lados de la
+     firma. */
+  { blockKey: 'closing', variantKey: 'bouquet', name: 'Cierre entre ramilletes' },
+  /* El noveno, para `gala`, y el único que envuelve el texto: dos ramas enfrentadas cerrando una
+     guirnalda alrededor de la despedida. */
+  { blockKey: 'closing', variantKey: 'wreath', name: 'Cierre en guirnalda' },
   { blockKey: 'footer', variantKey: 'centered', name: 'Pie centrado' },
   { blockKey: 'footer', variantKey: 'ribbon', name: 'Pie en cinta de color' },
   { blockKey: 'footer', variantKey: 'marquee', name: 'Pie con rótulo en movimiento' },
@@ -423,6 +561,20 @@ const VARIANTS: {
    */
   { blockKey: 'footer', variantKey: 'colophon', name: 'Pie en colofón editorial' },
   { blockKey: 'footer', variantKey: 'sprig', name: 'Pie en hoja rasgada con ramitas' },
+  /* El sexto, para `silk`, y por lo mismo que los dos de arriba: sin él la plantilla nueva tenía
+     que repetir un pie. Es el único que cierra en oscuro y centrado —la lámina del color
+     principal con el monograma dentro de un doble cerco—; la cinta de `ribbon` también se tiñe,
+     pero es de un solo renglón y reparte el contenido a los dos lados. */
+  { blockKey: 'footer', variantKey: 'seal', name: 'Pie en lámina con sello' },
+  /* El séptimo, para `monochrome`: un filete, el nombre en versalitas y nada más. Sin monograma,
+     que es lo que lo separa de `centered`. */
+  { blockKey: 'footer', variantKey: 'rule', name: 'Pie de un filete' },
+  /* El octavo, para `sketch`: la franja del color principal bajo una onda, con el nombre vaciado
+     dejando ver el color a través. */
+  { blockKey: 'footer', variantKey: 'wave', name: 'Pie en franja ondulada' },
+  /* El noveno, para `gala`, y el único enmarcado por los cuatro lados: el cartucho de doble
+     filete con la corona encabalgada arriba. */
+  { blockKey: 'footer', variantKey: 'frame', name: 'Pie en cartucho grabado' },
 ];
 
 /**
@@ -456,14 +608,14 @@ const RETIRED_VARIANTS = {
  *      `editorial` no se parezcan en nada: una encuadra planos a pantalla completa y la otra
  *      maqueta un pliego con folios y pies de foto.
  *
- * El tema va aparte y encima: cualquiera de las cinco se puede vestir con cualquiera de los siete
- * temas. Esa separación es la que evita que el catálogo crezca por multiplicación —cinco
- * estructuras por siete temas son treinta y cinco invitaciones distintas, y ni una pieza de código
+ * El tema va aparte y encima: cualquiera de las nueve se puede vestir con cualquiera de los once
+ * temas. Esa separación es la que evita que el catálogo crezca por multiplicación —nueve
+ * estructuras por once temas son noventa y nueve invitaciones distintas, y ni una pieza de código
  * de más—.
  *
  * Cada una declara además el **tema con el que se diseñó** (`defaultThemeKey`). No lo impone: la
- * tipografía, el color y la densidad son del tema, y cualquiera de las cinco se puede vestir con
- * cualquiera de los siete. Lo que hace es que al crear un evento el tema llegue ya elegido, y que
+ * tipografía, el color y la densidad son del tema, y cualquiera de las nueve se puede vestir con
+ * cualquiera de los once. Lo que hace es que al crear un evento el tema llegue ya elegido, y que
  * quien no quiera pensarlo se lleve la combinación que el catálogo enseña.
  */
 /**
@@ -702,6 +854,248 @@ const TEMPLATES: {
       { blockKey: 'footer', variantKey: 'sprig', isRequired: true },
     ],
   },
+  {
+    key: 'silk',
+    name: 'Silk',
+    description:
+      'Piezas de papel sobre fondo crema: la portada en una tarjeta encima de la foto, las telas del dress code en fichas y el cierre en una lámina oscura.',
+    /*
+     * Los cuatro tipos donde una papelería de tarde-noche es la referencia. Fuera lo empresarial
+     * —el registro es íntimo— y las fiestas infantiles, que piden color y no marfil y chocolate.
+     */
+    eventTypes: ['wedding', 'quince', 'graduation', 'presentation'],
+    defaultThemeKey: 'silk',
+    isActive: true,
+    /*
+     * La sexta estructura, y la primera que se arma **por planos** en vez de por retícula.
+     *
+     * Las cinco anteriores se distinguen por cómo reparten el ancho —dos columnas, franjas a
+     * sangre, pliego enmarcado, retícula de revista—. Esta se distingue por lo que hay debajo:
+     * casi cada sección es una pieza de papel apoyada sobre otra cosa, con su canto y su sombra.
+     * La portada es una tarjeta encima de la fotografía, la confirmación es otra encimada sobre la
+     * banda del final, la historia es una copia montada sobre la hoja del relato, y el dress code
+     * y los detalles son pilas de fichas. Es una decisión de composición y no de color: con
+     * cualquiera de los ocho temas se sigue leyendo así.
+     *
+     * Por eso estrena ocho variantes de golpe —portada, historia, cronograma, detalles,
+     * vestimenta, confirmación, cierre y pie—. No es que las que había no valieran: es que la
+     * regla de exclusividad ya no dejaba ninguna libre en esos bloques para boda ni para XV, y en
+     * los pocos casos en que quedaba alguna (`rsvp.ticket`) era de otra familia visual. Ver
+     * `docs/COMPONENTES.md`, «Cuando no queda variante libre, se escribe una».
+     *
+     * El orden es el de la referencia: presenta, cuenta, dice cuándo y dónde, luego lo práctico y
+     * cómo vestir, después las fotos, y remata pidiendo la confirmación. El calendario no entra —
+     * `calendar.month` es el único que existe y lo lleva `botanical`—, y aquí la fecha ya la dan
+     * la portada y la cuenta regresiva de la bienvenida.
+     */
+    blocks: [
+      /* Sin `isRequired`, como en las otras dos que la llevan: la bienvenida es de Plus en
+         adelante, y un bloque obligatorio que el plan del cliente no incluye sería una plantilla
+         imposible de montar.
+
+         `countdown` es la única puerta que enseña el tiempo que falta, y es la sección que la
+         referencia remata a pantalla completa: aquí abre en vez de cerrar, que es donde una
+         cuenta atrás de verdad se mira. */
+      { blockKey: 'welcome', variantKey: 'countdown' },
+      { blockKey: 'hero', variantKey: 'card', isRequired: true },
+      { blockKey: 'story', variantKey: 'mounted' },
+      { blockKey: 'schedule', variantKey: 'cards' },
+      /* Una sola sede en una tarjeta centrada: el mismo objeto —papel apoyado sobre el fondo— que
+         el resto de la plantilla. Las dos columnas de `dual-venue` son de `classic`. */
+      { blockKey: 'location', variantKey: 'single-card' },
+      { blockKey: 'details', variantKey: 'stack' },
+      { blockKey: 'dresscode', variantKey: 'swatches', config: { eyebrow: 'Dress code', title: 'Paleta de la noche' } },
+      /* El collage desfasado: dos columnas a distinta altura y una fotografía cruzando el ancho
+         al final. Es el mismo principio que el resto de la plantilla —piezas sueltas apoyadas
+         sobre el fondo, cada una con su sombra— y por eso sustituyó al mosaico, que repartía en
+         una cuadrícula con una foto destacada. */
+      { blockKey: 'gallery', variantKey: 'offset' },
+      { blockKey: 'rsvp', variantKey: 'raised', isRequired: true },
+      { blockKey: 'closing', variantKey: 'note' },
+      { blockKey: 'footer', variantKey: 'seal', isRequired: true },
+    ],
+  },
+  {
+    key: 'monochrome',
+    name: 'Monochrome',
+    description:
+      'Papel blanco, fotografía en blanco y negro y la caligrafía como único ornamento. Sin una sola caja en toda la invitación.',
+    /*
+     * Solo boda y XV, y es la primera que se ofrece para tan pocos tipos. No es un descuido: la
+     * fotografía en blanco y negro y la copperplate son el registro de una celebración formal, y
+     * un bautizo o un baby shower con ese tratamiento se leen como un obituario. Ofrecer una
+     * plantilla donde no encaja no amplía el catálogo, lo emborrona.
+     */
+    eventTypes: ['wedding', 'quince'],
+    defaultThemeKey: 'ink',
+    isActive: true,
+    /*
+     * La séptima estructura, y la que se define **por lo que quita**.
+     *
+     * Las seis anteriores se distinguen por lo que ponen —franjas de color, tarjetas, pliegos,
+     * fichas, láminas—. Esta no tiene ni una caja, ni un medallón, ni un fondo teñido en toda la
+     * invitación: el papel es blanco, la tinta es negra, las fotografías van en blanco y negro
+     * (lo hace el tema con `photo.filter`, no los componentes) y lo único que adorna son los
+     * rótulos en caligrafía y algún filete de un píxel.
+     *
+     * Eso obliga a nueve variantes nuevas, y no por la regla de exclusividad —que también—: es
+     * que casi ninguna de las que había podía usarse aquí sin traicionar la idea. Cada una de las
+     * nueve se escribió quitando la pieza gráfica que su bloque daba por supuesta: el medallón de
+     * los detalles, la cápsula del plazo en la confirmación, la tarjeta de la sede, el filete
+     * completo del cronograma, la franja de color del calendario, el monograma del pie.
+     *
+     * La única de las nueve que no nace de una supresión es `calendar.sheet`, y es la más
+     * importante del lote: el bloque llevaba un solo diseño desde que existe, y aquí se supo por
+     * fin qué distingue a dos —el mes entero contra siete días en un renglón—, que era la
+     * condición que el registro se había puesto para escribir el segundo.
+     *
+     * El orden es el de la referencia: la fotografía y los nombres, el saludo, la fecha, las
+     * fotos, el programa, dónde, cómo vestir, qué hay que saber y la confirmación.
+     */
+    blocks: [
+      /* Sin `isRequired`, como en las otras tres que la llevan: la bienvenida es de Plus en
+         adelante. `monogram` es la puerta que compone las iniciales a cuerpo enorme sobre la
+         fotografía, que es el mismo gesto que la portada de esta estructura hace con los nombres:
+         la puerta y la primera pantalla riman en vez de contarse dos cosas distintas. */
+      { blockKey: 'welcome', variantKey: 'monogram' },
+      { blockKey: 'hero', variantKey: 'script', isRequired: true },
+      /* El saludo, con el rótulo de la referencia. El bloque se llama «historia» y aquí no cuenta
+         una: se dirige a quien lee. Es el mismo contenido —rótulo, entradilla y párrafos— con
+         otro papel, y por eso no hace falta un bloque nuevo. */
+      { blockKey: 'story', variantKey: 'greeting', config: { eyebrow: null, title: 'Invitación' } },
+      /* Sin rótulo propio: el calendario es la segunda mitad del saludo, no una sección aparte, y
+         un titular en medio partiría en dos lo que en la referencia se lee de corrido. */
+      { blockKey: 'calendar', variantKey: 'sheet', config: { eyebrow: null, title: null } },
+      { blockKey: 'gallery', variantKey: 'carousel', config: { eyebrow: null, title: 'Nosotros' } },
+      { blockKey: 'schedule', variantKey: 'hours', config: { eyebrow: null, title: 'Programa' } },
+      { blockKey: 'location', variantKey: 'single-open', config: { eyebrow: null, title: 'La sede' } },
+      { blockKey: 'dresscode', variantKey: 'discs', config: { eyebrow: null, title: 'Dress code' } },
+      { blockKey: 'details', variantKey: 'notes', config: { eyebrow: null, title: 'Detalles' } },
+      /*
+       * Todos los rótulos van sin `eyebrow`, y es la única estructura que lo hace en bloque.
+       *
+       * El rótulo pequeño en versalitas se compone con un ornamento a cada lado (ver
+       * `BlockHeading`), y esas dos piezas son justo lo que esta invitación no tiene. Sin ellos, el
+       * título en caligrafía **es** el encabezado, que es como está en la referencia: una palabra
+       * escrita a mano y debajo el contenido.
+       */
+      { blockKey: 'rsvp', variantKey: 'hairline', isRequired: true },
+      { blockKey: 'closing', variantKey: 'script' },
+      { blockKey: 'footer', variantKey: 'rule', isRequired: true },
+    ],
+  },
+  {
+    key: 'sketch',
+    name: 'Sketch',
+    description:
+      'Ilustrada a mano: rótulos de letra vaciada, dibujos de línea en cada sección y manchas de color en vez de muestras.',
+    /*
+     * Los tipos donde una invitación dibujada no desentona. Se queda fuera lo empresarial —un
+     * candelabro dibujado no es el registro de una convención— y, al revés que las demás, **sí**
+     * entran las fiestas: un cumpleaños o un baby shower ilustrados son exactamente esto, y hasta
+     * ahora el catálogo no tenía nada que ofrecerles que no fuera papelería formal.
+     */
+    eventTypes: ['wedding', 'quince', 'baby_shower', 'birthday', 'baptism'],
+    defaultThemeKey: 'cocoa',
+    isActive: true,
+    /*
+     * La octava estructura, y la primera **ilustrada**.
+     *
+     * Las siete anteriores se componen con tipografía, filetes, fotografías y color. Esta añade
+     * una cosa que ninguna tenía: **dibujos**. Un lazo, unas alianzas, un candelabro, dos
+     * ramilletes y una mesa puesta, todos de línea y todos del color del tema
+     * (`shared/doodle-ornaments.tsx`). Y un segundo recurso que la recorre entera: el rótulo
+     * **vaciado**, la letra dibujada con su contorno y el interior en papel —`.inv-outline-text`,
+     * en `globals.css`—, que aparece en la portada, en el saludo, en el mes del calendario, en la
+     * vestimenta, en los detalles y en el pie.
+     *
+     * Estrena ocho variantes, y esta vez tres de los doce bloques se reutilizaron enteros:
+     * `welcome.band`, `schedule.ribbon` —que ya era el cronograma dibujado del catálogo, con sus
+     * lazos y sus ilustraciones— y `gallery.mosaic`, más `rsvp.ticket`, que es papelería
+     * troquelada y encaja con el tono. Es la primera estructura desde `silk` que no tiene que
+     * escribirlo casi todo, y es porque el catálogo ya tenía piezas de esta familia.
+     *
+     * El orden es el de la referencia: la portada, el saludo, la fecha, el programa, la sede, la
+     * vestimenta, los detalles y la confirmación.
+     */
+    blocks: [
+      /* La bienvenida con banda de color, sin `isRequired` como las otras cuatro que la llevan.
+         Es la más móvil del bloque —retrato arriba, franja abajo— y la única que ya usaba una
+         mancha de color plena, que es el material de esta plantilla. */
+      { blockKey: 'welcome', variantKey: 'band' },
+      { blockKey: 'hero', variantKey: 'frame', isRequired: true },
+      { blockKey: 'story', variantKey: 'bow', config: { eyebrow: null, title: 'Queridos invitados' } },
+      { blockKey: 'calendar', variantKey: 'week', config: { eyebrow: null, title: null } },
+      /* El cronograma que ya era dibujado: cinta con lazos y una ilustración por momento. No hizo
+         falta escribir otro —es exactamente el registro de esta plantilla— y estaba libre porque
+         ninguna otra estructura lo había reclamado. */
+      { blockKey: 'schedule', variantKey: 'ribbon', config: { eyebrow: null, title: 'Programa' } },
+      { blockKey: 'gallery', variantKey: 'mosaic', config: { eyebrow: null, title: 'Recuerdos' } },
+      { blockKey: 'location', variantKey: 'single-scene', config: { eyebrow: null, title: 'El lugar' } },
+      { blockKey: 'dresscode', variantKey: 'drops', config: { eyebrow: null, title: 'Dress code' } },
+      { blockKey: 'details', variantKey: 'stickers', config: { eyebrow: null, title: 'Detalles' } },
+      /* El pase troquelado: es la única confirmación del catálogo con una forma recortada, y en
+         una invitación dibujada se lee como el ticket que acompaña a la tarjeta. */
+      { blockKey: 'rsvp', variantKey: 'ticket', isRequired: true },
+      { blockKey: 'closing', variantKey: 'bouquet' },
+      { blockKey: 'footer', variantKey: 'wave', isRequired: true },
+    ],
+  },
+  {
+    key: 'gala',
+    name: 'Gala',
+    description:
+      'Verde bosque y oro: la corona, el retrato enmarcado y la fecha grabada, todo en un eje y con guirnaldas de línea en los cantos.',
+    /*
+     * **Solo XV**, y es la primera plantilla del catálogo con un único tipo de evento.
+     *
+     * No es una limitación que se pueda quitar cambiando esta lista: `hero.crown` lleva la corona
+     * escrita dentro —como el «XV» de `hero.quince`— y ofrecerla para una boda prometería otra
+     * celebración, que es justo lo que el catálogo evita separando `welcome.crown` de
+     * `welcome.luminous`. La consecuencia buena es que aquí la regla de exclusividad solo se
+     * cruza con las otras siete en «quince».
+     */
+    eventTypes: ['quince'],
+    defaultThemeKey: 'emerald',
+    isActive: true,
+    /*
+     * La novena estructura, y la primera **oscura de catálogo**.
+     *
+     * «cinematic» ya se vestía de oscuro con el tema «royal», pero su composición es de cartel:
+     * fotografías a sangre y muy poco texto por vista. Esta es lo contrario —una participación
+     * grabada— y eso, sobre un fondo oscuro, cambia todas las reglas: no puede haber tarjetas
+     * claras (abren agujeros de luz), ni franjas de color (el papel ya es la franja), ni sombras
+     * (no se ven). Lo que queda para separar y destacar es **el filete dorado**, y de ahí salen
+     * las nueve variantes: el retrato con su filete al canto, la fecha entre dos filetes, el
+     * nombre de la sede entre otros dos, la confirmación en un cartucho de doble filete y el pie
+     * dentro de otro.
+     *
+     * El segundo recurso es la **guirnalda**: la misma rama botánica que ya tenía la biblioteca,
+     * recortada por los cantos de la portada y del cierre para que se lea impresa y no pegada.
+     *
+     * Se reutilizan tres bloques enteros: `welcome.crown` —la puerta de XV, que estaba libre y
+     * lleva la misma corona que la portada—, `gallery.parallax` y el tipo de contenido de siempre.
+     * Y se **omite la historia**: la referencia no la tiene, porque en una participación de XV lo
+     * que iría ahí —los padres, los padrinos, la frase de invitación— va en la portada.
+     */
+    blocks: [
+      /* La puerta de unos XV: corona en vez de alianzas. Es la hermana de `welcome.luminous` y
+         estaba libre porque ninguna estructura la había reclamado — es exactamente para esto. */
+      { blockKey: 'welcome', variantKey: 'crown' },
+      { blockKey: 'hero', variantKey: 'crown', isRequired: true },
+      { blockKey: 'calendar', variantKey: 'band', config: { eyebrow: null, title: null } },
+      { blockKey: 'location', variantKey: 'single-plaque', config: { eyebrow: null, title: 'Recepción' } },
+      { blockKey: 'schedule', variantKey: 'leaders', config: { eyebrow: null, title: 'Itinerario de actividades' } },
+      { blockKey: 'gallery', variantKey: 'parallax', config: { eyebrow: null, title: 'Recuerdos' } },
+      /* «Qué hay que saber» antes que «cómo voy»: en la referencia, la sugerencia de regalo y la
+         barra de bebidas van juntas y antes de la vestimenta. */
+      { blockKey: 'details', variantKey: 'column', config: { eyebrow: null, title: 'Detalles' } },
+      { blockKey: 'dresscode', variantKey: 'label', config: { eyebrow: null, title: 'Vestimenta' } },
+      { blockKey: 'rsvp', variantKey: 'engraved', isRequired: true },
+      { blockKey: 'closing', variantKey: 'wreath' },
+      { blockKey: 'footer', variantKey: 'frame', isRequired: true },
+    ],
+  },
 ];
 
 /**
@@ -815,9 +1209,9 @@ function assertTemplateVariantsAreExclusive(): void {
  * Los cuatro se aplican en piezas compartidas —`BlockSection`, `BlockImage`, `BlockOrnament`—,
  * así que un tema nuevo no toca ni un componente de bloque.
  *
- * ## Los siete son del catálogo, y ninguno de un cliente
+ * ## Los once son del catálogo, y ninguno de un cliente
  *
- * Hubo un octavo, `saja-boys`, que era la paleta de la fiesta de un cliente concreto. Se retiró:
+ * Hubo otro, `saja-boys`, que era la paleta de la fiesta de un cliente concreto. Se retiró:
  * `docs/PROJECT.md` es explícito en que lo que solo beneficia a un cliente es una personalización
  * y no parte del núcleo, y un catálogo con la paleta de una fiesta dentro deja de ser un catálogo.
  */
@@ -1081,6 +1475,218 @@ const THEMES = [
       edge: { height: '0px' },
     },
   },
+  {
+    key: 'silk',
+    name: 'Silk',
+    description: 'Chocolate, marfil y oro. Nocturna y de papel grueso, para bodas de tarde-noche.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /*
+         * El chocolate va en `primary` y no en el fondo, y esa es la decisión del tema.
+         *
+         * La referencia de la que sale reparte así: casi toda la invitación sobre un crema cálido,
+         * y el marrón muy oscuro reservado a las piezas que rematan —el botón, la lámina del
+         * final—. Puesto en el fondo, el tema se convertiría en otro «royal»: dramático y de
+         * pantalla completa, que es un producto que el catálogo ya tiene. Guardado para las
+         * láminas, el contraste aparece dos o tres veces en toda la lectura, y por eso pesa.
+         */
+        background: '#f3ede2',
+        surface: '#fffcf6',
+        ink: '#2f2620',
+        inkSoft: '#7c7065',
+        primary: '#2c2119',
+        onPrimary: '#f6efe3',
+        accent: '#a98a55',
+        line: '#e3d9c8',
+        overlay: 'rgba(30, 22, 16, 0.5)',
+      },
+      fonts: {
+        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        script: "var(--font-sacramento, 'Sacramento'), cursive",
+      },
+      /* Un pelo de radio, no cero: aquí las piezas son tarjetas apoyadas sobre el fondo —la
+         portada, las fichas, la confirmación— y a canto vivo se ven recortadas con guillotina en
+         vez de troqueladas. Es lo contrario que en «elegance», donde no hay tarjetas flotando. */
+      radii: { sm: '3px', md: '6px', lg: '10px' },
+      /* La sombra es el tema. Toda la composición se sostiene sobre piezas que levantan del
+         fondo, así que va más larga y más abierta que la de los otros siete: sin ella, las mismas
+         tarjetas se leen como recuadros con borde. */
+      shadows: { soft: '0 26px 60px -32px rgba(44, 33, 25, 0.55)' },
+      motion: { reveal: '0.9s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.75rem, 10vw, 8.5rem)' },
+      /* Cálida y con un punto de contraste: la luz de tarde de la referencia, no el lavado de
+         «elegance» ni el frío de cine de «royal». */
+      photo: { filter: 'saturate(0.92) contrast(1.04) sepia(0.08)' },
+      /* Punto redondo pequeño: el filete con su nudo es el separador que esta plantilla usa entre
+         piezas, y tiene que leerse a tamaño pequeño dentro de una tarjeta. */
+      ornament: { line: '2rem', node: '4px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.6' },
+      /* Recto: las láminas de esta plantilla se cortan a escuadra y lo que las separa del fondo es
+         la sombra, no el troquel. Una onda encima sería un segundo canto contando otra cosa. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'ink',
+    name: 'Ink',
+    description:
+      'Blanco, tinta y caligrafía inglesa. Las fotografías salen en blanco y negro: es el tema el que las revela.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* Blanco puro, y es el único de los nueve que lo usa. Los demás calientan el papel —marfil,
+           crema, hueso— porque imitan un material impreso; aquí el papel no imita nada: es la
+           pantalla en blanco contra la que se recorta una fotografía en blanco y negro. */
+        background: '#ffffff',
+        /* Y por eso `surface` tiene que ser gris y no otro blanco: en un tema donde el fondo ya es
+           #fff, una tarjeta blanca sobre fondo blanco desaparece. Esta estructura no usa tarjetas,
+           pero el tema se puede poner sobre cualquiera de las otras seis. */
+        surface: '#f6f5f3',
+        ink: '#14110f',
+        inkSoft: '#7c7873',
+        primary: '#14110f',
+        onPrimary: '#ffffff',
+        /* Un pardo cálido y **oscuro**. El acento aquí no adorna filetes: rotula los detalles, y
+           tiene que leerse a trece píxeles sobre blanco. Los dorados claros de «elegance» o «silk»
+           en ese papel se quedan en una insinuación. */
+        accent: '#7a6e5d',
+        line: '#e6e3de',
+        overlay: 'rgba(10, 9, 8, 0.5)',
+      },
+      fonts: {
+        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        /* La copperplate, y no la manuscrita de los otros temas. Es la mitad del carácter de este:
+           aquí la caligrafía no firma al pie, **es** el titular de cada sección. Ver la nota de
+           `Pinyon_Script` en `app/layout.tsx`. */
+        script: "var(--font-pinyon, 'Pinyon Script'), cursive",
+      },
+      /* El radio grande es para las fotografías —en la referencia todas van con la esquina
+         redondeada—, y el medio para el botón, que es la única pieza de interfaz de la
+         invitación. El pequeño casi a cero: no hay nada más que redondear. */
+      radii: { sm: '2px', md: '10px', lg: '18px' },
+      /* Prácticamente no hay sombra, y es coherente: en esta invitación nada levanta del papel.
+         Se deja un pelo para las piezas de otras estructuras que la den por supuesta. */
+      shadows: { soft: '0 12px 32px -28px rgba(20, 17, 15, 0.5)' },
+      motion: { reveal: '0.85s cubic-bezier(0.22, 1, 0.36, 1)' },
+      /* Mucho aire, como «elegance»: sin cajas ni filetes, el blanco entre secciones es lo único
+         que separa una de otra. */
+      space: { block: 'clamp(5rem, 11vw, 9rem)' },
+      /*
+       * Blanco y negro de verdad, y aquí está el tema entero.
+       *
+       * Es la primera vez que `photo.filter` hace algo más que matizar: revela **todas** las
+       * fotografías de la invitación en gris, y esa decisión no la toma ningún componente ni
+       * obliga al cliente a subir las fotos ya convertidas. Cambiar a otro tema devuelve el color
+       * al instante, que es exactamente lo que este token existe para poder hacer.
+       *
+       * El punto de contraste extra compensa lo que el gris se lleva: sin color, una fotografía
+       * plana se queda sin ningún plano que la ordene.
+       */
+      photo: { filter: 'grayscale(1) contrast(1.08)' },
+      /* Sin nudo: el ornamento de este tema es un filete y nada más, como en «minimal». Un rombo
+         dorado al lado de un rótulo en copperplate son dos adornos discutiendo. */
+      ornament: { line: '2.5rem', node: '0px', nodeRadius: '0px', nodeRotate: '0deg', opacity: '0.4' },
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'cocoa',
+    name: 'Cocoa',
+    description: 'Crema, tinta cacao y pasteles apagados. Redonda y dibujada a mano, para bodas y fiestas ilustradas.',
+    isActive: true,
+    tokens: {
+      colors: {
+        background: '#fdf5e9',
+        surface: '#fffaf1',
+        /* Cacao y no negro. Toda la invitación está dibujada con un solo trazo de color, y ese
+           trazo es el que hace de tinta: un negro puro al lado de un crema cálido corta el papel,
+           y lo que se quiere es que el dibujo parezca hecho con el mismo rotulador que el texto. */
+        ink: '#6f3a37',
+        inkSoft: '#a4736e',
+        primary: '#8c4a44',
+        onPrimary: '#fff8f0',
+        accent: '#c9847c',
+        line: '#ecd9c8',
+        overlay: 'rgba(70, 35, 33, 0.42)',
+      },
+      fonts: {
+        /* Fredoka: el único palo seco redondo del catálogo, y aquí no es un gusto. Los rótulos de
+           esta plantilla van **vaciados** —el contorno hace de letra— y eso solo funciona con una
+           letra gorda y de formas cerradas: con un garalde fino, el contorno de una «e» se cruza
+           consigo mismo y el hueco desaparece. Ver `.inv-outline-text` en `globals.css`. */
+        display: "var(--font-fredoka, 'Fredoka'), 'Trebuchet MS', sans-serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        /* Sacramento y no la copperplate de «ink»: aquí la manuscrita es la de una nota escrita a
+           mano con rotulador, no la de una pluma de punta flexible. Es la que rima con el trazo
+           de los dibujos. */
+        script: "var(--font-sacramento, 'Sacramento'), cursive",
+      },
+      /* Todo redondeado, como las formas de la plantilla. El radio grande es el de las
+         fotografías; el medio, el del botón, que en esta invitación se lee como una pastilla. */
+      radii: { sm: '8px', md: '16px', lg: '26px' },
+      shadows: { soft: '0 20px 44px -30px rgba(110, 58, 55, 0.4)' },
+      motion: { reveal: '0.75s cubic-bezier(0.34, 1.3, 0.64, 1)' },
+      space: { block: 'clamp(4.25rem, 9vw, 7.5rem)' },
+      /* Cálida y algo lavada: una fotografía impresa y pegada en un cuaderno, no un archivo
+         recién salido de la cámara. */
+      photo: { filter: 'saturate(0.92) sepia(0.12) contrast(0.97)' },
+      /* Punto redondo y bien visible: es el único ornamento de tema que se ve al lado de los
+         dibujos, y un rombo o un cuadrado serían la única arista de la página. */
+      ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.6' },
+      /* Y el canto ondulado, que aquí sí se usa: la banda de la historia y la franja del pie lo
+         piden, y es la misma mano que dibuja los ramilletes. */
+      edge: { height: 'clamp(1.75rem, 5vw, 3.25rem)' },
+    },
+  },
+  {
+    key: 'emerald',
+    name: 'Emerald',
+    description: 'Verde bosque y oro viejo sobre fondo oscuro. Grabada y formal, para XV y bodas de noche.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /*
+         * El segundo tema oscuro del catálogo, y hay que decir en qué se diferencia de «royal»
+         * para que no sean dos versiones de lo mismo: aquel es vino y negro, de contraste alto y
+         * fotografía de cine; este es verde botella y oro, de contraste bajo y todo dorado. Uno es
+         * dramático, el otro es formal — y se nota sobre todo en el acento, que allí destaca y
+         * aquí **acompaña**: en una participación grabada, el oro es el color del filete.
+         */
+        background: '#0f2a22',
+        surface: '#16382e',
+        ink: '#f0e7d4',
+        inkSoft: '#b9ac8e',
+        primary: '#1c453a',
+        onPrimary: '#f6efdd',
+        accent: '#c9a961',
+        line: '#2c5a4b',
+        overlay: 'rgba(6, 22, 17, 0.55)',
+      },
+      fonts: {
+        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        script: "var(--font-pinyon, 'Pinyon Script'), cursive",
+      },
+      /* Cantos vivos: una participación grabada se corta a guillotina, y el radio es el detalle
+         que delata que algo se diseñó para una app. El medio a 2px por el botón, que a cero se ve
+         recortado con tijera. */
+      radii: { sm: '0px', md: '2px', lg: '2px' },
+      /* Casi sin sombra: sobre un fondo oscuro no se ve una sombra, se ve una mancha más oscura.
+         Lo que separa las piezas aquí es el filete dorado. */
+      shadows: { soft: '0 24px 60px -40px rgba(0, 0, 0, 0.85)' },
+      motion: { reveal: '0.95s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.75rem, 10vw, 8.5rem)' },
+      /* Cálida y un punto más contrastada: una fotografía clara sobre verde oscuro se ve lavada
+         si no se le sube el contraste, y el punto de sepia la reconcilia con el oro. */
+      photo: { filter: 'saturate(0.95) contrast(1.08) sepia(0.06)' },
+      /* Rombo, el ornamento clásico de la papelería formal, y bien visible: en este tema los
+         filetes son la mitad del diseño. */
+      ornament: { line: '2.25rem', node: '5px', nodeRadius: '1px', nodeRotate: '45deg', opacity: '0.8' },
+      edge: { height: '0px' },
+    },
+  },
 ] as const;
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1137,13 +1743,21 @@ async function seedCatalogs(): Promise<void> {
   await db.delete(s.planFeatures);
   await db.insert(s.planFeatures).values(PLAN_FEATURES);
 
+  /* `is_active` también en el `SET`: sin él, un tipo que ya existía se quedaría con el valor que
+     tuviera en la base y desactivarlo aquí no serviría de nada en ninguna instalación que ya
+     hubiera sembrado. */
   await db
     .insert(s.eventTypes)
     .values(EVENT_TYPES.map((t) => ({ ...t })))
-    .onConflictDoUpdate({ target: s.eventTypes.key, set: { name: sql`excluded.name` } });
+    .onConflictDoUpdate({
+      target: s.eventTypes.key,
+      set: { name: sql`excluded.name`, isActive: sql`excluded.is_active` },
+    });
+
+  const sellable = EVENT_TYPES.filter((type) => type.isActive).length;
 
   console.log(
-    `  ${FEATURES.length} funcionalidades, ${PLANS.length} planes, ${EVENT_TYPES.length} tipos de evento`,
+    `  ${FEATURES.length} funcionalidades, ${PLANS.length} planes, ${EVENT_TYPES.length} tipos de evento (${sellable} activos)`,
   );
 }
 
@@ -1310,8 +1924,13 @@ async function retireVariants(variantByRegistryId: Map<string, string>): Promise
 /**
  * La cuenta de plataforma: la **única** fila de `users` que deja este seed.
  *
- * Va sin cliente (`client_id` NULL) y es con la que se entra a `/admin`. No se siembra ninguna
+ * Va **sin ninguna membresía** y es con la que se entra a `/admin`. No se siembra ninguna
  * cuenta de cliente, y por tanto tampoco ningún cliente: ver la nota de cabecera del archivo.
+ *
+ * Que no tenga membresías no es un detalle: es el invariante que sustituye al CHECK
+ * `users_client_xor_platform` y lo que mantiene esta cuenta invisible para el panel de
+ * cualquier cliente, porque la política de `users` alcanza solo a quien comparte membresía.
+ * `npm run db:check` lo verifica.
  *
  * `platform_role` se escribe aquí, con el rol DUEÑO. La aplicación no puede tocar esa columna
  * —está revocada en `sql/0001_security.sql`— justamente para que conceder ese rol sea una
@@ -1324,8 +1943,6 @@ async function seedPlatformAccount(): Promise<void> {
   const [platformAdmin] = await db
     .insert(s.users)
     .values({
-      // `clientId` va sin poner: es NULL, y el CHECK `users_client_xor_platform` exige que
-      // lo sea para una cuenta con rol de plataforma.
       email: PLATFORM_ADMIN.email,
       name: PLATFORM_ADMIN.name,
       platformRole: 'superadmin',

@@ -33,12 +33,12 @@ export function ClosingHorizon({ content }: ClosingVariantProps) {
       variant="horizon"
       /* El mínimo se mide contra la pantalla y no en rem: el cierre tiene que llenar la vista,
          y 34rem en un móvil apaisado es más de lo que hay. */
-      className="relative isolate flex min-h-[clamp(24rem,72svh,38rem)] items-center bg-inv-primary py-[calc(5rem+var(--inv-edge-height,0px))] sm:py-[calc(7rem+var(--inv-edge-height,0px))]"
+      className="relative isolate inv-on-photo flex min-h-[clamp(24rem,72svh,38rem)] items-center bg-inv-primary py-[calc(5rem+var(--inv-edge-height,0px))] sm:py-[calc(7rem+var(--inv-edge-height,0px))]"
     >
       {content.image && (
         <>
           <BlockImage image={content.image} className="-z-20" sizes="100vw" priority={false} />
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-overlay" />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="center" />
         </>
       )}
 

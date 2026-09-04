@@ -27,7 +27,7 @@ export async function createClientAction(
     name: readText(formData, 'name'),
     slug: readText(formData, 'slug'),
     contactEmail: readText(formData, 'contactEmail'),
-    ownerEmail: readText(formData, 'ownerEmail'),
+    contactPhone: readText(formData, 'contactPhone'),
     ownerName: readText(formData, 'ownerName'),
   });
 
@@ -62,8 +62,13 @@ export async function createClientAction(
     case 'invalid-owner':
       return {
         status: 'error',
-        message: 'Revisa el nombre y el correo de la persona responsable.',
+        message: 'Revisa el correo del cliente y el nombre de la persona responsable.',
       };
+
+    /* Lo devuelve la base de datos, no la validación de arriba: si llega hasta ahí sin correo es
+       que la petición no vino de este formulario. Se contesta igual de claro. */
+    case 'invalid-email':
+      return { status: 'error', message: 'El cliente necesita un correo de contacto.' };
 
     case 'forbidden':
       /*

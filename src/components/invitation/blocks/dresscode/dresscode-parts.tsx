@@ -23,7 +23,15 @@ import type { DresscodeSwatch } from '@/domain/invitation/blocks/dresscode';
  * Van en blanco y negro translúcidos a propósito. Un degradado con un color escrito a mano solo
  * funcionaría con los dorados, y las paletas traen también plateados y cobres.
  */
-const METALLIC_SHEEN =
+/**
+ * El brillo de un tejido metálico.
+ *
+ * Se exporta porque una variante lo necesita fuera de `Swatch`: `dresscode.drops` dibuja la
+ * muestra con otra forma —una mancha irregular, no un círculo— y aun así el reflejo tiene que ser
+ * **el mismo**. Es lo único que distingue un oro de un mostaza en una pantalla, y con dos
+ * degradados escritos por separado acabarían siendo dos oros distintos en el mismo catálogo.
+ */
+export const METALLIC_SHEEN =
   'linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.08) 42%, rgba(0,0,0,0.06) 58%, rgba(0,0,0,0.24) 100%)';
 
 /**

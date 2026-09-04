@@ -25,7 +25,7 @@ export function WelcomeLuminous({ content }: WelcomeVariantProps) {
     <WelcomeShell
       variant="luminous"
       label={`Bienvenida a la invitación de ${content.celebrantName}`}
-      className="text-inv-on-primary"
+      className="text-inv-on-primary inv-on-photo"
       contentClassName="items-center justify-center px-7 py-14 text-center sm:px-10"
       backdrop={
         <>
@@ -36,7 +36,7 @@ export function WelcomeLuminous({ content }: WelcomeVariantProps) {
           ) : (
             <div aria-hidden="true" className="absolute inset-0 -z-20 bg-inv-primary" />
           )}
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-overlay/80" />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="all" />
         </>
       }
     >

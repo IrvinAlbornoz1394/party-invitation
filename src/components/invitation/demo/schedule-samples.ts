@@ -4,23 +4,23 @@ import type { DemoSample } from './sample';
 /**
  * Contenido de ejemplo para ver un cronograma sin tener que crear un evento.
  *
- * Mismas claves que el resto de bloques —los mismos tres eventos imaginarios— para poder saltar
- * de la portada al cronograma sin que cambie el evento debajo.
+ * Mismas claves que el resto de bloques para poder saltar de la portada al cronograma sin que
+ * cambie el evento debajo. Los dos cubren lo que hay que probar antes de elegir una forma:
  *
- * Los tres cubren lo que hay que probar antes de elegir una forma:
+ *   · **Boda**: siete hitos con iconos. El cronograma largo, donde se nota cuál de las siete
+ *     variantes aguanta y cuál se hace interminable.
+ *   · **XV**: seis hitos en modo **solo puntos**. Es la comprobación de que todas se sostienen sin
+ *     iconos — y de paso, cómo se ve una invitación más sobria.
  *
- *   · **Presentación**: cuatro hitos con iconos. El caso corto y variado, donde los iconos
- *     distinguen de un vistazo la misa, las fotos, la comida y el pastel.
- *   · **XV Años**: seis hitos en modo **solo puntos**. Es la comprobación de que las cuatro
- *     formas se sostienen sin iconos — y de paso, cómo se ve una invitación más sobria.
- *   · **Boda**: siete hitos con iconos. El cronograma largo, donde se nota cuál de las cuatro
- *     aguanta y cuál se hace interminable.
+ * Los hitos son los que de verdad distinguen a los dos eventos: una boda tiene ceremonia, cóctel y
+ * primer baile; unos XV tienen misa, vals y chambelanes. El componente es el mismo; lo que cuenta,
+ * no.
  */
 
 export const SCHEDULE_SAMPLES: readonly DemoSample<ScheduleContent>[] = [
   {
-    key: 'presentacion',
-    name: 'Presentación',
+    key: 'boda',
+    name: 'Boda',
     content: scheduleContentSchema.parse({
       eyebrow: 'Cómo será el día',
       title: 'El orden del día',
@@ -28,80 +28,75 @@ export const SCHEDULE_SAMPLES: readonly DemoSample<ScheduleContent>[] = [
       marker: 'icon',
       items: [
         {
-          timeLabel: '12:00',
-          title: 'Misa de acción de gracias',
-          description: 'En el Templo de Nuestra Señora de Guadalupe.',
+          timeLabel: '17:00',
+          title: 'Ceremonia religiosa',
+          description: 'En el Convento de San Antonio de Padua.',
           icon: 'church',
         },
         {
-          timeLabel: '13:00',
-          title: 'Fotos con la festejada',
-          description: 'Afuera del templo, antes de irnos a la fiesta.',
+          timeLabel: '18:15',
+          title: 'Fotos con los novios',
+          description: 'En el atrio, antes de salir hacia la hacienda.',
           icon: 'camera',
         },
+        { timeLabel: '19:30', title: 'Cóctel de bienvenida', description: null, icon: 'toast' },
         {
-          timeLabel: '14:00',
-          title: 'Comida y juegos',
-          description: 'Brincolín, mesa de dulces y toda la tarde para jugar.',
+          timeLabel: '20:30',
+          title: 'Cena',
+          description: 'Servicio en mesa; encontrarás tu lugar en el plano de la entrada.',
           icon: 'food',
         },
+        { timeLabel: '22:00', title: 'Primer baile', description: null, icon: 'heart' },
         {
-          timeLabel: '17:30',
-          title: 'Feliz cumpleaños',
-          description: 'Acompáñanos a cantar en la mesa del pastel.',
-          icon: 'cake',
+          timeLabel: '22:30',
+          title: 'Fiesta',
+          description: 'Grupo en vivo y después música hasta el cierre.',
+          icon: 'party',
         },
+        { timeLabel: '02:00', title: 'Última canción', description: null, icon: 'sparkles' },
       ],
       note: 'Los horarios son aproximados; lo importante es que vengas.',
     }),
   },
   {
-    key: 'xv-anios',
+    key: 'quince',
     name: 'XV Años',
     content: scheduleContentSchema.parse({
-      eyebrow: 'La noche, hora por hora',
+      eyebrow: 'La noche, paso a paso',
       title: 'Programa',
       subtitle: null,
-      /*
-       * En «solo puntos» a propósito. Los iconos siguen guardados en cada hito —cambiar de modo
-       * es un interruptor, no volver a elegirlos—, pero aquí no se pintan: seis momentos de una
-       * misma noche se distinguen por la hora, no por seis dibujos parecidos.
-       */
+      /* Solo puntos: sin iconos, lo único que destaca es la hora. Es lo que pide una invitación
+         formal y lo que salva a un programa de seis momentos parecidos. */
       marker: 'dot',
       items: [
-        { timeLabel: '8:00 PM', title: 'Recepción', description: 'Bienvenida con cóctel en el jardín.', icon: 'guests' },
-        { timeLabel: '8:45 PM', title: 'Entrada de la festejada', description: null, icon: 'sparkles' },
-        { timeLabel: '9:00 PM', title: 'Vals', description: 'El baile que llevamos meses ensayando.', icon: 'music' },
-        { timeLabel: '9:30 PM', title: 'Cena', description: 'Servicio en mesa. Avísanos de cualquier alergia.', icon: 'food' },
-        { timeLabel: '10:30 PM', title: 'Brindis y pastel', description: null, icon: 'toast' },
-        { timeLabel: '11:00 PM', title: 'A bailar', description: 'Hasta que aguantemos.', icon: 'party' },
-      ],
-      note: 'La hacienda cierra sus puertas a las 8:30 PM; procura llegar antes.',
-    }),
-  },
-  {
-    key: 'boda',
-    name: 'Boda',
-    content: scheduleContentSchema.parse({
-      eyebrow: 'Nuestro día',
-      title: 'Así será la boda',
-      subtitle: 'Siete momentos, de la ceremonia a la última canción.',
-      marker: 'icon',
-      items: [
         {
-          timeLabel: '5:00 PM',
-          title: 'Ceremonia',
-          description: 'En el ex convento de San Antonio. Te pedimos llegar diez minutos antes.',
+          timeLabel: '19:00',
+          title: 'Misa de acción de gracias',
+          description: 'Iglesia de San Servacio, en el centro.',
           icon: 'church',
         },
-        { timeLabel: '6:00 PM', title: 'Fotos y traslado', description: 'Hay diez minutos de camino hasta la recepción.', icon: 'car' },
-        { timeLabel: '7:00 PM', title: 'Cóctel de bienvenida', description: 'En la terraza, mientras cae la tarde.', icon: 'toast' },
-        { timeLabel: '8:30 PM', title: 'Cena', description: 'Servicio en mesa, con menú vegetariano a petición.', icon: 'food' },
-        { timeLabel: '10:00 PM', title: 'Primer baile', description: null, icon: 'heart' },
-        { timeLabel: '10:30 PM', title: 'Fiesta', description: 'Grupo en vivo hasta la una y música hasta el cierre.', icon: 'party' },
-        { timeLabel: '2:00 AM', title: 'Última canción', description: 'Y un taco de despedida para el camino.', icon: 'music' },
+        { timeLabel: '20:15', title: 'Sesión de fotos', description: null, icon: 'camera' },
+        {
+          timeLabel: '21:00',
+          title: 'Recepción',
+          description: 'En la Hacienda Santa Cruz.',
+          icon: 'sparkles',
+        },
+        {
+          timeLabel: '21:45',
+          title: 'Vals y chambelanes',
+          description: 'El baile que llevamos meses ensayando.',
+          icon: 'music',
+        },
+        { timeLabel: '22:30', title: 'Cena', description: null, icon: 'food' },
+        {
+          timeLabel: '23:30',
+          title: 'Baile',
+          description: 'Hasta que se acabe la música.',
+          icon: 'party',
+        },
       ],
-      note: 'Habrá transporte de regreso al centro a la 1:00 y a las 2:00 AM.',
+      note: null,
     }),
   },
 ];

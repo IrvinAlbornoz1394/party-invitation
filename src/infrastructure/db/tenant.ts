@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
+import type { TenantScope } from '@/domain/auth/actor';
 import { db, type Database } from './client';
 
 /** Transacción de Drizzle. Es lo que reciben los callbacks con contexto de tenant. */
@@ -20,22 +21,49 @@ const uuidSchema = z.uuid();
  * El id se valida como UUID antes de enviarse. Además va como parámetro y no
  * interpolado, porque `SET LOCAL` no acepta parámetros y `set_config()` sí.
  *
- * Este helper es para el camino de un CLIENTE, donde el tenant sale de su propia sesión y
+ * Con un `TenantScope` que traiga evento, fija además `app.current_event_id` y RLS estrecha a
+ * ese evento: es el camino de un visor, o de un colaborador asignado a una sola boda. Ver
+ * `docs/ACCESO.md`.
+ *
+ * Este helper es para el camino de un CLIENTE, donde el alcance sale de una membresía suya y
  * no puede ser otro. El panel de plataforma usa `withAuthorizedClientContext()`, y el
  * camino público de las invitaciones no pasa por ninguno de los dos: va por
  * `DrizzleInvitationRepository`, que obtiene el contexto validando slug y código.
  */
 export async function withTenant<T>(
-  clientId: string,
+  scope: string | TenantScope,
   fn: (tx: TenantTransaction) => Promise<T>,
 ): Promise<T> {
-  const parsed = uuidSchema.safeParse(clientId);
-  if (!parsed.success) {
+  /*
+   * Acepta un id suelto además del alcance completo, y no es dejadez: la mayoría de las
+   * consultas del panel trabajan sobre el cliente entero y escribir `{ clientId, eventId: null }`
+   * en cada llamada sería ceremonia. Un id suelto significa exactamente eso — todo el cliente.
+   */
+  const clientId = typeof scope === 'string' ? scope : scope.clientId;
+  const eventId = typeof scope === 'string' ? null : scope.eventId;
+
+  const parsedClient = uuidSchema.safeParse(clientId);
+  if (!parsedClient.success) {
     throw new Error('withTenant requiere un client_id con formato UUID');
   }
 
+  const parsedEvent = eventId === null ? null : uuidSchema.safeParse(eventId);
+  if (parsedEvent !== null && !parsedEvent.success) {
+    throw new Error('withTenant requiere un event_id con formato UUID');
+  }
+
   return db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.current_client_id', ${parsed.data}, true)`);
+    await tx.execute(sql`select set_config('app.current_client_id', ${parsedClient.data}, true)`);
+
+    /*
+     * La segunda dimensión. La cadena vacía es lo que `app.current_event_id()` lee como NULL, o
+     * sea «sin estrechar», y se fija siempre en lugar de omitir la llamada cuando no hay evento:
+     * así el alcance de la transacción queda escrito entero y no depende de lo que hubiera antes.
+     */
+    await tx.execute(
+      sql`select set_config('app.current_event_id', ${parsedEvent?.data ?? ''}, true)`,
+    );
+
     return fn(tx);
   });
 }

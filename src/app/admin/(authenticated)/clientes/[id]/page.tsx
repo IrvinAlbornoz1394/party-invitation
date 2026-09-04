@@ -1,6 +1,10 @@
 import { notFound } from 'next/navigation';
 import { ClientDetailScreen } from '@/components/dashboard/admin/ClientDetailScreen';
-import { listClients, listEventsOfClient } from '@/infrastructure/container';
+import {
+  listClients,
+  listEventsOfClient,
+  loadNewEventOptions,
+} from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 
 /**
@@ -33,9 +37,11 @@ export default async function AdminClientDetailPage({
   const { id } = await params;
   const credentials = await requirePlatformCredentials();
 
-  const [clients, events] = await Promise.all([
+  const [clients, events, options] = await Promise.all([
     listClients.execute(credentials),
     listEventsOfClient.execute(credentials, id),
+    // El catálogo del formulario de alta. Va en la misma tanda para no encadenar viajes.
+    loadNewEventOptions.execute(credentials),
   ]);
 
   /*
@@ -47,5 +53,5 @@ export default async function AdminClientDetailPage({
 
   if (!client || events === null) notFound();
 
-  return <ClientDetailScreen client={client} events={events} />;
+  return <ClientDetailScreen client={client} events={events} options={options} />;
 }

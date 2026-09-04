@@ -92,39 +92,3 @@ export function ScheduleMarker({
     </span>
   );
 }
-
-/**
- * Un lazo de cinta, dibujado a trazo.
- *
- * Es la firma de `schedule.ribbon`, y va como SVG en línea y no como icono de la librería por una
- * razón simple: no existe. Ninguna colección de iconos de interfaz trae un lazo de papelería —son
- * catálogos de herramientas, no de ornamentos—, y el que se pinta aquí es el elemento que
- * convierte un riel vertical en una cinta atada.
- *
- * Hereda color y se dibuja sin relleno, así que toma el acento del tema y funciona igual en los
- * seis. El trazo es fino a propósito: engordarlo lo convierte en un icono, y lo que se busca es
- * que parezca dibujado a mano.
- */
-export function ScheduleBow({ className }: { readonly className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 32 40"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={clsx('h-auto w-[clamp(1.35rem,4vw,1.75rem)]', className)}
-    >
-      {/* Los dos lazos, simétricos respecto al nudo. */}
-      <path d="M16 14c-3.4-4.6-7.2-6.4-9.2-4.6-2 1.8-.3 5.6 4 7.4 1.8.8 3.6 1.2 5.2 1.2z" />
-      <path d="M16 14c3.4-4.6 7.2-6.4 9.2-4.6 2 1.8.3 5.6-4 7.4-1.8.8-3.6 1.2-5.2 1.2z" />
-      {/* El nudo: dos trazos cortos, no un círculo. Un círculo se lee como un botón. */}
-      <path d="M14.3 16.6c1 .9 2.4.9 3.4 0" />
-      {/* Las colas, cayendo con distinta curva para que no parezca un espejo. */}
-      <path d="M14.6 18.2c-1 4.4-2.2 7.8-4.4 11" />
-      <path d="M17.4 18.2c1.2 4.2 2.6 7.6 4.8 10.6" />
-    </svg>
-  );
-}

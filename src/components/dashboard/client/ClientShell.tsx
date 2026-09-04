@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import type { ClientActor, UserRole } from '@/domain/auth/actor';
+import { type ClientActor, type UserRole, displayNameOf } from '@/domain/auth/actor';
 import type { EventSummary } from '@/domain/events/event-repository';
 import { DashboardShell } from '../layout/DashboardShell';
 import { buildClientNavigation, CLIENT_ROOT_CRUMB } from '../navigation/client-navigation';
@@ -49,11 +49,11 @@ export function ClientShell({
   return (
     <DashboardShell
       variant="client"
-      navigation={buildClientNavigation(events.length)}
+      navigation={buildClientNavigation(events.length, actor.role)}
       rootCrumb={CLIENT_ROOT_CRUMB}
       identityTitle={clientName}
       identityCaption={ROLE_LABEL[actor.role]}
-      userName={actor.name}
+      userName={displayNameOf(actor)}
       headerExtra={<EventPicker events={events} activeEventId={activeEventId} />}
     >
       {children}

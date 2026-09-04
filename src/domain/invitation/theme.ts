@@ -130,6 +130,9 @@ const BASE = {
     inkSoft: '#7a6a80',
     primary: '#6b2d7b',
     onPrimary: '#fff8fd',
+    /* Se deriva siempre (ver `withReadableText`); el valor de aquí solo existe para que el
+       esquema tenga forma completa antes de resolverlo. */
+    onPhoto: '#ffffff',
     accent: '#c0559f',
     line: '#eddbe9',
     /** El velo que va sobre la foto para que el texto encima se lea. */
@@ -181,6 +184,7 @@ export const invitationThemeSchema = z.object({
       inkSoft: cssValue().catch(BASE.colors.inkSoft).default(BASE.colors.inkSoft),
       primary: cssValue().catch(BASE.colors.primary).default(BASE.colors.primary),
       onPrimary: cssValue().catch(BASE.colors.onPrimary).default(BASE.colors.onPrimary),
+      onPhoto: cssValue().catch(BASE.colors.onPhoto).default(BASE.colors.onPhoto),
       accent: cssValue().catch(BASE.colors.accent).default(BASE.colors.accent),
       line: cssValue().catch(BASE.colors.line).default(BASE.colors.line),
       overlay: cssValue().catch(BASE.colors.overlay).default(BASE.colors.overlay),
@@ -379,9 +383,49 @@ function withReadableText(theme: InvitationTheme): InvitationTheme {
         '#111111',
       ]),
       ink: readableOn(colors.background, [colors.ink, '#111111', '#ffffff']),
+      onPhoto: readableOn(VEIL, [colors.surface, colors.background, colors.ink, '#ffffff']),
     },
   };
 }
+
+/**
+ * La tinta que se lee **sobre una fotografía**, y por qué no vale `onPrimary`.
+ *
+ * `onPrimary` significa «el color que se lee encima del color principal», y hace bien su trabajo:
+ * cuando el principal es un tono medio, `withReadableText` lo sustituye por el que de verdad
+ * contrasta con él. En «elegance» el marfil declarado se queda en 4,37 y el reemplazo acaba
+ * siendo blanco, así que no se nota. En **«dreamy»** no: su morado (#8272c0) no llega a 4,5 con
+ * ningún claro del tema, y el único candidato que contrasta es **#111111**. La pareja funciona
+ * —negro sobre morado se lee— y el token cumple su contrato.
+ *
+ * El problema es que media biblioteca pintaba con ese mismo token el texto que va **encima de una
+ * fotografía velada**, que es un fondo completamente distinto —y siempre oscuro, porque el velo
+ * lo garantiza (`--inv-scrim-dense` mezcla el `overlay` del tema con negro)—. Ahí, el negro que
+ * salva a la franja de color deja la pantalla ilegible. Se vio en la puerta de `storytelling-xv`,
+ * que es la demo vestida con «dreamy», pero el fallo estaba en todas: doce bienvenidas, cuatro
+ * portadas, el cierre a pantalla completa y la sede a sangre. Bastaba con que alguien eligiera
+ * ese tema.
+ *
+ * Así que el papel se separa del color: `onPhoto` es «la tinta que se lee sobre el velo», y se
+ * elige entre los **claros del propio tema** —la superficie, el papel, la tinta— quedándose con
+ * el primero que contraste contra un fondo oscuro. En un tema claro sale la superficie (casi
+ * blanco); en uno oscuro, donde superficie y papel son oscuros, sale la tinta, que ahí es la
+ * clara: el marfil de «royal» o el crema de «emerald». No es un blanco fijo, entonces — sigue
+ * siendo el tema el que pone el color.
+ *
+ * Es derivado y no se escribe en la base de datos: nadie tiene que acordarse de rellenarlo al dar
+ * de alta un tema, y no puede quedar mal puesto.
+ */
+
+/**
+ * Contra qué se mide `onPhoto`: el velo, no la fotografía.
+ *
+ * La foto la sube el cliente y puede ser cualquier cosa, así que medir contra ella sería medir
+ * contra nada. Lo que sí es constante es el velo que va encima —siempre oscuro en los once
+ * temas— y por eso la referencia es un casi negro, que es lo que el velo denso deja debajo del
+ * texto.
+ */
+const VEIL = '#141414';
 
 /**
  * Lee los tokens de un tema guardado y devuelve un tema completo y legible.

@@ -40,7 +40,7 @@ import { useCountdown } from './useCountdown';
  *
  * ## Una forma por estructura, no por portada
  *
- * Son cinco, una por estructura del catálogo, y ese es el criterio — no «una por portada».
+ * Son nueve, una por estructura del catálogo, y ese es el criterio — no «una por portada».
  * `hero.split` y `hero.quince` comparten `script` porque las dos son la portada de
  * `storytelling` (una para boda y otra para XV), y la cuenta regresiva es parte del lenguaje de
  * la estructura, no del tipo de evento. Si se separaran, cambiar de boda a XV cambiaría también
@@ -54,8 +54,21 @@ import { useCountdown } from './useCountdown';
  * - `engraved`  Cifra, filete y versalita. Papelería grabada.        → `botanical`
  * - `script`    Serif para las cifras, manuscrita en las etiquetas.  → `storytelling`
  * - `inline`    Una línea corrida, del peso de la fecha. Discreta.   → `classic`
+ * - `stacked`   Una unidad por renglón, con filete entre ellas.      → `silk`
+ * - `air`       Cifras sueltas, sin caja ni filete: solo aire.        → `monochrome`
+ * - `bubble`    Cifras vaciadas, con el contorno haciendo de número.  → `sketch`
+ * - `crest`     Dos por dos, en un cuadro de filetes. Compacta.       → `gala`
  */
-export type CountdownVariant = 'boxes' | 'rule' | 'engraved' | 'script' | 'inline';
+export type CountdownVariant =
+  | 'boxes'
+  | 'rule'
+  | 'engraved'
+  | 'script'
+  | 'inline'
+  | 'stacked'
+  | 'air'
+  | 'bubble'
+  | 'crest';
 
 /**
  * Hacia dónde se alinea la fila.
@@ -105,6 +118,14 @@ export function Countdown({
       return <CountdownScript cells={cells} tone={tone} align={align} className={className} />;
     case 'inline':
       return <CountdownInline cells={cells} align={align} className={className} />;
+    case 'stacked':
+      return <CountdownStacked cells={cells} tone={tone} align={align} className={className} />;
+    case 'air':
+      return <CountdownAir cells={cells} tone={tone} align={align} className={className} />;
+    case 'bubble':
+      return <CountdownBubble cells={cells} tone={tone} align={align} className={className} />;
+    case 'crest':
+      return <CountdownCrest cells={cells} tone={tone} align={align} className={className} />;
     case 'boxes':
       return <CountdownBoxes cells={cells} tone={tone} className={className} />;
     default: {
@@ -405,11 +426,228 @@ function CountdownInline({
 }
 
 /**
- * El envoltorio común: lo que hace que las cinco formas sean **la misma pieza** para quien no la
+ * Una unidad por renglón: la cuenta regresiva compuesta **en columna** y no en fila.
+ *
+ * Es la única de las seis que rompe la fila, y ahí está toda la diferencia. Las otras cinco
+ * reparten cuatro unidades a lo ancho —con caja, con filete vertical, con aire o de corrido— y
+ * todas acaban leyéndose como un mismo renglón de datos. En columna, cada cifra tiene su propio
+ * renglón y su filete debajo, así que la pieza se lee como el remate de una lámina: números
+ * grandes a la izquierda, el nombre de la unidad en versalitas a la derecha, y el papel entre
+ * medias.
+ *
+ * ## Por qué la cifra y su etiqueta van a los extremos y no apiladas
+ *
+ * En la referencia de `silk` la cuenta ocupa una pantalla entera y las cifras van centradas con
+ * su etiqueta debajo. Aquí no puede: esta forma vive **dentro de la tarjeta de papel** de
+ * `hero.card`, encima de la fecha y de los nombres, así que cuatro bloques centrados de dos
+ * renglones cada uno la desbordarían en un teléfono. Repartidos a los extremos del mismo
+ * renglón, los cuatro caben en poco más de lo que ocupa una fila —y el filete entre ellos hace
+ * el trabajo que allí hacía el aire.
+ *
+ * El ancho es acotado (`max-w-[13rem]`) a propósito: sin tope, los filetes cruzarían la tarjeta
+ * de lado a lado y la cuenta pasaría a ser la retícula de la portada en vez de una pieza dentro
+ * de ella. `tabular-nums` mantiene quieta la columna de cifras al pasar el segundo, y como cada
+ * renglón dimensiona la suya, unos días de tres dígitos ensanchan sin descuadrar a los demás.
+ */
+function CountdownStacked({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+
+  return (
+    <Frame
+      className={clsx(
+        'flex w-full max-w-[13rem] flex-col',
+        align === 'center' && 'mx-auto',
+        onImage ? 'text-inv-on-primary' : 'text-inv-ink-soft',
+        className,
+      )}
+    >
+      {cells.map((part, index) => (
+        <div
+          key={part.unit}
+          className={clsx(
+            'flex items-baseline justify-between gap-4 py-2.5',
+            /* El filete va arriba de todas menos la primera: cuatro renglones, tres separadores y
+               ninguno colgando en los extremos. Es el mismo criterio que en `rule`, girado. */
+            index > 0 && ['border-t', onImage ? 'border-current/25' : 'border-inv-line'],
+          )}
+        >
+          <b
+            className={clsx(
+              'font-inv-display text-[clamp(1.5rem,6vw,2rem)] leading-none font-light tabular-nums',
+              !onImage && 'text-inv-primary',
+            )}
+          >
+            <Digits value={part.value} />
+          </b>
+          <span className="text-[9px] tracking-[0.24em] uppercase opacity-75 sm:text-[10px]">
+            {part.label}
+          </span>
+        </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * Cifras sueltas separadas por aire: la forma que no dibuja nada.
+ *
+ * Las otras seis traen alguna pieza gráfica —caja, filete vertical, filete bajo la cifra, punto
+ * medio, filete entre renglones—. Esta no trae ninguna, y esa ausencia es la forma. Lo único que
+ * separa una unidad de la siguiente es un hueco grande, y lo único que distingue la cifra de su
+ * etiqueta es el salto de tamaño: serif ligera a cuerpo grande contra versalita diminuta.
+ *
+ * Es la que le toca a `monochrome`, una estructura donde el papel es blanco puro, no hay una sola
+ * caja en toda la invitación y el único ornamento es la caligrafía de los rótulos. Cualquiera de
+ * las otras seis metería ahí el primer filete de interfaz de la página.
+ *
+ * El hueco es grande a propósito —`gap-x-10` en escritorio— porque sin separador dibujado es lo
+ * único que impide que «12 05» se lea como un número de cuatro cifras. Por debajo de ese hueco la
+ * forma deja de funcionar, así que no se puede apretar para que quepa: si no cabe, `flex-wrap`
+ * baja las unidades a dos renglones, que sigue siendo legible.
+ */
+function CountdownAir({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+
+  return (
+    <Frame
+      className={clsx(
+        rowClasses(align),
+        'gap-x-7 gap-y-5 sm:gap-x-10',
+        onImage ? 'text-inv-on-primary' : 'text-inv-ink-soft',
+        className,
+      )}
+    >
+      {cells.map((part) => (
+        <div key={part.unit} className="flex flex-col items-center gap-2.5">
+          <b
+            className={clsx(
+              'font-inv-display text-[clamp(1.7rem,7vw,2.5rem)] leading-none font-light tabular-nums',
+              !onImage && 'text-inv-ink',
+            )}
+          >
+            <Digits value={part.value} />
+          </b>
+          <span className="text-[8.5px] uppercase opacity-70 sm:text-[9.5px] sm:tracking-[0.26em]">
+            {part.label}
+          </span>
+        </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * Cifras vaciadas: el contorno hace de número y el interior se queda en papel.
+ *
+ * Es la forma de `sketch`, y no es un color distinto: es el mismo recurso con el que esa
+ * estructura compone **todos** sus rótulos de sección —la letra dibujada con su trazo, ver
+ * `.inv-outline-text` en `globals.css`—. Una cuenta regresiva maciza en medio de una portada de
+ * letras huecas se lee como una pieza traída de otra plantilla.
+ *
+ * ## Pide cuerpo grande y peso gordo, y por eso no vale para las otras siete
+ *
+ * Vaciar una cifra le quita la mancha y le deja el perímetro. A cuerpo pequeño o con un peso
+ * ligero, lo que queda es un dibujo de alambre que no se lee de un vistazo —y una cuenta
+ * regresiva que hay que descifrar no sirve para nada—. De ahí el `clamp` que no baja de 2rem y el
+ * `font-bold`: la letra tiene que ser gorda para que su contorno sea legible.
+ *
+ * Con `tone="onImage"` no se vacía. Sobre una fotografía el contorno se pierde en cuanto detrás
+ * hay textura, y el respaldo correcto es la cifra maciza, que es lo que hace el propio
+ * `.inv-outline-text` cuando el navegador no lo soporta.
+ */
+function CountdownBubble({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+
+  return (
+    <Frame
+      className={clsx(
+        rowClasses(align),
+        'gap-x-5 gap-y-4 sm:gap-x-7',
+        onImage ? 'text-inv-on-primary' : 'text-inv-ink-soft',
+        className,
+      )}
+    >
+      {cells.map((part) => (
+        <div key={part.unit} className="flex flex-col items-center gap-1.5">
+          <b
+            className={clsx(
+              'font-inv-display text-[clamp(2rem,8vw,2.8rem)] leading-none font-bold tabular-nums',
+              onImage ? 'text-inv-on-primary' : 'inv-outline-text text-inv-primary',
+            )}
+          >
+            <Digits value={part.value} />
+          </b>
+          <span className="text-[9px] uppercase opacity-80 sm:text-[10px] sm:tracking-[0.2em]">
+            {part.label}
+          </span>
+        </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * Dos por dos: las cuatro unidades en un cuadro, separadas por dos filetes en cruz.
+ *
+ * Es la única que **no es una fila**. Las otras ocho reparten a lo ancho —con caja, con filete,
+ * con aire, de corrido— o bajan en columna; esta forma un bloque compacto de dos por dos, y esa
+ * es la diferencia que importa: cabe en una composición estrecha y centrada sin obligar a que la
+ * pieza más ancha de la pantalla sea el reloj.
+ *
+ * Es la forma de `gala`, una estructura que compone toda la invitación en un eje de menos de
+ * cuatrocientos píxeles. Ahí una fila de cuatro cifras con sus etiquetas o se sale, o se encoge
+ * hasta que las etiquetas dejan de leerse.
+ *
+ * Los filetes van como bordes de las celdas —el derecho en las de la izquierda, el inferior en
+ * las de arriba— y no como un `divide-*` del contenedor: en una retícula de dos por dos, `divide`
+ * pinta las líneas en el orden del documento y deja el ángulo del centro sin cerrar.
+ */
+function CountdownCrest({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+  const rule = onImage ? 'border-current/25' : 'border-inv-line';
+
+  return (
+    <Frame
+      className={clsx(
+        'grid w-full max-w-[15rem] grid-cols-2',
+        align === 'center' && 'mx-auto',
+        onImage ? 'text-inv-on-primary' : 'text-inv-ink-soft',
+        className,
+      )}
+    >
+      {cells.map((part, index) => (
+        <div
+          key={part.unit}
+          className={clsx(
+            'flex flex-col items-center gap-1 px-3 py-3.5',
+            /* Las dos de la izquierda cierran por la derecha; las dos de arriba, por abajo. */
+            index % 2 === 0 && ['border-r', rule],
+            index < 2 && ['border-b', rule],
+          )}
+        >
+          <b
+            className={clsx(
+              'font-inv-display text-[clamp(1.5rem,6vw,1.9rem)] leading-none font-light tabular-nums',
+              !onImage && 'text-inv-accent',
+            )}
+          >
+            <Digits value={part.value} />
+          </b>
+          <span className="text-[8.5px] uppercase opacity-80 sm:text-[9.5px] sm:tracking-[0.22em]">
+            {part.label}
+          </span>
+        </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * El envoltorio común: lo que hace que las nueve formas sean **la misma pieza** para quien no la
  * ve.
  *
  * El papel de grupo y su nombre no son de una forma ni de otra —son de la cuenta regresiva—, y
- * dejarlos escritos cinco veces es la manera de que dentro de un año haya cuatro correctos y uno
+ * dejarlos escritos nueve veces es la manera de que dentro de un año haya cuatro correctos y uno
  * que se quedó sin etiqueta.
  */
 function Frame({
@@ -429,7 +667,7 @@ function Frame({
 /**
  * Los dos dígitos, o el hueco mientras no hay reloj.
  *
- * Se saca a su propia función porque es la única regla que las cinco formas **no pueden**
+ * Se saca a su propia función porque es la única regla que las nueve formas **no pueden**
  * escribir cada una a su manera: el relleno con cero y el guion doble son lo que garantiza que la
  * pieza no cambie de anchura entre el primer cuadro y el segundo, y una forma que se olvidara del
  * `padStart` haría saltar la maqueta solo por debajo de las diez unidades — que es un fallo que

@@ -1,7 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
-  check,
   index,
   inet,
   integer,
@@ -13,10 +12,22 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { createdAtOnly, timestamps } from './_shared';
-import { clients } from './clients';
 
-/** Rol dentro de un cliente. */
-export const userRole = pgEnum('user_role', ['owner', 'admin', 'staff']);
+/**
+ * Rol de una membresía.
+ *
+ * Antes era `user_role` y vivía como columna de `users`. Se mudó porque un rol no
+ * significa nada sin el alcance al que aplica: «staff» de todo un cliente y «staff» de un
+ * solo evento son permisos distintos con el mismo nombre, y con el rol en la identidad el
+ * segundo no era representable.
+ *
+ * `viewer` es el rol de solo lectura que el cliente concede sobre UN evento —los novios de
+ * la boda que organiza, los papás de la quinceañera—. No aparece en la jerarquía de
+ * `ROLE_RANK` de `domain/auth/actor.ts` como un rango más bajo: no es un `staff` con menos
+ * permisos, es un rol que no escribe nada, y compararlo por rango invitaría a tratarlo como
+ * «staff-1» el día que alguien añada una comprobación por rango.
+ */
+export const membershipRole = pgEnum('membership_role', ['owner', 'admin', 'staff', 'viewer']);
 
 /**
  * Rol sobre la plataforma. Nullable: la inmensa mayoría de las cuentas no tiene
@@ -42,73 +53,68 @@ export const otpChannel = pgEnum('otp_channel', ['email', 'whatsapp']);
 export const authAttemptKind = pgEnum('auth_attempt_kind', ['issue', 'verify']);
 
 /**
- * Cuenta con acceso a un panel. El invitado final nunca es un usuario: entra por un
+ * Identidad con acceso a un panel. El invitado final nunca es un usuario: entra por un
  * enlace público y no tiene cuenta.
  *
- * ## Dos clases de cuenta en una sola tabla
+ * ## Aquí vive quién eres, no qué alcanzas
  *
- * `client_id` es NULLABLE, y ahí está toda la distinción:
+ * La tabla tuvo `client_id` y `role`, y con eso una cuenta pertenecía a un cliente y a uno
+ * solo. Eso dejaba fuera tres casos que el producto necesita: un acceso limitado a UN
+ * evento —los novios de la boda que organiza un cliente, sin ver las demás bodas de ese
+ * cliente—, el mismo correo alcanzando dos clientes distintos, y que el sistema pueda
+ * saber a qué evento entra alguien. Los tres fallaban por lo mismo: la pertenencia era una
+ * columna de la identidad.
  *
- * - `client_id` no nulo, `platform_role` nulo → cuenta de un cliente. Entra a `/panel`
- *   y solo ve los eventos de su cliente.
- * - `client_id` nulo, `platform_role` no nulo → cuenta de la plataforma. Entra a
- *   `/admin` y gestiona clientes y eventos.
+ * Ahora la pertenencia son filas de `memberships` y aquí solo queda la identidad: el
+ * correo con el que se pide el código, el teléfono al que entregarlo y el estado de la
+ * cuenta. Ver `docs/ACCESO.md`.
  *
- * Van en la misma tabla porque el correo tiene que ser único entre las dos: es la
- * identidad con la que se pide el código de acceso, y si hubiera dos tablas la misma
- * dirección podría resolver a dos cuentas y el login no sabría a cuál.
+ * El único de `email` pasa a ser correcto en vez de un estorbo: una persona, una
+ * identidad, un sitio donde pedir el código. Que ese correo haya sido dueño de un cliente
+ * hace años y hoy sea visor del evento de otro ya no es una contradicción.
  *
- * Lo que antes se resolvía con una "organización de plataforma" —un tenant ficticio al
- * que pertenecía el superadministrador— desaparece: no hacía falta un cliente inventado
- * para representar a quien no es cliente de sí mismo.
+ * ## `platform_role` se queda
  *
- * El invariante lo impone la base de datos con un CHECK, no la aplicación. Una cuenta
- * con las dos cosas a la vez sería un cliente con acceso a `/admin`, y una con ninguna
- * sería una cuenta que puede iniciar sesión y no pertenece a ningún panel.
+ * Podría ser una membresía más y no lo es. Mantenerlo como columna conserva la propiedad
+ * que protege `/admin`: el privilegio de plataforma no vive en el mismo espacio de valores
+ * que el de tenant, así que ninguna comprobación de rol dentro de un cliente puede
+ * concederlo por una comparación mal escrita.
+ *
+ * El CHECK `users_client_xor_platform` se fue con `client_id`. Lo sustituye un invariante
+ * que ya no es expresable en una sola fila —**una cuenta de plataforma no tiene
+ * membresías**— y que por eso lo verifica `npm run db:check` en vez de un CHECK.
  */
-export const users = pgTable(
-  'users',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    /** null solo para las cuentas de plataforma. Ver el comentario de la tabla. */
-    clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }),
-    /** Se normaliza a minúsculas antes de insertar; el índice único es sensible a mayúsculas. */
-    email: text('email').notNull().unique(),
-    /**
-     * Teléfono en E.164 con `+`, para entregar el código por WhatsApp.
-     *
-     * Es un destino de entrega, no una identidad: no tiene único y nadie inicia sesión
-     * con él. Si fuera identidad habría dos claves capaces de resolver a cuentas
-     * distintas, y los límites de intentos se podrían duplicar alternándolas.
-     */
-    phone: text('phone'),
-    name: text('name').notNull(),
-    /** Rol DENTRO del cliente. Para una cuenta de plataforma no significa nada. */
-    role: userRole('role').notNull().default('admin'),
-    /** Rol SOBRE la plataforma. Ver el comentario del enum. */
-    platformRole: platformRole('platform_role'),
-    status: userStatus('status').notNull().default('active'),
-    /** Canal que se usa cuando el usuario no pide uno explícitamente. */
-    preferredOtpChannel: otpChannel('preferred_otp_channel').notNull().default('email'),
-    lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
-    ...timestamps,
-  },
-  (t) => [
-    /**
-     * O es de un cliente, o es de la plataforma. Nunca las dos, nunca ninguna.
-     *
-     * Va como CHECK y no como validación de la aplicación porque es la frontera entre
-     * los dos paneles: una cuenta que cumpliera las dos condiciones tendría acceso a
-     * `/admin` y además un tenant propio, que es justo la escalada que el modelo evita.
-     */
-    check(
-      'users_client_xor_platform',
-      sql`(${t.clientId} is not null and ${t.platformRole} is null)
-          or (${t.clientId} is null and ${t.platformRole} is not null)`,
-    ),
-    index('users_client_id_idx').on(t.clientId),
-  ],
-);
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /** Se normaliza a minúsculas antes de insertar; el índice único es sensible a mayúsculas. */
+  email: text('email').notNull().unique(),
+  /**
+   * Teléfono en E.164 con `+`, para entregar el código por WhatsApp.
+   *
+   * Es un destino de entrega, no una identidad: no tiene único y nadie inicia sesión
+   * con él. Si fuera identidad habría dos claves capaces de resolver a cuentas
+   * distintas, y los límites de intentos se podrían duplicar alternándolas.
+   */
+  phone: text('phone'),
+  /**
+   * Nullable, y a propósito.
+   *
+   * Un visor no tiene por qué dar su nombre: con el correo basta para pedir el código, y
+   * exigir datos personales que nadie va a leer es fricción a cambio de nada. Cómo se
+   * llama esa persona **para el cliente que le dio acceso** es `memberships.label`, que es
+   * donde pertenece — la misma persona es «los novios» en un evento y otra cosa en otro.
+   *
+   * Donde la interfaz enseñe un nombre y no haya, enseña el correo.
+   */
+  name: text('name'),
+  /** Rol SOBRE la plataforma. Ver el comentario del enum. */
+  platformRole: platformRole('platform_role'),
+  status: userStatus('status').notNull().default('active'),
+  /** Canal que se usa cuando el usuario no pide uno explícitamente. */
+  preferredOtpChannel: otpChannel('preferred_otp_channel').notNull().default('email'),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+  ...timestamps,
+});
 
 /**
  * Códigos de un solo uso para iniciar sesión.
@@ -220,12 +226,16 @@ export const authAttempts = pgTable(
  * Sesiones del panel. Igual que los códigos: solo el HMAC del token, y sin permisos para
  * el rol de la aplicación.
  *
- * No guarda ningún cliente. Antes existía un `active_client_id` mutable que era lo que
- * sostenía la impersonación: el superadministrador lo cambiaba y pasaba a trabajar dentro
- * de otro tenant. Con dos paneles separados esa pieza sobra, y quitarla elimina de golpe
- * toda una clase de fallo —una sesión que quedó apuntando al cliente equivocado— porque
- * el tenant de una cuenta de cliente vuelve a ser un solo valor inmutable:
- * `users.client_id`. Una cuenta de plataforma sencillamente no tiene tenant.
+ * No guarda ningún cliente, y ahora menos que nunca. Antes existía un `active_client_id`
+ * mutable que era lo que sostenía la impersonación: el superadministrador lo cambiaba y
+ * pasaba a trabajar dentro de otro tenant. Con dos paneles separados esa pieza sobra, y
+ * quitarla elimina de golpe toda una clase de fallo: una sesión que quedó apuntando al
+ * cliente equivocado.
+ *
+ * La sesión autentica una **identidad** y nada más. Con qué membresía se está trabajando no
+ * vive aquí sino en la URL (`/panel/eventos/<id>/…`), por el mismo motivo por el que se fue
+ * `active_client_id`: un contexto mutable guardado en el servidor se queda pegado, y con dos
+ * eventos abiertos en dos pestañas una de las dos trabajaría sobre el contexto de la otra.
  */
 export const sessions = pgTable(
   'sessions',

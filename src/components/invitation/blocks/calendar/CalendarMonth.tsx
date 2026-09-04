@@ -1,10 +1,10 @@
 import clsx from 'clsx';
-import type { DayMark } from '@/domain/invitation/blocks/calendar';
 import { monthGrid } from '@/domain/invitation/month-grid';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
-import { LeafSprig, TornEdge } from '../../shared/paper-ornaments';
+import { TornEdge } from '../../shared/paper-ornaments';
+import { DayMarkShape } from './calendar-parts';
 import type { CalendarVariantProps } from './calendar-variant';
 
 /**
@@ -131,54 +131,18 @@ export function CalendarMonth({ content }: CalendarVariantProps) {
           </p>
         )}
 
-        {/* La ramita cierra la lámina. Va en acento y no en el color del texto: es el único
-            elemento de la franja que no es información, y conviene que se lea como tal. */}
-        <LeafSprig className="mx-auto mt-9 h-8 w-44 text-inv-accent opacity-90 sm:w-52" />
+        {/*
+          Aquí había una ramita cerrando la lámina, y se quitó: entre la hora y la nota, con los
+          dos cantos rasgados a la vista, era el tercer adorno de la misma franja. La lámina se
+          remata sola con el rasgado.
 
+          La nota se queda —un evento real puede llevarla— y arranca de la hora directamente.
+        */}
         {content.note && (
-          <BlockNote note={content.note} tone="inverse" className="mx-auto mt-6 max-w-sm text-center" />
+          <BlockNote note={content.note} tone="inverse" className="mx-auto mt-9 max-w-sm text-center" />
         )}
       </BlockContainer>
     </BlockSection>
   );
 }
 
-/**
- * La marca del día del evento: corazón, disco o aro.
- *
- * Las tres se dibujan del color de acento, con relleno translúcido y contorno sólido, y las tres
- * miden lo mismo (36px) para que la casilla no cambie de alto según la forma elegida. Van
- * absolutas y centradas con `m-auto`, así que la cifra sigue mandando en la retícula: si la marca
- * ocupara sitio, la fila del día señalado sería más alta que las otras cinco.
- *
- * El corazón es un trazo propio y no el icono del vocabulario común. Los de `block-icons.ts` son
- * dibujos de trazo pensados para un medallón junto a un texto; este va **detrás de una cifra** y
- * necesita controlar relleno y contorno por separado, que es algo que el contrato de aquellos no
- * expone a propósito.
- */
-function DayMarkShape({ mark }: { readonly mark: DayMark }) {
-  if (mark === 'heart') {
-    return (
-      <svg
-        viewBox="0 0 32 30"
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 m-auto size-9 fill-inv-accent/30 stroke-inv-accent"
-        strokeWidth="1.2"
-      >
-        <path d="M16 27.5C16 27.5 2.5 19.4 2.5 11.1 2.5 6.4 6.2 3 10.3 3c2.5 0 4.6 1.3 5.7 3.3C17.1 4.3 19.2 3 21.7 3 25.8 3 29.5 6.4 29.5 11.1c0 8.3-13.5 16.4-13.5 16.4Z" />
-      </svg>
-    );
-  }
-
-  return (
-    <span
-      aria-hidden="true"
-      className={clsx(
-        'pointer-events-none absolute inset-0 m-auto size-9 rounded-full border border-inv-accent',
-        /* El aro es el mismo círculo sin relleno: la forma sobria, para cuando la franja ya lleva
-           bastante color y una mancha más ensucia la retícula. */
-        mark === 'disc' && 'bg-inv-accent/30',
-      )}
-    />
-  );
-}

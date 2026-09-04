@@ -3,13 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { isUserRole } from '@/domain/auth/actor';
 import { changeUserRole, inviteUser, setUserStatus } from '@/infrastructure/container';
-import { requireClientActor } from '@/lib/auth/current-session';
+import { requireClientScope } from '@/lib/auth/current-session';
 import type { ActionState } from '@/app/action-state';
 
 /**
  * Acciones de administración de cuentas.
  *
- * Todas empiezan por `requireClientActor()`, y no es ceremonia: una Server Action es un
+ * Todas empiezan por `requireClientScope()`, y no es ceremonia: una Server Action es un
  * endpoint HTTP público con un nombre difícil de adivinar, no una función privada. Que solo
  * se llame desde un botón que la interfaz muestra a los administradores no impide que
  * alguien la invoque a mano. La autorización vive en el caso de uso, y el aislamiento entre
@@ -34,7 +34,7 @@ export async function inviteUserAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const actor = await requireClientActor();
+  const actor = await requireClientScope();
 
   const role = readText(formData, 'role');
   if (!isUserRole(role)) {
@@ -61,7 +61,7 @@ export async function inviteUserAction(
 }
 
 export async function changeRoleAction(userId: string, role: string): Promise<ActionState> {
-  const actor = await requireClientActor();
+  const actor = await requireClientScope();
 
   if (!isUserRole(role)) {
     return { status: 'error', message: 'Ese rol no existe.' };
@@ -80,7 +80,7 @@ export async function changeRoleAction(userId: string, role: string): Promise<Ac
 }
 
 export async function setStatusAction(userId: string, disable: boolean): Promise<ActionState> {
-  const actor = await requireClientActor();
+  const actor = await requireClientScope();
 
   const result = await setUserStatus.execute(actor, {
     userId,

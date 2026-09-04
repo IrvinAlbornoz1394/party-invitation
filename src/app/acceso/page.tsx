@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/access/LoginForm';
 import { availableOtpChannels } from '@/infrastructure/container';
-import { getCurrentActor, homePathFor } from '@/lib/auth/current-session';
+import { getCurrentActor, homePathFor, safeReturnTo } from '@/lib/auth/current-session';
 
 export const metadata: Metadata = {
-  title: 'Acceder · éclat',
+  title: 'Acceder · MiEvento',
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -21,7 +21,11 @@ export const metadata: Metadata = {
  * puede saber si WhatsApp está configurado —eso depende de variables de entorno— y no debe
  * intentar adivinarlo.
  */
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   /*
    * Quien ya tiene sesión no ve el formulario. Sin esto, un usuario con sesión abierta que
    * llega a esta URL desde un marcador pediría un código sin necesidad, y de paso
@@ -29,9 +33,16 @@ export default async function LoginPage() {
    */
   const actor = await getCurrentActor();
 
+  /*
+   * A dónde iba quien llegó aquí rebotado. Lo manda `loginPathFor` al redirigir, y se vuelve a
+   * validar en la acción que crea la sesión: aquí solo sirve para no pintar un campo con basura.
+   */
+  const { volver } = await searchParams;
+  const returnTo = safeReturnTo(typeof volver === 'string' ? volver : null);
+
   if (actor) {
-    redirect(homePathFor(actor));
+    redirect(returnTo ?? homePathFor(actor));
   }
 
-  return <LoginForm channels={availableOtpChannels()} />;
+  return <LoginForm channels={availableOtpChannels()} returnTo={returnTo} />;
 }

@@ -37,7 +37,7 @@
  * y lo dice.
  */
 import { config as loadDotenv } from 'dotenv';
-import { eq, isNotNull } from 'drizzle-orm';
+import { eq, isNotNull, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { normalizeEmail } from '../src/domain/auth/email-address.js';
@@ -182,7 +182,7 @@ async function revokePlatformAdmin(rawEmail: string): Promise<void> {
   }
 
   const [account] = await db
-    .select({ id: s.users.id, role: s.users.platformRole, clientId: s.users.clientId })
+    .select({ id: s.users.id, role: s.users.platformRole })
     .from(s.users)
     .where(eq(s.users.email, email))
     .limit(1);
@@ -251,15 +251,28 @@ async function grantPlatformAdmin(options: Options): Promise<void> {
   }
 
   const [existing] = await db
-    .select({ id: s.users.id, clientId: s.users.clientId, role: s.users.platformRole })
+    .select({
+      id: s.users.id,
+      role: s.users.platformRole,
+      /*
+       * Si alcanza algún cliente, es una cuenta de cliente. Antes bastaba mirar
+       * `users.client_id`; ahora la pertenencia son filas de `memberships`, así que la
+       * pregunta se hace con un EXISTS. La condición es «alguna», del alcance que sea: un
+       * visor de un solo evento tampoco debe convertirse en administrador de la plataforma
+       * de rebote.
+       */
+      hasMembership: sql<boolean>`exists (
+        select 1 from ${s.memberships} m where m.user_id = ${s.users.id}
+      )`,
+    })
     .from(s.users)
     .where(eq(s.users.email, email))
     .limit(1);
 
-  if (existing && existing.clientId !== null) {
+  if (existing && existing.hasMembership) {
     throw new Error(
-      `${email} ya es una cuenta del cliente ${existing.clientId}. Usa otro correo: una ` +
-        'misma dirección no puede administrar la plataforma y ser cliente a la vez.',
+      `${email} ya alcanza algún cliente. Usa otro correo: una misma dirección no puede ` +
+        'administrar la plataforma y tener acceso como cliente a la vez.',
     );
   }
 

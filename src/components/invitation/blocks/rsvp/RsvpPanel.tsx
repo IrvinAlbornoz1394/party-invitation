@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { BlockCurve } from '../../shared/BlockCurve';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
@@ -28,13 +29,27 @@ export function RsvpPanel({ content }: RsvpVariantProps) {
     <BlockSection
       block="rsvp"
       variant="panel"
-      /* El relleno lleva sumada la altura del canto del tema, o la onda se comería el rótulo. */
-      className="relative isolate bg-inv-primary py-[calc(6rem+var(--inv-edge-height,0px))] text-inv-on-primary sm:py-[calc(7rem+var(--inv-edge-height,0px))]"
+      className={clsx(
+        /* El relleno lleva sumada la altura del canto del tema, o la onda se comería el rótulo. */
+        'relative isolate bg-inv-primary py-[calc(6rem+var(--inv-edge-height,0px))] text-inv-on-primary sm:py-[calc(7rem+var(--inv-edge-height,0px))]',
+        /*
+         * `inv-on-photo` **solo cuando hay fotografía**, y es la única variante que lo condiciona.
+         *
+         * Esa clase reapunta la tinta a la que se lee sobre el velo (ver `globals.css`), y aquí el
+         * fondo es una cosa u otra según el contenido: sin foto, la franja es el color principal y
+         * el token que corresponde es `onPrimary` —que el tema garantiza legible contra él—; con
+         * foto, el fondo pasa a ser el velo y `onPrimary` puede ser justo el color equivocado.
+         *
+         * Las demás secciones que usan la clase no tienen esa duda: o siempre hay fotografía
+         * debajo, o lo que hay son las muestras de color del propio contenido.
+         */
+        content.image && 'inv-on-photo',
+      )}
     >
       {content.image && (
         <>
           <BlockImage image={content.image} className="-z-20" sizes="100vw" />
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-overlay" />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="center" />
         </>
       )}
 

@@ -92,7 +92,7 @@ export class DrizzleClientRepository implements ClientRepository {
             ${input.name},
             ${input.slug},
             ${input.contactEmail},
-            ${input.ownerEmail},
+            ${input.contactPhone},
             ${input.ownerName},
             ${credentials.clientIp}::inet
           )`,
@@ -113,6 +113,8 @@ export class DrizzleClientRepository implements ClientRepository {
         return { outcome: 'slug-taken' };
       case 'email_taken':
         return { outcome: 'email-taken' };
+      case 'invalid_email':
+        return { outcome: 'invalid-email' };
       default:
         return { outcome: 'forbidden' };
     }

@@ -1,10 +1,12 @@
 import 'server-only';
 
-import { and, asc, eq, sql } from 'drizzle-orm';
-import { isUserRole } from '@/domain/auth/actor';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { isMembershipRole, isUserRole } from '@/domain/auth/actor';
 import { isOtpChannel } from '@/domain/auth/otp-channel';
 import type { ManagedUser } from '@/domain/auth/user-management';
 import type {
+  EventAccessMember,
+  EventAccessSnapshot,
   InviteUserInput,
   InviteUserResult,
   TeamMember,
@@ -12,11 +14,8 @@ import type {
   UserRepository,
 } from '@/domain/auth/user-repository';
 
-import { clients, users } from '../db/schema';
+import { clients, events, memberships, users } from '../db/schema';
 import { withTenant } from '../db/tenant';
-
-/** Código de violación de restricción única de Postgres. */
-const UNIQUE_VIOLATION = '23505';
 
 /**
  * Implementación del puerto de administración de cuentas.
@@ -36,25 +35,38 @@ export class DrizzleUserRepository implements UserRepository {
         .where(eq(clients.id, clientId))
         .limit(1);
 
+      /*
+       * El equipo son las MEMBRESÍAS de alcance cliente, no las identidades: quien tiene
+       * acceso a todo el cliente. Las de alcance evento —visores, y `staff` asignado a una
+       * sola boda— no salen aquí; son accesos de un evento y se administran desde el evento.
+       *
+       * `isNull(memberships.eventId)` es por tanto una condición de negocio y no un filtro
+       * técnico: sin ella esta pantalla mezclaría a los novios de cada boda con el equipo del
+       * organizador.
+       *
+       * El estado y el rol se leen de la membresía; el correo y el nombre, de la identidad.
+       * Ese reparto es todo el cambio del modelo visto desde una consulta.
+       */
       const rows = await tx
         .select({
           id: users.id,
           email: users.email,
           name: users.name,
           phone: users.phone,
-          role: users.role,
-          status: users.status,
+          role: memberships.role,
+          status: memberships.status,
           platformRole: users.platformRole,
           preferredChannel: users.preferredOtpChannel,
           lastLoginAt: users.lastLoginAt,
-          createdAt: users.createdAt,
+          createdAt: memberships.createdAt,
         })
-        .from(users)
-        // El `where` es redundante con RLS y va a propósito: si algún día alguien ejecutara
-        // esta consulta sin contexto, el resultado sería vacío por las dos vías. Defensa en
-        // profundidad barata.
-        .where(eq(users.clientId, clientId))
-        .orderBy(asc(users.createdAt));
+        .from(memberships)
+        .innerJoin(users, eq(users.id, memberships.userId))
+        // El `where` del cliente es redundante con RLS y va a propósito: si algún día alguien
+        // ejecutara esta consulta sin contexto, el resultado sería vacío por las dos vías.
+        // Defensa en profundidad barata.
+        .where(and(eq(memberships.clientId, clientId), isNull(memberships.eventId)))
+        .orderBy(asc(memberships.createdAt));
 
       const members: TeamMember[] = rows.map((row) => ({
         id: row.id,
@@ -88,61 +100,63 @@ export class DrizzleUserRepository implements UserRepository {
   async invite(input: InviteUserInput): Promise<InviteUserResult> {
     return withTenant(input.clientId, async (tx) => {
       /*
-       * Primero se mira dentro del propio equipo. RLS hace que esta consulta solo vea a los
-       * de este cliente, así que un resultado aquí significa inequívocamente "ya está
-       * contigo" — nunca "existe en otro cliente".
+       * Va por `app.grant_membership()` y no por un INSERT propio, y el motivo no es
+       * comodidad: crear la IDENTIDAD es una escritura que RLS no puede acotar. Un correo
+       * puede alcanzar dos clientes, así que no existe ningún `client_id` con el que decidir
+       * quién tiene derecho a crearlo —una política permisiva dejaría a un cliente fabricar
+       * identidades ajenas, y una restrictiva impediría invitar a nadie—. Cuando RLS no
+       * puede expresar la regla, la aplica una función. Ver la sección 4 de
+       * sql/0001_security.sql.
+       *
+       * La función hace las dos cosas en una transacción: reutiliza la identidad si el correo
+       * ya existe, la crea si no, y le añade la membresía —del alcance que diga `eventId`—. A
+       * medias quedaría una cuenta capaz de pedir código y entrar a ninguna parte.
+       *
+       * Ya no hay caso `email-taken`. Que el correo exista en otro cliente dejó de ser un
+       * conflicto —se le añade una membresía—, así que la respuesta es la misma que para un
+       * correo nuevo y quien invita no averigua nada sobre en qué otros clientes está.
        */
-      const [existing] = await tx
-        .select({ id: users.id })
-        .from(users)
-        .where(and(eq(users.clientId, input.clientId), eq(users.email, input.email)))
-        .limit(1);
-
-      if (existing) return { outcome: 'already-in-team' };
-
-      try {
-        /*
-         * INSERT escrito a mano en lugar de `tx.insert(users)`, y el motivo es exacto:
-         * Drizzle nombra TODAS las columnas de la tabla en la sentencia —las que no recibe
-         * valor las manda como `default`—, incluidas `platform_role` y `last_login_at`. El
-         * rol de la aplicación tiene INSERT **por columna** y esas dos están revocadas
-         * (ver sql/0001_security.sql), así que Postgres rechaza la sentencia entera con
-         * "permission denied for table users" aunque no se les esté dando ningún valor.
-         *
-         * Es el precio de proteger `platform_role` a nivel de columna, y vale la pena: la
-         * alternativa sería conceder INSERT sobre la tabla completa y dejar que una pantalla
-         * de administración pudiera fabricar superadministradores.
-         *
-         * `status` nace `invited`: aún no ha entrado nadie. No bloquea el acceso
-         * —`app.begin_otp_issue` acepta invitados—, es la marca que permite al panel decir
-         * "pendiente de primer acceso", y se promueve a `active` sola en el primer login.
-         */
-        const inserted = await tx.execute<{ id: string; [column: string]: unknown }>(
-          sql`insert into public.users (client_id, email, name, role, phone, status)
-              values (
+      const granted = await tx.execute<{
+        status: string;
+        user_id: string | null;
+        membership_id: string | null;
+      }>(
+        sql`select status, user_id, membership_id
+              from app.grant_membership(
                 ${input.clientId}::uuid,
+                ${input.actorUserId}::uuid,
+                ${input.eventId}::uuid,
                 ${input.email},
+                ${input.role},
+                ${input.label},
                 ${input.name},
-                ${input.role}::user_role,
-                ${input.phone},
-                'invited'::user_status
-              )
-              returning id`,
-        );
+                ${input.phone}
+              )`,
+      );
 
-        const created = inserted.rows.at(0);
-        if (!created) return { outcome: 'email-taken' };
+      const row = granted.rows.at(0);
 
-        return { outcome: 'invited', userId: created.id };
-      } catch (error: unknown) {
-        /*
-         * El único de `users.email` es GLOBAL, no por cliente. Si el correo pertenece a
-         * otro cliente, la comprobación de arriba no lo vio —RLS se lo ocultó— y es aquí
-         * donde se descubre. Es la única forma de detectarlo sin darle a la aplicación una
-         * vía para leer usuarios de otros clientes, que sería mucho peor.
-         */
-        if (isUniqueViolation(error)) return { outcome: 'email-taken' };
-        throw error;
+      switch (row?.status) {
+        case 'granted':
+          // `user_id` no puede venir null con status `granted`; el fallback es para no
+          // ampliar el tipo del resultado por un caso que la función no produce.
+          return { outcome: 'invited', userId: row.user_id ?? '' };
+        case 'already_member':
+          return { outcome: 'already-in-team' };
+        case 'already_member_disabled':
+          return {
+            outcome: 'access-revoked',
+            membershipId: row.membership_id ?? '',
+            userId: row.user_id ?? '',
+          };
+        default:
+          /*
+           * `forbidden`, `role_too_high` y `event_not_found` colapsan en uno. Los candados
+           * del dominio ya pararon estos casos con un mensaje explicado, así que llegar aquí
+           * significa que algo llamó al repositorio sin pasar por ellos: lo que toca es
+           * negarse, no redactar un mensaje para un camino que no debería existir.
+           */
+          return { outcome: 'rejected' };
       }
     });
   }
@@ -154,10 +168,23 @@ export class DrizzleUserRepository implements UserRepository {
     readonly actorUserId: string;
   }): Promise<void> {
     await withTenant(input.clientId, async (tx) => {
+      /*
+       * El rol vive en la membresía, así que cambiarlo es un UPDATE de tenant normal y RLS lo
+       * acota. Es la diferencia con invitar: conceder toca la identidad, que no es de nadie;
+       * cambiar el rol toca la relación, que sí es del cliente.
+       *
+       * `isNull(eventId)` acota al equipo: esta pantalla no cambia el rol de un visor.
+       */
       await tx
-        .update(users)
+        .update(memberships)
         .set({ role: input.role })
-        .where(and(eq(users.id, input.userId), eq(users.clientId, input.clientId)));
+        .where(
+          and(
+            eq(memberships.userId, input.userId),
+            eq(memberships.clientId, input.clientId),
+            isNull(memberships.eventId),
+          ),
+        );
 
       await writeAudit(tx, {
         clientId: input.clientId,
@@ -176,10 +203,22 @@ export class DrizzleUserRepository implements UserRepository {
     readonly actorUserId: string;
   }): Promise<void> {
     await withTenant(input.clientId, async (tx) => {
+      /*
+       * Se desactiva la MEMBRESÍA, no la identidad, y esa distinción es la que hace correcto
+       * el modelo: quitarle el acceso a alguien en este cliente no puede dejarlo fuera de
+       * otro donde también entra. Desactivar la identidad —`users.status`— es una operación de
+       * plataforma, no de un cliente.
+       */
       await tx
-        .update(users)
+        .update(memberships)
         .set({ status: input.status })
-        .where(and(eq(users.id, input.userId), eq(users.clientId, input.clientId)));
+        .where(
+          and(
+            eq(memberships.userId, input.userId),
+            eq(memberships.clientId, input.clientId),
+            isNull(memberships.eventId),
+          ),
+        );
 
       /*
        * Desactivar tiene que cortar las sesiones abiertas, o el cambio no surtiría efecto
@@ -211,6 +250,123 @@ export class DrizzleUserRepository implements UserRepository {
     });
   }
 
+  async loadEventAccess(input: {
+    readonly clientId: string;
+    readonly eventId: string;
+  }): Promise<EventAccessSnapshot | null> {
+    /*
+     * Contexto de CLIENTE, no de evento, y no es comodidad: la política de `users` exige
+     * `app.current_event_id() is null` —cierra la tabla entera en contexto de evento, para que
+     * quien alcanza una sola boda no pueda enumerar a quién más entra al cliente—. Con el
+     * contexto estrechado, esta consulta devolvería las membresías sin un solo correo al lado,
+     * que es la única columna por la que la pantalla existe.
+     *
+     * El filtro por evento pasa entonces al `where`, y eso no lo debilita: la clave ajena
+     * compuesta de `memberships` garantiza que un `event_id` de otro cliente no pueda existir en
+     * una fila de este, así que filtrar por los dos no es redundancia sino la misma condición
+     * escrita donde RLS ya no llega.
+     */
+    return withTenant(input.clientId, async (tx) => {
+      const [event] = await tx
+        .select({ title: events.title, clientName: clients.name })
+        .from(events)
+        .innerJoin(clients, eq(clients.id, events.clientId))
+        .where(and(eq(events.id, input.eventId), eq(events.clientId, input.clientId)))
+        .limit(1);
+
+      // El evento no es de este cliente, o no existe. Las dos respuestas son la misma a
+      // propósito: el id va en la URL, y distinguirlas convertiría la pantalla en un oráculo.
+      if (!event) return null;
+
+      const rows = await tx
+        .select({
+          membershipId: memberships.id,
+          userId: users.id,
+          email: users.email,
+          name: users.name,
+          label: memberships.label,
+          role: memberships.role,
+          status: memberships.status,
+          lastLoginAt: users.lastLoginAt,
+          createdAt: memberships.createdAt,
+        })
+        .from(memberships)
+        .innerJoin(users, eq(users.id, memberships.userId))
+        .where(
+          and(eq(memberships.clientId, input.clientId), eq(memberships.eventId, input.eventId)),
+        )
+        .orderBy(asc(memberships.createdAt));
+
+      const members: EventAccessMember[] = rows.map((row) => ({
+        membershipId: row.membershipId,
+        userId: row.userId,
+        email: row.email,
+        name: row.name,
+        label: row.label,
+        // Un rol que no reconozcamos cae al suelo y no al medio: si el enum creciera algún día,
+        // lo peor que puede pasar es que alguien vea de menos.
+        role: isMembershipRole(row.role) ? row.role : 'viewer',
+        status: row.status,
+        lastLoginAt: row.lastLoginAt,
+        createdAt: row.createdAt,
+      }));
+
+      return { eventTitle: event.title, clientName: event.clientName, members };
+    });
+  }
+
+  async setEventAccessStatus(input: {
+    readonly clientId: string;
+    readonly eventId: string;
+    readonly membershipId: string;
+    readonly userId: string;
+    readonly status: 'active' | 'disabled';
+    readonly actorUserId: string;
+  }): Promise<void> {
+    await withTenant(input.clientId, async (tx) => {
+      /*
+       * Se desactiva UNA membresía: la de este evento. Ni la identidad —esa persona puede ser
+       * dueña de otro cliente— ni sus otras membresías. El `eventId` en el `where` es una
+       * frontera de seguridad y no un filtro de comodidad: RLS acota a este cliente y ahí se
+       * detiene, así que sin esta condición un colaborador podría desactivar desde aquí la
+       * membresía del dueño.
+       *
+       * Se desactiva en vez de borrarse porque `memberships.status` es lo que permite responder
+       * quién tuvo acceso a un evento, y porque la bitácora quedaría apuntando a filas que ya no
+       * existen.
+       */
+      await tx
+        .update(memberships)
+        .set({ status: input.status })
+        .where(
+          and(
+            eq(memberships.id, input.membershipId),
+            eq(memberships.clientId, input.clientId),
+            eq(memberships.eventId, input.eventId),
+          ),
+        );
+
+      /*
+       * Y **no** se llama a `app.revoke_user_sessions()`, al contrario que `setStatus()`. Esa
+       * función hace `update sessions where user_id = …` sin filtrar por cliente: usarla aquí
+       * sacaría del sistema entero a alguien por haberle retirado una boda.
+       *
+       * Tampoco hace falta. `app.resolve_session()` relee las membresías en CADA petición
+       * filtrando `m.status <> 'disabled'`, así que la siguiente petición de esa sesión ya no
+       * trae el evento y `requireEventAccess()` responde 404. La diferencia con el equipo es
+       * real y por eso allí sí se cortan: retirar el acceso al cliente entero deja una sesión
+       * abierta con el panel delante hasta que alguien recargue.
+       */
+
+      await writeAudit(tx, {
+        clientId: input.clientId,
+        actorUserId: input.actorUserId,
+        action: input.status === 'disabled' ? 'membership.revoked' : 'membership.restored',
+        targetUserId: input.userId,
+        metadata: { event_id: input.eventId, membership_id: input.membershipId },
+      });
+    });
+  }
 }
 
 /**
@@ -241,34 +397,4 @@ async function writeAudit(
           ${JSON.stringify(entry.metadata)}::jsonb
         )`,
   );
-}
-
-/**
- * Distingue un choque de índice único de cualquier otro fallo.
- *
- * Dos detalles que costaron un error 500 antes de estar bien:
- *
- * **Se recorre la cadena de `cause`.** Drizzle no propaga el error de `pg` tal cual: lo
- * envuelve en un `DrizzleQueryError` que lleva la consulta y los parámetros, y deja el
- * original en `cause`. Mirando solo el nivel superior, el `23505` nunca aparece y el caso
- * "ese correo ya tiene cuenta en otro cliente" acaba como fallo del servidor en lugar de
- * como mensaje explicado.
- *
- * **Se compara el `code`, no el mensaje.** Los textos de Postgres cambian con la versión y
- * con el idioma del servidor —este proyecto se desarrolla contra uno en español—, así que
- * compararlos sería una condición que se rompe sola.
- */
-function isUniqueViolation(error: unknown): boolean {
-  // Tope de profundidad por si alguna capa construyera una cadena cíclica de causas.
-  for (let current = error, depth = 0; current != null && depth < 5; depth += 1) {
-    if (typeof current !== 'object') break;
-
-    if ('code' in current && (current as { code?: unknown }).code === UNIQUE_VIOLATION) {
-      return true;
-    }
-
-    current = (current as { cause?: unknown }).cause;
-  }
-
-  return false;
 }

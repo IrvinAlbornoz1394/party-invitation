@@ -60,45 +60,6 @@ export function FiligreeCorner({ className }: { readonly className?: string }) {
 }
 
 /**
- * La rama: hojas alternadas a lo largo de un tallo curvo, para las guirnaldas de acuarela.
- *
- * Es la traducción honesta de una acuarela a un trazo: una acuarela no se imita con vectores, y
- * el intento —degradados, manchas— sale peor que asumir que aquí el lenguaje es el dibujo a
- * línea. Lo que sí se conserva es la silueta, que es lo que hace que la esquina se lea como
- * botánica en un vistazo de medio segundo.
- */
-export function BotanicalSpray({ className }: { readonly className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 200 90"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.1"
-      strokeLinecap="round"
-      aria-hidden="true"
-      className={clsx('pointer-events-none', className)}
-    >
-      {/* El tallo, de una esquina hacia el centro. */}
-      <path d="M2 12C40 20 78 38 118 52c22 8 44 12 80 13" />
-      {/* Las hojas: la misma elipse repetida con otra inclinación y otro tamaño. Se escriben a
-          mano y no en un bucle porque una rama regular no parece una rama. */}
-      <ellipse cx="24" cy="10" rx="12" ry="5" transform="rotate(-24 24 10)" />
-      <ellipse cx="44" cy="26" rx="14" ry="6" transform="rotate(18 44 26)" />
-      <ellipse cx="66" cy="24" rx="10" ry="4.5" transform="rotate(-30 66 24)" />
-      <ellipse cx="88" cy="42" rx="15" ry="6" transform="rotate(14 88 42)" />
-      <ellipse cx="112" cy="38" rx="11" ry="5" transform="rotate(-26 112 38)" />
-      <ellipse cx="138" cy="56" rx="14" ry="5.5" transform="rotate(10 138 56)" />
-      <ellipse cx="164" cy="52" rx="10" ry="4.5" transform="rotate(-20 164 52)" />
-      <ellipse cx="186" cy="66" rx="12" ry="5" transform="rotate(8 186 66)" />
-      {/* Tres capullos: los puntos que rompen la repetición de las hojas. */}
-      <circle cx="58" cy="14" r="3.5" />
-      <circle cx="126" cy="28" r="3" />
-      <circle cx="176" cy="40" r="3.5" />
-    </svg>
-  );
-}
-
-/**
  * Las dos alianzas enlazadas.
  *
  * Dos circunferencias que se cruzan, sin más. Es un símbolo, no una ilustración: a los treinta
@@ -121,3 +82,4 @@ export function RingsGlyph({ className }: { readonly className?: string }) {
     </svg>
   );
 }
+

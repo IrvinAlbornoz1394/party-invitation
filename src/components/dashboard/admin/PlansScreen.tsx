@@ -62,101 +62,99 @@ export function PlansScreen({ catalog }: { readonly catalog: PlanCatalog }) {
         ))}
       </div>
 
-      <div style={{ marginTop: 'var(--dash-gap)' }}>
-        <SectionCard
-          title="Qué incluye cada plan"
-          subtitle={pluralize(features.length, 'funcionalidad', 'funcionalidades')}
-          flush
-        >
-          {features.length === 0 ? (
-            <EmptyState
-              title="No hay funcionalidades registradas"
-              description="Sin funcionalidades no hay nada que asignar a los planes."
-            />
-          ) : (
-            /*
-             * El desbordamiento lo gestiona este contenedor y no la página. Con cinco planes
-             * la rejilla no cabe en un teléfono, y sin este envoltorio sería el `body` el
-             * que se desplazaría en horizontal — el fallo que hace que toda la interfaz se
-             * mueva al arrastrar, no solo la tabla.
-             */
-            <div className="dash-matrix__scroll">
-              <table className="dash-matrix">
-                <caption className="dash-sr-only">
-                  Funcionalidades incluidas en cada plan, agrupadas por categoría
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Funcionalidad</th>
-                    {plans.map((plan) => (
-                      <th scope="col" key={plan.key}>
-                        {plan.name}
-                      </th>
-                    ))}
+      <SectionCard
+        title="Qué incluye cada plan"
+        subtitle={pluralize(features.length, 'funcionalidad', 'funcionalidades')}
+        flush
+      >
+        {features.length === 0 ? (
+          <EmptyState
+            title="No hay funcionalidades registradas"
+            description="Sin funcionalidades no hay nada que asignar a los planes."
+          />
+        ) : (
+          /*
+           * El desbordamiento lo gestiona este contenedor y no la página. Con cinco planes
+           * la rejilla no cabe en un teléfono, y sin este envoltorio sería el `body` el
+           * que se desplazaría en horizontal — el fallo que hace que toda la interfaz se
+           * mueva al arrastrar, no solo la tabla.
+           */
+          <div className="dash-matrix__scroll">
+            <table className="dash-matrix">
+              <caption className="dash-sr-only">
+                Funcionalidades incluidas en cada plan, agrupadas por categoría
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Funcionalidad</th>
+                  {plans.map((plan) => (
+                    <th scope="col" key={plan.key}>
+                      {plan.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              {categories.map((category) => (
+                <tbody key={category}>
+                  <tr className="dash-matrix__group">
+                    {/* `colSpan` sobre todas las columnas: es un rótulo de sección dentro
+                        de la tabla, no una fila de datos. */}
+                    <th scope="colgroup" colSpan={plans.length + 1}>
+                      {categoryLabel(category)}
+                    </th>
                   </tr>
-                </thead>
-                {categories.map((category) => (
-                  <tbody key={category}>
-                    <tr className="dash-matrix__group">
-                      {/* `colSpan` sobre todas las columnas: es un rótulo de sección dentro
-                          de la tabla, no una fila de datos. */}
-                      <th scope="colgroup" colSpan={plans.length + 1}>
-                        {categoryLabel(category)}
-                      </th>
-                    </tr>
-                    {features
-                      .filter((feature) => feature.category === category)
-                      .map((feature) => (
-                        <tr key={feature.key}>
-                          <th scope="row">
-                            <span className="dash-cell__primary">{feature.name}</span>
-                            {feature.description && (
-                              <span className="dash-cell__secondary">{feature.description}</span>
-                            )}
-                          </th>
-                          {plans.map((plan) => {
-                            const link = plan.features.find(
-                              (candidate) => candidate.featureKey === feature.key,
-                            );
-                            const included = link?.isIncluded ?? false;
+                  {features
+                    .filter((feature) => feature.category === category)
+                    .map((feature) => (
+                      <tr key={feature.key}>
+                        <th scope="row">
+                          <span className="dash-cell__primary">{feature.name}</span>
+                          {feature.description && (
+                            <span className="dash-cell__secondary">{feature.description}</span>
+                          )}
+                        </th>
+                        {plans.map((plan) => {
+                          const link = plan.features.find(
+                            (candidate) => candidate.featureKey === feature.key,
+                          );
+                          const included = link?.isIncluded ?? false;
 
-                            return (
-                              <td key={plan.key}>
-                                {included ? (
-                                  <span className="dash-matrix__yes">
-                                    <Check size={15} strokeWidth={2.5} aria-hidden="true" />
-                                    {link?.limitValue !== null && link?.limitValue !== undefined && (
-                                      <span className="dash-matrix__limit">
-                                        hasta {link.limitValue}
-                                      </span>
-                                    )}
-                                    <span className="dash-sr-only">
-                                      {feature.name} incluido en {plan.name}
-                                      {link?.limitValue !== null && link?.limitValue !== undefined
-                                        ? `, hasta ${link.limitValue}`
-                                        : ''}
+                          return (
+                            <td key={plan.key}>
+                              {included ? (
+                                <span className="dash-matrix__yes">
+                                  <Check size={15} strokeWidth={2.5} aria-hidden="true" />
+                                  {link?.limitValue !== null && link?.limitValue !== undefined && (
+                                    <span className="dash-matrix__limit">
+                                      hasta {link.limitValue}
                                     </span>
+                                  )}
+                                  <span className="dash-sr-only">
+                                    {feature.name} incluido en {plan.name}
+                                    {link?.limitValue !== null && link?.limitValue !== undefined
+                                      ? `, hasta ${link.limitValue}`
+                                      : ''}
                                   </span>
-                                ) : (
-                                  <span className="dash-matrix__no">
-                                    <Minus size={15} strokeWidth={2.5} aria-hidden="true" />
-                                    <span className="dash-sr-only">
-                                      {feature.name} no incluido en {plan.name}
-                                    </span>
+                                </span>
+                              ) : (
+                                <span className="dash-matrix__no">
+                                  <Minus size={15} strokeWidth={2.5} aria-hidden="true" />
+                                  <span className="dash-sr-only">
+                                    {feature.name} no incluido en {plan.name}
                                   </span>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                  </tbody>
-                ))}
-              </table>
-            </div>
-          )}
-        </SectionCard>
-      </div>
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                </tbody>
+              ))}
+            </table>
+          </div>
+        )}
+      </SectionCard>
     </>
   );
 }

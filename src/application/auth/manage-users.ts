@@ -1,4 +1,4 @@
-import type { ClientActor, UserRole } from '@/domain/auth/actor';
+import { type ClientActor, type UserRole, displayNameOf } from '@/domain/auth/actor';
 import { normalizeEmail } from '@/domain/auth/email-address';
 import type { InvitationNotifier } from '@/domain/auth/invitation-notifier';
 import { normalizePhoneNumber } from '@/domain/auth/phone-number';
@@ -97,8 +97,13 @@ export class InviteUser {
 
     const result = await this.users.invite({
       clientId: actor.clientId,
+      actorUserId: actor.userId,
+      // El equipo es el alcance CLIENTE, y ahora el puerto lo dice en vez de darlo por hecho:
+      // el mismo método concede también accesos a un solo evento. Ver `GrantEventAccess`.
+      eventId: null,
       email,
       name,
+      label: null,
       role: command.role,
       phone,
     });
@@ -106,11 +111,24 @@ export class InviteUser {
     switch (result.outcome) {
       case 'already-in-team':
         return { outcome: 'invalid', reason: 'Esa persona ya está en tu equipo.' };
-      case 'email-taken':
+      case 'access-revoked':
+        /*
+         * Tuvo acceso y se lo quitaron. Se cuenta aparte porque «ya está en tu equipo» sería
+         * mentira y además no dejaría nada que hacer: el único parcial de `memberships` impide
+         * reinsertar la fila, así que lo que corresponde es reactivarla desde la propia lista.
+         */
         return {
           outcome: 'invalid',
-          reason: 'Ese correo ya tiene una cuenta en la plataforma. Escríbenos para moverla.',
+          reason: 'Esa persona ya estuvo en tu equipo y su acceso está desactivado. ' +
+            'Reactívalo desde la lista.',
         };
+      case 'rejected':
+        /*
+         * La base de datos revalidó el rol del actor y se negó. Los candados de arriba ya
+         * pararon los casos reales con su motivo, así que esto solo ocurre si algo llamó al
+         * caso de uso con un actor que no es quien dice ser: no hay nada que explicar.
+         */
+        return { outcome: 'denied', reason: 'No se pudo conceder ese acceso.' };
       case 'invited':
         break;
     }
@@ -125,7 +143,7 @@ export class InviteUser {
     await this.notifier.send({
       email,
       recipientName: name,
-      inviterName: actor.name,
+      inviterName: displayNameOf(actor),
       clientName: team.clientName,
     });
 

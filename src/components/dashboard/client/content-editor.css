@@ -1,0 +1,218 @@
+/* ============================================================================
+   Editor de contenido
+   ============================================================================
+   Vive dentro del armazón, así que sí hereda los `--dash-*` de `.dash` y no repite tokens.
+   Lo único propio de aquí es la retícula de dos columnas y el marco del teléfono, para lo que
+   antd no tiene nada. */
+
+/* `minmax(0, 2fr)` en la primera columna y no `2fr` a secas: sin el mínimo en 0, un campo con
+   texto largo o una tabla dentro del formulario ensancharía la columna por encima de su parte y
+   empujaría el teléfono fuera de la pantalla. Es el desbordamiento clásico de CSS Grid. */
+.content-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--dash-gap-lg);
+  align-items: start;
+}
+
+.content-editor__alert {
+  margin-bottom: var(--dash-gap);
+}
+
+.content-editor__form {
+  display: grid;
+  gap: var(--dash-gap);
+  min-width: 0;
+}
+
+/* Fecha y hora comparten fila: son un solo dato partido en dos controles, y separarlos en dos
+   filas sugeriría que no tienen que ver entre sí. */
+.content-editor__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--dash-gap);
+  /* El mismo aire que un campo suelto: una fila es un campo más de la lista vertical, y sus dos
+     campos no lo añaden por su cuenta (ver `.dash-form__field` en `dashboard.css`). */
+  margin-top: 18px;
+}
+.content-editor__row .dash-form__field {
+  margin-top: 0;
+}
+
+.content-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--dash-gap-sm);
+}
+
+/* ── El marco ─────────────────────────────────────────────────────────────── */
+
+/* `sticky` para que la invitación siga a la vista mientras se recorre el formulario. Sin esto,
+   editar el último campo dejaría la vista previa tres pantallas más arriba, que es justo cuando
+   más se quiere mirar. */
+.content-editor__preview {
+  position: sticky;
+  top: var(--dash-gap-lg);
+  display: grid;
+  gap: var(--dash-gap-sm);
+  min-width: 0;
+}
+
+.content-editor__preview-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--dash-gap-sm);
+}
+
+.content-editor__preview-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.content-editor__preview-note {
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+
+/* La proporción 9/19.5 es la de un teléfono actual. Va con `aspect-ratio` y no con una altura
+   fija para que el marco se estreche con la columna sin deformar lo que enseña dentro. */
+.content-editor__phone {
+  overflow: hidden;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 9 / 19.5;
+  border: 8px solid #2c222a;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: var(--dash-shadow-lifted);
+}
+
+.content-editor__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.content-editor__hint {
+  margin: 0;
+  max-width: 380px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dash-muted);
+}
+
+/* ── Móvil: una columna, y el marco abajo ─────────────────────────────────── */
+
+/* No se bloquea la pantalla. Lo que se pierde en un teléfono es ver las dos cosas a la vez, y eso
+   lo dice `.content-editor__hint`; negarse a cargar sería peor en un mercado donde mucha gente
+   solo tiene teléfono. El `sticky` se quita porque en una columna fijaría el marco encima del
+   campo que se está escribiendo. */
+@media (max-width: 1100px) {
+  .content-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content-editor__preview {
+    position: static;
+  }
+
+  .content-editor__phone {
+    max-width: 320px;
+  }
+}
+
+/* ── Editor de listas ─────────────────────────────────────────────────────── */
+
+.collection {
+  display: grid;
+  gap: var(--dash-gap-sm);
+}
+
+.collection__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dash-gap);
+}
+
+.collection__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.collection__description {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dash-muted);
+}
+
+/* El contador va en tabular para que no baile al pasar de 9 a 10 filas. */
+.collection__count {
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted);
+}
+
+.collection__empty {
+  margin: 0;
+  padding: var(--dash-gap) 0;
+  font-size: 13px;
+  color: var(--dash-muted);
+}
+
+.collection__rows {
+  display: grid;
+  gap: var(--dash-gap-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.collection__row {
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+  background: var(--dash-canvas);
+}
+
+.collection__row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dash-gap-sm);
+  padding: var(--dash-gap-xs) var(--dash-gap-xs) var(--dash-gap-xs) var(--dash-gap-sm);
+  border-bottom: 1px solid var(--dash-border);
+}
+
+/* El título de la fila se recorta en una línea: con una dirección larga, el encabezado crecería
+   hasta empujar los botones de orden fuera de la vista. */
+.collection__row-title {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.collection__row-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+/* Los `Form.Item` de antd traen margen inferior propio; dentro de una fila sobra en el último,
+   que si no deja un hueco entre el campo y el borde de la tarjeta. */
+.collection__row-body {
+  padding: var(--dash-gap-sm) var(--dash-gap-sm) 0;
+}
+
+.collection__row-body .ant-form-item:last-child {
+  margin-bottom: var(--dash-gap-sm);
+}

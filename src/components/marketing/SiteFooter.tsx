@@ -52,8 +52,8 @@ export function SiteFooter() {
           </p>
 
           <h2 className="mt-8 mb-0 font-display text-[clamp(2.2rem,6vw,3.75rem)] leading-[1.06] font-medium tracking-[-0.03em] text-white">
-            Cuéntanos qué celebras
-            <span className="block italic">y qué día</span>
+            Cuéntanos
+            <span className="block italic">de tu evento</span>
           </h2>
 
           <p className="mt-7 mb-0 max-w-xl text-[16px] leading-relaxed text-white/80">
@@ -61,11 +61,16 @@ export function SiteFooter() {
             confirmaciones.
           </p>
 
+          {/*
+            Lleva a pedir información y no al panel. La sección dice «Empecemos, cuéntanos de tu
+            evento» y quien la lee todavía no es cliente: mandarlo al acceso era pedirle un correo
+            que no tiene.
+          */}
           <Link
-            href="/panel"
+            href="/cotizar"
             className="mt-11 inline-flex min-h-12 items-center justify-center bg-white px-9 text-[12px] font-semibold tracking-[0.14em] text-plum uppercase transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-plum focus-visible:outline-none"
           >
-            Entrar al panel
+            Cuéntanos de tu evento
           </Link>
         </div>
       </section>
@@ -77,19 +82,19 @@ export function SiteFooter() {
               href="/"
               className="font-display text-[1.35rem] leading-none tracking-[0.06em] text-plum"
             >
-              éclat
+              MiEvento
             </Link>
-            <p className="m-0 text-[13px] text-ink/55">
+            <p className="m-0 text-[13px] text-ink/75">
               Invitaciones digitales y organización de eventos.
             </p>
           </div>
 
-          <p className="m-0 max-w-md text-[13px] leading-relaxed text-ink/55">
+          <p className="m-0 max-w-md text-[13px] leading-relaxed text-ink/75">
             ¿Recibiste una invitación? Abre el enlace completo que te compartieron: incluye un
             código propio del evento y sin él no se puede ver.
           </p>
 
-          <p className="m-0 text-[12px] text-ink/40">© {year} éclat</p>
+          <p className="m-0 text-[12px] text-ink/40">© {year} MiEvento</p>
         </div>
       </footer>
     </>

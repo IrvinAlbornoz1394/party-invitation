@@ -1,6 +1,6 @@
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
-import { BotanicalSpray } from './welcome-ornaments';
+import { BotanicalSpray } from '../../shared/paper-ornaments';
 
 /**
  * `welcome.botanical` — papel claro con dos guirnaldas, arriba y abajo.

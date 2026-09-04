@@ -1,9 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from 'antd';
 import type { TableProps } from 'antd';
 import Link from 'next/link';
-import { ArrowLeft, CalendarDays, CircleCheck, Clock } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CircleCheck, Clock, Plus } from 'lucide-react';
+import {
+  INITIAL_NEW_EVENT_STATE,
+  type NewEventState,
+} from '@/app/admin/(authenticated)/eventos/form-state';
+import type { NewEventOptions } from '@/application/events/create-event';
 import type { ClientSummary } from '@/domain/clients/client-repository';
 import type { EventSummary } from '@/domain/events/event-repository';
 import { formatDate, formatDaysUntil, isUpcoming } from '../format';
@@ -16,6 +22,7 @@ import { SectionCard } from '../primitives/SectionCard';
 import { StatCard } from '../primitives/StatCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { clientStatus, eventStatus } from '../primitives/status-display';
+import { NewEventDialog, NewEventNotice } from './NewEventDialog';
 
 /**
  * Un cliente visto desde la plataforma: su ficha y todos sus eventos.
@@ -39,10 +46,16 @@ import { clientStatus, eventStatus } from '../primitives/status-display';
 export function ClientDetailScreen({
   client,
   events,
+  options,
 }: {
   readonly client: ClientSummary;
   readonly events: readonly EventSummary[];
+  /** El catálogo con el que se llena el formulario de alta. */
+  readonly options: NewEventOptions;
 }) {
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [feedback, setFeedback] = useState<NewEventState>(INITIAL_NEW_EVENT_STATE);
+
   const published = events.filter((event) => event.status === 'published').length;
   const upcoming = events
     .filter((event) => isUpcoming(event.startsAt))
@@ -55,13 +68,30 @@ export function ClientDetailScreen({
         title={client.name}
         description={client.contactEmail ?? 'Sin correo de contacto registrado.'}
         actions={
-          <Link href="/admin/clientes">
-            <Button size="large" icon={<ArrowLeft size={16} strokeWidth={2} />}>
-              Todos los clientes
+          <>
+            <Link href="/admin/clientes">
+              <Button size="large" icon={<ArrowLeft size={16} strokeWidth={2} />}>
+                Todos los clientes
+              </Button>
+            </Link>
+            {/*
+              El alta vive en la cabecera y no dentro de la tarjeta de eventos porque es la acción
+              principal de esta pantalla: se entra a la ficha de un cliente sobre todo para darle
+              su siguiente evento.
+            */}
+            <Button
+              type="primary"
+              size="large"
+              icon={<Plus size={16} strokeWidth={2.25} />}
+              onClick={() => setDialogOpen(true)}
+            >
+              Dar de alta evento
             </Button>
-          </Link>
+          </>
         }
       />
+
+      <NewEventNotice state={feedback} onDismiss={() => setFeedback(INITIAL_NEW_EVENT_STATE)} />
 
       <div className="dash-grid">
         <StatCard icon={CalendarDays} tone="azure" label="Eventos" value={events.length} />
@@ -81,8 +111,21 @@ export function ClientDetailScreen({
         />
       </div>
 
-      <div className="dash-split" style={{ marginTop: 'var(--dash-gap)' }}>
-        <SectionCard title="Eventos del cliente" flush>
+      <div className="dash-split">
+        <SectionCard
+          title="Eventos del cliente"
+          /*
+           * El salto a la pantalla de eventos llega con este cliente ya elegido: el filtro
+           * viaja en la URL, así que enlazarlo es lo mismo que preseleccionarlo. Solo se
+           * ofrece si hay algo que ver — mandar a una tabla vacía no ayuda a nadie.
+           */
+          action={
+            events.length > 0
+              ? { label: 'Ver en Eventos', href: `/admin/eventos?cliente=${client.id}` }
+              : undefined
+          }
+          flush
+        >
           <DataTable
             rows={events}
             rowKey="id"
@@ -91,7 +134,7 @@ export function ClientDetailScreen({
             empty={{
               title: 'Este cliente todavía no tiene eventos',
               description:
-                'Los eventos los da de alta la plataforma: elegir plantilla, plan y tema es parte del servicio que se vende.',
+                'Dale el primero desde «Dar de alta evento»: elegir plantilla, plan y tema es parte del servicio que se vende.',
             }}
           />
         </SectionCard>
@@ -111,6 +154,19 @@ export function ClientDetailScreen({
           />
         </SectionCard>
       </div>
+
+      {/*
+        Con `client`: el evento es de este cliente y el campo no se enseña. El identificador viaja
+        igualmente en el formulario, oculto — que no se vea no lo hace de fiar, y por eso quien
+        autoriza sigue siendo la base de datos. Ver `NewEventDialog`.
+      */}
+      <NewEventDialog
+        open={isDialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onResult={setFeedback}
+        options={options}
+        client={{ id: client.id, name: client.name }}
+      />
     </>
   );
 }

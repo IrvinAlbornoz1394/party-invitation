@@ -7,7 +7,7 @@ import type {
   ClientSummary,
   CreateClientResult,
 } from '@/domain/clients/client-repository';
-import type { ClientActor } from '@/domain/auth/actor';
+import { type ClientActor, displayNameOf } from '@/domain/auth/actor';
 import { normalizeEmail } from '@/domain/auth/email-address';
 import type { InvitationNotifier } from '@/domain/auth/invitation-notifier';
 
@@ -52,8 +52,10 @@ export interface CreateClientCommand {
   readonly name: string;
   /** Opcional: si viene vacío se deriva del nombre. */
   readonly slug: string;
+  /** Obligatorio. Es el correo del cliente y la identidad de su responsable. Ver `NewClient`. */
   readonly contactEmail: string;
-  readonly ownerEmail: string;
+  /** Opcional mientras WhatsApp no exista. Ver `NewClient`. */
+  readonly contactPhone: string;
   readonly ownerName: string;
 }
 
@@ -61,6 +63,7 @@ export type CreateClientOutcome =
   | CreateClientResult
   | { readonly outcome: 'invalid-name' }
   | { readonly outcome: 'invalid-slug' }
+  /** Falta el nombre de la persona responsable, o el correo no tiene forma de correo. */
   | { readonly outcome: 'invalid-owner' };
 
 export class CreateClient {
@@ -89,19 +92,26 @@ export class CreateClient {
     );
     if (slug === null) return { outcome: 'invalid-slug' };
 
-    const ownerEmail = normalizeEmail(command.ownerEmail);
-    const ownerName = command.ownerName.trim();
-    if (ownerEmail === null || ownerName.length < 2) return { outcome: 'invalid-owner' };
-
+    /*
+     * Un solo correo para las dos cosas: los avisos del cliente y la cuenta de su responsable.
+     * Es obligatorio —sin él el cliente nace sin nadie que pueda entrar y sin dónde avisarle— y
+     * lo vuelve a comprobar `app.create_client()`, que es quien de verdad escribe.
+     */
     const contactEmail = normalizeEmail(command.contactEmail);
+    const ownerName = command.ownerName.trim();
+
+    if (contactEmail === null || ownerName.length < 2) return { outcome: 'invalid-owner' };
+
+    /* El teléfono se guarda tal cual y solo se limpia de espacios: todavía no se marca ni se
+       manda nada a él, así que imponerle un formato hoy sería inventarse una regla sin uso. La
+       tendrá el día que WhatsApp entre, y entonces se decide con el canal delante. */
+    const contactPhone = command.contactPhone.trim();
 
     const result = await this.clients.create(credentials, {
       name,
       slug,
-      // El correo de contacto del cliente es opcional; el del dueño no, porque es con el
-      // que va a iniciar sesión.
       contactEmail,
-      ownerEmail,
+      contactPhone: contactPhone.length > 0 ? contactPhone : null,
       ownerName,
     });
 
@@ -114,9 +124,9 @@ export class CreateClient {
      */
     if (result.outcome === 'created') {
       await this.notifier.send({
-        email: ownerEmail,
+        email: contactEmail,
         recipientName: ownerName,
-        inviterName: credentials.actor.name,
+        inviterName: displayNameOf(credentials.actor),
         clientName: name,
       });
     }

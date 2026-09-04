@@ -206,20 +206,58 @@ Nunca podrá activar funcionalidades pertenecientes a un plan superior.
 
 # Filosofía del Panel Administrativo
 
-Durante el MVP, el administrador será quien configure completamente cada invitación.
+Revisado el 2026-08-27. Antes decía que el cliente final no tendría configurador y que el
+autoservicio quedaba fuera del MVP.
 
-El cliente final no tendrá acceso a un configurador.
+La frontera se movió, y no está entre plataforma y cliente: está entre **contenido** y **diseño**.
 
-Esto permite:
+El cliente captura su contenido:
+
+- nombres, fechas, historia
+- fotos
+- cronograma
+- ubicaciones
+- padrinos y textos
+
+La plataforma decide el diseño:
+
+- plantilla
+- tema
+- variantes de cada bloque
+- composición y orden
+
+El motivo del cambio: capturar contenido ajeno a mano desde una conversación de WhatsApp no
+escala, y no protege la calidad visual — el contenido nunca fue lo que la ponía en riesgo.
+
+Lo que la decisión anterior buscaba se conserva entero, porque el diseño sigue sin ser del
+cliente:
 
 - mantener calidad visual;
 - controlar tiempos de entrega;
-- evitar complejidad innecesaria;
-- validar el negocio antes de automatizar procesos.
+- evitar complejidad innecesaria.
 
-El autoservicio no forma parte del MVP.
+Todo plan tiene panel, incluido Esencial.
 
-Podrá evaluarse en el futuro únicamente si aporta valor real al negocio.
+En Esencial ese panel es una sola opción: Contenido.
+
+El menú se arma de plan × rol de la membresía. Ver `docs/ACCESO.md`.
+
+La pantalla de contenido vive en `/panel/eventos/<id>/contenido`.
+
+Formulario a la izquierda, la invitación real a la derecha en un marco de teléfono.
+
+La vista previa no es una aproximación: usa el mismo renderizador y las mismas consultas que sirven
+la invitación al invitado. Se actualiza al guardar.
+
+Lo que el cliente captura hoy:
+
+- nombres, fecha y hora, ciudad
+- frase de portada e historia
+- sedes, cronograma y galería como listas ordenadas
+- fotos por enlace, mientras no exista almacenamiento propio
+- teléfono, WhatsApp, Instagram y fecha límite para confirmar
+
+Intercambiar variantes y reordenar secciones sigue siendo del plan Plus en adelante.
 
 ---
 

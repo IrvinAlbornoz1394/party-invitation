@@ -30,7 +30,7 @@ export function WelcomeFiligree({ content }: WelcomeVariantProps) {
     <WelcomeShell
       variant="filigree"
       label={`Bienvenida a la invitación de ${content.celebrantName}`}
-      className="text-inv-on-primary"
+      className="text-inv-on-primary inv-on-photo"
       contentClassName="items-center justify-center px-8 py-14 text-center sm:px-12"
       backdrop={
         <>
@@ -42,7 +42,7 @@ export function WelcomeFiligree({ content }: WelcomeVariantProps) {
           {/* Velo uniforme y denso: aquí no hay una zona de texto que proteger, hay un dibujo de
               línea repartido por los cuatro cantos. Un degradado dejaría dos esquinas legibles y
               dos perdidas. */}
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-overlay/85" />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="all" />
         </>
       }
     >

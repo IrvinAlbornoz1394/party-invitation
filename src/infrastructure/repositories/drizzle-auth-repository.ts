@@ -1,7 +1,12 @@
 import 'server-only';
 
 import { sql } from 'drizzle-orm';
-import { type Actor, isPlatformRole, isUserRole } from '@/domain/auth/actor';
+import {
+  type Actor,
+  type Membership,
+  isMembershipRole,
+  isPlatformRole,
+} from '@/domain/auth/actor';
 import type { AuthRepository } from '@/domain/auth/auth-repository';
 import { isOtpChannel, resolveDeliveryChannel } from '@/domain/auth/otp-channel';
 import type {
@@ -33,13 +38,24 @@ type BeginIssueRow = {
 type ActorRow = {
   status?: string;
   user_id: string | null;
-  /** NULL para una cuenta de plataforma; es lo que decide a qué panel pertenece. */
-  client_id: string | null;
-  role: string | null;
+  /** NULL para una cuenta de cliente; es lo que decide a qué panel pertenece. */
   platform_role: string | null;
   email: string | null;
   name: string | null;
   [column: string]: unknown;
+};
+
+/** Una membresía tal como la agrega `app.resolve_session` en su jsonb. */
+type MembershipRow = {
+  membership_id: string;
+  client_id: string;
+  client_name: string;
+  event_id: string | null;
+  event_title: string | null;
+  event_slug: string | null;
+  plan_key: string | null;
+  role: string;
+  label: string | null;
 };
 
 /**
@@ -139,8 +155,7 @@ export class DrizzleAuthRepository implements AuthRepository {
 
   async verifyOtp(request: OtpVerifyRequest): Promise<OtpVerifyResult> {
     const result = await db.execute<ActorRow & { session_expires_at: string | null }>(
-      sql`select status, user_id, client_id, role, platform_role, email, name,
-                 session_expires_at
+      sql`select status, user_id, platform_role, email, name, session_expires_at
           from app.verify_otp(
             ${request.identifier},
             ${hashIdentifier(request.identifier)},
@@ -177,8 +192,8 @@ export class DrizzleAuthRepository implements AuthRepository {
   }
 
   async resolveSession(sessionToken: string): Promise<Actor | null> {
-    const result = await db.execute<ActorRow>(
-      sql`select user_id, client_id, role, platform_role, email, name
+    const result = await db.execute<ActorRow & { memberships: unknown }>(
+      sql`select user_id, platform_role, email, name, memberships
           from app.resolve_session(${hashSessionToken(sessionToken)})`,
     );
 
@@ -197,12 +212,13 @@ export class DrizzleAuthRepository implements AuthRepository {
 /**
  * Convierte una fila en un actor del dominio, o null si algo no cuadra.
  *
- * Aquí es donde `client_id` nullable se convierte en la unión discriminada: con cliente
- * sale un `ClientActor`, sin cliente y con rol de plataforma un `PlatformActor`. Cualquier
- * otra combinación —las dos cosas, ninguna— devuelve null y acaba en la pantalla de
- * acceso. La base de datos ya lo impide con el CHECK `users_client_xor_platform`; esto es
- * lo que garantiza que, si alguna vez llegara una fila imposible, el sistema falle cerrado
- * en lugar de construir un actor sin sentido.
+ * `platform_role` es lo que discrimina la unión: con rol de plataforma sale un
+ * `PlatformActor`; sin él, una cuenta de cliente con sus membresías. Antes discriminaba
+ * `client_id`, que ya no existe en la identidad.
+ *
+ * El nombre puede venir NULL —un visor se da de alta con el correo y nada más— así que ya no se
+ * exige. El correo sí: es la identidad con la que se pide el código, y una fila sin él no
+ * describe a nadie.
  *
  * Los enums se validan aunque vengan de una columna con tipo enum de Postgres. Parece
  * paranoia y no lo es: el día que se añada un valor al enum en la base de datos y no en
@@ -212,22 +228,54 @@ export class DrizzleAuthRepository implements AuthRepository {
  * comparaciones... o `true` si alguien escribe la comparación al revés. Mejor no llegar
  * ahí.
  */
-function toActor(row: ActorRow): Actor | null {
-  if (!row.user_id || !row.email || !row.name) return null;
+function toActor(row: ActorRow & { memberships?: unknown }): Actor | null {
+  if (!row.user_id || !row.email) return null;
 
   const identity = { userId: row.user_id, email: row.email, name: row.name } as const;
 
-  if (row.client_id !== null) {
-    // Una cuenta con cliente Y rol de plataforma no debería existir. Si existiera, tratarla
-    // como cuenta de cliente sería la lectura peligrosa: le daría un tenant propio a alguien
-    // que además puede entrar a `/admin`.
-    if (row.platform_role !== null) return null;
-    if (!isUserRole(row.role)) return null;
+  if (row.platform_role !== null) {
+    if (!isPlatformRole(row.platform_role)) return null;
 
-    return { kind: 'client', ...identity, clientId: row.client_id, role: row.role };
+    /*
+     * Una cuenta de plataforma con membresías no debería existir —`db:check` lo verifica— y si
+     * existiera, lo peligroso sería tratarla como cuenta de cliente: tendría un tenant propio
+     * además del privilegio de ver a todos los demás. Aquí se ignoran: entra a `/admin` y a
+     * nada más.
+     */
+    return { kind: 'platform', ...identity, platformRole: row.platform_role };
   }
 
-  if (!isPlatformRole(row.platform_role)) return null;
+  return { kind: 'client', ...identity, memberships: toMemberships(row.memberships) };
+}
 
-  return { kind: 'platform', ...identity, platformRole: row.platform_role };
+/**
+ * Traduce el jsonb de membresías, descartando en silencio las que no cuadren.
+ *
+ * Descartar y no fallar la sesión entera es deliberado: una membresía con un rol que esta
+ * versión del código no conoce —porque la base de datos ganó un valor en el enum y el
+ * despliegue va por detrás— tiene que dejar a la persona entrar a lo que sí se entiende, no
+ * dejarla fuera de todo. Lo que no se entiende, no se alcanza.
+ */
+function toMemberships(value: unknown): readonly Membership[] {
+  if (!Array.isArray(value)) return [];
+
+  const memberships: Membership[] = [];
+
+  for (const raw of value as readonly MembershipRow[]) {
+    if (!raw?.membership_id || !raw.client_id || !isMembershipRole(raw.role)) continue;
+
+    memberships.push({
+      membershipId: raw.membership_id,
+      clientId: raw.client_id,
+      clientName: raw.client_name ?? '',
+      eventId: raw.event_id,
+      eventTitle: raw.event_title,
+      eventSlug: raw.event_slug,
+      planKey: raw.plan_key,
+      role: raw.role,
+      label: raw.label,
+    });
+  }
+
+  return memberships;
 }

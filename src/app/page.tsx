@@ -9,13 +9,13 @@ import { TemplateShowcase } from '@/components/marketing/TemplateShowcase';
 import { browseShowcase } from '@/infrastructure/container';
 
 export const metadata: Metadata = {
-  title: 'éclat · Invitaciones digitales que además organizan tu fiesta',
+  title: 'MiEvento · Invitaciones digitales que además organizan tu fiesta',
   description:
     'No solo hacemos invitaciones digitales: te damos la herramienta para administrar tu evento — confirmaciones, invitados, mesas y recordatorios automáticos.',
   openGraph: {
     type: 'website',
     locale: 'es_MX',
-    title: 'éclat · Invitaciones digitales',
+    title: 'MiEvento · Invitaciones digitales',
     description:
       'La invitación es la parte fácil. Lo demás —confirmaciones, invitados, mesas y recordatorios— lo hacemos nosotros.',
   },
@@ -46,9 +46,12 @@ interface PageProps {
  * ## Qué se lee de la base de datos y qué no
  *
  * Las plantillas son contenido local: la sección más importante de la página no puede depender
- * de que Postgres responda. Los planes y los tipos de evento sí vienen del catálogo, porque una
- * página de precios que promete lo que el producto ya no hace es peor que una que tarda un poco
- * más en cargar.
+ * de que Postgres responda. Los planes sí vienen del catálogo, porque una página de precios que
+ * promete lo que el producto ya no hace es peor que una que tarda un poco más en cargar.
+ *
+ * `showcase.eventTypes` se sigue leyendo y ya no se pinta. Es a propósito: el catálogo tiene
+ * nueve tipos y hoy solo se venden bodas y XV, así que la página dejó de anunciarlos. El caso
+ * de uso los sigue exponiendo porque el panel los necesita para dar de alta un evento.
  *
  * ## Es también el destino de los rebotes
  *
@@ -84,13 +87,10 @@ export default async function LandingPage({ searchParams }: PageProps) {
           <LandingHero />
         </div>
 
-        <LandingAbout
-          themeCount={showcase.themes.length}
-          eventTypeCount={showcase.eventTypes.length}
-        />
+        <LandingAbout themeCount={showcase.themes.length} />
         <TemplateShowcase />
         <ManagementStory />
-        <PlansSection plans={showcase.plans} eventTypes={showcase.eventTypes} />
+        <PlansSection plans={showcase.plans} />
       </main>
 
       <SiteFooter />

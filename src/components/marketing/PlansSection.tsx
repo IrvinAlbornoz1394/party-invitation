@@ -1,15 +1,23 @@
 import clsx from 'clsx';
 import Link from 'next/link';
 import type { PublicPlan } from '@/application/catalog/browse-showcase';
-import type { EventTypeSummary } from '@/domain/catalog/catalog-repository';
 
 /**
- * Los planes y los tipos de evento, leídos del catálogo real.
+ * Los planes, leídos del catálogo real.
  *
  * No están escritos a mano en esta página: vienen de la misma base de datos que configura los
  * eventos. Es lo que evita el problema de toda página de precios —que prometa algo que el
  * producto dejó de hacer hace tres meses—, y significa que añadir una funcionalidad a un plan la
  * publica aquí sin que nadie tenga que acordarse.
+ *
+ * ## Ya no cierra con la tira de tipos de evento
+ *
+ * Debajo de las láminas iba «Para cualquier celebración» y los nueve tipos del catálogo. Se
+ * quitó al estrechar el producto a bodas y XV: la tira salía del catálogo, así que era cierta y
+ * al mismo tiempo prometía siete cosas que hoy no se venden. Es justo el fallo contra el que
+ * esta sección se diseñó —una página de precios que promete lo que el producto ya no hace—,
+ * solo que en la dirección contraria a la esperada: no se quedó vieja el texto, se estrechó el
+ * producto. Si el catálogo vuelve a ser la oferta real, el sitio para reponerla es este.
  *
  * ## Ahora son láminas y no columnas
  *
@@ -27,20 +35,22 @@ import type { EventTypeSummary } from '@/domain/catalog/catalog-repository';
  * reserva el sitio donde irá —el hueco existe y está compuesto—, así que ponerlo el día que se
  * decida no obliga a rehacer la sección.
  *
- * ## Por qué el plan superior se enseña por su diferencia
+ * ## Por qué cada plan se enseña por su diferencia
  *
- * Repetir las dieciocho funcionalidades del Premium al lado de las trece del Esencial obliga a
- * comparar dos listas largas casi iguales. Se enseña lo que **añade**, que es la única pregunta
- * real: «¿qué me llevo si pago más?».
+ * Repetir la lista entera de un plan al lado de la del anterior obliga a comparar dos listas
+ * largas casi iguales. Cada lámina enseña lo que **añade** sobre la de su izquierda, que es la
+ * única pregunta real: «¿qué me llevo si pago más?».
+ *
+ * ## La sección no sabe cuántos planes hay
+ *
+ * Nació con dos y hoy son tres. Nada de esto está escrito a mano: las láminas salen de recorrer
+ * el catálogo, cada una recibe la anterior para calcular su diferencia, y la destacada es la
+ * última. Añadir o quitar un plan en el seed no obliga a tocar este archivo.
  */
-export function PlansSection({
-  plans,
-  eventTypes,
-}: {
-  readonly plans: readonly PublicPlan[];
-  readonly eventTypes: readonly EventTypeSummary[];
-}) {
-  const [base, ...upper] = plans;
+export function PlansSection({ plans }: { readonly plans: readonly PublicPlan[] }) {
+  /* Llegan ordenados por `rank` desde el caso de uso, así que la posición en el array ES la
+     jerarquía: la lámina de la izquierda es el plan de entrada y la de la derecha el mayor. */
+  const lastIndex = plans.length - 1;
 
   return (
     <section id="planes" className="relative isolate overflow-hidden bg-ivory">
@@ -59,47 +69,36 @@ export function PlansSection({
             <span aria-hidden="true" className="h-px w-8 bg-accent/45" />
           </p>
           <h2 className="m-0 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.08] font-medium tracking-[-0.03em] text-ink">
-            Dos formas de empezar
+            Tres formas de empezar
           </h2>
-          <p className="m-0 text-[16px] leading-relaxed text-ink/70">
-            La invitación completa está en los dos. Lo que cambia es cuánto trabajo de
-            organización te quita.
+          <p className="m-0 text-[16px] leading-relaxed text-ink/75">
+            Los tres reparten una invitación diseñada de verdad. Lo que cambia es cuánto puedes
+            ajustarla y cuánto trabajo de organización te quita.
           </p>
         </header>
 
-        {base && (
-          <div className="mt-16 grid items-start gap-6 md:grid-cols-2 md:gap-8">
-            <PlanCard plan={base} />
-            {upper.map((plan) => (
-              <PlanCard key={plan.key} plan={plan} previous={base} highlighted />
+        {plans.length > 0 && (
+          <div
+            className={clsx(
+              'mt-16 grid items-start gap-6 md:gap-8',
+              /* Dos láminas se reparten el ancho; tres o más caben en la retícula de tres y las
+                 siguientes bajan de fila sin dejar un hueco descolgado. */
+              plans.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3',
+            )}
+          >
+            {plans.map((plan, index) => (
+              <PlanCard
+                key={plan.key}
+                plan={plan}
+                /* La diferencia se calcula contra el plan inmediatamente inferior, no contra el
+                   de entrada: si no, Premium enseñaría también todo lo que ya trae Plus. */
+                previous={plans[index - 1]}
+                highlighted={index === lastIndex}
+              />
             ))}
           </div>
         )}
 
-        {eventTypes.length > 0 && (
-          <div className="mt-20 text-center">
-            <p className="m-0 text-[11px] tracking-[0.3em] text-accent uppercase">
-              Para cualquier celebración
-            </p>
-            {/*
-              Los tipos van como una tira de texto separada por puntos y no como etiquetas en
-              cajas: son nueve, y nueve cajas grises son una nube de etiquetas — el recurso que
-              más rápido convierte una página cuidada en un panel de administración.
-            */}
-            <p className="mx-auto mt-7 mb-0 max-w-4xl font-display text-[clamp(1.25rem,3vw,1.9rem)] leading-relaxed font-light text-plum">
-              {eventTypes.map((type, index) => (
-                <span key={type.key}>
-                  {index > 0 && (
-                    <span aria-hidden="true" className="mx-3 text-accent/50">
-                      ·
-                    </span>
-                  )}
-                  {type.name}
-                </span>
-              ))}
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );
@@ -135,15 +134,15 @@ function PlanCard({
     >
       <h3
         className={clsx(
-          'm-0 font-display text-[clamp(1.6rem,3.5vw,2.25rem)] leading-tight font-light',
-          highlighted ? 'text-white' : 'text-plum',
+          'm-0 font-display text-[clamp(1.6rem,3.5vw,2.25rem)] leading-tight font-medium tracking-[-0.02em]',
+          highlighted ? 'text-white' : 'text-ink',
         )}
       >
         {plan.name}
       </h3>
 
       {plan.description && (
-        <p className={clsx('mt-3 mb-0 text-[15px] leading-relaxed', highlighted ? 'text-white/80' : 'text-ink/70')}>
+        <p className={clsx('mt-3 mb-0 text-[15px] leading-relaxed', highlighted ? 'text-white/80' : 'text-ink/75')}>
           {plan.description}
         </p>
       )}
@@ -159,7 +158,7 @@ function PlanCard({
         <span
           className={clsx(
             'mt-3 block font-body text-[12px] tracking-[0.16em] uppercase',
-            highlighted ? 'text-white/65' : 'text-ink/50',
+            highlighted ? 'text-white/65' : 'text-ink/75',
           )}
         >
           Según tu celebración
@@ -169,7 +168,7 @@ function PlanCard({
       <p
         className={clsx(
           'mt-10 mb-0 text-[11.5px] tracking-[0.2em] uppercase',
-          highlighted ? 'text-white/65' : 'text-ink/50',
+          highlighted ? 'text-white/65' : 'text-ink/75',
         )}
       >
         {previous ? 'Todo lo anterior, más:' : 'Incluye'}
@@ -201,8 +200,12 @@ function PlanCard({
           retícula, y el botón tiene que quedar abajo en las dos aunque una tenga cinco líneas
           más que la otra. */}
       <div className="mt-auto pt-10">
+        {/*
+          El plan viaja en la URL. Es lo que hace que la solicitud llegue diciendo qué estaba
+          mirando esta persona, en vez de obligar a preguntárselo en la primera respuesta.
+        */}
         <Link
-          href="/panel"
+          href={`/cotizar?plan=${plan.key}`}
           className={clsx(
             'inline-flex min-h-12 items-center justify-center px-9 text-[12px] font-semibold tracking-[0.14em] uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
             highlighted

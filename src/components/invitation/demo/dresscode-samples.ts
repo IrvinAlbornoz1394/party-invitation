@@ -7,49 +7,49 @@ import type { DemoSample } from './sample';
 /**
  * Contenido de ejemplo para ver el código de vestimenta sin tener que crear un evento.
  *
- * Mismas claves que el resto de bloques —los mismos tres eventos imaginarios— para poder saltar de
- * la portada al código de vestimenta sin que cambie el evento debajo.
+ * Mismas claves que el resto de bloques para poder saltar de la portada aquí sin que cambie el
+ * evento debajo. Los dos cubren las decisiones que este bloque tiene que aguantar:
  *
- * Los tres cubren las decisiones que este bloque tiene que aguantar:
- *
- *   · **Presentación**: paleta corta, **con nombres** y sin metálicos. Es el caso en el que la fila
- *     de muestras es información anunciable — ver `DresscodePalette`.
- *   · **XV Años**: seis muestras, el tope del contrato, y dos metálicas. Es la comprobación de que
- *     la fila envuelve en un móvil sin descuadrarse y de que el brillo funciona en dos tonos
- *     distintos.
  *   · **Boda**: cinco muestras **sin nombre** y un marfil casi del color del papel. Las dos cosas
- *     que se rompen solas: la fila queda decorativa, y el marfil solo se ve si el filete exterior
- *     está donde tiene que estar.
+ *     que se rompen solas: la fila queda decorativa —un lector de pantalla no puede leer
+ *     «#f4efe6» de forma útil—, y el marfil solo se ve si el filete exterior está donde debe.
+ *   · **XV**: seis muestras, el tope del contrato, dos de ellas metálicas y todas **con nombre**.
+ *     Comprueba que la fila envuelve en un móvil sin aplastarse y que el brillo funciona en dos
+ *     tonos distintos.
+ *
+ * La petición de reservar un color —el blanco en una boda, el color de la festejada en unos XV— es
+ * la misma idea contada distinto, y es lo que hace que este bloque no sea intercambiable entre los
+ * dos tipos de evento aunque el componente sí lo sea.
  */
 
 export const DRESSCODE_SAMPLES: readonly DemoSample<DresscodeContent>[] = [
   {
-    key: 'presentacion',
-    name: 'Presentación',
+    key: 'boda',
+    name: 'Boda',
     content: dresscodeContentSchema.parse({
-      eyebrow: 'Para la foto de familia',
-      title: 'Código de vestimenta',
+      eyebrow: 'Para que vayamos a juego',
+      title: 'Dress code',
       description:
-        'Vestimenta casual elegante. Para la foto de todos juntos nos gustaría que fuera en estos tonos, pero ven como estés más cómodo.',
+        'Formal de jardín. Nos hace muy felices que uses estos tonos, y te pedimos reservar el blanco para la novia.',
       palette: [
-        { color: '#c8d3c5', label: 'Verde agua', finish: 'flat' },
-        { color: '#efe3d3', label: 'Arena', finish: 'flat' },
-        { color: '#d9b7a5', label: 'Terracota', finish: 'flat' },
+        { color: '#5a6350', label: null, finish: 'flat' },
+        { color: '#8d9479', label: null, finish: 'flat' },
+        { color: '#d7c8b0', label: null, finish: 'flat' },
+        { color: '#f4efe6', label: null, finish: 'flat' },
+        { color: '#b79a63', label: null, finish: 'metallic' },
       ],
       action: null,
-      note: 'Los niños, cómodos: hay brincolín y jardín.',
+      note: null,
     }),
   },
   {
-    key: 'xv-anios',
+    key: 'quince',
     name: 'XV Años',
     content: dresscodeContentSchema.parse({
       eyebrow: 'La noche pide etiqueta',
       title: 'Dress code',
       description:
-        'Etiqueta formal: vestido largo y traje oscuro. Te pedimos evitar el blanco y el rosa palo, que son los colores de la festejada.',
-      /* Seis, el tope del contrato, y dos con brillo. La fila tiene que envolver en un móvil sin
-         que las muestras se aplasten. */
+        'Etiqueta formal: vestido largo y traje oscuro. Te pido evitar el azul cielo, que es el color de la festejada.',
       palette: [
         { color: '#1d2230', label: 'Azul noche', finish: 'flat' },
         { color: '#4a3f5c', label: 'Ciruela', finish: 'flat' },
@@ -60,30 +60,6 @@ export const DRESSCODE_SAMPLES: readonly DemoSample<DresscodeContent>[] = [
       ],
       action: { label: 'Ver ideas de atuendo', href: 'https://www.pinterest.com' },
       note: 'Tacón cómodo: la pista es de madera y no pensamos parar.',
-    }),
-  },
-  {
-    key: 'boda',
-    name: 'Boda',
-    content: dresscodeContentSchema.parse({
-      eyebrow: 'Para que vayamos a juego',
-      title: 'Dress code',
-      description:
-        'Formal de jardín. Nos hace muy felices que uses estos tonos, y te pedimos reservar el blanco para la novia.',
-      /*
-       * Sin nombres a propósito: es como se entrega casi toda la papelería, y el estado en el que
-       * la fila de muestras pasa a ser decorativa. El marfil es además el color que desaparece si
-       * al componente se le olvida el filete exterior.
-       */
-      palette: [
-        { color: '#5a6350', label: null, finish: 'flat' },
-        { color: '#8d9479', label: null, finish: 'flat' },
-        { color: '#d7c8b0', label: null, finish: 'flat' },
-        { color: '#f4efe6', label: null, finish: 'flat' },
-        { color: '#b79a63', label: null, finish: 'metallic' },
-      ],
-      action: null,
-      note: null,
     }),
   },
 ];

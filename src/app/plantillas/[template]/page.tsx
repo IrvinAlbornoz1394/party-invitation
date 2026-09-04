@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { DEMO_TEMPLATES, findDemoTemplate } from '@/components/invitation/demo/templates';
+import {
+  DEMO_TEMPLATES,
+  demoEventTypes,
+  findDemoTemplate,
+  findSiblingTemplate,
+} from '@/components/invitation/demo/templates';
 import { registeredIds } from '@/components/invitation/registry/component-registry';
 import { TemplateStudio, type StudioBlock } from '@/components/showcase/TemplateStudio';
 import { browseShowcase } from '@/infrastructure/container';
@@ -27,10 +32,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { template } = await params;
   const found = findDemoTemplate(template);
 
-  if (!found) return { title: 'Plantilla no encontrada · éclat' };
+  if (!found) return { title: 'Plantilla no encontrada · MiEvento' };
 
   return {
-    title: `${found.eventTypeName} · ${found.name} — Plantilla de éclat`,
+    title: `${found.eventTypeName} · ${found.name} — Plantilla de MiEvento`,
     description: found.tagline,
     openGraph: {
       type: 'website',
@@ -88,7 +93,17 @@ export default async function TemplateDemoPage({ params }: PageProps) {
       templates={DEMO_TEMPLATES.map((option) => ({
         key: option.key,
         name: option.name,
+        eventTypeKey: option.eventTypeKey,
         eventTypeName: option.eventTypeName,
+      }))}
+      /*
+       * A qué demo lleva cada tipo de evento, resuelto aquí. Es la misma estructura contada para
+       * el otro tipo cuando existe, y la primera de ese tipo cuando no: cambiar a XV siempre lleva
+       * a unos XV, aunque esa estructura no esté hecha para ellos.
+       */
+      eventTypes={demoEventTypes().map((eventType) => ({
+        ...eventType,
+        templateKey: findSiblingTemplate(found, eventType.key)?.key ?? found.key,
       }))}
       blocks={blocks}
       themes={showcase.themes.map((theme) => ({

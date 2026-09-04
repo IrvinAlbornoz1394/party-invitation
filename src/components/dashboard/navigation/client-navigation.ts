@@ -1,4 +1,5 @@
 import { CalendarDays, LayoutDashboard, Settings, Users } from 'lucide-react';
+import type { UserRole } from '@/domain/auth/actor';
 import type { Crumb, Navigation } from './nav-model';
 
 /**
@@ -12,12 +13,29 @@ import type { Crumb, Navigation } from './nav-model';
  *
  * `count` lleva el número de eventos cuando hay más de uno. Es una función y no una
  * constante porque ese dato sale de la base de datos y cambia por sesión.
+ *
+ * ## «Equipo» es del dueño
+ *
+ * Es la única opción que varía por rol, porque es la única capacidad que varía por rol: repartir
+ * accesos al cliente entero. Un colaborador que la viera pulsaría una pantalla que le responde
+ * 404, y eso se lee como un panel roto en lugar de como el límite de lo suyo.
+ *
+ * Y esto **no es el permiso**, igual que en el menú de un evento: la página vuelve a comprobarlo
+ * con `canManageUsers()` y el dominio otra vez debajo. Un menú es una sugerencia de navegación;
+ * que una opción no aparezca no impide teclear su URL.
  */
-export function buildClientNavigation(eventCount: number): Navigation {
+export function buildClientNavigation(eventCount: number, role: UserRole): Navigation {
+  const canManageUsers = role === 'owner';
+
   return [
     {
       items: [
-        { href: '/panel', label: 'Resumen', icon: LayoutDashboard },
+        /*
+         * `/panel/inicio` y no `/panel`: esa raíz es ahora el SELECTOR de entrada, que vive
+         * fuera de este armazón y no tiene menú. Apuntar «Resumen» ahí sacaría a la persona del
+         * panel cada vez que pulsara la primera opción de su propio menú.
+         */
+        { href: '/panel/inicio', label: 'Resumen', icon: LayoutDashboard },
         {
           href: '/panel/eventos',
           label: 'Eventos',
@@ -25,7 +43,7 @@ export function buildClientNavigation(eventCount: number): Navigation {
           // Un contador de "1" no informa de nada: se enseña solo cuando hay algo que contar.
           count: eventCount > 1 ? eventCount : undefined,
         },
-        { href: '/panel/equipo', label: 'Equipo', icon: Users },
+        ...(canManageUsers ? [{ href: '/panel/equipo', label: 'Equipo', icon: Users }] : []),
       ],
     },
     {

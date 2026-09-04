@@ -2,7 +2,8 @@ import { blockIconComponent } from '../../shared/block-icons';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
-import { ScheduleBow, ScheduleTime } from './schedule-parts';
+import { RibbonBow } from '../../shared/doodle-ornaments';
+import { ScheduleTime } from './schedule-parts';
 import type { ScheduleVariantProps } from './schedule-variant';
 
 /**
@@ -96,7 +97,7 @@ export function ScheduleRibbon({ content }: ScheduleVariantProps) {
                     }
                     aria-hidden="true"
                   />
-                  <ScheduleBow className="my-1 shrink-0 text-inv-accent" />
+                  <RibbonBow className="my-1 shrink-0 text-inv-accent" />
                   <span
                     className={
                       index === lastIndex ? 'flex-1' : 'w-px flex-1 bg-inv-accent/35'

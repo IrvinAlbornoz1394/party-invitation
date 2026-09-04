@@ -1,14 +1,16 @@
 CREATE TYPE "public"."auth_attempt_kind" AS ENUM('issue', 'verify');--> statement-breakpoint
+CREATE TYPE "public"."membership_role" AS ENUM('owner', 'admin', 'staff', 'viewer');--> statement-breakpoint
 CREATE TYPE "public"."otp_channel" AS ENUM('email', 'whatsapp');--> statement-breakpoint
 CREATE TYPE "public"."platform_role" AS ENUM('superadmin', 'support');--> statement-breakpoint
-CREATE TYPE "public"."user_role" AS ENUM('owner', 'admin', 'staff');--> statement-breakpoint
 CREATE TYPE "public"."user_status" AS ENUM('active', 'invited', 'disabled');--> statement-breakpoint
 CREATE TYPE "public"."moderation_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
-CREATE TYPE "public"."event_status" AS ENUM('draft', 'published', 'archived');--> statement-breakpoint
+CREATE TYPE "public"."event_status" AS ENUM('draft', 'review', 'published', 'archived');--> statement-breakpoint
 CREATE TYPE "public"."venue_kind" AS ENUM('church', 'reception', 'other');--> statement-breakpoint
 CREATE TYPE "public"."guest_kind" AS ENUM('adult', 'child');--> statement-breakpoint
 CREATE TYPE "public"."rsvp_channel" AS ENUM('web', 'whatsapp', 'panel');--> statement-breakpoint
 CREATE TYPE "public"."rsvp_status" AS ENUM('pending', 'confirmed', 'declined');--> statement-breakpoint
+CREATE TYPE "public"."prospect_status" AS ENUM('new', 'contacted', 'quoted', 'won', 'lost');--> statement-breakpoint
+CREATE TYPE "public"."touch_channel" AS ENUM('whatsapp', 'call', 'email', 'meeting', 'other');--> statement-breakpoint
 CREATE TYPE "public"."delivery_status" AS ENUM('queued', 'sent', 'failed', 'skipped');--> statement-breakpoint
 CREATE TYPE "public"."reminder_channel" AS ENUM('whatsapp', 'email', 'sms');--> statement-breakpoint
 CREATE TYPE "public"."table_shape" AS ENUM('round', 'rectangular', 'other');--> statement-breakpoint
@@ -66,20 +68,16 @@ CREATE TABLE "sessions" (
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"client_id" uuid,
 	"email" text NOT NULL,
 	"phone" text,
-	"name" text NOT NULL,
-	"role" "user_role" DEFAULT 'admin' NOT NULL,
+	"name" text,
 	"platform_role" "platform_role",
 	"status" "user_status" DEFAULT 'active' NOT NULL,
 	"preferred_otp_channel" "otp_channel" DEFAULT 'email' NOT NULL,
 	"last_login_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_email_unique" UNIQUE("email"),
-	CONSTRAINT "users_client_xor_platform" CHECK (("users"."client_id" is not null and "users"."platform_role" is null)
-          or ("users"."client_id" is null and "users"."platform_role" is not null))
+	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
 CREATE TABLE "guestbook_entries" (
@@ -119,6 +117,7 @@ CREATE TABLE "event_gallery_items" (
 	"url" text NOT NULL,
 	"storage_key" text,
 	"alt_text" text,
+	"caption" text,
 	"width" integer,
 	"height" integer,
 	"byte_size" integer,
@@ -163,6 +162,7 @@ CREATE TABLE "event_schedule_items" (
 	"starts_at" timestamp with time zone,
 	"title" text NOT NULL,
 	"description" text,
+	"icon" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "event_schedule_items_event_position_key" UNIQUE("event_id","position")
@@ -179,6 +179,8 @@ CREATE TABLE "event_venues" (
 	"detail" text,
 	"map_url" text,
 	"starts_at" timestamp with time zone,
+	"image_url" text,
+	"image_alt" text,
 	"position" smallint DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -204,6 +206,7 @@ CREATE TABLE "events" (
 	"time_zone" text DEFAULT 'America/Merida' NOT NULL,
 	"city" text,
 	"status" "event_status" DEFAULT 'draft' NOT NULL,
+	"client_fills_content" boolean DEFAULT false NOT NULL,
 	"published_at" timestamp with time zone,
 	"expires_at" timestamp with time zone,
 	"rsvp_deadline" date,
@@ -267,6 +270,21 @@ CREATE TABLE "rsvp_responses" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "memberships" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"client_id" uuid NOT NULL,
+	"event_id" uuid,
+	"role" "membership_role" NOT NULL,
+	"label" text,
+	"status" "user_status" DEFAULT 'active' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "memberships_role_scope" CHECK (("memberships"."role" in ('owner', 'admin') and "memberships"."event_id" is null)
+          or ("memberships"."role" = 'viewer' and "memberships"."event_id" is not null)
+          or "memberships"."role" = 'staff')
+);
+--> statement-breakpoint
 CREATE TABLE "features" (
 	"key" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -293,6 +311,35 @@ CREATE TABLE "plans" (
 	"duration_months" smallint DEFAULT 12 NOT NULL,
 	"rank" smallint NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "prospect_touches" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"prospect_id" uuid NOT NULL,
+	"channel" "touch_channel" NOT NULL,
+	"note" text NOT NULL,
+	"created_by" uuid,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "prospects" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"contact_name" text NOT NULL,
+	"contact_email" text,
+	"contact_phone" text NOT NULL,
+	"event_type_key" text,
+	"event_date" date,
+	"guest_range" text,
+	"template_key" text,
+	"plan_key" text,
+	"message" text,
+	"submitted_ip" "inet",
+	"status" "prospect_status" DEFAULT 'new' NOT NULL,
+	"next_follow_up_at" timestamp with time zone,
+	"lost_reason" text,
+	"client_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -336,10 +383,17 @@ CREATE TABLE "template_blocks" (
 	"default_variant_id" uuid NOT NULL,
 	"position" smallint NOT NULL,
 	"is_required" boolean DEFAULT false NOT NULL,
+	"default_config" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "template_blocks_template_block_key" UNIQUE("template_id","block_key"),
 	CONSTRAINT "template_blocks_template_position_key" UNIQUE("template_id","position")
+);
+--> statement-breakpoint
+CREATE TABLE "template_event_types" (
+	"template_id" uuid NOT NULL,
+	"event_type_key" text NOT NULL,
+	CONSTRAINT "template_event_types_pkey" UNIQUE("template_id","event_type_key")
 );
 --> statement-breakpoint
 CREATE TABLE "template_plans" (
@@ -353,8 +407,8 @@ CREATE TABLE "templates" (
 	"key" text NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
-	"event_type_key" text NOT NULL,
 	"preview_image_url" text,
+	"default_theme_key" text,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -456,7 +510,6 @@ ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_client_id_clients_id_fk" FOREI
 ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "otp_challenges" ADD CONSTRAINT "otp_challenges_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "guestbook_entries" ADD CONSTRAINT "guestbook_entries_moderated_by_users_id_fk" FOREIGN KEY ("moderated_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "guestbook_entries" ADD CONSTRAINT "guestbook_entries_event_fk" FOREIGN KEY ("event_id","client_id") REFERENCES "public"."events"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "event_blocks" ADD CONSTRAINT "event_blocks_block_key_blocks_key_fk" FOREIGN KEY ("block_key") REFERENCES "public"."blocks"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
@@ -478,16 +531,24 @@ ALTER TABLE "guests" ADD CONSTRAINT "guests_event_fk" FOREIGN KEY ("event_id","c
 ALTER TABLE "guests" ADD CONSTRAINT "guests_guest_group_fk" FOREIGN KEY ("guest_group_id","client_id") REFERENCES "public"."guest_groups"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rsvp_responses" ADD CONSTRAINT "rsvp_responses_event_fk" FOREIGN KEY ("event_id","client_id") REFERENCES "public"."events"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rsvp_responses" ADD CONSTRAINT "rsvp_responses_guest_group_fk" FOREIGN KEY ("guest_group_id","client_id") REFERENCES "public"."guest_groups"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_event_fk" FOREIGN KEY ("event_id","client_id") REFERENCES "public"."events"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "plan_features" ADD CONSTRAINT "plan_features_plan_key_plans_key_fk" FOREIGN KEY ("plan_key") REFERENCES "public"."plans"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "plan_features" ADD CONSTRAINT "plan_features_feature_key_features_key_fk" FOREIGN KEY ("feature_key") REFERENCES "public"."features"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "prospect_touches" ADD CONSTRAINT "prospect_touches_prospect_id_prospects_id_fk" FOREIGN KEY ("prospect_id") REFERENCES "public"."prospects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "prospect_touches" ADD CONSTRAINT "prospect_touches_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "prospects" ADD CONSTRAINT "prospects_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "blocks" ADD CONSTRAINT "blocks_feature_key_features_key_fk" FOREIGN KEY ("feature_key") REFERENCES "public"."features"("key") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "component_variants" ADD CONSTRAINT "component_variants_block_key_blocks_key_fk" FOREIGN KEY ("block_key") REFERENCES "public"."blocks"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "template_blocks" ADD CONSTRAINT "template_blocks_template_id_templates_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."templates"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "template_blocks" ADD CONSTRAINT "template_blocks_block_key_blocks_key_fk" FOREIGN KEY ("block_key") REFERENCES "public"."blocks"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "template_blocks" ADD CONSTRAINT "template_blocks_default_variant_id_component_variants_id_fk" FOREIGN KEY ("default_variant_id") REFERENCES "public"."component_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "template_event_types" ADD CONSTRAINT "template_event_types_template_id_templates_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."templates"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "template_event_types" ADD CONSTRAINT "template_event_types_event_type_key_event_types_key_fk" FOREIGN KEY ("event_type_key") REFERENCES "public"."event_types"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "template_plans" ADD CONSTRAINT "template_plans_template_id_templates_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."templates"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "template_plans" ADD CONSTRAINT "template_plans_plan_key_plans_key_fk" FOREIGN KEY ("plan_key") REFERENCES "public"."plans"("key") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "templates" ADD CONSTRAINT "templates_event_type_key_event_types_key_fk" FOREIGN KEY ("event_type_key") REFERENCES "public"."event_types"("key") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "templates" ADD CONSTRAINT "templates_default_theme_key_themes_key_fk" FOREIGN KEY ("default_theme_key") REFERENCES "public"."themes"("key") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "reminder_deliveries" ADD CONSTRAINT "reminder_deliveries_schedule_fk" FOREIGN KEY ("reminder_schedule_id","client_id") REFERENCES "public"."reminder_schedules"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "reminder_deliveries" ADD CONSTRAINT "reminder_deliveries_event_fk" FOREIGN KEY ("event_id","client_id") REFERENCES "public"."events"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "reminder_deliveries" ADD CONSTRAINT "reminder_deliveries_guest_group_fk" FOREIGN KEY ("guest_group_id","client_id") REFERENCES "public"."guest_groups"("id","client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -505,7 +566,6 @@ CREATE INDEX "otp_challenges_user_id_created_at_idx" ON "otp_challenges" USING b
 CREATE INDEX "otp_challenges_expires_at_idx" ON "otp_challenges" USING btree ("expires_at");--> statement-breakpoint
 CREATE INDEX "sessions_user_id_idx" ON "sessions" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "sessions_expires_at_idx" ON "sessions" USING btree ("expires_at");--> statement-breakpoint
-CREATE INDEX "users_client_id_idx" ON "users" USING btree ("client_id");--> statement-breakpoint
 CREATE INDEX "guestbook_entries_event_id_status_idx" ON "guestbook_entries" USING btree ("event_id","status");--> statement-breakpoint
 CREATE INDEX "guestbook_entries_client_id_idx" ON "guestbook_entries" USING btree ("client_id");--> statement-breakpoint
 CREATE INDEX "event_blocks_client_id_idx" ON "event_blocks" USING btree ("client_id");--> statement-breakpoint
@@ -525,6 +585,15 @@ CREATE INDEX "guests_guest_group_id_idx" ON "guests" USING btree ("guest_group_i
 CREATE INDEX "guests_client_id_idx" ON "guests" USING btree ("client_id");--> statement-breakpoint
 CREATE INDEX "rsvp_responses_event_id_created_at_idx" ON "rsvp_responses" USING btree ("event_id","created_at");--> statement-breakpoint
 CREATE INDEX "rsvp_responses_client_id_idx" ON "rsvp_responses" USING btree ("client_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "memberships_client_scope_idx" ON "memberships" USING btree ("user_id","client_id") WHERE event_id is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "memberships_event_scope_idx" ON "memberships" USING btree ("user_id","event_id") WHERE event_id is not null;--> statement-breakpoint
+CREATE INDEX "memberships_user_id_idx" ON "memberships" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "memberships_client_id_idx" ON "memberships" USING btree ("client_id");--> statement-breakpoint
+CREATE INDEX "memberships_event_id_idx" ON "memberships" USING btree ("event_id");--> statement-breakpoint
+CREATE INDEX "prospect_touches_prospect_idx" ON "prospect_touches" USING btree ("prospect_id",created_at desc);--> statement-breakpoint
+CREATE INDEX "prospects_status_idx" ON "prospects" USING btree ("status","next_follow_up_at");--> statement-breakpoint
+CREATE INDEX "prospects_ip_idx" ON "prospects" USING btree ("submitted_ip","created_at");--> statement-breakpoint
+CREATE INDEX "prospects_client_id_idx" ON "prospects" USING btree ("client_id");--> statement-breakpoint
 CREATE INDEX "reminder_deliveries_status_scheduled_for_idx" ON "reminder_deliveries" USING btree ("status","scheduled_for");--> statement-breakpoint
 CREATE INDEX "reminder_deliveries_client_id_idx" ON "reminder_deliveries" USING btree ("client_id");--> statement-breakpoint
 CREATE INDEX "reminder_schedules_client_id_idx" ON "reminder_schedules" USING btree ("client_id");--> statement-breakpoint

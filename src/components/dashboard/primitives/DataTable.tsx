@@ -18,6 +18,17 @@ interface DataTableProps<T> {
    */
   readonly rowHref?: (row: T) => string | null;
   readonly pageSize?: number;
+  /**
+   * Seleccionar una fila **sin salir de la pantalla**: la tabla es un índice y lo que hay al
+   * lado cambia con lo que se elige.
+   *
+   * Es la alternativa a `rowHref`, no un añadido: una fila que navega y además selecciona haría
+   * dos cosas con el mismo clic. Quien pase las dos se queda con la navegación, que es la que
+   * cambia de página y por tanto la que manda.
+   */
+  readonly onRowSelect?: (row: T) => void;
+  /** Cuál está seleccionada, para pintarla. Se compara contra el valor de `rowKey`. */
+  readonly activeRowKey?: string | number | null;
 }
 
 /**
@@ -51,6 +62,8 @@ export function DataTable<T extends object>({
   empty,
   rowHref,
   pageSize = 25,
+  onRowSelect,
+  activeRowKey,
 }: DataTableProps<T>) {
   const router = useRouter();
 
@@ -76,19 +89,33 @@ export function DataTable<T extends object>({
       onRow={(row) => {
         const href = rowHref?.(row) ?? null;
 
-        if (href === null) return {};
+        /* Navegar gana sobre seleccionar: es la acción que se lleva al usuario a otra pantalla,
+           y dos comportamientos en el mismo clic no se pueden repartir. */
+        const activate = href !== null ? () => router.push(href) : onRowSelect?.bind(null, row);
+
+        if (!activate) return {};
+
+        const active = activeRowKey !== undefined && activeRowKey === row[rowKey];
 
         return {
-          className: 'dash-table__row--clickable',
+          className: active
+            ? 'dash-table__row--clickable dash-table__row--active'
+            : 'dash-table__row--clickable',
           tabIndex: 0,
-          onClick: () => router.push(href),
+          /* `aria-current` y no `aria-selected`: aquella es válida en cualquier elemento, y esta
+             solo dentro de un `grid` o un `treegrid` —una tabla de datos normal no lo es—. Lo que
+             hay que comunicar es «esta es la fila que se está mirando», que es justo lo que
+             `aria-current` dice. Con navegación no se pone: ahí la fila es un enlace, no una
+             elección que se queda hecha. */
+          'aria-current': href === null && active ? true : undefined,
+          onClick: activate,
           onKeyDown: (event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return;
 
             // Espacio desplaza la página por defecto; sin esto, abrir una fila con la barra
             // espaciadora salta además media pantalla hacia abajo.
             event.preventDefault();
-            router.push(href);
+            activate();
           },
         };
       }}

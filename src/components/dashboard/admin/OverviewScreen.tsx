@@ -84,7 +84,7 @@ export function OverviewScreen({
         <StatCard icon={FileText} tone="gold" label="En borrador" value={drafts} />
       </div>
 
-      <div className="dash-split" style={{ marginTop: 'var(--dash-gap)' }}>
+      <div className="dash-split">
         <SectionCard
           title="Próximos eventos"
           subtitle={

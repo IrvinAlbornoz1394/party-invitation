@@ -345,10 +345,24 @@ export function TemplateStudio({
             </div>
 
             {/*
-              La salida. Sin barra superior, este es el único camino de vuelta: un escaparate del
-              que no se puede salir es un callejón.
+              La salida, y la entrada.
+              
+              Sin barra superior, la vuelta a la portada es el único camino de salida: un escaparate
+              del que no se puede salir es un callejón.
+              
+              Y encima de ella, lo que faltaba: pedir información **desde aquí**. Este es el momento
+              de máximo interés —acaba de gustarle una plantilla— y hasta ahora el único enlace era
+              para irse. La plantilla viaja en la URL, así que la solicitud llega diciendo cuál le
+              gustó en vez de obligar a preguntárselo después.
             */}
-            <footer className="border-t border-white/10 px-6 py-5">
+            <footer className="grid gap-4 border-t border-white/10 px-6 py-5">
+              <Link
+                href={`/cotizar?plantilla=${template.key}`}
+                className="inline-flex min-h-11 items-center justify-center bg-white px-6 text-[12px] font-semibold tracking-[0.14em] text-ink uppercase transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+              >
+                Quiero esta plantilla
+              </Link>
+
               <Link
                 href="/"
                 className="text-[12.5px] tracking-[0.14em] text-white/70 uppercase transition-colors hover:text-white"

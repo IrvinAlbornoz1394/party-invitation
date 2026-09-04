@@ -28,7 +28,7 @@ export function WelcomeSpotlight({ content }: WelcomeVariantProps) {
     <WelcomeShell
       variant="spotlight"
       label={`Bienvenida a la invitación de ${content.celebrantName}`}
-      className="text-inv-on-primary"
+      className="text-inv-on-primary inv-on-photo"
       contentClassName="justify-end px-7 pt-16 pb-14 text-center sm:px-10 sm:pb-16"
       backdrop={
         <>

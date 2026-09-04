@@ -20,8 +20,10 @@ import { ClosingMessage, type ClosingVariantProps } from './closing-parts';
  * borde de arriba: eso es literalmente una hoja abatiéndose. El sello llega después, con retraso,
  * y con un pequeño rebote — porque cae sobre la carta ya abierta, no a la vez.
  *
- * El pliegue se dibuja con un filete a un tercio de la altura. Es lo que hace que se lea como
- * papel doblado y no como una tarjeta girando: sin él, el giro parece un efecto de interfaz.
+ * El pliegue se dibuja a un tercio de la altura, arrancando de los dos cantos y disolviéndose
+ * antes del texto. Es lo que hace que se lea como papel doblado y no como una tarjeta girando:
+ * sin él, el giro parece un efecto de interfaz. De lado a lado no puede ir —ver el comentario
+ * del propio pliegue—, porque el tercio cae donde el texto decida.
  *
  * ## Con `prefers-reduced-motion`
  *
@@ -42,18 +44,34 @@ export function ClosingLetter({ content }: ClosingVariantProps) {
             abatimiento con profundidad y no en un aplastamiento vertical. */}
         <div style={{ perspective: 1600 }}>
           <motion.article
-            className="relative overflow-hidden rounded-inv-md border border-inv-line bg-inv-surface px-6 pt-20 pb-14 shadow-inv-soft sm:px-14 sm:pt-24 sm:pb-16"
+            className="relative overflow-hidden rounded-inv-md border border-inv-line bg-inv-surface px-6 pt-28 pb-14 shadow-inv-soft sm:px-14 sm:pt-32 sm:pb-16"
             style={{ transformOrigin: 'top center' }}
             initial={reduced ? false : { rotateX: -82, opacity: 0 }}
             whileInView={{ rotateX: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* El pliegue. Decorativo y a un tercio de la altura, que es donde cae el doblez de
-                una carta doblada en tres. */}
+            {/*
+              El pliegue, a un tercio de la altura, que es donde cae el doblez de una carta
+              doblada en tres.
+
+              Son **dos arranques que se disuelven** y no una recta de lado a lado. La recta
+              cruzaba el título por la mitad: el alto de la tarjeta lo decide el texto, así que
+              ese tercio cae donde caiga y en una despedida corta cae justo sobre la frase
+              grande. Un filete de interfaz atravesando un titular no se lee como un doblez, se
+              lee como un error.
+
+              Naciendo en los cantos y apagándose antes de llegar al texto, el doblez sigue
+              estando —es donde se ve en una carta de verdad, en el borde del papel— y ya no
+              depende de cuánto mida el mensaje.
+            */}
             <span
               aria-hidden="true"
-              className="absolute inset-x-0 top-[33%] h-px bg-inv-line opacity-60"
+              className="absolute top-[33%] left-0 h-px w-1/4 bg-linear-to-r from-inv-line to-transparent opacity-70"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute top-[33%] right-0 h-px w-1/4 bg-linear-to-l from-inv-line to-transparent opacity-70"
             />
 
             <motion.span

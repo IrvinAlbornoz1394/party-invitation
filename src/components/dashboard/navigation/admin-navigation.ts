@@ -2,6 +2,7 @@ import {
   Blocks,
   Building2,
   CalendarDays,
+  Inbox,
   Layers,
   LayoutDashboard,
   LayoutTemplate,
@@ -23,11 +24,31 @@ import type { Crumb, Navigation } from './nav-model';
  *
  * El orden dentro de cada grupo va de lo más usado a lo menos, no alfabético: la lista se
  * recorre con la vista y lo frecuente tiene que caer arriba.
+ *
+ * Es una función y no una constante desde que Prospectos lleva contador: ese número sale de la
+ * base de datos y cambia por sesión, igual que el de eventos en el menú del cliente.
  */
-export const ADMIN_NAVIGATION: Navigation = [
+export function buildAdminNavigation(pendingProspects: number): Navigation {
+  return [
   {
     items: [
       { href: '/admin', label: 'Resumen', icon: LayoutDashboard },
+      /*
+       * Prospectos va ARRIBA de Clientes, y no es alfabético ni casual: este grupo se ordena de lo
+       * más usado a lo menos, la bandeja se revisa a diario y además es el orden del embudo —
+       * primero quien pregunta, después quien contrató.
+       */
+      {
+        href: '/admin/prospectos',
+        label: 'Prospectos',
+        icon: Inbox,
+        /*
+         * Cuenta las nuevas y las vencidas, no todas las abiertas: un contador que nunca llega a
+         * cero deja de mirarse. Y `undefined` cuando no hay ninguna, para que no se pinte un «0»
+         * —que ocupa el mismo sitio y no dice nada—.
+         */
+        count: pendingProspects > 0 ? pendingProspects : undefined,
+      },
       { href: '/admin/clientes', label: 'Clientes', icon: Building2 },
       { href: '/admin/eventos', label: 'Eventos', icon: CalendarDays },
     ],
@@ -45,7 +66,8 @@ export const ADMIN_NAVIGATION: Navigation = [
     label: 'Cuenta',
     items: [{ href: '/admin/ajustes', label: 'Ajustes', icon: Settings }],
   },
-];
+  ];
+}
 
 /** La raíz de las migas de pan del panel de plataforma. */
 export const ADMIN_ROOT_CRUMB: Crumb = { label: 'Plataforma', href: '/admin' };

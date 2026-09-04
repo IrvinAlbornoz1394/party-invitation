@@ -6,7 +6,7 @@ import type { TableProps } from 'antd';
 import { UserPlus } from 'lucide-react';
 import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import { changeRoleAction, setStatusAction } from '@/app/panel/(authenticated)/equipo/actions';
-import { hasRoleAtLeast, type ClientActor, type UserRole } from '@/domain/auth/actor';
+import { canManageUsers, type ClientActor, type UserRole } from '@/domain/auth/actor';
 import { canChangeRole, canSetStatus } from '@/domain/auth/user-management';
 import type { TeamMember, TeamSnapshot } from '@/domain/auth/user-repository';
 import { formatDate } from '../format';
@@ -29,8 +29,9 @@ import { ROLE_HELP, ROLE_LABEL } from './team-roles';
  * se muestra sea exactamente el mismo texto en los dos lados, porque sale de la misma
  * función.
  *
- * Cualquier rol puede VER el equipo —saber con quién trabajas no es un privilegio—, pero solo
- * `admin` y `owner` pueden modificarlo.
+ * La pantalla entera es del dueño: la página responde 404 a cualquier otro rol. Los candados
+ * de aquí siguen valiendo igual, porque dentro de la lista hay cosas que ni el dueño puede
+ * hacer —cambiarse el rol a sí mismo, o quedarse sin ningún dueño—.
  */
 export function TeamScreen({
   actor,
@@ -42,7 +43,7 @@ export function TeamScreen({
   const [isInviteOpen, setInviteOpen] = useState(false);
   const [feedback, setFeedback] = useState<ActionState>(IDLE_ACTION_STATE);
 
-  const canInvite = hasRoleAtLeast(actor, 'admin');
+  const canInvite = canManageUsers(actor);
 
   return (
     <>
@@ -88,7 +89,6 @@ export function TeamScreen({
 
       <InviteMemberDialog
         open={isInviteOpen}
-        actor={actor}
         onClose={() => setInviteOpen(false)}
         onResult={setFeedback}
       />
@@ -171,11 +171,21 @@ function RoleCell({
   const [isPending, startTransition] = useTransition();
 
   /*
-   * Se pregunta al dominio por cada rol posible. Así el desplegable solo ofrece los que de
-   * verdad se pueden asignar —un `admin` no ve la opción «Dueño»— en lugar de dejar elegir y
-   * fallar después.
+   * Los dos roles que se pueden asignar hoy, más el que la persona ya tiene.
+   *
+   * `admin` no está en la lista: dejó de ofrecerse cuando la gestión del equipo pasó a ser solo
+   * del dueño y el rol intermedio se quedó sin nada que significar. Sigue apareciendo en la
+   * fila de quien lo tenga de antes —de ahí el `role === member.role`—, para que su desplegable
+   * pueda pintar el valor actual y cambiarlo a uno de los dos que quedan. Lo que no se puede es
+   * volver a poner uno.
+   *
+   * Y se pregunta al dominio por cada candidato en lugar de decidirlo aquí, para que la lista
+   * no ofrezca lo que el servidor va a rechazar: el último dueño no puede dejar de serlo.
    */
-  const options = (['owner', 'admin', 'staff'] as const)
+  const candidates: readonly UserRole[] =
+    member.role === 'admin' ? ['owner', 'admin', 'staff'] : ['owner', 'staff'];
+
+  const options = candidates
     .filter(
       (role) =>
         role === member.role ||
@@ -183,7 +193,9 @@ function RoleCell({
     )
     .map((role) => ({ value: role, label: ROLE_LABEL[role], title: ROLE_HELP[role] }));
 
-  const editable = canChangeRole(actor, member, member.role === 'owner' ? 'admin' : 'owner', {
+  // Se sondea con el rol contrario al que ya tiene: si ese cambio se puede hacer, la fila es
+  // editable. `staff` sustituye a `admin` como contrario de `owner` ahora que no se asigna.
+  const editable = canChangeRole(actor, member, member.role === 'owner' ? 'staff' : 'owner', {
     activeOwners: team.activeOwners,
   });
 

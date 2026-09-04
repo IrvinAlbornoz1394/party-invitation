@@ -3,8 +3,10 @@ import type { ReactNode } from 'react';
 import {
   Bebas_Neue,
   Cormorant_Garamond,
+  Fredoka,
   Jost,
   Manrope,
+  Pinyon_Script,
   Playfair_Display,
   Sacramento,
 } from 'next/font/google';
@@ -24,8 +26,10 @@ import './globals.css';
  * mueva el texto. También quita la dependencia de que Google responda para que el panel se
  * vea bien, y de paso el dato de qué usuario abrió qué página deja de salir hacia fuera.
  *
- * Cada una expone una variable CSS en vez de una clase, porque quien las consume es CSS a
- * mano (`panel.css`, `App.css`) y el token `fontFamily` de antd, no un `className`.
+ * Cada una expone una variable CSS en vez de una clase, y eso es lo que permite que las use
+ * quien las necesita sin conocerlas: los temas de invitación apuntan a estas variables desde
+ * `themes.tokens.fonts`, y el panel las consume desde `dashboard.css` y el token `fontFamily`
+ * de antd. Una clase solo serviría para lo segundo.
  */
 /**
  * Jost: el palo seco geométrico de la marca.
@@ -64,9 +68,9 @@ const cormorant = Cormorant_Garamond({
 });
 
 /*
- * Estas dos solo las usa la invitación (`App.css`, `Fiesta.css`), así que van sin precarga:
- * precargar en `/admin` una fuente decorativa que esa pantalla no pinta es gastar ancho de
- * banda en la petición que más importa. Se descargan igual, pero cuando hacen falta.
+ * De aquí abajo, todas van sin precarga: solo las pide el tema de una invitación, y precargar en
+ * `/admin` una fuente decorativa que esa pantalla no pinta es gastar ancho de banda en la
+ * petición que más importa. Se descargan igual, pero cuando hacen falta.
  */
 const sacramento = Sacramento({
   subsets: ['latin'],
@@ -109,6 +113,51 @@ const playfair = Playfair_Display({
   preload: false,
 });
 
+/**
+ * Pinyon Script: la caligrafía inglesa de «ink».
+ *
+ * Sacramento ya cubre lo manuscrito, y no sirve para lo mismo. Es una monoline moderna —trazo de
+ * grosor constante, formas redondas, aire de rotulador— y funciona en un tema romántico o de
+ * jardín. Lo que pide una papelería de boda formal es una **copperplate**: pluma de punta
+ * flexible, mucho contraste entre el grueso y el fino, mayúsculas con rúbrica. Puestas al lado, la
+ * diferencia no es de gusto: una firma con rotulador junto a una fotografía en blanco y negro se
+ * lee como una nota adhesiva.
+ *
+ * Va como `script` de un solo tema. Un tema no tiene por qué compartir tipografía con los demás
+ * —es la mitad de lo que lo hace un producto distinto—, y por eso `manrope` y `playfair` ya
+ * estaban aquí para «minimal» y «royal».
+ *
+ * Sin precarga, como las demás decorativas: solo la pide la invitación que la usa.
+ */
+const pinyon = Pinyon_Script({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-pinyon',
+  display: 'swap',
+  preload: false,
+});
+
+/**
+ * Fredoka: el palo seco **redondo** de «cocoa».
+ *
+ * Es la única de las siete sin ninguna arista, y por eso está: ese tema viste una invitación
+ * dibujada a mano, con ilustraciones de línea y formas orgánicas, y un grotesco de terminales
+ * rectas al lado de un lazo dibujado se lee como dos piezas de proyectos distintos.
+ *
+ * Se carga en cuatro pesos porque aquí el titular no es fino sino **gordo**: los rótulos de esa
+ * plantilla se componen vaciados, con el contorno haciendo de letra (ver `.inv-outline-text` en
+ * `globals.css`), y un peso ligero vaciado deja un dibujo de alambre que no se lee.
+ *
+ * Sin precarga, como el resto de las decorativas.
+ */
+const fredoka = Fredoka({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-fredoka',
+  display: 'swap',
+  preload: false,
+});
+
 const bebas = Bebas_Neue({
   subsets: ['latin'],
   weight: '400',
@@ -117,7 +166,7 @@ const bebas = Bebas_Neue({
   preload: false,
 });
 
-const fontVariables = [jost, cormorant, sacramento, bebas, manrope, playfair]
+const fontVariables = [jost, cormorant, sacramento, pinyon, fredoka, bebas, manrope, playfair]
   .map((font) => font.variable)
   .join(' ');
 
@@ -139,6 +188,21 @@ export const metadata: Metadata = {
     telephone: false,
     date: false,
     address: false,
+  },
+  /*
+   * Los dos formatos son necesarios y el orden importa: el navegador se queda con el primero
+   * que sepa leer. El SVG va delante porque es el que escala sin pixelarse a las densidades
+   * altas y a los tamaños grandes (favoritos, pantalla de inicio); el `.ico` queda detrás como
+   * red para Safari antiguo, que no admite favicons vectoriales.
+   *
+   * Declararlos aquí no es opcional aunque los ficheros vivan en `public/`: sin esta entrada,
+   * el navegador solo pide `/favicon.ico` por convención y el SVG no lo mira nadie.
+   */
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+    ],
   },
 };
 

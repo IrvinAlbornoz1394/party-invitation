@@ -47,19 +47,19 @@ export function SiteHeader({ tone = 'paper' }: { readonly tone?: 'paper' | 'over
           href="/"
           className="font-display text-[1.6rem] leading-none tracking-[0.06em] text-plum transition-opacity hover:opacity-70"
         >
-          éclat
+          MiEvento
         </Link>
 
         <nav className="flex items-center gap-6 sm:gap-8" aria-label="Principal">
           <Link
             href="#plantillas"
-            className="hidden text-[12.5px] tracking-[0.16em] text-ink/70 uppercase transition-colors hover:text-plum sm:inline"
+            className="hidden text-[12.5px] tracking-[0.16em] text-ink/75 uppercase transition-colors hover:text-plum sm:inline"
           >
             Plantillas
           </Link>
           <Link
             href="#planes"
-            className="hidden text-[12.5px] tracking-[0.16em] text-ink/70 uppercase transition-colors hover:text-plum sm:inline"
+            className="hidden text-[12.5px] tracking-[0.16em] text-ink/75 uppercase transition-colors hover:text-plum sm:inline"
           >
             Planes
           </Link>

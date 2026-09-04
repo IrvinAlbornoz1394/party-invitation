@@ -3,8 +3,20 @@ import 'server-only';
 import { cache } from 'react';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import type { Actor, ClientActor, PlatformActor } from '@/domain/auth/actor';
-import { canAdministerPlatform, isClientActor } from '@/domain/auth/actor';
+import type {
+  Actor,
+  ClientAccount,
+  ClientActor,
+  Membership,
+  PlatformActor,
+} from '@/domain/auth/actor';
+import {
+  canAdministerPlatform,
+  clientScopedMemberships,
+  isClientAccount,
+  membershipForEvent,
+  scopeFromMembership,
+} from '@/domain/auth/actor';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
 import { resolveSession } from '@/infrastructure/container';
 import { clientIpFromHeaders } from '@/lib/request-ip';
@@ -22,12 +34,15 @@ import { readSessionCookie } from './session-cookie';
  *
  * - `requireActor()` — hay sesión, de la clase que sea. La usa `/acceso` para decidir a
  *   dónde mandar a quien ya entró.
- * - `requireClientActor()` — la frontera de `/panel`.
+ * - `requireClientAccount()` — la frontera de `/panel`: hay cuenta de cliente.
+ * - `requireClientScope()` — además, con qué cliente se trabaja.
+ * - `requireEventAccess(id)` — además, que ese evento se alcance.
  * - `requirePlatformAdmin()` — la frontera de `/admin`.
  *
  * Que devuelvan tipos distintos es lo que hace que la frontera no se pueda olvidar: una
- * pantalla de `/panel` necesita `clientId` para consultar nada, y `clientId` solo existe en
- * el tipo que devuelve `requireClientActor()`.
+ * pantalla de `/panel` necesita `clientId` para consultar nada, y `clientId` no existe en la
+ * cuenta —solo en el `ClientActor` que devuelven `requireClientScope()` y `requireEventAccess()`
+ * después de autorizar—. Pedir datos sin haber autorizado un alcance no compila.
  */
 
 /**
@@ -54,7 +69,41 @@ export const getCurrentActor = cache(async (): Promise<Actor | null> => {
  * `redirect()` lanza una excepción interna de Next que nunca hay que capturar; por eso esta
  * función no vuelve nunca cuando no hay sesión.
  */
-export async function requireActor(): Promise<Actor> {
+/**
+ * A dónde mandar a quien no tiene sesión, recordando a dónde iba.
+ *
+ * Sin el parámetro, entrar por un enlace directo —el que le llega al cliente por correo para
+ * llenar su invitación— acababa siempre en el inicio del panel: la persona hacía login y tenía
+ * que volver a buscar su evento. Con él, el flujo es el que todo el mundo espera: pides una
+ * dirección, te piden identificarte, y al identificarte llegas a la dirección que pediste.
+ *
+ * El nombre del parámetro va en español como el resto de las URL del sitio.
+ */
+export function loginPathFor(returnTo?: string | null): string {
+  const safe = safeReturnTo(returnTo);
+
+  return safe === null ? '/acceso' : `/acceso?volver=${encodeURIComponent(safe)}`;
+}
+
+/**
+ * La dirección de vuelta, si se puede confiar en ella.
+ *
+ * Solo rutas **de este sitio**: una que empiece por `/` y no por `//`. Es la protección contra el
+ * redirect abierto, que es el fallo clásico de este patrón — con `?volver=https://otro-sitio` se
+ * manda a alguien recién identificado a una copia de la pantalla de acceso, y ahí es donde se
+ * regalan las credenciales.
+ *
+ * `//evil.com` merece la mención aparte porque **es** una URL absoluta con esquema heredado, y a
+ * ojo parece una ruta del sitio. Es la comprobación que se olvida.
+ */
+export function safeReturnTo(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith('/') || value.startsWith('//')) return null;
+
+  return value;
+}
+
+export async function requireActor(returnTo?: string): Promise<Actor> {
   const actor = await getCurrentActor();
 
   if (actor === null) {
@@ -65,14 +114,14 @@ export async function requireActor(): Promise<Actor> {
      * volver a ella y aterrizar en el inicio del panel que toque es un coste pequeño frente
      * a mantener ese parámetro seguro para siempre.
      */
-    redirect('/acceso');
+    redirect(loginPathFor(returnTo));
   }
 
   return actor;
 }
 
 /**
- * La frontera de `/panel`: exige una cuenta de cliente.
+ * La frontera de `/panel`: exige una cuenta de cliente, sin resolver todavía qué alcanza.
  *
  * Una cuenta de plataforma que pida una URL de `/panel` recibe un 404, no un redirect a
  * `/admin`. Es deliberado, aunque parezca menos amable: `/panel/eventos/<id>` de un cliente
@@ -80,12 +129,89 @@ export async function requireActor(): Promise<Actor> {
  * `/admin`— y redirigir a la raíz sería llevarla a un sitio que no pidió. El 404 dice lo
  * que pasa: aquí no hay nada para ti.
  */
-export async function requireClientActor(): Promise<ClientActor> {
-  const actor = await requireActor();
+export async function requireClientAccount(returnTo?: string): Promise<ClientAccount> {
+  const actor = await requireActor(returnTo);
 
-  if (!isClientActor(actor)) notFound();
+  if (!isClientAccount(actor)) notFound();
 
   return actor;
+}
+
+/**
+ * El alcance de cliente de las pantallas que administran el cliente entero: equipo, ajustes,
+ * la lista de eventos.
+ *
+ * Resuelve la única membresía de alcance cliente de la cuenta. Si no tiene ninguna —un visor,
+ * que solo alcanza un evento— rebota al selector, que es donde sí hay algo para esa persona.
+ *
+ * ## Y si tuviera varias
+ *
+ * Hoy responde 404, y es una limitación conocida, no un descuido. Una identidad con dos
+ * membresías de alcance cliente alcanza dos clientes enteros, y estas pantallas no llevan el
+ * cliente en la URL: elegir uno «por defecto» significaría enseñarle el equipo de un cliente a
+ * quien pidió el del otro, sin decírselo. Fallar es la lectura correcta hasta que estas rutas
+ * tengan el cliente en la URL, como ya lo tienen las de evento. Está anotado en
+ * `docs/ACCESO.md`.
+ *
+ * El caso no ocurre con los datos de hoy: cada identidad se da de alta en un cliente.
+ */
+export async function requireClientScope(): Promise<ClientActor> {
+  const account = await requireClientAccount();
+  const scoped = clientScopedMemberships(account);
+
+  if (scoped.length === 0) redirect('/panel');
+  if (scoped.length > 1) notFound();
+
+  // `scoped[0]` existe: acabamos de comprobar que hay exactamente uno. El operador de
+  // aserción se evita porque `noUncheckedIndexedAccess` puede activarse cualquier día.
+  const membership = scoped.at(0);
+  const scope = membership ? scopeFromMembership(account, membership) : null;
+
+  // Un `viewer` no puede tener alcance cliente —lo impide el CHECK `memberships_role_scope`—
+  // así que llegar aquí significaría que la base de datos tiene una fila imposible. 404.
+  if (scope === null) notFound();
+
+  return scope;
+}
+
+/**
+ * La frontera de una pantalla de evento: `/panel/eventos/<id>/…`.
+ *
+ * Devuelve las dos cosas que hacen falta y que no se pueden separar sin abrir un hueco: la
+ * **membresía** que autoriza —con su rol, su plan y su etiqueta, que es de donde saldrá el
+ * menú— y el **alcance** con el que consultar, que es null cuando quien mira es un visor.
+ *
+ * Un evento que la cuenta no alcanza responde 404, igual que uno que no existe. Los dos casos
+ * tienen que ser indistinguibles: un 403 confirmaría que ese evento existe, y el id va en la
+ * URL, así que sería un oráculo para averiguar qué eventos hay.
+ *
+ * La autorización sale de las membresías y no de «¿está en la lista de eventos de mi cliente?»,
+ * que es como se hacía antes. La diferencia es justo el caso nuevo: los novios alcanzan un
+ * evento **sin** alcanzar el cliente que lo contiene, así que la pregunta por el cliente
+ * respondería que no.
+ */
+export async function requireEventAccess(
+  eventId: string,
+  /**
+   * A dónde volver después de identificarse, cuando no hay sesión.
+   *
+   * Lo pasa la pantalla y no se deduce aquí porque un componente de servidor no conoce su propia
+   * dirección: Next no la expone. Solo lo necesita la de contenido —es la que se manda por
+   * correo—, así que el resto lo omite y sigue cayendo en el inicio del panel.
+   */
+  returnTo?: string,
+): Promise<{
+  readonly account: ClientAccount;
+  readonly membership: Membership;
+  /** null cuando el rol es `viewer`: no hay alcance de escritura que construir. */
+  readonly scope: ClientActor | null;
+}> {
+  const account = await requireClientAccount(returnTo);
+  const membership = membershipForEvent(account, eventId);
+
+  if (membership === null) notFound();
+
+  return { account, membership, scope: scopeFromMembership(account, membership) };
 }
 
 /**

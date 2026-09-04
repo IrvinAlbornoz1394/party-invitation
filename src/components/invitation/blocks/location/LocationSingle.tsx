@@ -45,12 +45,12 @@ export function LocationSingle({ content }: LocationVariantProps) {
           key={index}
           /* Alto fluido en lugar de 30rem fijos: en un móvil apaisado, 480px de mínimo dejaban la banda
              más alta que la propia pantalla y el siguiente bloque no asomaba. */
-          className="relative isolate flex min-h-[clamp(22rem,62svh,34rem)] items-center justify-center overflow-hidden px-6 py-16 sm:px-10 sm:py-24"
+          className="relative isolate inv-on-photo flex min-h-[clamp(22rem,62svh,34rem)] items-center justify-center overflow-hidden px-6 py-16 sm:px-10 sm:py-24"
         >
           {venue.image ? (
             <>
               <BlockImage image={venue.image} className="-z-20" sizes="100vw" />
-              <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-overlay" />
+              <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="center" />
             </>
           ) : (
             <div aria-hidden="true" className="absolute inset-0 -z-10 bg-inv-primary" />

@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { EclatWordmark } from '@/components/brand/EclatWordmark';
+import { MiEventoWordmark } from '@/components/brand/MiEventoWordmark';
 
 /**
- * La marca en la barra lateral: el logotipo de éclat y, si lo hay, el distintivo del panel.
+ * La marca en la barra lateral: el logotipo de MiEvento y, si lo hay, el distintivo del panel.
  *
  * El distintivo responde «¿en cuál de los dos paneles estoy?», y va aquí porque la esquina
  * superior izquierda es lo primero que se mira al llegar. En `/admin` dice «Plataforma»; en el
@@ -18,8 +18,8 @@ import { EclatWordmark } from '@/components/brand/EclatWordmark';
  */
 export function SidebarBrand({ href, badge }: { readonly href: string; readonly badge?: string }) {
   return (
-    <Link className="dash__brand" href={href} aria-label="éclat, ir al inicio">
-      <EclatWordmark size="sm" tone="dark" />
+    <Link className="dash__brand" href={href} aria-label="MiEvento, ir al inicio">
+      <MiEventoWordmark size="sm" tone="dark" />
       {badge && <span className="dash__brand-badge">{badge}</span>}
     </Link>
   );

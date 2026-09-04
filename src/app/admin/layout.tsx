@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 
 export const metadata: Metadata = {
-  title: 'Plataforma · éclat',
+  title: 'Plataforma · MiEvento',
   // El panel de plataforma nunca debe aparecer en buscadores.
   robots: { index: false, follow: false, nocache: true },
 };

@@ -31,6 +31,7 @@ src/domain/invitation/
   countdown.ts          Aritmética de la cuenta regresiva, sin React.
   event-date.ts         La fecha partida en piezas, leída de la cadena ISO sin zonas horarias.
   month-grid.ts         El mes en la retícula de siete columnas de un calendario. Sin React.
+  day-strip.ts          Los tres días de antes, el del evento y los tres de después. Sin React.
 
 src/components/invitation/
   theme/
@@ -53,6 +54,11 @@ src/components/invitation/
     WelcomeTorn.tsx       welcome.torn      — papel rasgado que descubre la fotografía.
     WelcomeBand.tsx       welcome.band      — retrato arriba y banda de color abajo (la más móvil).
     WelcomeCountdown.tsx  welcome.countdown — nombres apilados y la cuenta atrás antes de entrar.
+    WelcomeCrown.tsx      welcome.crown     — la hermana de `luminous` para XV: corona en vez de
+                          alianzas y el nombre como titular.
+    WelcomeGilded.tsx     welcome.gilded    — la participación grabada: doble filete inscrito,
+                          guirnaldas en dos esquinas y la tiara sobre la foto en penumbra. La otra
+                          de XV, y la que compone con ornamento donde `crown` compone con aire.
   blocks/hero/
     hero-variant.ts       HeroVariantProps: lo único que recibe una variante.
     HeroClassic.tsx       hero.classic  — foto a sangre, contenido abajo.
@@ -60,24 +66,51 @@ src/components/invitation/
     HeroSplit.tsx         hero.split    — foto a un lado, texto sobre el papel del tema.
     HeroPortrait.tsx      hero.portrait — el retrato se deshace en el papel con una máscara.
     HeroFramed.tsx        hero.framed   — rótulo, retrato enmarcado y nombres a mano debajo.
+    HeroQuince.tsx        hero.quince   — las cifras romanas a cuerpo de cartel sobre el retrato.
+    HeroCard.tsx          hero.card     — la foto a sangre y una tarjeta de papel apoyada encima.
+    HeroScript.tsx        hero.script   — la foto, los nombres en caligrafía y el año. Nada más.
+    HeroFrame.tsx         hero.frame    — rótulo vaciado y el retrato en un marco dibujado.
+    HeroCrown.tsx         hero.crown    — corona, rótulo en versalitas y el nombre en manuscrita.
+                          La segunda de XV: aquí el titular es el nombre, no la cifra.
   blocks/story/
     story-variant.ts      StoryVariantProps.
     story-parts.tsx       Encabezado, cuerpo, cita y firma: lo que las cuatro comparten.
     StorySplit.tsx        story.image-left y story.image-right (un componente, dos entradas).
     StoryCentered.tsx     story.centered — columna centrada, foto apaisada.
     StoryOverlay.tsx      story.overlay  — tarjeta de texto sobre la fotografía.
+    StoryPressed.tsx      story.pressed  — pliego con doble filete, crónica numerada y lámina.
+    StoryMounted.tsx      story.mounted  — la copia torcida, encabalgada sobre la hoja del relato.
+    StoryGreeting.tsx     story.greeting — la alocución centrada. La única que ignora la foto.
+    StoryBow.tsx          story.bow      — banda de canto ondulado, lazo atado y texto centrado.
   blocks/calendar/
     calendar-variant.ts   CalendarVariantProps.
+    calendar-parts.tsx    DayMarkShape: la marca del día señalado, igual en las dos.
     CalendarMonth.tsx     calendar.month — el mes en una lámina de color con cantos rasgados.
+    CalendarSheet.tsx     calendar.sheet — la fecha en una tira de siete días, con el del evento
+                          marcado en el centro. La cuenta la hace `domain/invitation/day-strip.ts`.
+    CalendarWeek.tsx      calendar.week  — la semana real del evento, con las iniciales de los
+                          días. La cuenta la hace `eventWeek`, en `month-grid.ts`.
+    CalendarBand.tsx      calendar.band  — la fecha sin retícula: la cifra del día a cuerpo de
+                          cartel entre dos filetes.
   blocks/dresscode/
     dresscode-variant.ts  DresscodeVariantProps.
-    DresscodePalette.tsx  dresscode.palette — la instrucción escrita y la paleta en muestras.
+    DresscodePalette.tsx  dresscode.palette  — la instrucción escrita y la paleta en muestras.
+    DresscodeSwatches.tsx dresscode.swatches — el muestrario de telas: un retal por renglón.
+    DresscodeDiscs.tsx    dresscode.discs    — discos grandes y los nombres en un pie aparte.
+    DresscodeDrops.tsx    dresscode.drops    — manchas de contorno irregular y el candelabro.
+    DresscodeLabel.tsx    dresscode.label    — manda la palabra y la paleta baja a una fila de
+                          puntos. Para el evento cuyo código es «FORMAL» y nada más.
   blocks/details/
     details-variant.ts    DetailsVariantProps.
     DetailsCards.tsx      details.cards — una tarjeta por detalle, en rejilla.
     DetailsList.tsx       details.list  — una columna con filetes.
     DetailsSplit.tsx      details.split — encabezado anclado a un lado, detalles al otro.
-    DetailsPanel.tsx      details.panel — franja del color principal del tema.
+    DetailsPanel.tsx      details.panel   — franja del color principal del tema.
+    DetailsProgram.tsx    details.program — dos columnas contra un filete central.
+    DetailsStack.tsx      details.stack   — una ficha por dato, con la placa cuadrada al margen.
+    DetailsNotes.tsx      details.notes   — icono suelto y rótulo en acento. Sin ninguna caja.
+    DetailsStickers.tsx   details.stickers — el icono dentro de una mancha, como una pegatina.
+    DetailsColumn.tsx     details.column  — columna centrada: dibujo arriba y filete entre avisos.
   blocks/schedule/
     schedule-variant.ts   ScheduleVariantProps.
     schedule-parts.tsx    La hora y la marca del hito (icono o punto).
@@ -88,6 +121,11 @@ src/components/invitation/
     ScheduleRibbon.tsx    schedule.ribbon     — cinta vertical atada con lazos, con ilustraciones.
     ScheduleZigzag.tsx    schedule.zigzag     — hilo central y momentos alternos desfasados.
     ScheduleItinerary.tsx schedule.itinerary  — iconos al margen, fuera del hilo; la más corta.
+    ScheduleCards.tsx     schedule.cards      — una ficha por momento, la hora en un medallón y
+                          ningún hilo.
+    ScheduleHours.tsx     schedule.hours      — la cifra al margen y el filete solo bajo el texto.
+    ScheduleLeaders.tsx   schedule.leaders    — hora en un margen, rótulo en el otro y una guía
+                          punteada uniéndolos por encima del hilo.
   blocks/gallery/
     gallery-parts.tsx     PhotoButton: la foto pulsable, igual en las cinco.
     GalleryParallax.tsx   gallery.parallax — la de Kamilah: fotos flotando y final desplegable.
@@ -95,6 +133,7 @@ src/components/invitation/
     GalleryCarousel.tsx   gallery.carousel — pasarela infinita a todo el ancho.
     GalleryMasonry.tsx    gallery.masonry  — mampostería que respeta cada proporción.
     GalleryMosaic.tsx     gallery.mosaic   — una destacada y el resto alrededor.
+    GalleryOffset.tsx     gallery.offset   — dos columnas desfasadas y un remate a todo el ancho.
     GalleryPolaroid.tsx   gallery.polaroid — instantáneas torcidas, con su franja blanca.
   blocks/location/
     location-parts.tsx    VenueFacts y VenueMedia: una sede, compuesta igual en las seis.
@@ -106,6 +145,9 @@ src/components/invitation/
     LocationDualVenue.tsx     location.dual-venue   — dos columnas simétricas.
     LocationDualJourney.tsx   location.dual-journey — recorrido con conector.
     LocationDualStacked.tsx   location.dual-stacked — franjas alternas a ancho completo.
+    LocationSingleOpen.tsx    location.single-open  — la sede sin tarjeta, sobre el papel.
+    LocationSingleScene.tsx   location.single-scene — la mesa puesta dibujada, y la foto debajo.
+    LocationSinglePlaque.tsx  location.single-plaque — la hora abre y el nombre va entre filetes.
   blocks/rsvp/
     rsvp-parts.tsx        RsvpAction: el botón, sus dos caminos y sus cuatro estados.
     rsvp-gateway.ts       La costura con la plataforma (contexto y tipos).
@@ -116,22 +158,39 @@ src/components/invitation/
     RsvpReplyCard.tsx     rsvp.reply-card — la tarjeta de respuesta del sobre, con doble filete.
     RsvpPostcard.tsx      rsvp.postcard   — el reverso de una postal, con sello y matasellos.
     RsvpTorn.tsx          rsvp.torn       — franja de papel rasgado con un velo del color del tema.
+    RsvpRaised.tsx        rsvp.raised     — la tarjeta encimada entre el papel y la banda final.
+    RsvpHairline.tsx      rsvp.hairline   — un filete, el rótulo y el botón. Sin pieza alrededor.
+    RsvpEngraved.tsx      rsvp.engraved   — doble filete alrededor y ningún fondo propio.
   blocks/closing/
-    closing-parts.tsx     ClosingMessage: la despedida, compuesta igual en los tres.
+    closing-parts.tsx     ClosingMessage: la despedida, compuesta igual en todos.
     ClosingSplit.tsx      closing.split   — foto a un lado, frase al otro.
     ClosingLetter.tsx     closing.letter  — una carta que se despliega, con su sello.
     ClosingHorizon.tsx    closing.horizon — la frase sola, a pantalla completa.
     ClosingEnvelope.tsx   closing.envelope — un sobre con la tarjeta de contacto asomando.
+    ClosingAlbum.tsx      closing.album   — la foto montada con esquineras, y la frase al pie.
+    ClosingNote.tsx       closing.note    — la nota, con el medallón encabalgado en la fotografía.
+    ClosingScript.tsx     closing.script  — la despedida entera en caligrafía, sin nada alrededor.
+    ClosingBouquet.tsx    closing.bouquet — dos ramilletes espejados a los lados de la firma.
+    ClosingWreath.tsx     closing.wreath  — dos ramas cerrando una guirnalda **alrededor** del
+                          texto. El único que envuelve.
   blocks/footer/
     footer-parts.tsx      Monograma, contactos, volver arriba y créditos.
     FooterCentered.tsx    footer.centered — clásico, todo en un eje.
     FooterRibbon.tsx      footer.ribbon   — cinta del color principal, en una línea.
     FooterMarquee.tsx     footer.marquee  — el nombre cruzando la pantalla, en grande.
+    FooterColophon.tsx    footer.colophon — doble filete, mancheta y corondeles.
+    FooterSprig.tsx       footer.sprig    — otra hoja, rasgada, con el monograma entre ramitas.
+    FooterSeal.tsx        footer.seal     — lámina oscura y el monograma dentro de un doble cerco.
+    FooterRule.tsx        footer.rule     — un filete y el nombre en versalitas. Sin monograma.
+    FooterWave.tsx        footer.wave     — franja de color bajo una onda, con el nombre vaciado.
+    FooterFrame.tsx       footer.frame    — cartucho de doble filete con la corona encabalgada.
   shared/                 Lo que comparten todos los bloques: BlockSection, BlockHeading,
                           BlockImage, BlockNote, BlockOrnament, BlockCurve, ActionLink,
                           TextLink, IconBadge, Countdown, Lightbox + useLightbox,
-                          paper-ornaments.tsx (canto rasgado y ramita), block-icons.ts,
-                          href.ts.
+                          paper-ornaments.tsx (canto rasgado, ramita, corona, tiara y
+                          guirnalda),
+                          doodle-ornaments.tsx (lazo, alianzas, candelabro, ramillete, mesa
+                          puesta y marco dibujado), block-icons.ts, href.ts.
   registry/
     component-registry.ts EL registro. Único sitio que importa los componentes.
   demo/
@@ -159,18 +218,60 @@ variante × tema × contenido × pantalla, y se abre desde **Componentes** y des
 ## El escaparate público
 
 `/plantillas/<clave>` enseña una invitación completa que se puede desarmar en vivo: cambiar de
-plantilla, de tema y de variante en cada bloque, como en las demos de un mercado de plantillas.
-La portada la anuncia con una tarjeta por plantilla.
+**tipo de evento**, de plantilla, de tema y de variante en cada bloque, como en las demos de un
+mercado de plantillas. La portada la anuncia con una tarjeta por demo.
+
+Son **diez demos para nueve estructuras**: la de `botanical` está contada dos veces, una para boda
+y otra para XV (`botanical` y `botanical-xv`). Cada una es una entrada propia y no un parámetro, por
+dos motivos:
+la URL se prerenderiza y se comparte con su propia vista previa, y —lo importante— boda y XV no se
+distinguen solo por el texto, sino por **qué variantes componen la plantilla**, que es una
+composición distinta y no un ajuste.
+
+El gestor **se cierra al cambiar cualquier cosa**. Ocupa un tercio de la pantalla en un escritorio
+y casi toda en un teléfono, así que quien cambiaba el tema no veía lo que acababa de cambiar. Se
+cierra desde un único sitio (`applyAndClose`) para que ningún mando se quede sin hacerlo el día
+que se añada el siguiente.
 
 ```
 src/components/invitation/
   demo/templates.ts       Las plantillas: evento imaginario + tema + una variante por bloque.
-  TemplateBlock.tsx       Pinta un bloque con la variante que se le pida. El embrión del motor.
+  TemplateBlock.tsx       Envoltorio fino sobre `InvitationBlock`: solo decide de dónde sale el
+                          identificador cuando el visitante no ha elegido variante.
 src/components/showcase/
   TemplateStudio.tsx      La barra de mandos y la invitación debajo.
 src/app/plantillas/[template]/page.tsx
 src/application/catalog/browse-showcase.ts   El catálogo público: sin credenciales, solo activo.
 ```
+
+### Las fotografías de las demos
+
+Viven en `demo/photos.ts`, agrupadas por tipo de evento, y **la imagen y su descripción viajan
+juntas**: quien la usa no escribe el `alt`, lo recibe. Existe porque antes cada archivo escribía
+sus propias URL y el resultado fue el que era de esperar — una fiesta infantil con un cartel de
+«HAPPY BIRTHDAY» ilustrando la portada de unos XV, y un niño pintando con témperas descrito como
+«mesa larga montada al aire libre para una boda». Nadie mintió a propósito: **un identificador de
+Unsplash no dice qué se ve en la foto**, así que copiarlo de un sitio a otro es copiar a ciegas.
+
+Al añadir una, hay que descargarla y **mirarla**, y describir en `alt` lo que se ve.
+
+### Boda y XV: dos entradas del catálogo, nunca una condición
+
+Lo que cambia entre una boda y unos XV se resuelve **con variantes distintas**, no preguntándole al
+componente de qué evento se trata. `docs/PROJECT.md` lo prohíbe y la razón es práctica: el día que
+llegue «bautizo», una condición obligaría a abrir los sesenta componentes.
+
+En la práctica, casi todo se resuelve por **contenido**: el `dayMark` del calendario —corazón para
+la papelería nupcial, aro para la sobria—, los iconos del cronograma, la forma del nombre. Solo hay
+que escribir un componente nuevo cuando la **composición** cambia:
+
+- `welcome.crown` frente a `welcome.luminous`: aquella lleva las alianzas (`RingsGlyph`), que son
+  un símbolo nupcial incrustado; sobre unos XV prometen una boda.
+- `hero.quince` frente a `hero.framed`: aquí el titular es una cifra y el nombre va debajo; allí el
+  titular es el nombre. Son dos composiciones, no una con un parámetro.
+
+El «XV» va escrito en el componente y no en el contenido, igual que la rasgadura de `rsvp.torn`: no
+es un dato del evento —no cambia, no se configura— sino la firma de la variante.
 
 Tres decisiones que sostienen esto:
 
@@ -178,11 +279,135 @@ Tres decisiones que sostienen esto:
   que alimentan la previsualización del panel, y lo que la define es qué variante lleva cada
   bloque y con qué tema se compone. Así el texto de la demo y el de las pruebas no se separan.
 - **Sin base de datos para el contenido.** Un visitante no dispara ni una consulta de datos de
-  nadie; del servidor solo llega el catálogo —qué variantes y qué temas existen—, y las cinco
+  nadie; del servidor solo llega el catálogo —qué variantes y qué temas existen—, y todas las
   demos se generan estáticas en el build.
 - **El catálogo se cruza con el registro del código.** La base de datos tiene variantes sin
   componente todavía; ofrecerlas en el selector daría un bloque en blanco. El nombre bonito lo
   pone la base de datos, lo que se puede enseñar lo dice `registeredIds()`.
+
+## Ninguna plantilla repite la variante de otra del mismo tipo de evento
+
+Es la regla que sostiene el plan **Esencial**. Ahí el cliente no intercambia nada: se lleva la
+plantilla como está, así que lo único que separa una de otra es su composición. Dos plantillas de
+boda que comparten el cronograma y el pie son, para quien las compara en el escaparate, la misma
+invitación con otras fotos — y el catálogo aparenta un tamaño que no tiene.
+
+**El alcance es el tipo de evento, no el catálogo entero.** Nadie compara una plantilla de boda con
+una de XV: quien entra a elegir ya sabe qué celebra. Que `botanical` y su hermana de XV compartan el
+calendario en lámina no le quita nada a ninguna de las dos, y prohibirlo obligaría a duplicar la
+biblioteca entera por tipo de evento — justo lo que `docs/PROJECT.md` no quiere.
+
+La consecuencia práctica es más dura de lo que parece: una estructura ofrecida para varios tipos
+entra en varias comparaciones a la vez, y **ocho de las nueve se ofrecen para boda y para XV**. O
+sea que en la práctica tienen que ser disjuntas entre sí, las ocho.
+
+La novena, `gala`, es la excepción que enseña cómo funciona la regla: se ofrece **solo para XV**
+—su portada lleva la corona escrita dentro— así que solo tiene que ser disjunta en «quince», y en
+«boda» no compite con nadie. Es también lo que pasará cuando llegue una solo para «corporate»:
+podrá reutilizar lo que quiera siempre que ningún otro candidato de «corporate» lo use.
+
+**No limita a Plus ni a Premium.** Ahí intercambiar variantes es precisamente lo que se vende, y
+cualquier plantilla puede acabar con cualquier variante de su bloque. Lo que se protege es la
+composición **de partida**.
+
+### Se comprueba, no se confía
+
+`assertTemplateVariantsAreExclusive()` corre al principio de `seedRegistry()` y lanza antes de
+escribir nada, con el nombre de las dos plantillas y la variante que comparten. Existe porque la
+duplicación **no se ve leyendo el archivo**: hay que cruzar nueve listas de once líneas
+mentalmente, y estas composiciones llegaron a repetir seis variantes —`cinematic` compartía cinco
+con sus vecinas— sin que nadie lo notara en varias revisiones.
+
+`demo/templates.ts` lleva la misma comprobación, pero **avisa por consola en vez de lanzar**, y solo
+en desarrollo: romper ahí significaría una página de venta en blanco, y una demo que repite un pie
+es un defecto de catálogo, no un fallo de render. Hace falta aparte porque las diez demos no son
+las nueve del catálogo — llevan la bienvenida en todas y la de XV cambia la portada por `hero.quince`,
+así que el escaparate puede repetir sin que el catálogo lo haga.
+
+### Cuando no queda variante libre, se escribe una
+
+Es lo que pasó al aplicar la regla: cinco estructuras necesitaban cinco cierres y cinco pies, y el
+catálogo tenía cuatro y tres. La salida **no** es que dos plantillas compartan la que sobra ni
+repartir la misma con otro tema: es que faltaban piezas. De ahí salieron `closing.album`,
+`footer.colophon` y `footer.sprig`, cada una escrita para el lenguaje de la estructura que la pedía
+—álbum, revista y papelería— y disponibles desde entonces para cualquier otra.
+
+Las tres van **sin `minPlanRank`**, a diferencia de las galerías o los cronogramas de pago. No es un
+descuido: son el pie o el cierre por defecto de una plantilla del catálogo, y una variante de Plus
+en la composición base la volvería imposible de montar para un cliente de Esencial.
+
+Con la sexta estructura —`silk`— la cuenta se disparó: llegó pidiendo once bloques y solo tres
+tenían una variante libre para boda y para XV (`welcome.countdown`, `location.single-card` y
+`gallery.mosaic`). Los otros ocho se escribieron —`hero.card`, `story.mounted`, `schedule.cards`,
+`details.stack`, `dresscode.swatches`, `rsvp.raised`, `closing.note` y `footer.seal`—, y no como
+variaciones de las que ya había: esta estructura se arma **por planos** —casi cada sección es una
+pieza de papel apoyada sobre otra cosa, con su canto y su sombra— y ninguna de las existentes
+componía así. En el único bloque donde sí quedaba algo libre (`rsvp.ticket`, un pase troquelado) la
+pieza era de otra familia visual, y forzarla habría metido un recurso de feria en una papelería de
+tarde-noche.
+
+Es el aviso de que la regla tiene un coste creciente, y es el que se quiere: **la séptima
+estructura tendrá que traer casi una biblioteca entera**, así que más vale que exista por una razón
+de composición y no porque apetezca otra paleta. Para eso está el tema, que no es exclusivo de
+nadie.
+
+Y así fue. `monochrome` —papel blanco, fotografía en blanco y negro y la caligrafía como único
+ornamento— trajo nueve: `hero.script`, `story.greeting`, `calendar.sheet`, `schedule.hours`,
+`location.single-open`, `dresscode.discs`, `details.notes`, `rsvp.hairline`, `closing.script` y
+`footer.rule`. De los doce bloques que lleva, solo dos se pudieron reutilizar
+(`welcome.monogram` y `gallery.carousel`).
+
+Lo importante es que la regla **no fue el motivo**, solo la ocasión. Ocho de las nueve nacen de
+quitarle a su bloque la pieza gráfica que daba por supuesta —el medallón de los detalles, la
+cápsula del plazo, la tarjeta de la sede, el filete completo del cronograma, la franja del
+calendario, el monograma del pie—, y ninguna de las que había podía hacer eso sin dejar de ser lo
+que era. La novena, `calendar.sheet`, es la excepción y la más valiosa: el calendario llevaba **un
+solo diseño desde que existe el bloque**, y aquí se supo por fin qué distingue a dos —la lámina
+impresa contra la hoja de agenda—, que era exactamente la condición que el registro se había
+puesto para escribir el segundo.
+
+La lección para la octava estructura es esa: si las variantes nuevas salen de una idea que se
+puede escribir en una frase —«esta no tiene ni una caja»—, el lote entero se sostiene y cada pieza
+sirve además a quien venga después. Si salen de «hacía falta una libre», son relleno.
+
+Y la octava, `sketch`, es la que enseña la otra mitad: trajo ocho variantes pero **reutilizó cuatro
+bloques enteros** —`welcome.band`, `schedule.ribbon`, `gallery.mosaic` y `rsvp.ticket`—, y no por
+suerte. La cinta con lazos era ya el cronograma dibujado del catálogo y el pase troquelado su única
+confirmación recortada: piezas de la misma familia visual, escritas años antes, que estaban libres
+porque ninguna estructura las había reclamado. La cuenta no crece sola, entonces: crece cuando la
+plantilla nueva no se parece a nada de lo que hay.
+
+La novena, `gala`, añade el tercer camino: **acotar el tipo de evento**. Al ofrecerse solo para XV
+solo compite con las otras ocho en «quince», y eso le permitió llevarse `welcome.crown` —la puerta
+con corona, libre desde que se escribió— y `gallery.parallax`. Nueve variantes nuevas siguen siendo
+nueve, pero ninguna nació de un hueco: todas salen de la misma restricción, que es la que impone un
+papel oscuro —ni tarjetas claras, ni franjas de color, ni sombras—, y de la única respuesta que
+queda entonces: **el filete dorado**.
+
+## Rehacer una variante o escribir otra
+
+La pregunta llega en cuanto una plantilla ya montada tiene que cambiar de aspecto en un bloque, y
+se responde mirando **quién más la usa**, no quién la pidió:
+
+- **Solo la usa la plantilla que quiere el cambio** → se rehace en su sitio, conservando el
+  `registry_id`. Es lo que se hizo con `calendar.sheet`: nació como una hoja con el mes entero y
+  hoy es una tira de siete días. Nadie más la tenía asignada, así que rehacerla no cambió ninguna
+  otra invitación.
+- **La usa otra plantilla, o es una pieza del catálogo con identidad propia** → se escribe una
+  nueva y la plantilla cambia de asignación. Es lo que se hizo al sustituir `gallery.mosaic` por
+  `gallery.offset` en `silk`: el mosaico es una galería del catálogo desde hace tiempo, cualquier
+  cliente de Plus puede tenerla elegida en su evento, y rehacerla les habría cambiado la sección
+  sin que nadie se lo pidiera.
+
+El criterio de fondo es el mismo del `registry_id`: la cadena guardada en `event_blocks` es un
+contrato con las invitaciones ya repartidas. Rehacer una variante **es** cambiarle el diseño a
+todo el que la tenga puesta, y eso solo es aceptable cuando ese conjunto es exactamente la
+plantilla que lo está pidiendo.
+
+Renombrar el identificador de una variante rehecha no compensa: obliga a reapuntar los bloques que
+la usan y a borrar la fila vieja (ver `RETIRED_VARIANTS`), y lo que se lee en el panel es el
+**nombre**, que sí se actualiza. Por eso `calendar.sheet` se sigue llamando así aunque ya no sea
+una hoja.
 
 ## Añadir una variante
 
@@ -198,8 +423,26 @@ Tres decisiones que sostienen esto:
    registrado llevan botón «Ver ejemplo»; las que solo están en la base de datos, no — y esa
    diferencia es el aviso de que asignarla a un evento dejaría el bloque sin pintar.
 
+Y si además va a entrar en la composición de una plantilla, **comprobar que no la use ya otra del
+mismo tipo de evento**: ver la sección anterior. El seed lo verifica solo.
+
 Nada más se toca. No hay ningún `if` de variante en ninguna parte, y añadir la cuarta portada
 no cambia una línea del motor de render.
+
+## Un símbolo y una ilustración no son la misma pieza
+
+En `shared/paper-ornaments.tsx` hay dos coronas, y en el catálogo dos anillos. No es duplicación:
+es que un dibujo pensado para treinta píxeles y otro pensado para cinco centímetros **no pueden
+ser el mismo trazo**.
+
+  `CrownGlyph` / `RingsGlyph`     símbolos: pocas líneas, trazo grueso, ningún detalle. Se ven
+                                  junto a un rótulo, y ahí un adorno de más es una mancha.
+  `TiaraGlyph` / `WeddingRings`   ilustraciones: curvas, filigrana, perlas, trazo fino. Ocupan una
+                                  parte de la pantalla, y ahí la falta de detalle se ve pobre.
+
+La prueba es directa: agrandar el símbolo deja un zigzag, y encoger la ilustración deja un borrón.
+Cada uno declara en su cabecera para qué tamaño está dibujado, y esa es la pregunta que hay que
+hacerse antes de añadir el tercero.
 
 ## Los iconos
 
@@ -291,10 +534,10 @@ clases completas (`rotate-[-2.5deg]`) y no compuestos al vuelo: Tailwind genera 
 el código fuente, y una clase construida con una plantilla no aparece en ningún sitio que pueda
 leer, así que saldrían todas rectas.
 
-## Una sede o dos: siete componentes, un contrato
+## Una sede o dos: diez componentes, un contrato
 
-El bloque de ubicación tiene **cuatro componentes pensados para una sede y tres para dos**. Es
-una intención de diseño, no una restricción: los siete pintan todas las sedes que traiga el
+El bloque de ubicación tiene **siete componentes pensados para una sede y tres para dos**. Es
+una intención de diseño, no una restricción: los diez pintan todas las sedes que traiga el
 evento. Asignar `location.single` a una boda con templo y salón las enseña las dos, apiladas —
 nunca esconde una. Es la regla de la biblioteca: cambiar de componente jamás pierde contenido.
 
@@ -333,15 +576,18 @@ así que el seed **reapunta** primero los bloques que las usaran a `rsvp.card` y
 borra. Ese orden está en `RETIRED_VARIANTS`, y es el camino para dar de baja cualquier variante
 en el futuro.
 
-### Los seis formatos
+### Los nueve formatos
 
 `card` (sobria), `panel` (franja de color, la insistente), `ticket` (pase troquelado),
 `reply-card` (la tarjeta de respuesta que venía dentro del sobre, con doble filete y renglones),
-`postcard` (el reverso de una postal, con sello torcido y matasellos) y `torn` (franja de papel
-rasgado con un velo del color del tema).
+`postcard` (el reverso de una postal, con sello torcido y matasellos), `torn` (franja de papel
+rasgado con un velo del color del tema), `raised` (la tarjeta encimada entre el papel y la banda
+del final: la fotografía si la hay, el color principal si no) `hairline` (un filete, el rótulo y
+el botón, sin ninguna pieza alrededor) y `engraved` (un cartucho de doble filete, sin fondo
+propio: el que funciona sobre un papel oscuro).
 
-Los cuatro últimos son papelería reproducida. Ninguno pide el nombre ni cuántos van, y eso es una
-decisión, no una carencia: ver abajo.
+`torn`, `postcard`, `reply-card` y `ticket` son papelería reproducida. Ninguno pide el nombre ni
+cuántos van, y eso es una decisión, no una carencia: ver abajo.
 
 `torn` y `panel` son la misma insistencia con dos volúmenes: aquella cambia el fondo al color pleno
 del tema, esta lo tiñe al 15 % y se rompe por los cantos. La segunda es la que conviene cuando la
@@ -399,6 +645,23 @@ Los dos bloques finales son los únicos que se permiten un gesto, y cada uno el 
 
 Los dos respetan `prefers-reduced-motion`: la carta aparece ya abierta y la cinta se queda
 quieta, sin perder ni una pieza de la composición.
+
+Los otros tres no se mueven, y su gesto es de **material**:
+
+- **`closing.album`** trata la fotografía como un objeto pegado y no como fondo ni como columna:
+  montada sobre la hoja con cuatro esquineras y torcida grado y medio. La inclinación va en el
+  montaje y nunca en la fotografía —girar solo la foto dentro de un marco recto deja cuñas de papel
+  en las esquinas—, y pasados los tres grados deja de leerse como un descuido y empieza a leerse
+  como un efecto.
+- **`footer.colophon`** cierra como una revista: filete grueso con uno fino debajo —la marca
+  tipográfica de «aquí acabó lo que se estaba leyendo», que con un solo trazo se leería como una
+  separación entre secciones— y tres columnas separadas por corondeles. Los corondeles hacen el
+  trabajo de las etiquetas, y eso no es estilo: **ninguna variante escribe copia**, así que rotular
+  los campos «Fecha» o «Ciudad» ataría el pie a un idioma.
+- **`footer.sprig`** no es «el centrado con hojitas»: lo que cambia es el soporte. Es *otra hoja*,
+  con un velo de `primary` al 10 % y rasgada por el canto de arriba, que es el mismo material con
+  el que la plantilla Botanical abre. Sin monograma no deja dos ramas enfrentadas alrededor de un
+  hueco —eso se lee como una pieza que no cargó—: pone una sola, centrada.
 
 ## La bienvenida: el único bloque que no es una sección
 
@@ -615,10 +878,41 @@ Dos consecuencias prácticas:
 ### El contraste lo garantiza el tema, no el componente
 
 Al leer un tema se comprueban dos parejas y **se reparan si no se leen**: `onPrimary` sobre
-`primary` —el panel de detalles, el pie en cinta, el cierre a pantalla completa y el botón de
-confirmar— e `ink` sobre `background`. Si el contraste no llega a 4.5:1 (WCAG AA para texto
-normal), se sustituye por el color de la propia paleta que mejor contraste dé, y solo se recurre
-al blanco o al casi negro cuando ninguno de la paleta sirve.
+`primary` —el panel de detalles, el pie en cinta y el botón de confirmar— e `ink` sobre
+`background`. Si el contraste no llega a 4.5:1 (WCAG AA para texto normal), se sustituye por el
+color de la propia paleta que mejor contraste dé, y solo se recurre al blanco o al casi negro
+cuando ninguno de la paleta sirve.
+
+Y se **deriva** una tercera tinta que ningún tema escribe: `onPhoto`, la que se lee encima de una
+fotografía.
+
+#### Por qué hizo falta separarla de `onPrimary`
+
+Porque son dos fondos distintos y durante mucho tiempo se pintaron con el mismo token. `onPrimary`
+es «lo que se lee sobre el color principal», y cuando ese color es un tono medio la reparación
+hace lo correcto: en «dreamy», con su morado, ningún claro del tema llega a 4,5:1 y el token acaba
+resuelto a **#111111**. Negro sobre morado se lee perfectamente.
+
+El texto de una portada, en cambio, no está sobre el color principal: está sobre una **fotografía
+velada**, y ese fondo es siempre oscuro porque el velo lo garantiza. Ahí el mismo #111111 es
+invisible. El fallo salió en la puerta de `storytelling-xv` —la demo vestida con «dreamy»— pero
+afectaba a todo lo que se apoya en una foto: las bienvenidas, cuatro portadas, el cierre a
+pantalla completa y la sede a sangre. Con los otros diez temas no se veía, porque en ellos la
+reparación acaba dando un claro.
+
+`onPhoto` se elige entre los claros del propio tema —superficie, papel, tinta— midiendo contra el
+velo: en un tema claro sale la superficie, y en uno oscuro, donde superficie y papel son oscuros,
+sale la tinta, que ahí es la clara (el marfil de «royal», el crema de «emerald»). No es un blanco
+fijo: lo sigue poniendo el tema.
+
+#### Y se aplica sin tocar los componentes
+
+La clase `.inv-on-photo` —que ya marcaba «esto va sobre una foto» para ponerle sombra— redefine
+dentro de su subárbol la variable `--inv-color-on-primary`. Como las utilidades apuntan a la
+variable y no a un valor congelado, todo lo que ya estaba escrito se reapunta solo: los
+`text-inv-on-primary` de cada variante, el `tone="inverse"` de `BlockHeading` y el `tone="onImage"`
+del botón y de la cuenta regresiva. La única variante que la condiciona es `rsvp.panel`, porque es
+la única cuyo fondo es el color principal **o** una fotografía según el contenido.
 
 Un tema bien escrito pasa por ahí sin que se le cambie nada. Uno mal escrito —un verde bonito
 para el panel y la tinta que venía— sale legible igualmente, en lugar de con un botón que no se
@@ -635,9 +929,71 @@ Dos consecuencias que conviene tener presentes:
 - **Cambiar de tema no re-renderiza nada.** Por eso el panel puede enseñar cuatro
   previsualizaciones con cuatro temas en la misma página, sin iframes.
 
+## El motor de render
+
+`/<slug>/<código>` monta la invitación desde la base de datos. Tres piezas, y ninguna sabe nada
+de planes, temas ni variantes:
+
+```
+src/domain/invitation/
+  blocks/block-content.ts   La unión «contenido + de qué bloque es». La comparten el motor y la demo.
+  event-content.ts          El ensamblador: evento + config → el contenido de cada bloque.
+src/components/invitation/
+  InvitationBlock.tsx       Resuelve un registry_id contra el registro y lo pinta. El motor.
+  InvitationRenderer.tsx    La invitación entera: tema, puerta, secciones y mandos flotantes.
+  InvitationChrome.tsx      Música y volver arriba. Lo único que no es bloque ni tema.
+src/infrastructure/repositories/drizzle-invitation-repository.ts
+                            Carga evento, bloques, sedes, cronograma y fotos en la MISMA
+                            transacción que abre el acceso — el contexto de tenant dura eso.
+```
+
+### El contenido vive una sola vez
+
+**El evento guarda lo que es verdad del evento; el bloque guarda solo cómo lo cuenta.** El
+nombre, la fecha, las sedes, el cronograma y las fotos están en `events` y en sus tres tablas
+ordenadas; `event_blocks.config` guarda el rótulo de la sección, la introducción, la paleta de la
+vestimenta o si el cronograma va con iconos o con puntos.
+
+La composición es una sola regla, sin excepciones por bloque:
+
+```ts
+schema.safeParse({ ...projectFromEvent(source, blockKey), ...block.config })
+```
+
+El `config` **gana** sobre lo proyectado, así que escribir «Octubre 2026» donde la proyección
+diría «Sábado 17 de octubre, 2026» no necesita ninguna condición: lo derivado es un punto de
+partida, no una imposición.
+
+Lo que se gana es lo que vende el producto: **cambiar de plantilla o añadir una sección no obliga
+a recapturar nada**. Un evento que pasa de `classic` a `botanical` estrena un calendario que ya
+sabe qué día es, porque el día nunca fue del bloque. Con el contenido completo dentro de cada
+`config`, el nombre y la fecha estarían copiados en cinco sitios y corregir una errata sería
+corregirla cinco veces — hasta que alguien se dejara uno.
+
+Un bloque cuyo contenido no valida **se omite**, y no se lanza: pasa mientras alguien está
+montando la invitación —falta el rótulo, la lista está vacía— y perder una sección es un daño
+acotado. Una excepción dejaría la invitación en blanco para todos sus invitados. Es el criterio
+de `parseInvitationTheme` y de `resolveComponent`.
+
+### Dónde se aplica el plan
+
+Al **guardar**, nunca al pintar. Lo hace el alta de eventos de `/admin`
+(`DrizzleEventRepository.create`): al copiar la composición de la plantilla a `event_blocks`, un
+bloque nace **apagado** si su funcionalidad no entra en el plan vendido o si la variante que trae
+la plantilla exige un `min_plan_rank` mayor que el rango del plan. Se apaga en lugar de omitirse,
+para que subir de plan sea encenderlo. Para cuando el motor recibe los bloques, la decisión está
+tomada — y por eso no tiene ni un `if`.
+
+### La hora del evento
+
+`events.starts_at` es un instante absoluto y `time_zone` dice en qué huso vive. El repositorio los
+junta con `zonedIsoInstant` y entrega la hora **local del evento** con su desfase pegado detrás.
+Formatearla en UTC anunciaría el domingo una boda que es el sábado: las siete de la tarde en
+Mérida es la una de la madrugada del día siguiente en UTC.
+
 ## Lo que falta
 
-El motor que lee `event_blocks` de un evento —bloques, orden, variante y `config`— y renderiza
-la invitación real en `/<slug>/<código>`. Hoy esa ruta sigue pintando la invitación de Kamilah
-desde `src/data/event.json`; el contrato de contenido y el registro que ese motor necesita ya
-están en pie.
+- **Alta y edición de eventos en `/admin`.** Hoy los eventos entran por `db:seed`. Es lo que
+  cierra el flujo: crear, capturar contenido, ajustar bloques y publicar.
+- **El bloque `gifts`** (mesa de regalos) y la música por catálogo: lo exclusivo del plan Plus.
+- **La personalización por familia.** El motor ya reserva el hueco; ver «La confirmación».
