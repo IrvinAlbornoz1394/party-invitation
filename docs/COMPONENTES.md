@@ -30,7 +30,8 @@ src/domain/invitation/
   theme.ts              Tokens de un tema, con papeles semánticos y valores por defecto.
   countdown.ts          Aritmética de la cuenta regresiva, sin React.
   event-date.ts         La fecha partida en piezas, leída de la cadena ISO sin zonas horarias.
-  month-grid.ts         El mes en la retícula de siete columnas de un calendario. Sin React.
+  month-grid.ts         El mes en la retícula de siete columnas de un calendario, la semana del
+                        evento y el mes como recorrido (`monthSpan`). Sin React.
   day-strip.ts          Los tres días de antes, el del evento y los tres de después. Sin React.
 
 src/components/invitation/
@@ -92,6 +93,12 @@ src/components/invitation/
                           días. La cuenta la hace `eventWeek`, en `month-grid.ts`.
     CalendarBand.tsx      calendar.band  — la fecha sin retícula: la cifra del día a cuerpo de
                           cartel entre dos filetes.
+    CalendarScale.tsx     calendar.scale — el mes como una escala graduada, con el día señalado
+                          colgando del eje. La cuenta la hace `monthSpan`, en `month-grid.ts`.
+    CalendarDial.tsx      calendar.dial  — el mes en un aro con una marca por día y el arco
+                          recorrido encendido. La única circular.
+    CalendarPad.tsx       calendar.pad   — la hoja de taco sobre su pila, con cabecera de color y
+                          troquel. La única que es un objeto.
   blocks/dresscode/
     dresscode-variant.ts  DresscodeVariantProps.
     DresscodePalette.tsx  dresscode.palette  — la instrucción escrita y la paleta en muestras.
@@ -384,6 +391,22 @@ nueve, pero ninguna nació de un hueco: todas salen de la misma restricción, qu
 papel oscuro —ni tarjetas claras, ni franjas de color, ni sombras—, y de la única respuesta que
 queda entonces: **el filete dorado**.
 
+El décimo lote es distinto de todos los anteriores y conviene leerlo aparte, porque no lo pidió una
+plantilla nueva: `editorial`, `cinematic` y `silk` llevaban tiempo montadas **sin sección de
+fecha**. No era una decisión de composición, era la cuenta: cuando se escribieron, el bloque tenía
+una variante o dos y las llevaban otras estructuras, así que la regla dejaba a tres plantillas sin
+un bloque que cualquier invitación quiere. Escribir tres de golpe obligó a la pregunta buena —qué
+puede hacer un calendario que las cuatro que había no hagan— y la respuesta fue dejar de repartir
+días en casillas: `calendar.scale` es una escala graduada (el gráfico de un pliego de revista),
+`calendar.dial` es un aro con el arco recorrido (una figura por pantalla, que es lo que pide una
+plantilla de carteles) y `calendar.pad` es una hoja de taco sobre su pila (un objeto de papel, como
+todo lo demás en `silk`). Tres geometrías, no tres retículas.
+
+La lección es la simétrica de la anterior: un bloque que le falta a tres plantillas no se arregla
+repartiendo la variante que ya existe, pero tampoco es una excusa para tres variaciones de la
+misma. Si las tres se pueden describir en una frase cada una y ninguna frase se parece a la
+siguiente, el lote está bien.
+
 ## Rehacer una variante o escribir otra
 
 La pregunta llega en cuanto una plantilla ya montada tiene que cambiar de aspecto en un bloque, y
@@ -422,6 +445,13 @@ una hoja.
 4. **Verla** en `/admin/componentes`, en la pestaña de su bloque. Las variantes con componente
    registrado llevan botón «Ver ejemplo»; las que solo están en la base de datos, no — y esa
    diferencia es el aviso de que asignarla a un evento dejaría el bloque sin pintar.
+5. Y si la variante entra en una plantilla que **ya tiene eventos creados**, correr
+   `npm run db:sync-blocks`. La composición de un evento se copia de su plantilla al darlo de
+   alta, así que un bloque que la plantilla gana después no le llega a los que ya existían: ese
+   script les añade los que les faltan, en la posición que la plantilla les da y con su texto por
+   defecto, sin tocar variantes ni reordenar lo que ya tenían. Con `-- --dry` enseña qué haría.
+   Es idempotente y no hace falta cuando la variante solo se registra sin entrar en ninguna
+   plantilla.
 
 Y si además va a entrar en la composición de una plantilla, **comprobar que no la use ya otra del
 mismo tipo de evento**: ver la sección anterior. El seed lo verifica solo.

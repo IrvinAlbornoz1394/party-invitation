@@ -128,7 +128,12 @@ function namedGaps(source: EventContentSource, block: EventBlockRecord): readonl
 
   for (const issue of blockContentIssues(source, block)) {
     const field = issue.path.find((step) => typeof step === 'string');
-    const label = field ? FIELD_LABELS[field] : undefined;
+    /* El rótulo de la sección gana al general. Hace falta porque tres bloques guardan su lista en
+       la misma clave —`items`— y «los datos de la sección» no le dice a nadie que lo que falta
+       son fotos. Ver `BLOCK_FIELD_LABELS`. */
+    const label = field
+      ? (BLOCK_FIELD_LABELS[block.blockKey]?.[field] ?? FIELD_LABELS[field])
+      : undefined;
 
     seen.add(label ?? 'Falta contenido de esta sección');
   }
@@ -145,8 +150,12 @@ function namedGaps(source: EventContentSource, block: EventBlockRecord): readonl
  * No son los nombres del catálogo (`blocks.name`, en la base de datos), y la diferencia importa:
  * aquellos los lee un admin que conoce el sistema —«Pantalla de bienvenida»— y estos los lee
  * quien está completando su propia invitación. Cuando coinciden es casualidad.
+ *
+ * Se exporta porque los pasos del editor usan **estos mismos** nombres (ver `content-steps.ts`).
+ * Que el paso se llame igual que lo que la lista de pendientes echa en falta es lo que permite
+ * leer «te falta la Galería» y saber a qué paso ir.
  */
-const BLOCK_LABELS: Readonly<Record<string, string>> = {
+export const BLOCK_LABELS: Readonly<Record<string, string>> = {
   welcome: 'Pantalla de bienvenida',
   hero: 'Portada',
   story: 'Historia',
@@ -169,6 +178,21 @@ const BLOCK_LABELS: Readonly<Record<string, string>> = {
  * obligatorio un campo nuevo y nadie añade su rótulo, se ve igualmente —con el texto genérico— en
  * vez de desaparecer.
  */
+/**
+ * Lo mismo, pero dicho con las palabras de una sección concreta.
+ *
+ * Solo para los campos que significan cosas distintas según dónde estén. El caso es `items`: la
+ * galería, el programa y los detalles guardan su lista con esa clave, así que el rótulo común no
+ * puede ser más que «los datos de la sección» — y eso, leído en el marco de la vista previa junto
+ * a la palabra «Galería», no le dice a nadie que lo que falta son fotos.
+ */
+const BLOCK_FIELD_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  gallery: { items: 'Las fotos de la galería' },
+  schedule: { items: 'Los momentos del programa' },
+  details: { items: 'La lista de detalles' },
+  dresscode: { items: 'Los colores de la vestimenta' },
+};
+
 const FIELD_LABELS: Readonly<Record<string, string>> = {
   celebrantName: 'El nombre de quien celebra',
   dateLabel: 'La fecha',

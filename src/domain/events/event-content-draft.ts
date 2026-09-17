@@ -96,9 +96,17 @@ export const eventContentDraftSchema = z.object({
   celebrantLastName: optionalText(120),
   eventTypeLabel: optionalText(60),
   tagline: optionalText(240),
-  /* La historia se guarda tal cual, con sus saltos de línea: el bloque `story` los convierte en
-     párrafos con `paragraphsFromText`. Recortar solo los extremos deja la forma que se escribió. */
-  story: optionalText(4000),
+  /*
+   * La historia se guarda tal cual, con sus saltos de línea: el bloque `story` los convierte en
+   * párrafos con `paragraphsFromText`. Recortar solo los extremos deja la forma que se escribió.
+   *
+   * El tope son **cuatrocientos caracteres**, y bajó desde cuatro mil el 2026-09-10 por una razón
+   * de diseño y no de almacenamiento: la sección se compone en una columna angosta y un texto
+   * largo la convierte en un muro que nadie lee en un teléfono. El formulario enseña el contador con
+   * este mismo número —ver `maxLength` en `wizard/StepFields.tsx`—, así que si este cambia, aquel
+   * también: un contador que diga 200 mientras el servidor acepta más no informa, engaña.
+   */
+  story: optionalText(400),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Elige la fecha del evento.'),
   time: z.string().regex(/^\d{2}:\d{2}$/, 'Elige la hora del evento.'),
   city: optionalText(120),

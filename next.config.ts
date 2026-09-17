@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { OPTIMIZED_IMAGE_HOSTS } from './src/lib/images';
 
 /**
  * Cabeceras de seguridad aplicadas a todo el sitio.
@@ -56,8 +57,17 @@ const nextConfig: NextConfig = {
    */
   agentRules: false,
   images: {
-    // Allowlist explícita: sin esto, /_next/image se vuelve un proxy abierto.
-    remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
+    /*
+     * Allowlist explícita: sin esto, /_next/image se vuelve un proxy abierto.
+     *
+     * La lista vive en `src/lib/images.ts` porque `BlockImage` la necesita para lo contrario:
+     * saber qué URL **no** puede optimizar y servirla tal cual en vez de dejar que el
+     * renderizador lance. Escrita dos veces, añadir un host arreglaría un lado y no el otro.
+     */
+    remotePatterns: OPTIMIZED_IMAGE_HOSTS.map((hostname) => ({
+      protocol: 'https' as const,
+      hostname,
+    })),
   },
   // El header Server delata la infraestructura sin dar ningún beneficio.
   poweredByHeader: false,

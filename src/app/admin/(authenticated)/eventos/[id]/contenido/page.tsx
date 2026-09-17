@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { EventPublishPanel } from '@/components/dashboard/admin/EventPublishPanel';
-import { EventContentScreen } from '@/components/dashboard/client/EventContentScreen';
+import { ContentWizard } from '@/components/dashboard/client/wizard/ContentWizard';
 import { editEventContent, findEventForPlatform } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 import {
@@ -48,24 +48,31 @@ export default async function AdminEventContentPage({
 
   if (event === null) notFound();
 
-  const [draft, collections] = await Promise.all([
+  const [form, collections, sections] = await Promise.all([
     editEventContent.loadAsPlatform(credentials, event.clientId, id),
     editEventContent.loadCollectionsAsPlatform(credentials, event.clientId, id),
+    editEventContent.loadSectionsAsPlatform(credentials, event.clientId, id),
   ]);
 
-  if (!draft || !collections) notFound();
+  if (!form || !collections) notFound();
 
   return (
-    <EventContentScreen
+    <ContentWizard
       eventId={id}
-      draft={draft}
+      draft={form.draft}
+      eventTypeKey={form.eventTypeKey}
+      steps={sections.steps}
       collections={collections}
+      blockTexts={sections.texts}
       timeZone={TIME_ZONE_LABEL}
       action={saveAdminContentAction}
       initialState={INITIAL_ADMIN_CONTENT_STATE}
       title={event.title}
       description={`Contenido de la invitación de ${event.clientName ?? 'este cliente'}. Se guarda igual que lo guardaría el cliente.`}
       previewUrl={`/admin/eventos/${id}/vista`}
+      /* Un evento que ya llegó a revisión no se entra a capturar, se entra a mirar y publicar:
+         la pantalla abre en la vista previa y los pasos quedan para corregir algo. */
+      openAtPreview={event.status === 'review'}
       banner={
         <EventPublishPanel
           eventId={id}

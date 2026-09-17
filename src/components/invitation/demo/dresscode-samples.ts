@@ -39,7 +39,10 @@ export const DRESSCODE_SAMPLES: readonly DemoSample<DresscodeContent>[] = [
         { color: '#b79a63', label: null, finish: 'metallic' },
       ],
       action: null,
-      note: null,
+      /* La nota corta: el dato práctico que la instrucción de arriba no da. La llevaba solo el
+         ejemplo de XV, así que en las cinco demos de boda la sección terminaba en la paleta y no
+         se veía que las nueve variantes pintan este renglón. */
+      note: 'El coctel es en el jardín, así que mejor evita el tacón de aguja.',
     }),
   },
   {
@@ -58,7 +61,11 @@ export const DRESSCODE_SAMPLES: readonly DemoSample<DresscodeContent>[] = [
         { color: '#b8b5b0', label: 'Plata', finish: 'metallic' },
         { color: '#2f3b34', label: 'Verde botella', finish: 'flat' },
       ],
-      action: { label: 'Ver ideas de atuendo', href: 'https://www.pinterest.com' },
+      /* Sin botón. El enlace a un tablero de ideas mandaba fuera de la invitación justo en la
+         sección que ya dice lo que hay que saber —la instrucción y la paleta—, y era además el
+         único de las dos demos, así que enseñaba una salida que ninguna otra sección tiene. El
+         campo sigue en el contrato para un evento que quiera darla. */
+      action: null,
       note: 'Tacón cómodo: la pista es de madera y no pensamos parar.',
     }),
   },

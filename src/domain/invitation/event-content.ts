@@ -335,8 +335,13 @@ function projectFromEvent(
  * El molde de la salida es lo que cuesta esta forma: `safeParse` devuelve el tipo del esquema
  * concreto y aquí se ven todos como uno. Se paga una vez, en `assembleBlockContent`, donde la
  * pareja (clave, esquema) es correcta por construcción — y no en cada uso.
+ *
+ * Se exporta porque el editor de textos por bloque (`domain/events/event-block-texts.ts`) valida
+ * con **estos mismos** esquemas en lugar de con una copia: los topes de longitud y qué campo puede
+ * quedar vacío son del contrato del bloque, y escribirlos otra vez en el formulario sería tener
+ * dos verdades sobre lo mismo — la del panel y la que decide si la sección se pinta.
  */
-const SCHEMAS = {
+export const BLOCK_CONTENT_SCHEMAS = {
   welcome: welcomeContentSchema,
   hero: heroContentSchema,
   story: storyContentSchema,
@@ -351,9 +356,27 @@ const SCHEMAS = {
   footer: footerContentSchema,
 } as const;
 
+/**
+ * Qué campos de un bloque los pone el **evento** y no su configuración.
+ *
+ * Es la misma proyección que usa el ensamblado, leída solo por sus claves. La necesita el editor
+ * de textos por bloque para no ofrecer un campo que el evento ya decide: si el panel guardara un
+ * `dateLabel` en `event_blocks.config`, ganaría al del evento —el `spread` lo pone después— y la
+ * fecha de la portada se quedaría congelada el día que el evento se moviera.
+ *
+ * Se calcula con el evento delante en vez de con una tabla escrita a mano porque una tabla
+ * paralela al `switch` de la proyección se desincroniza en cuanto un bloque gane un campo.
+ */
+export function projectedFieldsOf(
+  source: EventContentSource,
+  blockKey: ContentBlockKey,
+): readonly string[] {
+  return Object.keys(projectFromEvent(source, blockKey));
+}
+
 /** Si el código sabe qué contenido lleva ese bloque. Un bloque sin contrato no se pinta. */
 export function isContentBlockKey(blockKey: string): blockKey is ContentBlockKey {
-  return blockKey in SCHEMAS;
+  return blockKey in BLOCK_CONTENT_SCHEMAS;
 }
 
 /**
@@ -367,7 +390,7 @@ export function assembleBlockContent(
 ): AssembledBlock | null {
   if (!isContentBlockKey(block.blockKey)) return null;
 
-  const parsed = SCHEMAS[block.blockKey].safeParse({
+  const parsed = BLOCK_CONTENT_SCHEMAS[block.blockKey].safeParse({
     ...projectFromEvent(source, block.blockKey),
     ...block.config,
   });
@@ -399,7 +422,7 @@ export function blockContentIssues(
 ): readonly { readonly path: readonly PropertyKey[] }[] {
   if (!isContentBlockKey(block.blockKey)) return [];
 
-  const parsed = SCHEMAS[block.blockKey].safeParse({
+  const parsed = BLOCK_CONTENT_SCHEMAS[block.blockKey].safeParse({
     ...projectFromEvent(source, block.blockKey),
     ...block.config,
   });

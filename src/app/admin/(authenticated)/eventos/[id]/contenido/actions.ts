@@ -64,6 +64,7 @@ export async function saveAdminContentAction(
     eventId,
     draft,
     parseCollections(readText(formData, 'collections')),
+    parseBlockTextsField(readText(formData, 'blocks')),
   );
 
   switch (result.outcome) {
@@ -202,6 +203,24 @@ function parseCollections(raw: string): {
     };
   } catch {
     return empty;
+  }
+}
+
+/**
+ * Los textos de cada sección, del campo oculto que los serializa.
+ *
+ * Va sin tipar más allá de «un objeto»: quien sabe qué bloques tiene este evento y qué campos
+ * admite cada uno es el dominio (`parseBlockTexts`), y adelantar aquí esa forma sería escribir la
+ * misma regla en dos sitios. Un JSON ilegible —solo puede venir de una llamada hecha a mano— se
+ * trata como «no se mandó nada», que es el mismo fallar cerrado que las colecciones.
+ */
+function parseBlockTextsField(raw: string): unknown {
+  if (raw.length === 0) return {};
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
   }
 }
 

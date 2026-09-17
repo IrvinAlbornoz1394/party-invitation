@@ -117,60 +117,67 @@ const [row] = await tx
 // que el contexto y el evento no concuerdan, y eso nunca debe servirse.
 if (!row) return null;
 
-const [blocks, venues, schedule, gallery] = await Promise.all([
-  tx
-    .select({
-      blockKey: eventBlocks.blockKey,
-      registryId: componentVariants.registryId,
-      position: eventBlocks.position,
-      config: eventBlocks.config,
-    })
-    .from(eventBlocks)
-    .innerJoin(componentVariants, eq(componentVariants.id, eventBlocks.variantId))
-    /* Los bloques apagados no se leen siquiera. Filtrarlos después traería a memoria el
-       `config` de secciones que nadie va a ver. */
-    .where(sql`${eventBlocks.eventId} = ${eventId} and ${eventBlocks.isEnabled}`)
-    .orderBy(asc(eventBlocks.position)),
+/*
+ * Las cuatro lecturas van **en serie**, y no es un descuido de optimización: están dentro de una
+ * transacción, o sea sobre **una sola conexión**, y `pg` no puede ejecutar dos consultas a la vez
+ * por la misma. Con `Promise.all` las encolaba igual —el paralelismo era aparente— y desde pg@8
+ * avisa de que en la 9 dejará de tolerarlo. Lo que se creía ganar no se ganaba.
+ *
+ * Sacarlas de la transacción para que sí fueran en paralelo tampoco vale: el contexto de tenant
+ * es `LOCAL` a esta transacción, así que fuera de ella RLS no devolvería ni una fila.
+ */
+const blocks = await tx
+  .select({
+    blockKey: eventBlocks.blockKey,
+    registryId: componentVariants.registryId,
+    position: eventBlocks.position,
+    config: eventBlocks.config,
+  })
+  .from(eventBlocks)
+  .innerJoin(componentVariants, eq(componentVariants.id, eventBlocks.variantId))
+  /* Los bloques apagados no se leen siquiera. Filtrarlos después traería a memoria el
+     `config` de secciones que nadie va a ver. */
+  .where(sql`${eventBlocks.eventId} = ${eventId} and ${eventBlocks.isEnabled}`)
+  .orderBy(asc(eventBlocks.position));
 
-  tx
-    .select({
-      kind: eventVenues.kind,
-      label: eventVenues.label,
-      name: eventVenues.name,
-      address: eventVenues.address,
-      detail: eventVenues.detail,
-      mapUrl: eventVenues.mapUrl,
-      startsAt: eventVenues.startsAt,
-      imageUrl: eventVenues.imageUrl,
-      imageAlt: eventVenues.imageAlt,
-    })
-    .from(eventVenues)
-    .where(eq(eventVenues.eventId, eventId))
-    .orderBy(asc(eventVenues.position)),
+const venues = await tx
+  .select({
+    kind: eventVenues.kind,
+    label: eventVenues.label,
+    name: eventVenues.name,
+    address: eventVenues.address,
+    detail: eventVenues.detail,
+    mapUrl: eventVenues.mapUrl,
+    startsAt: eventVenues.startsAt,
+    imageUrl: eventVenues.imageUrl,
+    imageAlt: eventVenues.imageAlt,
+  })
+  .from(eventVenues)
+  .where(eq(eventVenues.eventId, eventId))
+  .orderBy(asc(eventVenues.position));
 
-  tx
-    .select({
-      timeLabel: eventScheduleItems.timeLabel,
-      title: eventScheduleItems.title,
-      description: eventScheduleItems.description,
-      icon: eventScheduleItems.icon,
-    })
-    .from(eventScheduleItems)
-    .where(eq(eventScheduleItems.eventId, eventId))
-    .orderBy(asc(eventScheduleItems.position)),
+const schedule = await tx
+  .select({
+    timeLabel: eventScheduleItems.timeLabel,
+    title: eventScheduleItems.title,
+    description: eventScheduleItems.description,
+    icon: eventScheduleItems.icon,
+  })
+  .from(eventScheduleItems)
+  .where(eq(eventScheduleItems.eventId, eventId))
+  .orderBy(asc(eventScheduleItems.position));
 
-  tx
-    .select({
-      url: eventGalleryItems.url,
-      altText: eventGalleryItems.altText,
-      caption: eventGalleryItems.caption,
-      width: eventGalleryItems.width,
-      height: eventGalleryItems.height,
-    })
-    .from(eventGalleryItems)
-    .where(eq(eventGalleryItems.eventId, eventId))
-    .orderBy(asc(eventGalleryItems.position)),
-]);
+const gallery = await tx
+  .select({
+    url: eventGalleryItems.url,
+    altText: eventGalleryItems.altText,
+    caption: eventGalleryItems.caption,
+    width: eventGalleryItems.width,
+    height: eventGalleryItems.height,
+  })
+  .from(eventGalleryItems)
+  .where(eq(eventGalleryItems.eventId, eventId))
+  .orderBy(asc(eventGalleryItems.position));
 
 const content: InvitationContent = {
   themeTokens: row.themeTokens,

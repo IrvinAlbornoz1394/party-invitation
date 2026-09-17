@@ -1,14 +1,27 @@
 import type { ClientActor, TenantScope } from '@/domain/auth/actor';
+import { contentSteps, type ContentStep } from '@/domain/events/content-steps';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
+import {
+  coerceBlockTexts,
+  editableBlockTexts,
+  parseBlockTexts,
+  type BlockConfigPatch,
+  type EditableBlockTexts,
+} from '@/domain/events/event-block-texts';
 import { eventCollectionsSchema, type EventCollections } from '@/domain/events/event-collections';
 import {
   eventContentDraftSchema,
-  type EventContentDraft,
   type EventContentDraftInput,
 } from '@/domain/events/event-content-draft';
-import type { EventRepository } from '@/domain/events/event-repository';
+import type { EventContentForm, EventRepository } from '@/domain/events/event-repository';
 import type { Invitation, InvitationContent } from '@/domain/events/invitation';
 import type { InvitationRepository } from '@/domain/events/invitation-repository';
+
+/** Con qué se arma el editor: sus pasos y los textos que cada sección guarda. */
+export interface EditorSections {
+  readonly steps: readonly ContentStep[];
+  readonly texts: readonly EditableBlockTexts[];
+}
 
 export type SaveContentResult =
   | { readonly outcome: 'saved' }
@@ -46,14 +59,37 @@ export class EditEventContent {
     private readonly invitations: InvitationRepository,
   ) {}
 
-  /** El contenido actual, para rellenar el formulario. */
-  async load(actor: ClientActor, eventId: string): Promise<EventContentDraft | null> {
+  /** El contenido actual y qué se celebra, para rellenar el formulario. */
+  async load(actor: ClientActor, eventId: string): Promise<EventContentForm | null> {
     return this.events.loadContentDraft(actor, eventId);
   }
 
   /** Las tres listas ordenadas: sedes, cronograma y galería. */
   async loadCollections(actor: ClientActor, eventId: string): Promise<EventCollections> {
     return this.events.loadCollections(actor, eventId);
+  }
+
+  /**
+   * Cómo se reparte el formulario: los pasos y los textos propios de cada sección.
+   *
+   * Las dos cosas salen de la **misma lectura que la vista previa** (`findForPreview`) y no de
+   * consultas propias, porque las dos dependen de lo mismo: qué bloques tiene el evento. Los
+   * pasos son esos bloques en su orden, y los textos son los campos que la proyección no da. Con
+   * dos consultas aparte habría que repetir el ensamblado del contexto, y el día que divergieran
+   * el formulario pediría cosas que la invitación ignora.
+   *
+   * Un evento fuera del alcance devuelve un solo paso —la vista previa— y ningún texto: la página
+   * ya responde 404 por su cuenta al no encontrar el borrador.
+   */
+  async loadSections(scope: TenantScope, eventId: string): Promise<EditorSections> {
+    const loaded = await this.invitations.findForPreview(scope, eventId);
+
+    if (!loaded) return { steps: contentSteps([]), texts: [] };
+
+    return {
+      steps: contentSteps(loaded.content.blocks),
+      texts: editableBlockTexts(loaded.content.source, loaded.content.blocks),
+    };
   }
 
   /**
@@ -74,6 +110,8 @@ export class EditEventContent {
      * y quien lo comprueba es el esquema, dos líneas más abajo.
      */
     collections: unknown,
+    /* Los textos de cada sección, del mismo campo oculto y con el mismo `unknown` por delante. */
+    blockTexts: unknown,
   ): Promise<SaveContentResult> {
     const parsed = eventContentDraftSchema.safeParse(input);
     const parsedCollections = eventCollectionsSchema.safeParse(collections);
@@ -102,6 +140,19 @@ export class EditEventContent {
       return { outcome: 'invalid', errors };
     }
 
+    /*
+     * Los textos por bloque se validan **antes** de escribir nada, con los bloques que el evento
+     * tiene hoy. Se lee el evento tal como está —todavía sin el borrador de este envío— y da
+     * igual: de esa lectura solo salen qué bloques hay y qué campos pone la proyección, y ninguna
+     * de las dos cosas cambia porque el cliente corrija su fecha en el mismo guardado.
+     */
+    const texts = this.blockTextPatches(
+      await this.invitations.findForPreview(actor, eventId),
+      blockTexts,
+    );
+
+    if (texts.outcome === 'invalid') return texts;
+
     const saved = await this.events.saveContentDraft({
       scope: actor,
       eventId,
@@ -128,7 +179,43 @@ export class EditEventContent {
       collections: parsedCollections.data,
     });
 
-    return savedCollections ? { outcome: 'saved' } : { outcome: 'not-found' };
+    if (!savedCollections) return { outcome: 'not-found' };
+
+    /* Y los textos de cada sección, en su propia escritura y por lo mismo que las colecciones:
+       unirlas exigiría que este caso de uso manejara la transacción. Volver a pulsar guardar deja
+       las tres partes al día, porque ninguna depende del estado anterior. */
+    const savedTexts = await this.events.saveBlockTexts({
+      scope: actor,
+      eventId,
+      patches: texts.patches,
+    });
+
+    return savedTexts ? { outcome: 'saved' } : { outcome: 'not-found' };
+  }
+
+  /**
+   * Los parches de texto listos para escribir, o los motivos por los que no.
+   *
+   * Está aparte porque lo usan los dos caminos —el del cliente y el de la plataforma— y hacen
+   * exactamente lo mismo: leer los bloques del evento y validar contra sus contratos. Que el admin
+   * pudiera guardar un rótulo que el cliente no puede sería la clase de diferencia que este editor
+   * compartido existe para evitar.
+   */
+  private blockTextPatches(
+    loaded: { readonly content: InvitationContent } | null,
+    blockTexts: unknown,
+  ):
+    | { readonly outcome: 'valid'; readonly patches: readonly BlockConfigPatch[] }
+    | { readonly outcome: 'invalid'; readonly errors: Readonly<Record<string, string>> } {
+    /* Sin invitación que leer no hay bloques a los que aplicar nada. No es un error aquí: el
+       guardado que viene detrás dirá «not-found» por su cuenta, que es el mismo motivo. */
+    if (!loaded) return { outcome: 'valid', patches: [] };
+
+    return parseBlockTexts(
+      loaded.content.source,
+      loaded.content.blocks,
+      coerceBlockTexts(blockTexts),
+    );
   }
 
   /**
@@ -173,7 +260,7 @@ export class EditEventContent {
     credentials: PlatformCredentials,
     clientId: string,
     eventId: string,
-  ): Promise<EventContentDraft | null> {
+  ): Promise<EventContentForm | null> {
     return this.events.loadContentDraftAsPlatform(credentials, clientId, eventId);
   }
 
@@ -185,12 +272,28 @@ export class EditEventContent {
     return this.events.loadCollectionsAsPlatform(credentials, clientId, eventId);
   }
 
+  async loadSectionsAsPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<EditorSections> {
+    const loaded = await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId);
+
+    if (!loaded) return { steps: contentSteps([]), texts: [] };
+
+    return {
+      steps: contentSteps(loaded.content.blocks),
+      texts: editableBlockTexts(loaded.content.source, loaded.content.blocks),
+    };
+  }
+
   async saveAsPlatform(
     credentials: PlatformCredentials,
     clientId: string,
     eventId: string,
     input: EventContentDraftInput,
     collections: unknown,
+    blockTexts: unknown,
   ): Promise<SaveContentResult> {
     const parsed = eventContentDraftSchema.safeParse(input);
     const parsedCollections = eventCollectionsSchema.safeParse(collections);
@@ -198,6 +301,16 @@ export class EditEventContent {
     if (!parsed.success || !parsedCollections.success) {
       return { outcome: 'invalid', errors: fieldErrors(parsed.error?.issues, parsedCollections.error?.issues) };
     }
+
+    /* Los mismos contratos que en el camino del cliente, y por eso la comprobación es la misma
+       función: el borrador de un admin no puede saltarse una regla que al cliente sí se le
+       aplica. */
+    const texts = this.blockTextPatches(
+      await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId),
+      blockTexts,
+    );
+
+    if (texts.outcome === 'invalid') return texts;
 
     const saved = await this.events.saveContentDraftAsPlatform({
       credentials,
@@ -216,6 +329,15 @@ export class EditEventContent {
     });
 
     if (!savedCollections) return { outcome: 'not-found' };
+
+    const savedTexts = await this.events.saveBlockTextsAsPlatform({
+      credentials,
+      clientId,
+      eventId,
+      patches: texts.patches,
+    });
+
+    if (!savedTexts) return { outcome: 'not-found' };
 
     /*
      * Guardar como plataforma **apaga la espera del cliente**.

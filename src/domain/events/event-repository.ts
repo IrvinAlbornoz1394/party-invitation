@@ -1,4 +1,5 @@
 import type { TenantScope } from '@/domain/auth/actor';
+import type { BlockConfigPatch } from './event-block-texts';
 import type { EventCollections } from './event-collections';
 import type { EventContentDraft } from './event-content-draft';
 import type { NewEvent } from './new-event';
@@ -80,6 +81,22 @@ export type CreateEventResult =
   /** La base de datos no autorizó abrir el contexto de ese cliente. */
   | { readonly outcome: 'forbidden' };
 
+/**
+ * Lo que la pantalla de contenido necesita del evento: lo editable y qué se celebra.
+ *
+ * `eventTypeKey` viaja al lado del borrador y **no dentro** de él, y la distinción importa: el
+ * borrador es exactamente lo que se guarda —de ahí sale el `UPDATE`— y el tipo de evento no se
+ * edita aquí, lo fija la plataforma al dar el alta. Metido dentro, el formulario podría mandarlo
+ * de vuelta y una boda se convertiría en unos XV desde un campo oculto.
+ *
+ * Lo pide el formulario porque hay preguntas que dependen de qué se celebra: ver
+ * `domain/events/content-hints.ts`.
+ */
+export interface EventContentForm {
+  readonly draft: EventContentDraft;
+  readonly eventTypeKey: string;
+}
+
 export interface EventRepository {
   /**
    * Da de alta un evento y su composición de bloques, en una sola transacción.
@@ -109,7 +126,7 @@ export interface EventRepository {
    * Devuelve `null` cuando el evento no está en el alcance, que con RLS puesto es lo mismo que
    * decir que no existe para quien pregunta.
    */
-  loadContentDraft(scope: TenantScope, eventId: string): Promise<EventContentDraft | null>;
+  loadContentDraft(scope: TenantScope, eventId: string): Promise<EventContentForm | null>;
 
   /**
    * Guarda el contenido editable.
@@ -145,6 +162,27 @@ export interface EventRepository {
     readonly scope: TenantScope;
     readonly eventId: string;
     readonly collections: EventCollections;
+  }): Promise<boolean>;
+
+  /**
+   * Funde textos en el `config` de varios bloques del evento, de una vez.
+   *
+   * **Funde, no reemplaza.** En `event_blocks.config` conviven los textos que el cliente escribe
+   * con ajustes que este formulario no toca —`marker` en el cronograma, `dayMark` en el
+   * calendario, la paleta de la vestimenta—, así que escribir el objeto entero borraría lo que no
+   * venía en el formulario. Cada bloque se actualiza con `config || parche`.
+   *
+   * Un `null` en el parche **sí** se guarda, y es a propósito: es como se borra un rótulo. El
+   * contrato del bloque admite `null` justo en los campos que pueden faltar, y una clave con
+   * `null` es lo que el ensamblado necesita para que gane el respaldo de la proyección.
+   *
+   * Devuelve `false` si el evento no está en el alcance. Un parche para un bloque que ese evento
+   * no tiene no es un error: no encuentra fila y no escribe nada.
+   */
+  saveBlockTexts(input: {
+    readonly scope: TenantScope;
+    readonly eventId: string;
+    readonly patches: readonly BlockConfigPatch[];
   }): Promise<boolean>;
 
   /**
@@ -190,7 +228,7 @@ export interface EventRepository {
     credentials: PlatformCredentials,
     clientId: string,
     eventId: string,
-  ): Promise<EventContentDraft | null>;
+  ): Promise<EventContentForm | null>;
 
   saveContentDraftAsPlatform(input: {
     readonly credentials: PlatformCredentials;
@@ -210,6 +248,13 @@ export interface EventRepository {
     readonly clientId: string;
     readonly eventId: string;
     readonly collections: EventCollections;
+  }): Promise<boolean>;
+
+  saveBlockTextsAsPlatform(input: {
+    readonly credentials: PlatformCredentials;
+    readonly clientId: string;
+    readonly eventId: string;
+    readonly patches: readonly BlockConfigPatch[];
   }): Promise<boolean>;
 
   /* ── El camino del evento ───────────────────────────────────────────────────

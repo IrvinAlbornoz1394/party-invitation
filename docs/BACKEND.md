@@ -734,6 +734,25 @@ fotos con RLS puesta. Va todo junto porque ese contexto dura **una transacción*
 solo: leerlo en una segunda llamada obligaría a volver a abrir la frontera de seguridad, y
 conviene que esté en un solo sitio.
 
+**Dentro de una transacción, las consultas van en serie.** Una transacción es **una conexión**, y
+`pg` no ejecuta dos consultas a la vez por la misma: las encola, así que un `Promise.all` de tres
+`tx.execute` no ahorra ni un viaje —el paralelismo es aparente— y desde pg@8 avisa de que en la 9
+dejará de tolerarlo (`Calling client.query() when the client is already executing a query`).
+Sacarlas fuera de la transacción para que sí fueran en paralelo tampoco vale: el contexto de
+tenant es `LOCAL` a ella, así que fuera RLS no devolvería ni una fila. Donde sí se puede pedir
+varias cosas a la vez es contra el **pool** —`db.select()` sin transacción, como hace el
+repositorio de catálogo—, porque ahí cada consulta toma su propia conexión; pero eso solo sirve
+para tablas sin RLS de cliente.
+
+**Un array de JavaScript en una plantilla `sql` no viaja como array.** Drizzle lo despliega en
+una lista de parámetros separados por comas, pensada para un `in (...)`. Donde la consulta espera
+un array de Postgres —`= any(...)`, `<> all(...)`, `unnest(...)`— eso genera SQL inválido: con la
+lista vacía sale `all(())` y con dos elementos `all(($1, $2)::uuid[])`, y ninguna de las dos es
+sintaxis válida. Hay que envolverlo en `sql.param(...)`, que lo manda como **un solo** parámetro y
+deja que `pg` lo serialice como el array que es. Costó un guardado que fallaba siempre —ver
+`syncVenues` en `DrizzleEventRepository`—, y el síntoma no señala al array: el error de Postgres
+habla de un paréntesis.
+
 ## Decisiones de esquema
 
 **Columnas tipadas vs jsonb.** Lo que la plataforma consulta, ordena o valida va en
@@ -741,6 +760,15 @@ columna (fecha, estado, slug, nombre del festejado). Lo que solo el bloque sabe
 renderizar (papás, padrinos, tema de la fiesta, lineup) vive en `event_blocks.config`
 como jsonb. Así el panel lista y filtra eventos sin abrir jsonb, y agregar un tipo de
 evento con contenido distinto no cuesta una migración.
+
+**`event_blocks.config` se funde, nunca se reemplaza.** Ese jsonb tiene dos dueños: el seed lo
+escribe al crear el evento copiando la plantilla, y desde el editor de contenido el cliente
+—o el admin— cambia los textos de cada sección. Como cada uno toca claves distintas, la
+escritura del panel es `config = config || parche` con solo los campos de ese formulario: guardar
+el objeto entero borraría lo que no venía en él (el `marker` del cronograma, el `dayMark` del
+calendario, la paleta de la vestimenta). Un `null` en el parche sí se guarda, y es como se borra
+un rótulo: el ensamblado hace `{ ...proyección, ...config }`, así que la clave con `null` deja
+que gane el respaldo derivado del evento. Ver `domain/events/event-block-texts.ts`.
 
 **Component Registry.** `component_variants.registry_id` (`'hero.classic'`) es una
 columna **generada** a partir de `block_key` y `variant_key`, así que el identificador
@@ -809,6 +837,25 @@ Un detalle que ya mordió una vez y conviene no volver a descubrir: antd fija
 `line-height: 64px` en `.ant-layout-header`, y los hijos lo heredan. Una cabecera con título
 y subtítulo suma dos líneas de 64px dentro de un header de 88px y, al ir centradas, la
 primera se sale por arriba y se corta. `panel.css` lo neutraliza con `line-height: normal`.
+
+## Las fotografías y el optimizador
+
+`next/image` exige una allowlist de hosts (`images.remotePatterns`) y **lanza** ante cualquier
+otro. Eso choca de frente con el producto: las fotos de una invitación las pega el cliente, con
+el enlace de donde las tenga, y ninguna lista puede adivinarlo — la primera invitación con una
+foto de un dominio nuevo dejaba la sección sin pintar en desarrollo y con la imagen rota (un 400
+del optimizador) en producción.
+
+La salida **no** fue abrir la lista a `**`: sin allowlist, `/_next/image` se convierte en un
+proxy abierto que cualquiera puede usar para descargar y reescalar imágenes de internet a costa
+del servidor. Lo que se hace es decidir por URL: lo que viene de un host nuestro se optimiza y lo
+demás se sirve tal cual, con `unoptimized`. La lista está en `src/lib/images.ts`, y la leen tanto
+`next.config.ts` —para declarar los `remotePatterns`— como los tres componentes que pintan fotos
+de un evento: `BlockImage`, la galería (`gallery-parts.tsx`) y el visor ampliado (`Lightbox`).
+
+El coste es que la foto de un cliente viaja con el peso que tenga. Es temporal: cuando exista la
+subida de archivos, esas fotos estarán en nuestro almacenamiento, ese host entrará en la lista y
+volverán a optimizarse todas.
 
 ## Pendientes conocidos
 

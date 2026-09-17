@@ -13,8 +13,9 @@ import type { DemoSample } from './sample';
  *     Es el camino de Premium, y en el panel se ve funcionando porque la previsualización conecta
  *     una pasarela simulada.
  *
- * La boda lleva además la salida de «no podré asistir». Los dos cambian de fecha límite, de texto
- * del botón y de nota, que es lo que se configura en cada evento.
+ * La boda lleva además la salida de «no podré asistir», y llega **pelada** —sin bajada y sin
+ * nota—, que es el caso que hay que poder ver: el bloque tiene que sostenerse con el título, el
+ * plazo y el botón. Los XV traen las dos, y entre los dos ejemplos se ven las dos maquetas.
  *
  * Ninguno pide **cuántos van**, y es a propósito: el cupo de cada familia llegará con la lista de
  * invitados del panel, en Premium, y entonces el bloque lo sabrá sin preguntarlo. Pedir hoy «vamos
@@ -29,7 +30,11 @@ export const RSVP_SAMPLES: readonly DemoSample<RsvpContent>[] = [
     content: rsvpContentSchema.parse({
       eyebrow: 'Nos vemos el 12 de junio',
       title: 'Confirma tu asistencia',
-      subtitle: 'El servicio es en mesa, así que cada lugar cuenta.',
+      /* Sin bajada. La que había —«el servicio es en mesa, así que cada lugar cuenta»—
+         justificaba la petición con un dato del banquete que ninguna de las nueve variantes
+         necesita para leerse, y dejaba el título con una explicación pegada debajo. El de XV sí
+         la lleva, así que las dos maquetas —con bajada y sin ella— se siguen viendo. */
+      subtitle: null,
       deadlineLabel: 'Antes del 12 de mayo',
       confirmLabel: 'Ahí estaré',
       destination: {
@@ -41,7 +46,10 @@ export const RSVP_SAMPLES: readonly DemoSample<RsvpContent>[] = [
         label: 'No podré asistir',
         href: 'https://wa.me/5219999876543?text=Hola%2C%20soy%20___%20y%20lamento%20no%20poder%20acompa%C3%B1arlos.',
       },
-      note: 'Esta invitación es para adultos. Gracias por entenderlo.',
+      /* Sin nota: lo que decía —que la invitación es para adultos— ya lo dice, y mejor, el
+         bloque de detalles de esta misma demo («Solo adultos», en `details-samples.ts`).
+         Repetido al pie de la confirmación se lee como una condición para poder confirmar. */
+      note: null,
       image: null,
     }),
   },

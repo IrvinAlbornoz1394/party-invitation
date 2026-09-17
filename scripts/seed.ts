@@ -90,7 +90,14 @@ const FEATURES = [
    * funcionalidades es lo que la página de precios enumera, así que tiene que constar aquí.
    */
   { key: 'variantes_intercambiables', name: 'Intercambiar variantes de cada bloque', category: 'invitacion' },
-  { key: 'reordenar_secciones', name: 'Reordenar las secciones', category: 'invitacion' },
+  /* Reordenar incluye **encender y apagar**: son el mismo gesto sobre la misma lista y se guardan
+     juntos, así que separarlos en dos llaves habría creado un plan imposible de explicar —«puedes
+     mover las secciones pero no quitarlas»— y dos comprobaciones donde basta una. */
+  { key: 'reordenar_secciones', name: 'Reordenar y ocultar secciones', category: 'invitacion' },
+  /* El tema va desde Esencial, y no es una concesión: el plan más barato ya se vende como «elige
+     plantilla y tema». Lo que faltaba era la llave para poder comprobarlo — sin ella, «¿puede
+     este cliente cambiar los colores?» no tenía respuesta en ninguna parte del catálogo. */
+  { key: 'tema_intercambiable', name: 'Cambiar el tema de colores', category: 'invitacion' },
   { key: 'libro_firmas', name: 'Libro de firmas', category: 'extras' },
   { key: 'album_colaborativo', name: 'Álbum colaborativo', category: 'extras' },
   { key: 'ia_contenido', name: 'Generación de contenido con IA', category: 'extras' },
@@ -128,7 +135,8 @@ const PLANS = [
  */
 const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number | null }[] = [
   /*
-   * Esencial: el cliente elige plantilla y tema, y ahí acaba su intervención.
+   * Esencial: el cliente elige plantilla y tema —`tema_intercambiable` es lo que hace comprobable
+   * esa promesa, y por eso está aquí y no solo en los de arriba—, y ahí acaba su intervención.
    *
    * Sin `pantalla_bienvenida`, sin `codigo_vestimenta`, sin `mesa_regalos` y sin `musica`: esas
    * cuatro son exactamente el argumento del salto a Plus.
@@ -146,6 +154,7 @@ const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number |
     'galeria',
     'ubicacion',
     'compartir_whatsapp',
+    'tema_intercambiable',
   ].map((featureKey) => ({ planKey: 'esencial', featureKey, limitValue: null })),
 
   /*
@@ -171,6 +180,7 @@ const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number |
     'compartir_whatsapp',
     'variantes_intercambiables',
     'reordenar_secciones',
+    'tema_intercambiable',
   ].map((featureKey) => ({ planKey: 'plus', featureKey, limitValue: null })),
 
   // Premium: todo lo de Plus sin tope, más la gestión completa, las mesas y los extras.
@@ -188,6 +198,7 @@ const PLAN_FEATURES: { planKey: string; featureKey: string; limitValue: number |
     'compartir_whatsapp',
     'variantes_intercambiables',
     'reordenar_secciones',
+    'tema_intercambiable',
     'rsvp',
     'panel_confirmaciones',
     'gestion_invitados',
@@ -410,6 +421,26 @@ const VARIANTS: {
      con la cifra del día a cuerpo de cartel entre dos filetes. Un calendario sin calendario no es
      una contradicción — el bloque guarda un instante y cada variante decide cómo se enseña. */
   { blockKey: 'calendar', variantKey: 'band', name: 'Fecha en banda grabada' },
+  /*
+   * Las tres siguientes salieron de golpe, y de una carencia concreta: `editorial`, `cinematic` y
+   * `silk` eran las tres estructuras del catálogo **sin sección de fecha**, y no por descuido —
+   * cuando se compusieron, el bloque tenía una variante o dos y las llevaban otras plantillas—.
+   * La regla de exclusividad obligaba entonces a escribir tres, y escribirlas obligó a la
+   * pregunta buena: qué puede hacer un calendario que las cuatro que había no hagan. La respuesta
+   * no fue otra retícula. Fue dejar de repartir días en casillas.
+   */
+  /* La quinta, para `editorial`: el mes como una escala graduada —una marca por día, las largas
+     cada cinco, folios en los extremos y el día señalado colgando del eje con su pie—. Es el
+     recurso con el que una revista cuenta una magnitud, que es el lenguaje de esa estructura. */
+  { blockKey: 'calendar', variantKey: 'scale', name: 'Escala graduada del mes' },
+  /* La sexta, para `cinematic`, y la única circular: el aro con una marca por día, el arco
+     recorrido hasta el señalado y la cifra en el centro. Una sola figura por pantalla, que es lo
+     que esa plantilla pide de cada sección. */
+  { blockKey: 'calendar', variantKey: 'dial', name: 'Esfera del mes con el día señalado' },
+  /* La séptima, para `silk`, y la única que es **un objeto**: la hoja de taco sobre su pila, con
+     la cabecera de color, la línea de troquel y la sombra del tema. Las otras seis son tinta
+     sobre la página; esta compone por planos, como el resto de esa estructura. */
+  { blockKey: 'calendar', variantKey: 'pad', name: 'Hoja de taco de calendario' },
   { blockKey: 'details', variantKey: 'cards', name: 'Detalles en tarjetas' },
   { blockKey: 'details', variantKey: 'list', name: 'Detalles en lista' },
   { blockKey: 'details', variantKey: 'split', name: 'Detalles a dos columnas' },
@@ -722,6 +753,10 @@ const TEMPLATES: {
       { blockKey: 'hero', variantKey: 'portrait', isRequired: true },
       { blockKey: 'story', variantKey: 'image-right' },
       { blockKey: 'gallery', variantKey: 'editorial' },
+      /* La fecha abre la parte práctica del pliego: después del reportaje y antes de los datos.
+         Va con el rótulo pequeño y **sin título propio**, para que el titular de la sección sea el
+         nombre del mes —el rótulo del eje— y no una frase escrita a mano que diría lo mismo. */
+      { blockKey: 'calendar', variantKey: 'scale', config: { eyebrow: 'Agenda', title: null } },
       { blockKey: 'details', variantKey: 'list' },
       { blockKey: 'dresscode', variantKey: 'chart' },
       { blockKey: 'schedule', variantKey: 'agenda' },
@@ -781,6 +816,10 @@ const TEMPLATES: {
       { blockKey: 'hero', variantKey: 'classic', isRequired: true },
       { blockKey: 'gallery', variantKey: 'cinematic' },
       { blockKey: 'story', variantKey: 'overlay' },
+      /* La fecha entre el relato y el programa, y sin rótulo ni título: la esfera es la única
+         pieza de esa pantalla —el aro es el mes y la cifra del centro es el día—, que es la regla
+         de esta estructura llevada al bloque que más texto suele traer. */
+      { blockKey: 'calendar', variantKey: 'dial', config: { eyebrow: null, title: null } },
       /* Muy poco texto por vista es la regla de esta estructura: los momentos se distinguen por
          la hora en cuerpo grande, así que los iconos sobran y estorban. */
       { blockKey: 'schedule', variantKey: 'showcase', config: { marker: 'dot' } },
@@ -877,16 +916,21 @@ const TEMPLATES: {
      * y los detalles son pilas de fichas. Es una decisión de composición y no de color: con
      * cualquiera de los ocho temas se sigue leyendo así.
      *
-     * Por eso estrena ocho variantes de golpe —portada, historia, cronograma, detalles,
-     * vestimenta, confirmación, cierre y pie—. No es que las que había no valieran: es que la
-     * regla de exclusividad ya no dejaba ninguna libre en esos bloques para boda ni para XV, y en
-     * los pocos casos en que quedaba alguna (`rsvp.ticket`) era de otra familia visual. Ver
-     * `docs/COMPONENTES.md`, «Cuando no queda variante libre, se escribe una».
+     * Por eso estrenó ocho variantes de golpe —portada, historia, cronograma, detalles,
+     * vestimenta, confirmación, cierre y pie— y una novena más tarde, el calendario. No es que las
+     * que había no valieran: es que la regla de exclusividad ya no dejaba ninguna libre en esos
+     * bloques para boda ni para XV, y en los pocos casos en que quedaba alguna (`rsvp.ticket`) era
+     * de otra familia visual. Ver `docs/COMPONENTES.md`, «Cuando no queda variante libre, se
+     * escribe una».
      *
      * El orden es el de la referencia: presenta, cuenta, dice cuándo y dónde, luego lo práctico y
-     * cómo vestir, después las fotos, y remata pidiendo la confirmación. El calendario no entra —
-     * `calendar.month` es el único que existe y lo lleva `botanical`—, y aquí la fecha ya la dan
-     * la portada y la cuenta regresiva de la bienvenida.
+     * cómo vestir, después las fotos, y remata pidiendo la confirmación.
+     *
+     * El calendario **no entraba** cuando se compuso, y no por el orden: el bloque tenía entonces
+     * un solo diseño —la lámina de color de `calendar.month`, que ya llevaba `botanical`— y una
+     * franja a sangre habría sido la única de esta invitación. Entra ahora con la novena variante
+     * escrita para ella, `calendar.pad`, que es la que compone la fecha como lo que es aquí todo
+     * lo demás: una pieza de papel apoyada, con su canto y su sombra.
      */
     blocks: [
       /* Sin `isRequired`, como en las otras dos que la llevan: la bienvenida es de Plus en
@@ -899,6 +943,10 @@ const TEMPLATES: {
       { blockKey: 'welcome', variantKey: 'countdown' },
       { blockKey: 'hero', variantKey: 'card', isRequired: true },
       { blockKey: 'story', variantKey: 'mounted' },
+      /* La fecha antes del programa: primero qué día es y después cómo será ese día. Sin título
+         propio —el mes ya está escrito en la cabecera de la hoja— y con el rótulo pequeño encima,
+         que es todo el texto que una pieza de papel de este tamaño admite alrededor. */
+      { blockKey: 'calendar', variantKey: 'pad', config: { eyebrow: 'Reserva la fecha', title: null } },
       { blockKey: 'schedule', variantKey: 'cards' },
       /* Una sola sede en una tarjeta centrada: el mismo objeto —papel apoyado sobre el fondo— que
          el resto de la plantilla. Las dos columnas de `dual-venue` son de `classic`. */

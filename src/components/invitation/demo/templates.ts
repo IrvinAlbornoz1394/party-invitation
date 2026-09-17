@@ -256,6 +256,10 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'hero', registryId: 'hero.portrait' },
       { blockKey: 'story', registryId: 'story.image-right' },
       { blockKey: 'gallery', registryId: 'gallery.editorial' },
+      /* La fecha como el gráfico del pliego: un eje graduado con una marca por día, folios en los
+         dos extremos y el día señalado colgando con su pie. Abre la parte práctica de la revista,
+         después del reportaje y antes de los datos. */
+      { blockKey: 'calendar', registryId: 'calendar.scale' },
       { blockKey: 'details', registryId: 'details.list' },
       /* La carta de imprenta: los tonos pegados, sin calle entre ellos, y numerados al pie.
          La demo de boda no trae nombres de color —ver `dresscode-samples.ts`—, así que aquí se
@@ -286,6 +290,9 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'hero', registryId: 'hero.classic' },
       { blockKey: 'gallery', registryId: 'gallery.cinematic' },
       { blockKey: 'story', registryId: 'story.overlay' },
+      /* Una figura por pantalla: el aro con una marca por día, el arco recorrido encendido y la
+         cifra del día en el centro. Es el calendario que cabe en una plantilla de carteles. */
+      { blockKey: 'calendar', registryId: 'calendar.dial' },
       { blockKey: 'schedule', registryId: 'schedule.showcase' },
       { blockKey: 'details', registryId: 'details.panel' },
       { blockKey: 'dresscode', registryId: 'dresscode.bands' },
@@ -322,6 +329,10 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'welcome', registryId: 'welcome.countdown', removable: true },
       { blockKey: 'hero', registryId: 'hero.card' },
       { blockKey: 'story', registryId: 'story.mounted' },
+      /* La fecha como una pieza más de papel: la hoja de taco sobre su pila, con la cabecera de
+         color, el troquel y la sombra del tema. Es el bloque que le faltaba a esta plantilla, y
+         no entraba hasta que hubo una variante que compusiera por planos. */
+      { blockKey: 'calendar', registryId: 'calendar.pad' },
       { blockKey: 'schedule', registryId: 'schedule.cards' },
       { blockKey: 'location', registryId: 'location.single-card' },
       { blockKey: 'details', registryId: 'details.stack' },

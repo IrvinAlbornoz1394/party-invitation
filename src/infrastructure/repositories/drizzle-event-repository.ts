@@ -10,10 +10,12 @@ import {
   type VenueKind,
   type VenueRow,
 } from '@/domain/events/event-collections';
+import type { BlockConfigPatch } from '@/domain/events/event-block-texts';
 import type { EventContentDraft } from '@/domain/events/event-content-draft';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
 import type {
   CreateEventResult,
+  EventContentForm,
   EventRepository,
   EventSummary,
   NewEventRecord,
@@ -212,7 +214,7 @@ export class DrizzleEventRepository implements EventRepository {
     }
   }
 
-  async loadContentDraft(scope: TenantScope, eventId: string): Promise<EventContentDraft | null> {
+  async loadContentDraft(scope: TenantScope, eventId: string): Promise<EventContentForm | null> {
     return withTenant(scope, async (tx) => {
       /*
        * La fecha y la hora se formatean EN POSTGRES, con la zona de la propia fila. Traer el
@@ -224,7 +226,8 @@ export class DrizzleEventRepository implements EventRepository {
        * conversión pertenece a la consulta.
        */
       const result = await tx.execute<Record<string, string | null>>(
-        sql`select celebrant_name,
+        sql`select event_type_key,
+                   celebrant_name,
                    celebrant_full_name,
                    celebrant_last_name,
                    event_type_label,
@@ -248,6 +251,10 @@ export class DrizzleEventRepository implements EventRepository {
       if (!row) return null;
 
       return {
+        /* El tipo no se edita en esta pantalla: sale al lado del borrador para que el formulario
+           sepa qué preguntar. Ver `EventContentForm`. */
+        eventTypeKey: row.event_type_key ?? '',
+        draft: {
         celebrantName: row.celebrant_name ?? '',
         celebrantFullName: row.celebrant_full_name,
         celebrantLastName: row.celebrant_last_name,
@@ -264,6 +271,7 @@ export class DrizzleEventRepository implements EventRepository {
         contactWhatsapp: row.contact_whatsapp,
         contactInstagram: row.contact_instagram,
         rsvpDeadline: row.rsvp_deadline,
+        },
       };
     });
   }
@@ -275,29 +283,36 @@ export class DrizzleEventRepository implements EventRepository {
        * que la del propio evento: partir un `timestamptz` en JavaScript daría la hora de donde
        * esté el servidor. El `join` con `events` es solo para llegar a `time_zone`.
        */
-      const [venueRows, scheduleRows, galleryRows] = await Promise.all([
-        tx.execute<Record<string, string | null>>(
-          sql`select v.id, v.kind::text, v.label, v.name, v.address, v.detail, v.map_url,
-                     to_char(v.starts_at at time zone e.time_zone, 'HH24:MI') as time,
-                     v.image_url, v.image_alt
-                from public.event_venues v
-                join public.events e on e.id = v.event_id
-               where v.event_id = ${eventId}::uuid
-               order by v.position`,
-        ),
-        tx.execute<Record<string, string | null>>(
-          sql`select id, time_label, title, description, icon
-                from public.event_schedule_items
-               where event_id = ${eventId}::uuid
-               order by position`,
-        ),
-        tx.execute<Record<string, string | null>>(
-          sql`select id, url, alt_text, caption
-                from public.event_gallery_items
-               where event_id = ${eventId}::uuid
-               order by position`,
-        ),
-      ]);
+      /*
+       * Las tres van **en serie**. Estaban con `Promise.all` y el paralelismo era aparente: una
+       * transacción es una sola conexión, y `pg` encola las consultas que le llegan a la vez por
+       * la misma —desde pg@8 avisa de que en la 9 dejará de hacerlo—. Sacarlas fuera de la
+       * transacción para que sí fueran en paralelo tampoco vale: el contexto de tenant es `LOCAL`
+       * a ella, así que fuera RLS no devolvería ni una fila.
+       */
+      const venueRows = await tx.execute<Record<string, string | null>>(
+        sql`select v.id, v.kind::text, v.label, v.name, v.address, v.detail, v.map_url,
+                   to_char(v.starts_at at time zone e.time_zone, 'HH24:MI') as time,
+                   v.image_url, v.image_alt
+              from public.event_venues v
+              join public.events e on e.id = v.event_id
+             where v.event_id = ${eventId}::uuid
+             order by v.position`,
+      );
+
+      const scheduleRows = await tx.execute<Record<string, string | null>>(
+        sql`select id, time_label, title, description, icon
+              from public.event_schedule_items
+             where event_id = ${eventId}::uuid
+             order by position`,
+      );
+
+      const galleryRows = await tx.execute<Record<string, string | null>>(
+        sql`select id, url, alt_text, caption
+              from public.event_gallery_items
+             where event_id = ${eventId}::uuid
+             order by position`,
+      );
 
       return {
         venues: venueRows.rows.map((row) => ({
@@ -368,6 +383,41 @@ export class DrizzleEventRepository implements EventRepository {
     });
   }
 
+  async saveBlockTexts(input: {
+    readonly scope: TenantScope;
+    readonly eventId: string;
+    readonly patches: readonly BlockConfigPatch[];
+  }): Promise<boolean> {
+    const { eventId, patches } = input;
+
+    return withTenant(input.scope, async (tx) => {
+      /* Que el evento esté en el alcance se comprueba una vez y aquí, igual que en las
+         colecciones: sin esto, un evento ajeno daría cero filas actualizadas —RLS las filtra— y la
+         pantalla diría «guardado» sin haber guardado nada. */
+      const owned = await tx.execute(sql`select 1 from public.events where id = ${eventId}::uuid`);
+
+      if (owned.rows.length === 0) return false;
+
+      for (const patch of patches) {
+        /*
+         * `config || parche` funde en lugar de reemplazar, que es lo que conserva las claves que
+         * este formulario no toca —`marker`, `dayMark`, la paleta—. El parche viaja como jsonb
+         * parametrizado y no interpolado: son textos escritos por el cliente y acaban dentro de un
+         * documento JSON, así que armarlos con plantillas sería inyección con otra sintaxis.
+         */
+        await tx.execute(
+          sql`update public.event_blocks
+                 set config = config || ${JSON.stringify(patch.config)}::jsonb,
+                     updated_at = now()
+               where event_id = ${eventId}::uuid
+                 and block_key = ${patch.blockKey}`,
+        );
+      }
+
+      return true;
+    });
+  }
+
   /**
    * Borra lo que sobra, actualiza lo que sigue y añade lo nuevo, en ese orden.
    *
@@ -383,6 +433,15 @@ export class DrizzleEventRepository implements EventRepository {
    * `all` sobre un array sin elementos—, así que vaciar una colección desde la pantalla borra sus
    * filas sin necesitar una rama aparte. Conviene saberlo porque a primera vista parece que no
    * borraría ninguna.
+   *
+   * ## Por qué `sql.param(keep)` y no `${keep}` a secas
+   *
+   * Porque un array de JavaScript metido en una plantilla `sql` de Drizzle **no viaja como un
+   * array**: se despliega en una lista de parámetros separados por comas. Con la lista vacía eso
+   * genera `all(())` y con dos elementos `all(($1, $2)::uuid[])`, y las dos son SQL inválido —el
+   * guardado fallaba siempre, con colección vacía y con colección llena—. `sql.param` lo manda
+   * como **un solo** parámetro y `pg` lo serializa como el array de Postgres que la consulta
+   * espera.
    */
   private async syncVenues(
     tx: TenantTransaction,
@@ -395,7 +454,7 @@ export class DrizzleEventRepository implements EventRepository {
     await tx.execute(
       sql`delete from public.event_venues
            where event_id = ${eventId}::uuid
-             and id <> all(${keep}::uuid[])`,
+             and id <> all(${sql.param(keep)}::uuid[])`,
     );
 
     // Primera pasada: sacar las posiciones de en medio. Ver el comentario de `saveCollections`.
@@ -450,7 +509,7 @@ export class DrizzleEventRepository implements EventRepository {
     await tx.execute(
       sql`delete from public.event_schedule_items
            where event_id = ${eventId}::uuid
-             and id <> all(${keep}::uuid[])`,
+             and id <> all(${sql.param(keep)}::uuid[])`,
     );
 
     await tx.execute(
@@ -488,7 +547,7 @@ export class DrizzleEventRepository implements EventRepository {
     await tx.execute(
       sql`delete from public.event_gallery_items
            where event_id = ${eventId}::uuid
-             and id <> all(${keep}::uuid[])`,
+             and id <> all(${sql.param(keep)}::uuid[])`,
     );
 
     await tx.execute(
@@ -682,7 +741,7 @@ export class DrizzleEventRepository implements EventRepository {
     credentials: PlatformCredentials,
     clientId: string,
     eventId: string,
-  ): Promise<EventContentDraft | null> {
+  ): Promise<EventContentForm | null> {
     if (!(await authorizeClient(credentials, clientId))) return null;
 
     return this.loadContentDraft({ clientId, eventId: null }, eventId);
@@ -726,6 +785,21 @@ export class DrizzleEventRepository implements EventRepository {
       scope: { clientId: input.clientId, eventId: null },
       eventId: input.eventId,
       collections: input.collections,
+    });
+  }
+
+  async saveBlockTextsAsPlatform(input: {
+    readonly credentials: PlatformCredentials;
+    readonly clientId: string;
+    readonly eventId: string;
+    readonly patches: readonly BlockConfigPatch[];
+  }): Promise<boolean> {
+    if (!(await authorizeClient(input.credentials, input.clientId))) return false;
+
+    return this.saveBlockTexts({
+      scope: { clientId: input.clientId, eventId: null },
+      eventId: input.eventId,
+      patches: input.patches,
     });
   }
 

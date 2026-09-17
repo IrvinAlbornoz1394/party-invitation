@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ContentSubmitPanel } from '@/components/dashboard/client/ContentSubmitPanel';
-import { EventContentScreen } from '@/components/dashboard/client/EventContentScreen';
+import { ContentWizard } from '@/components/dashboard/client/wizard/ContentWizard';
 import { editEventContent, submitEventContent } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
 import { saveEventContentAction, submitContentAction } from './actions';
@@ -46,9 +46,12 @@ export default async function EventContentPage({
    * Las dos lecturas van en paralelo: no dependen entre sí y en serie cada carga de esta pantalla
    * pagaría dos viajes a la base uno detrás de otro.
    */
-  const [draft, collections, progress] = await Promise.all([
+  const [form, collections, sections, progress] = await Promise.all([
     editEventContent.load(scope, id),
     editEventContent.loadCollections(scope, id),
+    /* Los pasos y los textos de cada sección, los dos de la misma lectura que la vista previa: el
+       formulario se reparte según los bloques que este evento lleva de verdad. */
+    editEventContent.loadSections(scope, id),
     /* En qué punto está el evento y qué le falta. Se pide aquí, en el servidor y junto al resto,
        porque es lo primero que hay que enseñar: sin ello la pantalla es un formulario largo sin
        principio ni final. */
@@ -56,13 +59,16 @@ export default async function EventContentPage({
   ]);
 
   // Null significa que el evento no está en el alcance: mismo 404 que si no existiera.
-  if (!draft) notFound();
+  if (!form) notFound();
 
   return (
-    <EventContentScreen
+    <ContentWizard
       eventId={id}
-      draft={draft}
+      draft={form.draft}
+      eventTypeKey={form.eventTypeKey}
+      steps={sections.steps}
       collections={collections}
+      blockTexts={sections.texts}
       timeZone={TIME_ZONE_LABEL}
       action={saveEventContentAction}
       initialState={INITIAL_CONTENT_STATE}

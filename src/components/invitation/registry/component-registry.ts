@@ -1,5 +1,8 @@
 import { CalendarBand } from '../blocks/calendar/CalendarBand';
+import { CalendarDial } from '../blocks/calendar/CalendarDial';
 import { CalendarMonth } from '../blocks/calendar/CalendarMonth';
+import { CalendarPad } from '../blocks/calendar/CalendarPad';
+import { CalendarScale } from '../blocks/calendar/CalendarScale';
 import { CalendarSheet } from '../blocks/calendar/CalendarSheet';
 import { CalendarWeek } from '../blocks/calendar/CalendarWeek';
 import type { CalendarVariant } from '../blocks/calendar/calendar-variant';
@@ -256,6 +259,19 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Y la cuarta, la única sin retícula: la fecha como dato tipográfico, con la cifra del día a
      cuerpo de cartel entre dos filetes. */
   'calendar.band': { blockKey: 'calendar', component: CalendarBand },
+  /*
+   * Las tres siguientes son las que le dieron fecha a `editorial`, `cinematic` y `silk`, que eran
+   * las tres estructuras del catálogo sin sección de calendario. Ninguna reparte días en casillas
+   * —eso ya lo hacen tres— y ninguna se parece a las otras dos: son una escala, una esfera y un
+   * objeto, que son tres maneras distintas de contestar «cuándo».
+   */
+  'calendar.scale': { blockKey: 'calendar', component: CalendarScale },
+  /* La sexta, y la única circular: el mes en un aro graduado con el arco recorrido encendido y la
+     cifra en el centro. Una figura por pantalla, que es el registro de `cinematic`. */
+  'calendar.dial': { blockKey: 'calendar', component: CalendarDial },
+  /* La séptima, y la única que es un objeto: la hoja de taco sobre su pila, con la cabecera de
+     color, el troquel y la sombra. Compone por planos, como el resto de `silk`. */
+  'calendar.pad': { blockKey: 'calendar', component: CalendarPad },
 
   'details.cards': { blockKey: 'details', component: DetailsCards },
   'details.list': { blockKey: 'details', component: DetailsList },

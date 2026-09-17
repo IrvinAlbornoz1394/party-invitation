@@ -19,6 +19,81 @@
   margin-bottom: var(--dash-gap);
 }
 
+/* ── La tira de pasos ─────────────────────────────────────────────────────── */
+
+/* Se puede pulsar cualquier paso, así que son botones y no adornos: quien está en el nueve y se
+   acuerda de una foto de la galería vuelve de un clic, sin recorrer los ocho de en medio.
+
+   Envuelve en varias líneas en lugar de desplazarse en horizontal. Con doce secciones, una tira
+   con scroll esconde justo los pasos del final —los que dicen cuánto queda— y en un panel de
+   escritorio hay ancho de sobra para dos renglones. */
+.wizard-steps {
+  margin-bottom: var(--dash-gap);
+}
+
+.wizard-steps__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dash-gap-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wizard-steps__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 7px;
+  border: 1px solid var(--dash-border);
+  border-radius: 999px;
+  background: var(--dash-surface);
+  color: var(--dash-ink-soft);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.wizard-steps__step:hover {
+  border-color: var(--dash-accent);
+  color: var(--dash-ink);
+}
+
+/* El número dentro de su disco. Ancho y alto fijos: con el ancho al contenido, el paso 1 y el
+   10 tendrían discos de distinto tamaño y la tira dejaría de leerse como una secuencia. */
+.wizard-steps__number {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--dash-canvas);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El paso actual se marca con el color y con el peso, no solo con el color: un solo indicador
+   cromático deja fuera a quien no distingue estos dos tonos. */
+.wizard-steps__step[data-state='current'] {
+  border-color: var(--dash-accent);
+  color: var(--dash-ink);
+  font-weight: 600;
+}
+.wizard-steps__step[data-state='current'] .wizard-steps__number {
+  background: var(--dash-accent);
+  color: #fff;
+}
+
+.wizard-steps__step[data-state='done'] .wizard-steps__number {
+  background: var(--dash-accent-wash);
+  color: var(--dash-accent);
+}
+
+
 .content-editor__form {
   display: grid;
   gap: var(--dash-gap);
@@ -39,9 +114,12 @@
   margin-top: 0;
 }
 
+/* Atrás a un lado y guardar al otro: son las dos direcciones del asistente, y juntos invitan a
+   pulsar el que no era. */
 .content-editor__actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: var(--dash-gap-sm);
   padding-top: var(--dash-gap-sm);
 }
 

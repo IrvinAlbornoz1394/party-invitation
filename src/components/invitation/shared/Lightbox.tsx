@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import Image from 'next/image';
+import { isOptimizableImage } from '@/lib/images';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { GalleryItem } from '@/domain/invitation/blocks/gallery';
 
@@ -89,6 +90,8 @@ export function Lightbox({
             sizes="100vw"
             className="object-contain"
             priority
+            /* Ver `lib/images.ts`: la foto es del cliente y su host no está en la allowlist. */
+            unoptimized={!isOptimizableImage(item.url)}
           />
         </div>
 

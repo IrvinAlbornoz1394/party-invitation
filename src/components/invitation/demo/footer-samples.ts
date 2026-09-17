@@ -7,8 +7,8 @@ import type { DemoSample } from './sample';
  * Mismas claves que el resto de bloques. Lo que cambia entre los dos es lo que decide si un pie
  * funciona: **el largo del nombre** y cuántos contactos hay.
  *
- *   · **Boda**: dos nombres unidos por un símbolo, dos contactos y sin monograma — para ver que
- *     el hueco de las iniciales no deja un agujero cuando no las hay.
+ *   · **Boda**: dos nombres unidos por un símbolo, **sin contactos** y sin monograma — para ver
+ *     que ni el hueco de las iniciales ni el de los enlaces dejan un agujero cuando no los hay.
  *   · **XV**: un nombre largo con dos apellidos y tres contactos. Es el que aprieta al pie en
  *     cinta y el que hace que el rótulo en movimiento se lea como un texto corriendo.
  */
@@ -23,10 +23,11 @@ export const FOOTER_SAMPLES: readonly DemoSample<FooterContent>[] = [
       dateLabel: 'Sábado 12 de junio, 2027',
       city: 'Izamal, Yucatán',
       message: 'Cualquier duda, escríbenos. De verdad.',
-      links: [
-        { icon: 'guests', label: 'Escríbenos por WhatsApp', href: 'https://wa.me/529999876543' },
-        { icon: 'location', label: 'Cómo llegar', href: '#ubicacion' },
-      ],
+      /* Sin enlaces. Los dos que había —«Escríbenos por WhatsApp» y «Cómo llegar»— no son lo que
+         el pie recibe en una invitación de verdad: `event-content.ts` proyecta ahí el teléfono y
+         el Instagram del evento, y ninguno de los dos es un WhatsApp ni un ancla a la sección de
+         ubicación. La demo enseñaba un pie que el producto no entrega. */
+      links: [],
       credits: '© 2027 · Ana & Diego',
       topAction: { label: 'Volver al inicio', href: '#inicio' },
     }),

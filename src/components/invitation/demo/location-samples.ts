@@ -22,14 +22,18 @@ export const LOCATION_SAMPLES: readonly DemoSample<LocationContent>[] = [
     content: locationContentSchema.parse({
       eyebrow: 'Dónde nos vemos',
       title: 'Ubicación',
-      subtitle: 'Los dos sitios están a diez minutos en coche.',
+      /* Sin bajada, como el ejemplo de XV. La llevaba —«los dos sitios están a diez minutos en
+         coche»— y era un dato inventado sobre dos sedes reales que están a la distancia que
+         están: en el escaparate se lee como información del lugar, no como texto de ejemplo. El
+         campo sigue existiendo para un evento que quiera explicar el trayecto. */
+      subtitle: null,
       venues: [
         {
           kind: 'church',
           label: 'Ceremonia',
           name: 'Convento de San Antonio de Padua',
           address: 'Calle 31 s/n, Centro, Izamal, Yucatán',
-          detail: 'El atrio abre a las 16:30.',
+          detail: null,
           timeLabel: '17:00',
           mapAction: {
             label: 'Cómo llegar',
@@ -42,7 +46,11 @@ export const LOCATION_SAMPLES: readonly DemoSample<LocationContent>[] = [
           label: 'Recepción',
           name: 'Hacienda San José',
           address: 'Carretera Izamal-Sudzal km 4',
-          detail: 'Hay valet en la entrada principal.',
+          /* Sin detalle, como el del templo. Lo que decía —«hay valet en la entrada
+             principal»— lo dice ya el bloque de detalles de esta misma demo
+             (`details-samples.ts`), y un dato repetido dos secciones más abajo no enseña una
+             variante: enseña una invitación mal montada. */
+          detail: null,
           timeLabel: '19:30',
           mapAction: {
             label: 'Cómo llegar',
@@ -51,7 +59,11 @@ export const LOCATION_SAMPLES: readonly DemoSample<LocationContent>[] = [
           image: demoImage(WEDDING_PHOTOS.venue, 1400, 1000),
         },
       ],
-      note: 'Si vienes de Mérida, calcula una hora de camino.',
+      /* Sin nota, como el ejemplo de XV. Era el tercer texto inventado alrededor de dos sedes
+         reales —tras la bajada y los dos detalles—, y una indicación de trayecto solo es cierta
+         para quien venga de donde diga: en el escaparate se lee como información y no como
+         relleno. El campo sigue existiendo para un evento que quiera darla de verdad. */
+      note: null,
     }),
   },
   {

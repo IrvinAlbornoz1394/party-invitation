@@ -33,7 +33,11 @@ export const GALLERY_SAMPLES: readonly DemoSample<GalleryContent>[] = [
         demoGalleryItem(WEDDING_PHOTOS.arch, 1400, 900, 'Las flores de la entrada'),
         demoGalleryItem(WEDDING_PHOTOS.guests, 1200, 800, 'Con toda la gente que queremos'),
       ],
-      note: 'Habrá un álbum compartido para que subas tus fotos después de la boda.',
+      /* Sin nota, como el ejemplo de XV. La llevaba —«habrá un álbum compartido…»— y prometía
+         en el escaparate un servicio que la invitación no presta: la galería es de solo lectura y
+         no hay a dónde subir nada. El campo sigue existiendo para un evento real que sí lo
+         organice por su cuenta. */
+      note: null,
     }),
   },
   {

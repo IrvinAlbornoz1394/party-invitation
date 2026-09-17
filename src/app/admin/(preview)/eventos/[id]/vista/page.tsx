@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { InvitationRenderer } from '@/components/invitation/InvitationRenderer';
-import { assembleInvitation } from '@/domain/invitation/event-content';
+import { InvitationPreview } from '@/components/invitation/InvitationPreview';
 import { parseInvitationTheme } from '@/domain/invitation/theme';
 import { editEventContent, findEventForPlatform } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
@@ -28,10 +27,13 @@ export const metadata: Metadata = {
  */
 export default async function AdminEventPreviewPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ id: string }>;
+  readonly searchParams: Promise<{ bloque?: string }>;
 }) {
   const { id } = await params;
+  const { bloque } = await searchParams;
   const credentials = await requirePlatformCredentials();
   const event = await findEventForPlatform.execute(credentials, id);
 
@@ -42,9 +44,11 @@ export default async function AdminEventPreviewPage({
   if (!loaded) notFound();
 
   return (
-    <InvitationRenderer
+    <InvitationPreview
       theme={parseInvitationTheme(loaded.content.themeTokens)}
-      blocks={assembleInvitation(loaded.content.source, loaded.content.blocks)}
+      source={loaded.content.source}
+      blocks={loaded.content.blocks}
+      blockKey={bloque}
       musicUrl={loaded.content.musicUrl}
       musicTitle={loaded.content.musicTitle}
     />

@@ -170,3 +170,60 @@ export function eventWeek(isoInstant: string, weekStartsOn: WeekStart = 'sunday'
     }),
   };
 }
+
+/** El mes del evento medido de punta a punta, con el día señalado situado dentro. */
+export interface MonthSpan {
+  /** El nombre del mes, capitalizado: «Junio». */
+  readonly monthLabel: string;
+  readonly year: string;
+  /** El día de la semana del evento, capitalizado: «Sábado». */
+  readonly weekday: string;
+  /** El día del evento: `12`. */
+  readonly day: number;
+  /** Cuántos días trae el mes: `30`. */
+  readonly length: number;
+}
+
+/**
+ * El mes como un **recorrido**: cuánto mide y qué día de él es el del evento. `null` si la fecha
+ * no se deja leer, igual que las otras tres cuentas de este archivo.
+ *
+ * Es la cuarta forma de contar la misma fecha y la primera que no devuelve casillas. Las otras
+ * tres —`monthGrid`, `dayStrip`, `eventWeek`— reparten días en celdas porque las variantes que
+ * las usan dibujan retículas; las que usan esta dibujan **una escala y una esfera**, y lo que
+ * necesitan de un mes no son treinta números sino dos: su longitud y la posición del día dentro.
+ *
+ * ## Por qué no devuelve además la fracción recorrida
+ *
+ * Era la tentación evidente —un `progress` de 0 a 1 y las dos variantes solo multiplican— y sería
+ * un error, porque **una recta y una circunferencia no se reparten igual**. En la escala los
+ * extremos son dos: el día 1 va al principio y el último al final, así que la fracción es
+ * `(día − 1) / (longitud − 1)`. En la esfera el principio y el final son el mismo punto, así que
+ * hay que repartir en `longitud` tramos —`(día − 1) / longitud`— o el último día se dibujaría
+ * encima del primero.
+ *
+ * Un solo número tendría que estar mal en una de las dos. Cada variante hace su reparto, con el
+ * comentario que explica cuál de las dos geometrías está resolviendo; lo que el dominio da es lo
+ * que de verdad es del mes y no del dibujo.
+ */
+export function monthSpan(isoInstant: string): MonthSpan | null {
+  const parts = eventDateParts(isoInstant);
+  const fields = ISO_MONTH.exec(isoInstant.trim());
+
+  /* `eventDateParts` es además el validador: ya descartó los días que existen como texto pero no
+     en el calendario, así que a partir de aquí las cuentas se hacen sobre una fecha real. */
+  if (!parts || !fields) return null;
+
+  const year = Number(fields[1]);
+  const monthIndex = Number(fields[2]) - 1;
+
+  return {
+    monthLabel: parts.month,
+    year: parts.year,
+    weekday: parts.weekday,
+    day: Number(parts.day),
+    /* El día cero del mes siguiente es el último del actual: la forma de contar los días de un
+       mes sin una tabla de longitudes y sin acordarse de los años bisiestos. */
+    length: new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate(),
+  };
+}

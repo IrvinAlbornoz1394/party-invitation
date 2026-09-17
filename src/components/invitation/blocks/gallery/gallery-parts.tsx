@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import Image from 'next/image';
+import { isOptimizableImage } from '@/lib/images';
 import { twMerge } from 'tailwind-merge';
 import type { ComponentType, CSSProperties } from 'react';
 import type { GalleryContent, GalleryItem } from '@/domain/invitation/blocks/gallery';
@@ -82,6 +83,9 @@ export function PhotoButton({
         fill
         sizes={sizes}
         priority={priority}
+        /* Igual que en `BlockImage`: la foto la pega el cliente, así que su host no está en la
+           allowlist y el optimizador la rechazaría con un 400. Ver `lib/images.ts`. */
+        unoptimized={!isOptimizableImage(item.url)}
         className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
       />
     </button>

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { tenantScopeOf } from '@/domain/auth/actor';
-import { InvitationRenderer } from '@/components/invitation/InvitationRenderer';
-import { assembleInvitation } from '@/domain/invitation/event-content';
+import { InvitationPreview } from '@/components/invitation/InvitationPreview';
 import { parseInvitationTheme } from '@/domain/invitation/theme';
 import { editEventContent } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
@@ -47,10 +46,13 @@ export const metadata: Metadata = {
  */
 export default async function EventPreviewPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ id: string }>;
+  readonly searchParams: Promise<{ bloque?: string }>;
 }) {
   const { id } = await params;
+  const { bloque } = await searchParams;
   const { membership } = await requireEventAccess(id);
 
   /*
@@ -62,13 +64,12 @@ export default async function EventPreviewPage({
 
   if (!loaded) notFound();
 
-  const theme = parseInvitationTheme(loaded.content.themeTokens);
-  const blocks = assembleInvitation(loaded.content.source, loaded.content.blocks);
-
   return (
-    <InvitationRenderer
-      theme={theme}
-      blocks={blocks}
+    <InvitationPreview
+      theme={parseInvitationTheme(loaded.content.themeTokens)}
+      source={loaded.content.source}
+      blocks={loaded.content.blocks}
+      blockKey={bloque}
       musicUrl={loaded.content.musicUrl}
       musicTitle={loaded.content.musicTitle}
     />
