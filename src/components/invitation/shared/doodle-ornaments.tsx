@@ -1,6 +1,8 @@
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { ReactNode } from 'react';
+import { requireDesignAsset } from '@/lib/design-assets';
+import { DesignAsset } from './DesignAsset';
 
 /**
  * Los ornamentos dibujados: lazo, alianzas, candelabro, ramillete, mesa puesta y marco.
@@ -12,15 +14,17 @@ import type { ReactNode } from 'react';
  * dependencia cruzada entre secciones, y la primera vez que alguien lo retoca se lo cambia al
  * vecino sin saberlo.
  *
- * ## Por qué son SVG en línea y no archivos
+ * ## SVG, nunca imágenes de color fijo
  *
  * Es la misma razón que sostiene el catálogo entero y ya está escrita en `paper-ornaments.tsx`:
  * **el color lo pone el tema**. Un PNG marrón sobre crema se ve mal en cuanto alguien elige el
  * tema oscuro, y obligaría a mantener una copia por tema. Dibujados con `currentColor`, el mismo
  * trazo sale cacao sobre papel crema y marfil sobre una franja oscura.
  *
- * Hay una segunda razón, práctica: un juego de ilustraciones de stock tiene licencia. Estos son
- * del proyecto y se pueden repartir con él.
+ * El candelabro, el ramo y las copas salen de la biblioteca de recursos
+ * (`public/assets/invitations/`, ver `docs/RECURSOS_GRAFICOS.md`): son ilustraciones CC0 con
+ * licencia verificada, pintadas como máscara para que sigan tomando el color del tema. El lazo,
+ * las alianzas y el marco siguen dibujados aquí.
  *
  * ## Cómo se dibujan
  *
@@ -106,83 +110,43 @@ export function WeddingRings({ className }: { readonly className?: string }) {
 }
 
 /**
- * El candelabro de tres brazos con las velas encendidas.
+ * El candelabro de tres brazos, con las velas encendidas.
  *
- * Las tres llamas van a distinta altura y ninguna es simétrica: una llama dibujada como una gota
- * perfecta se ve apagada. El pie es una elipse abierta —solo el arco de delante— porque el trazo
- * cerrado le daba aspecto de copa.
+ * Es `symbol-candelabra-001` de la biblioteca de recursos: un dibujo a pulso con el trazo
+ * irregular de la tinta, que es el lenguaje de estos dibujos.
  */
+const CANDELABRA = requireDesignAsset('symbol-candelabra-001');
+
 export function Candelabra({ className }: { readonly className?: string }) {
-  return (
-    <Doodle viewBox="0 0 64 96" className={clsx('h-auto', className)}>
-      {/* Las tres velas: la del medio más alta. */}
-      <path d="M12 78V34M32 78V22M52 78V34" />
-      {/* Los brazos que las unen al fuste. */}
-      <path d="M12 52c0-8 6-12 20-12s20 4 20 12" />
-      {/* Las llamas. */}
-      <path d="M12 32c3-3.5 3-7-.4-10-3 3.2-3.4 6.6.4 10Z" />
-      <path d="M32 20c3.2-4 3.2-8-.4-11.5-3.2 3.6-3.6 7.6.4 11.5Z" />
-      <path d="M52 32c3-3.5 3-7-.4-10-3 3.2-3.4 6.6.4 10Z" />
-      {/* El pie. */}
-      <path d="M22 78h20M26 78l-4 10h20l-4-10" />
-      <path d="M18 88h28" />
-    </Doodle>
-  );
+  return <DesignAsset asset={CANDELABRA} className={twMerge(clsx('pointer-events-none', className))} />;
 }
 
 /**
- * El ramillete atado: tres flores, hojas y el lazo del tallo.
+ * El ramo: lirios y varas de flor en un florero de pie.
  *
- * Los tallos no salen del mismo punto ni las corolas están a la misma altura, y eso es lo que
- * distingue un ramo de un diagrama. La cinta del final se dibuja con dos trazos sueltos en vez
- * de un nudo cerrado, por lo mismo que el nudo del lazo.
+ * Es `symbol-bouquet-001` de la biblioteca de recursos, dibujado a línea. Quien lo coloca a los
+ * dos lados de un rótulo refleja el segundo con `-scale-x-100`.
  */
+const BOUQUET = requireDesignAsset('symbol-bouquet-001');
+
 export function Bouquet({ className }: { readonly className?: string }) {
-  return (
-    <Doodle viewBox="0 0 60 84" className={clsx('h-auto', className)}>
-      {/* Los tallos, convergiendo en la atadura. */}
-      <path d="M30 62V30M30 62c-6-8-9-16-9-24M30 62c6-8 9-16 9-24" />
-      {/* Las tres corolas: cinco pétalos cada una, apenas insinuados. */}
-      <path d="M30 30c-4 0-6-2.4-6-5.4s2.6-5.6 6-5.6 6 2.6 6 5.6-2 5.4-6 5.4Z" />
-      <path d="M21 38c-3.4 0-5.4-2-5.4-4.6s2.2-4.8 5.2-4.8 5.2 2.2 5.2 4.8-1.8 4.6-5 4.6Z" />
-      <path d="M39 38c3.4 0 5.4-2 5.4-4.6s-2.2-4.8-5.2-4.8-5.2 2.2-5.2 4.8 1.8 4.6 5 4.6Z" />
-      {/* Dos hojas. */}
-      <path d="M30 50c-5-1-8-4.5-8.5-9 5 .5 8 3.6 8.5 9Z" />
-      <path d="M30 56c5-1 8-4.5 8.5-9-5 .5-8 3.6-8.5 9Z" />
-      {/* La atadura y las puntas de los tallos. */}
-      <path d="M24 62h12" />
-      <path d="M25 66l-3 12M30 66v12M35 66l3 12" />
-      <path d="M22 62c-3 2-4 4-3 6M38 62c3 2 4 4 3 6" />
-    </Doodle>
-  );
+  return <DesignAsset asset={BOUQUET} className={twMerge(clsx('pointer-events-none', className))} />;
 }
 
 /**
- * La mesa puesta: mantel largo, jarrón con flores y dos copas.
+ * Las dos copas del brindis.
  *
- * Es el dibujo de la sección de la sede, y por eso es una **escena** y no un objeto: un edificio
- * o un alfiler de mapa dirían «dirección», y lo que esa sección cuenta es dónde se celebra. El
- * mantel cae con dos pliegues desiguales; simétrico se leía como una lámpara.
+ * Es el dibujo de la sección de la sede, y por eso cuenta la celebración y no la dirección: un
+ * edificio o un alfiler de mapa dirían «dónde está»; las copas dicen «aquí se celebra». Sustituye
+ * a la mesa puesta dibujada a mano, que a tamaño de móvil se leía como una maceta. El nombre se
+ * conserva para no tocar el bloque que la usa.
+ *
+ * Es `symbol-champagne-001` de la biblioteca de recursos.
  */
+const CHAMPAGNE = requireDesignAsset('symbol-champagne-001');
+
 export function SetTable({ className }: { readonly className?: string }) {
-  return (
-    <Doodle viewBox="0 0 96 88" className={clsx('h-auto', className)}>
-      {/* El tablero y el mantel. */}
-      <path d="M8 44h80" />
-      <path d="M14 44c1 16 2 26 4 34M82 44c-1 16-2 26-4 34" />
-      <path d="M18 78c8 4 16 5 30 5s22-1 30-5" />
-      {/* Los pliegues. */}
-      <path d="M36 46c-1 12-1 22 0 32M60 46c1 12 1 22 0 32" />
-      {/* El jarrón. */}
-      <path d="M42 44c-1-6-1-10 0-13h12c1 3 1 7 0 13Z" />
-      {/* Las flores. */}
-      <path d="M48 31V16M48 20c-4-1-6-4-6-8 4 0 6 2.5 6 8ZM48 22c4-1 6-4 6-8-4 0-6 2.5-6 8Z" />
-      <circle cx="48" cy="13" r="3.5" />
-      {/* Las dos copas. */}
-      <path d="M22 44c0-5 2-8 4-8s4 3 4 8M26 44v-8" />
-      <path d="M66 44c0-5 2-8 4-8s4 3 4 8M70 44v-8" />
-    </Doodle>
-  );
+  return <DesignAsset asset={CHAMPAGNE} className={twMerge(clsx('pointer-events-none', className))} />;
 }
 
 /**

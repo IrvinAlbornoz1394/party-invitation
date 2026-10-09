@@ -46,7 +46,9 @@ export function LocationSingleScene({ content }: LocationVariantProps) {
         />
 
         <div className="mt-12 grid items-center gap-10 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-14">
-          <SetTable className="mx-auto w-52 text-inv-primary sm:w-full sm:max-w-[15rem]" />
+          {/* Las copas son más altas que anchas: a lo ancho de la mesa que había antes se comían el
+              título, así que van más estrechas. */}
+          <SetTable className="mx-auto w-32 text-inv-primary sm:w-full sm:max-w-[10rem]" />
 
           <div className="grid gap-12">
             {content.venues.map((venue, index) => (

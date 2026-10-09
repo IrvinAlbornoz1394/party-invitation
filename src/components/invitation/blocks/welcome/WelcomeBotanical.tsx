@@ -1,20 +1,27 @@
+import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockImage } from '../../shared/BlockImage';
+import { DesignAsset } from '../../shared/DesignAsset';
+import { LeafSprig } from '../../shared/paper-ornaments';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
-import { BotanicalSpray } from '../../shared/paper-ornaments';
+
+const CORNER = requireDesignAsset('botanical-corner-top-001');
 
 /**
- * `welcome.botanical` — papel claro con dos guirnaldas, arriba y abajo.
+ * `welcome.botanical` — papel claro enmarcado por dos esquinas de ramas, arriba y abajo.
  *
  * La de la papelería de boda civil: fondo casi blanco, ramas en las dos esquinas opuestas y el
  * texto alternando **versalitas y manuscrita** línea a línea, que es el recurso tipográfico que
  * define este estilo. Junto con `welcome.veil` es la otra que se sostiene sin fotografía —aquí la
  * imagen, si la hay, queda como un velo de luz detrás del papel—.
  *
- * ## Las dos ramas son la misma, girada
+ * ## Las dos esquinas son la misma, girada
  *
- * La de abajo es la de arriba con `rotate-180`, así que las dos guirnaldas se leen como un marco
- * y no como dos dibujos distintos que casualmente van juntos. Es el mismo truco que la filigrana,
- * y por la misma razón: un segundo trazo dibujado a mano nunca es el primero.
+ * `botanical-corner-top-001` de la biblioteca de recursos: dos ramas que recorren los bordes y un
+ * brote en diagonal. La de abajo es la de arriba con `rotate-180`, así que se leen como un marco y
+ * no como dos dibujos distintos que casualmente van juntos. Es el mismo truco que la filigrana.
+ *
+ * Antes eran dos ramas sueltas; en la primera pantalla de la invitación se quedaban en un adorno
+ * de esquina, y una esquina completa es lo que hace que el papel se lea como lámina enmarcada.
  *
  * ## Por qué el color de las ramas es el de acento y no un verde
  *
@@ -42,13 +49,16 @@ export function WelcomeBotanical({ content }: WelcomeVariantProps) {
         ) : null
       }
     >
-      {/*
-        Las guirnaldas sobresalen por los cantos (`-left-6`, `-right-6`). Una rama que termina
-        justo en el borde parece recortada; una que se sale parece que continúa fuera del papel,
-        que es como está impresa una lámina de verdad.
-      */}
-      <BotanicalSpray className="absolute -top-2 -left-6 h-24 w-[15rem] text-inv-accent opacity-70 sm:h-28 sm:w-[19rem]" />
-      <BotanicalSpray className="absolute -right-6 -bottom-2 h-24 w-[15rem] rotate-180 text-inv-accent opacity-70 sm:h-28 sm:w-[19rem]" />
+      {/* Separadas del canto lo justo para que el vértice respire: pegadas al borde, el
+          brote de la esquina se lee como recortado por la pantalla. */}
+      <DesignAsset
+        asset={CORNER}
+        className="pointer-events-none absolute top-4 left-4 w-44 text-inv-accent opacity-75 sm:top-6 sm:left-6 sm:w-60"
+      />
+      <DesignAsset
+        asset={CORNER}
+        className="pointer-events-none absolute right-4 bottom-4 w-44 rotate-180 text-inv-accent opacity-75 sm:right-6 sm:bottom-6 sm:w-60"
+      />
 
       <div className="relative flex max-w-xs flex-col items-center text-inv-ink">
         {content.eventTypeLabel && (
@@ -67,13 +77,9 @@ export function WelcomeBotanical({ content }: WelcomeVariantProps) {
           </p>
         )}
 
-        {/* El filete con nudo: la separación de una lámina impresa. Va aquí y no como ornamento
-            del tema porque su sitio en la composición es este, entre el nombre y la frase. */}
-        <span aria-hidden="true" className="mt-7 flex items-center gap-2 text-inv-accent">
-          <span className="h-px w-10 bg-current opacity-50" />
-          <span className="size-1 rotate-45 bg-current" />
-          <span className="h-px w-10 bg-current opacity-50" />
-        </span>
+        {/* La ramita: la separación de una lámina botánica. Va aquí y no como ornamento del
+            tema porque su sitio en la composición es este, entre el nombre y la frase. */}
+        <LeafSprig className="mt-7 h-7 w-36 text-inv-accent opacity-80" />
 
         {content.note && (
           <p className="mt-7 mb-0 font-inv-display text-[clamp(1.05rem,5vw,1.35rem)] leading-snug text-inv-ink italic">

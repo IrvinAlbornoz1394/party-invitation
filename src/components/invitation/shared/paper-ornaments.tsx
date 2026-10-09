@@ -1,4 +1,6 @@
 import clsx from 'clsx';
+import { requireDesignAsset } from '@/lib/design-assets';
+import { DesignAsset } from './DesignAsset';
 
 /**
  * Los ornamentos de papel: el canto rasgado y la ramita.
@@ -11,7 +13,8 @@ import clsx from 'clsx';
  * primera vez que alguien retoca el canto para su bloque, se lo cambia a los otros dos sin
  * saberlo.
  *
- * Son SVG en línea y no archivos, y la razón es la que sostiene todo el catálogo: **el color lo
+ * Son SVG en línea —o piezas de la biblioteca de recursos pintadas como máscara, que es lo mismo
+ * a efectos de color— y no imágenes, y la razón es la que sostiene todo el catálogo: **el color lo
  * pone el tema**. Un PNG del canto en marfil se vería mal en cuanto alguien eligiera el tema
  * oscuro, y habría que mantener una copia por tema. Dibujados con `currentColor`, el mismo trazo
  * sale marfil sobre una franja verde y verde sobre papel marfil.
@@ -82,46 +85,24 @@ export function TornEdge({ className }: { readonly className?: string }) {
  * brazos que salen del centro— en lugar de como una rama con dirección: una rama apuntando a un
  * lado debajo de un título centrado descuadra el eje.
  *
- * ## Por qué las hojas están escritas a mano
+ * ## Sale de la biblioteca de recursos
  *
- * Porque una rama regular no parece una rama. Las seis hojas repiten la misma elipse con otra
- * inclinación y otro tamaño, y las medidas están puestas a ojo a propósito: generadas en un
- * bucle con incrementos constantes, el dibujo se lee como un patrón y pierde lo único que se le
- * pide, que es parecer dibujado.
+ * El dibujo es `botanical-divider-002` (`public/assets/invitations/`), con el mismo trazo que el
+ * resto de piezas botánicas. Este componente conserva el nombre y la forma de usarse para que
+ * los bloques que lo colocan no tengan que enterarse del cambio.
  *
- * Es el mismo criterio que las colas del lazo del cronograma: lo que parece hecho a mano nunca
- * es un espejo exacto — de ahí que el brazo derecho no sea el izquierdo reflejado píxel a píxel.
+ * `inline-block` y no el `block` por defecto de `DesignAsset`: el SVG en línea al que sustituye
+ * era un elemento en línea, y hay bloques que lo centran con `text-align` y no con flex.
  */
+const LEAF_SPRIG = requireDesignAsset('botanical-divider-002');
+
 export function LeafSprig({ className }: { readonly className?: string }) {
   return (
-    <svg
-      viewBox="0 0 140 34"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      strokeLinecap="round"
-      aria-hidden="true"
+    <DesignAsset
+      asset={LEAF_SPRIG}
       className={clsx('pointer-events-none', className)}
-    >
-      {/* Los dos tallos, saliendo del centro y arqueándose hacia arriba. */}
-      <path d="M70 20C54 20 36 17 12 10" />
-      <path d="M70 20c16 0 34-3 58-11" />
-
-      {/* Las hojas de arriba: tres por brazo, cada vez más pequeñas hacia la punta. */}
-      <ellipse cx="54" cy="15" rx="9" ry="3.6" transform="rotate(-16 54 15)" />
-      <ellipse cx="37" cy="12" rx="7.5" ry="3.1" transform="rotate(-22 37 12)" />
-      <ellipse cx="21" cy="8.5" rx="6" ry="2.6" transform="rotate(-27 21 8.5)" />
-      <ellipse cx="87" cy="15" rx="8.6" ry="3.5" transform="rotate(17 87 15)" />
-      <ellipse cx="104" cy="12" rx="7.2" ry="3" transform="rotate(23 104 12)" />
-      <ellipse cx="120" cy="8.5" rx="5.6" ry="2.5" transform="rotate(29 120 8.5)" />
-
-      {/* Dos hojas caídas junto al centro: lo que evita que la ramita se lea como un bigote. */}
-      <ellipse cx="58" cy="25" rx="6.4" ry="2.7" transform="rotate(24 58 25)" />
-      <ellipse cx="83" cy="25" rx="6" ry="2.6" transform="rotate(-21 83 25)" />
-
-      {/* El capullo del centro, relleno: el punto de unión de los dos brazos. */}
-      <circle cx="70" cy="20" r="1.9" fill="currentColor" stroke="none" />
-    </svg>
+      style={{ display: 'inline-block' }}
+    />
   );
 }
 
@@ -173,101 +154,32 @@ export function CrownGlyph({ className }: { readonly className?: string }) {
 }
 
 /**
- * La rama: hojas alternadas a lo largo de un tallo curvo, para las guirnaldas de acuarela.
+ * La rama: hojas a lo largo de un tallo que baja de una esquina hacia el centro.
  *
- * Es la traducción honesta de una acuarela a un trazo: una acuarela no se imita con vectores, y
- * el intento —degradados, manchas— sale peor que asumir que aquí el lenguaje es el dibujo a
- * línea. Lo que sí se conserva es la silueta, que es lo que hace que la esquina se lea como
- * botánica en un vistazo de medio segundo.
+ * El dibujo es `botanical-olive-branch-001` de la biblioteca de recursos, reflejado en vertical
+ * para que el tallo arranque arriba a la izquierda y caiga hacia la derecha, como la rama a
+ * elipses que sustituye. Quien la coloca en la esquina opuesta la gira media vuelta, igual que
+ * antes.
  */
+const BOTANICAL_SPRAY = requireDesignAsset('botanical-olive-branch-001');
+
 export function BotanicalSpray({ className }: { readonly className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 200 90"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.1"
-      strokeLinecap="round"
-      aria-hidden="true"
-      className={clsx('pointer-events-none', className)}
-    >
-      {/* El tallo, de una esquina hacia el centro. */}
-      <path d="M2 12C40 20 78 38 118 52c22 8 44 12 80 13" />
-      {/* Las hojas: la misma elipse repetida con otra inclinación y otro tamaño. Se escriben a
-          mano y no en un bucle porque una rama regular no parece una rama. */}
-      <ellipse cx="24" cy="10" rx="12" ry="5" transform="rotate(-24 24 10)" />
-      <ellipse cx="44" cy="26" rx="14" ry="6" transform="rotate(18 44 26)" />
-      <ellipse cx="66" cy="24" rx="10" ry="4.5" transform="rotate(-30 66 24)" />
-      <ellipse cx="88" cy="42" rx="15" ry="6" transform="rotate(14 88 42)" />
-      <ellipse cx="112" cy="38" rx="11" ry="5" transform="rotate(-26 112 38)" />
-      <ellipse cx="138" cy="56" rx="14" ry="5.5" transform="rotate(10 138 56)" />
-      <ellipse cx="164" cy="52" rx="10" ry="4.5" transform="rotate(-20 164 52)" />
-      <ellipse cx="186" cy="66" rx="12" ry="5" transform="rotate(8 186 66)" />
-      {/* Tres capullos: los puntos que rompen la repetición de las hojas. */}
-      <circle cx="58" cy="14" r="3.5" />
-      <circle cx="126" cy="28" r="3" />
-      <circle cx="176" cy="40" r="3.5" />
-    </svg>
-  );
+  return <DesignAsset asset={BOTANICAL_SPRAY} flip="y" className={clsx('pointer-events-none', className)} />;
 }
 
 /**
- * La tiara: la corona **ilustrada**, con sus picos ojivales, la filigrana del central y las
- * perlas en las puntas.
+ * La tiara: la corona **ilustrada**, para la primera pantalla de unos XV.
  *
  * Y sí, ya hay una corona en este archivo. No es un descuido, es la misma pareja que forman
  * `RingsGlyph` y `WeddingRings`: un **símbolo** y una **ilustración**, y no se pueden sustituir.
+ * `CrownGlyph` está dibujada para verse a treinta píxeles junto a un rótulo; esta, para ocupar
+ * cinco centímetros en una invitación a pantalla completa, y a tamaño pequeño se emborrona.
  *
- *   `CrownGlyph`  cinco picos rectos y una banda, trazo grueso. Está dibujada para verse a treinta
- *                 píxeles junto a un rótulo, y ahí cualquier detalle de más se convierte en una
- *                 mancha. La usan la puerta con corona, la portada de `gala` y su pie.
- *   `TiaraGlyph`  picos curvos, filigrana y perlas, trazo fino. Está dibujada para ocupar cinco
- *                 centímetros en la primera pantalla de una invitación a pantalla completa, y a
- *                 tamaño pequeño se emborrona.
- *
- * Poner la primera a cuerpo grande deja un zigzag; la segunda a cuerpo pequeño, un borrón. Por eso
- * conviven, y por eso cada una dice en su cabecera para qué tamaño está hecha.
- *
- * El trazo va fino (`1.1`) a propósito: es lo que hace que se lea como una pieza de joyería
- * grabada y no como un icono. Con `currentColor`, como todos: el oro lo pone el tema.
+ * El dibujo es `tiara-filigree-001` de la biblioteca de recursos: volutas de filigrana con el
+ * corazón en el pico central, pintada con `currentColor` como el resto — el oro lo pone el tema.
  */
+const TIARA = requireDesignAsset('tiara-filigree-001');
+
 export function TiaraGlyph({ className }: { readonly className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 120 58"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className={clsx('pointer-events-none', className)}
-    >
-      {/* Los cinco picos, de fuera hacia dentro. Cada uno es una ojiva —dos curvas que se juntan
-          en punta— y no un triángulo: la punta recta es lo que hace que una corona parezca una
-          sierra. */}
-      <path d="M14 46c-1-8 1-13 5-17 4 4 6 9 5 17Z" />
-      <path d="M106 46c1-8-1-13-5-17-4 4-6 9-5 17Z" />
-      <path d="M37 46c-2-12 1-20 7-26 6 6 9 14 7 26Z" />
-      <path d="M83 46c2-12-1-20-7-26-6 6-9 14-7 26Z" />
-      <path d="M60 6c-9 9-14 20-13 40h26C74 26 69 15 60 6Z" />
-
-      {/* La filigrana del pico central: un tallo con dos volutas. Es el detalle que separa una
-          tiara de una corona, y el único sitio donde cabe sin cerrarse sobre sí mismo. */}
-      <path d="M60 20v20" />
-      <path d="M60 26c-5 2-7 6-6 11M60 26c5 2 7 6 6 11" />
-
-      {/* La banda, con una curva mínima: recta se lee como el borde de una caja. */}
-      <path d="M8 46c26 5 78 5 104 0" />
-      <path d="M8 51c26 5 78 5 104 0" />
-
-      {/* Las perlas de las puntas. Rellenas y no aros: a este tamaño un aro de trazo fino se
-          cierra solo. */}
-      <circle cx="60" cy="6" r="2.4" fill="currentColor" stroke="none" />
-      <circle cx="44" cy="20" r="1.8" fill="currentColor" stroke="none" />
-      <circle cx="76" cy="20" r="1.8" fill="currentColor" stroke="none" />
-      <circle cx="19" cy="29" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="101" cy="29" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
+  return <DesignAsset asset={TIARA} className={clsx('pointer-events-none', className)} />;
 }

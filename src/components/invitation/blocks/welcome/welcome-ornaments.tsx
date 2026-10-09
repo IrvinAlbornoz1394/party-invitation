@@ -1,4 +1,6 @@
 import clsx from 'clsx';
+import { requireDesignAsset } from '@/lib/design-assets';
+import { DesignAsset } from '../../shared/DesignAsset';
 
 /**
  * Los dibujos de las puertas: filigrana, ramas y alianzas.
@@ -19,44 +21,16 @@ import clsx from 'clsx';
  */
 
 /**
- * La esquina de filigrana: rombos, hojas y puntos, como el grabado de una participación.
+ * La esquina de filigrana: volutas que recorren los dos bordes, como el grabado de una
+ * participación.
  *
- * Se dibuja **una sola** —la de arriba a la izquierda— y las otras tres son la misma girada con
- * CSS (`rotate`). Dibujar las cuatro a mano sería cuadruplicar un trazo que tiene que ser
- * idéntico, y a la tercera dejaría de serlo.
+ * El dibujo es `corner-filigree-001` de la biblioteca de recursos. Es **una sola** esquina —la
+ * de arriba a la izquierda— y las otras tres son la misma girada con CSS (`rotate`).
  */
+const FILIGREE_CORNER = requireDesignAsset('corner-filigree-001');
+
 export function FiligreeCorner({ className }: { readonly className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 120 120"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      aria-hidden="true"
-      className={clsx('pointer-events-none', className)}
-    >
-      {/* El vértice: un rombo pequeño del que arrancan los dos brazos. */}
-      <path d="M10 10 3.5 16.5 10 23 16.5 16.5Z" />
-
-      {/* Brazo horizontal: punto, hoja, punto, rombo. */}
-      <circle cx="26" cy="16.5" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="33" cy="16.5" r="1.2" fill="currentColor" stroke="none" />
-      <path d="M40 16.5c6-9 16-9 22 0-6 9-16 9-22 0Z" />
-      <path d="M51 8.5v16" strokeWidth="0.7" />
-      <circle cx="69" cy="16.5" r="1.6" fill="currentColor" stroke="none" />
-      <path d="M76 16.5h14" strokeWidth="0.7" />
-      <path d="M97 10 90.5 16.5 97 23 103.5 16.5Z" />
-
-      {/* Brazo vertical: el mismo repertorio, girado. */}
-      <circle cx="16.5" cy="26" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="16.5" cy="33" r="1.2" fill="currentColor" stroke="none" />
-      <path d="M16.5 40c9 6 9 16 0 22-9-6-9-16 0-22Z" />
-      <path d="M8.5 51h16" strokeWidth="0.7" />
-      <circle cx="16.5" cy="69" r="1.6" fill="currentColor" stroke="none" />
-      <path d="M16.5 76v14" strokeWidth="0.7" />
-      <path d="M10 97 16.5 90.5 23 97 16.5 103.5Z" />
-    </svg>
-  );
+  return <DesignAsset asset={FILIGREE_CORNER} className={clsx('pointer-events-none', className)} />;
 }
 
 /**

@@ -1,0 +1,151 @@
+/* ── Recursos gráficos (/admin/design-assets) ──────────────────────────────────
+   Solo usa los tokens del panel (`--dash-*`); no añade colores de marca. El crema del escenario
+   imita el papel de una invitación para juzgar las piezas como se verán, no sobre blanco. */
+
+.dassets-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dash-gap-sm);
+  align-items: center;
+  margin-bottom: var(--dash-gap-sm);
+}
+.dassets-toolbar__search {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+.dassets-toolbar__type {
+  min-width: 180px;
+}
+.dassets-toolbar__ink {
+  display: flex;
+  gap: var(--dash-gap-xs);
+  align-items: center;
+  margin-left: auto;
+}
+
+.dassets-swatch {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--dash-border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.dassets-swatch[aria-pressed='true'] {
+  outline: 2px solid var(--dash-ink);
+  outline-offset: 2px;
+}
+.dassets-swatch--custom {
+  overflow: hidden;
+  background: conic-gradient(#b08d57, #6f7f63, #5b3a55, #b08d57);
+}
+.dassets-swatch--custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.dassets-swatch--custom:focus-within {
+  outline: 2px solid var(--dash-ink);
+  outline-offset: 2px;
+}
+
+.dassets-count {
+  margin: 0 0 var(--dash-gap);
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
+
+.dassets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--dash-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dassets-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius);
+  background: var(--dash-surface);
+  box-shadow: var(--dash-shadow);
+}
+
+.dassets-card__stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #faf6ee;
+  border-bottom: 1px solid var(--dash-border);
+  transition: background-color 0.2s ease;
+}
+.dassets-card__stage--dark {
+  background: #2a2228;
+}
+/* La caja ocupa el escenario menos un margen y la máscara (`contain`) encaja la pieza dentro sin
+   deformarla, sea apaisada o vertical. En absoluto para que una pieza muy vertical no estire
+   la tarjeta; y sin la proporción propia del componente, que aquí manda el escenario. */
+.dassets-card__art {
+  position: absolute;
+  inset: var(--dash-gap-lg);
+  aspect-ratio: auto !important;
+}
+
+.dassets-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--dash-gap-sm) var(--dash-gap) var(--dash-gap);
+}
+.dassets-card__name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--dash-ink);
+}
+.dassets-card__id {
+  font-size: 11.5px;
+  color: var(--dash-ink-soft);
+  overflow-wrap: anywhere;
+}
+.dassets-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dassets-card__tags .ant-tag {
+  margin: 0;
+}
+.dassets-card__source {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+.dassets-card__source a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dassets-card__actions {
+  display: flex;
+  gap: var(--dash-gap-xs);
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .dassets-toolbar__search,
+  .dassets-toolbar__type {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .dassets-toolbar__ink {
+    margin-left: 0;
+  }
+}
