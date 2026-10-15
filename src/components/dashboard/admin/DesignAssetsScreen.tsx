@@ -23,6 +23,8 @@ const TYPE_LABELS: Record<DesignAssetType, string> = {
   frame: 'Marco',
   tiara: 'Tiara',
   symbol: 'Símbolo',
+  flower: 'Flor',
+  bow: 'Moño',
 };
 
 /*

@@ -24,6 +24,8 @@ export const DESIGN_ASSET_TYPES = [
   'frame',
   'tiara',
   'symbol',
+  'flower',
+  'bow',
 ] as const;
 
 export type DesignAssetCategory = (typeof DESIGN_ASSET_CATEGORIES)[number];

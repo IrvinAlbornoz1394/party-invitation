@@ -63,6 +63,25 @@ fina con extremos redondeados, hojas lanceoladas con nervio central y un grosor 
 lienzo, de modo que todas se ven con la misma línea al tamaño típico (300–500 px de lado mayor).
 Una pieza original nueva debe seguir ese mismo lenguaje.
 
+## Piezas a color y cómo cambiarlas por ilustraciones realistas
+
+Las de `quince/florals` (la flor, el moño y la esquina de acuarela de `blush`) son `multi`: se
+pintan como `<img>` con sus propios colores y no se tiñen con el tema. Son SVG originales con
+degradados, hechos como sustitutos hasta tener ilustraciones realistas.
+
+Para cambiar una por una ilustración de verdad no hay que tocar código:
+
+1. Conseguir la imagen con una licencia que cumpla la regla 1. Las vías válidas:
+   - Generarla con una IA de uso comercial; Adobe Firefly es la más segura.
+   - Recortarla de una lámina botánica de dominio público (rawpixel, Wikimedia Commons,
+     Biodiversity Heritage Library).
+   - Encargarla, con cesión de derechos por escrito.
+   - Freepik, Envato y Etsy siguen fuera.
+2. Quitarle el fondo y exportarla a **WebP con transparencia**, de unos 800 px por el lado mayor.
+3. Guardarla en la misma carpeta y, en su ficha de `assets.json`, cambiar `file` y `format` (y
+   `width`/`height` si cambia la proporción), además de `license`, `source` y `author`. El ID se
+   queda igual: los componentes la piden por ID.
+
 ## Colección actual
 
 | Colección | Piezas | Originales | Externas (CC0) |
@@ -71,6 +90,7 @@ Una pieza original nueva debe seguir ese mismo lenguaje.
 | Bodas · Esquinas (`wedding/corners`) | 2 | — | 2 (Openclipart) |
 | Bodas · Símbolos (`wedding/wedding-symbols`) | 3 | — | 3 (Openclipart) |
 | XV años · Tiaras (`quince/tiaras`) | 2 | — | 2 (Openclipart) |
+| XV años · Florales a color (`quince/florals`) | 3 | 3 | — |
 
 ## Dónde se usan
 

@@ -962,6 +962,105 @@
         "brindis",
         "recepción"
       ]
+    },
+    {
+      "id": "symbol-flower-pink-001",
+      "name": "Flor rosa con tallo",
+      "category": "quince",
+      "subcategory": "florals",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "svg",
+      "colorMode": "multi",
+      "file": "/assets/invitations/quince/florals/symbol-flower-pink-001.svg",
+      "width": 200,
+      "height": 300,
+      "style": [
+        "color",
+        "soft-gradient",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "flor",
+        "rosa",
+        "tallo",
+        "cosmos"
+      ]
+    },
+    {
+      "id": "symbol-bow-satin-001",
+      "name": "Moño de satín",
+      "category": "quince",
+      "subcategory": "florals",
+      "type": "bow",
+      "orientation": "horizontal",
+      "format": "svg",
+      "colorMode": "multi",
+      "file": "/assets/invitations/quince/florals/symbol-bow-satin-001.svg",
+      "width": 320,
+      "height": 180,
+      "style": [
+        "color",
+        "soft-gradient",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "moño",
+        "lazo",
+        "satín",
+        "rosa"
+      ]
+    },
+    {
+      "id": "corner-floral-blush-001",
+      "name": "Esquina floral acuarela",
+      "category": "quince",
+      "subcategory": "florals",
+      "type": "corner",
+      "orientation": "diagonal",
+      "format": "svg",
+      "colorMode": "multi",
+      "file": "/assets/invitations/quince/florals/corner-floral-blush-001.svg",
+      "width": 260,
+      "height": 260,
+      "style": [
+        "color",
+        "watercolor",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "esquina",
+        "flores",
+        "acuarela",
+        "rosa"
+      ]
     }
   ]
 }
