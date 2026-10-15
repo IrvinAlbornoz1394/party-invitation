@@ -43,7 +43,9 @@ export function actionClasses(tone: Tone, className?: string): string {
     'focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 focus-visible:outline-none',
     tone === 'onImage'
       ? 'border border-current/45 bg-current/10! text-inv-on-primary! backdrop-blur-[2px] hover:bg-current/20!'
-      : 'bg-inv-primary! text-inv-on-primary! hover:bg-inv-accent!',
+      : /* `border-0`: sin preflight, un `<button>` trae el borde biselado del navegador, y en la
+           confirmación gestionada se veía como un contorno gris alrededor de la píldora. */
+        'border-0 bg-inv-primary! text-inv-on-primary! hover:bg-inv-accent!',
     className,
   );
 }
