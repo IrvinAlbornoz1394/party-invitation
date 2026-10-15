@@ -228,7 +228,7 @@ variante × tema × contenido × pantalla, y se abre desde **Componentes** y des
 **tipo de evento**, de plantilla, de tema y de variante en cada bloque, como en las demos de un
 mercado de plantillas. La portada la anuncia con una tarjeta por demo.
 
-Son **diez demos para nueve estructuras**: la de `botanical` está contada dos veces, una para boda
+Son **doce demos para once estructuras**: la de `botanical` está contada dos veces, una para boda
 y otra para XV (`botanical` y `botanical-xv`). Cada una es una entrada propia y no un parámetro, por
 dos motivos:
 la URL se prerenderiza y se comparte con su propia vista previa, y —lo importante— boda y XV no se
@@ -406,6 +406,42 @@ La lección es la simétrica de la anterior: un bloque que le falta a tres plant
 repartiendo la variante que ya existe, pero tampoco es una excusa para tres variaciones de la
 misma. Si las tres se pueden describir en una frase cada una y ninguna frase se parece a la
 siguiente, el lote está bien.
+
+La décima, `arbor`, es la primera que se define por **una forma**: un vano de medio punto que se
+repite en casi cada sección —el retrato, la puerta, las sedes, la galería, la confirmación, las
+muestras de color, el monograma del pie— y ramas que nacen en los pies de cada arco y lo
+desbordan, o cuelgan desde el canto de arriba. Se ofrece solo para XV, como `gala`, y trajo doce
+variantes: `welcome.arbor`, `hero.arch`, `story.dedication`, `calendar.countdown`,
+`location.arch`, `schedule.vine`, `gallery.arch`, `details.script`, `dresscode.arches`,
+`rsvp.arch`, `closing.canopy` y `footer.arch`, más la forma `arch` de la cuenta regresiva y la
+pieza compartida `shared/ArchFrame.tsx`. Los dibujos son los de la biblioteca de recursos
+gráficos (`docs/RECURSOS_GRAFICOS.md`), coloreados por el tema.
+
+Llegó de una referencia que traía secciones que el catálogo no tiene —la mesa de regalos, la
+lluvia de sobres y los pases asignados por familia— y **no se inventaron para ella**: la mesa es
+el bloque `gifts` de «Lo que falta», y los pases son la personalización por familia, que entrará
+como contexto de quien visita y no como contenido de un bloque. Al revés, los bloques que la
+referencia no tenía —detalles, vestimenta, cierre y pie— sí se escribieron, en el mismo lenguaje.
+
+Es también la primera demo que corrige el contenido de muestra: `TemplateBlockChoice.config`
+mezcla el mismo `config` que la plantilla lleva en `scripts/seed.ts` sobre el ejemplo y lo vuelve
+a validar. Hizo falta porque su cuenta regresiva va en la fecha y no en la portada
+(`showCountdown: false`), y una demo con los dos relojes enseñaría algo que el catálogo no monta.
+
+La undécima, `blush`, es la primera **con adornos a color**. Su forma es la polaroid —el retrato,
+las sedes, la galería y la historia van en instantáneas blancas un poco giradas
+(`shared/PolaroidFrame.tsx`)— y la acompañan tres piezas que no se tiñen con el tema: una flor rosa
+con tallo, un moño de satín y una esquina floral de acuarela (`quince/florals` en la biblioteca,
+`colorMode: 'multi'`). Vestida con otro tema, las flores siguen rosas; es el precio de que se
+parezca a su referencia. Solo para XV, y doce variantes: `welcome.ribbon`, `hero.polaroid`,
+`calendar.strip`, `location.polaroid`, `schedule.bubbles`, `details.row`, `story.quote`,
+`gallery.stack`, `dresscode.petals`, `rsvp.bow`, `closing.bloom` y `footer.band`, más la forma
+`bead` de la cuenta regresiva.
+
+De su referencia se quedó fuera la tercera columna de la franja de la fecha —el salón—, porque el
+lugar es de la ubicación y no se mantiene en dos sitios. La ubicación, los detalles más allá de la
+fila de pictogramas, la vestimenta y el cierre no venían en la referencia y se escribieron con su
+mismo lenguaje.
 
 ## Rehacer una variante o escribir otra
 

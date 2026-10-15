@@ -40,7 +40,7 @@ import { useCountdown } from './useCountdown';
  *
  * ## Una forma por estructura, no por portada
  *
- * Son nueve, una por estructura del catálogo, y ese es el criterio — no «una por portada».
+ * Son once, una por estructura del catálogo, y ese es el criterio — no «una por portada».
  * `hero.split` y `hero.quince` comparten `script` porque las dos son la portada de
  * `storytelling` (una para boda y otra para XV), y la cuenta regresiva es parte del lenguaje de
  * la estructura, no del tipo de evento. Si se separaran, cambiar de boda a XV cambiaría también
@@ -58,6 +58,8 @@ import { useCountdown } from './useCountdown';
  * - `air`       Cifras sueltas, sin caja ni filete: solo aire.        → `monochrome`
  * - `bubble`    Cifras vaciadas, con el contorno haciendo de número.  → `sketch`
  * - `crest`     Dos por dos, en un cuadro de filetes. Compacta.       → `gala`
+ * - `arch`      Cada cifra dentro de un arco de filete, como ventanas. → `arbor`
+ * - `bead`      Cada cifra en un círculo relleno, como cuentas.       → `blush`
  */
 export type CountdownVariant =
   | 'boxes'
@@ -68,7 +70,9 @@ export type CountdownVariant =
   | 'stacked'
   | 'air'
   | 'bubble'
-  | 'crest';
+  | 'crest'
+  | 'arch'
+  | 'bead';
 
 /**
  * Hacia dónde se alinea la fila.
@@ -126,6 +130,10 @@ export function Countdown({
       return <CountdownBubble cells={cells} tone={tone} align={align} className={className} />;
     case 'crest':
       return <CountdownCrest cells={cells} tone={tone} align={align} className={className} />;
+    case 'arch':
+      return <CountdownArch cells={cells} tone={tone} align={align} className={className} />;
+    case 'bead':
+      return <CountdownBead cells={cells} tone={tone} align={align} className={className} />;
     case 'boxes':
       return <CountdownBoxes cells={cells} tone={tone} className={className} />;
     default: {
@@ -589,7 +597,7 @@ function CountdownBubble({ cells, tone, align, className }: FormProps) {
 /**
  * Dos por dos: las cuatro unidades en un cuadro, separadas por dos filetes en cruz.
  *
- * Es la única que **no es una fila**. Las otras ocho reparten a lo ancho —con caja, con filete,
+ * Es la única que **no es una fila**. Las otras diez reparten a lo ancho —con caja, con filete,
  * con aire, de corrido— o bajan en columna; esta forma un bloque compacto de dos por dos, y esa
  * es la diferencia que importa: cabe en una composición estrecha y centrada sin obligar a que la
  * pieza más ancha de la pantalla sea el reloj.
@@ -643,7 +651,99 @@ function CountdownCrest({ cells, tone, align, className }: FormProps) {
 }
 
 /**
- * El envoltorio común: lo que hace que las nueve formas sean **la misma pieza** para quien no la
+ * Cada unidad dentro de un arco de filete: cuatro ventanas de medio punto en fila.
+ *
+ * Es la forma de `arbor`, la estructura donde todo lo que se mira va dentro de un arco —el
+ * retrato, la sede, la galería—. Aquí el arco es solo contorno y sin fondo, y eso la separa de
+ * `boxes`: aquella es interfaz sobre una fotografía; esta es una pieza de papelería que repite la
+ * forma de la invitación a tamaño de cifra.
+ *
+ * El arco va como borde de la propia casilla (`rounded-t-full`) y no como un dibujo aparte: así
+ * crece con la cifra, y unos días de tres dígitos ensanchan su ventana en vez de salirse de ella.
+ */
+function CountdownArch({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+
+  return (
+    <Frame
+      className={clsx(
+        rowClasses(align),
+        'gap-2.5 sm:gap-4',
+        onImage ? 'text-inv-on-primary' : 'text-inv-ink-soft',
+        className,
+      )}
+    >
+      {cells.map((part) => (
+        <div
+          key={part.unit}
+          className={clsx(
+            'flex min-w-[3.9rem] flex-col items-center gap-2 rounded-t-full border border-b-0 px-2 pt-6 pb-3 sm:min-w-[4.6rem]',
+            onImage ? 'border-current/40' : 'border-inv-accent/45',
+          )}
+        >
+          <b
+            className={clsx(
+              'font-inv-display text-[clamp(1.5rem,6.5vw,2.1rem)] leading-none font-normal tabular-nums',
+              !onImage && 'text-inv-primary',
+            )}
+          >
+            <Digits value={part.value} />
+          </b>
+          <span className="text-[8px] uppercase opacity-80 sm:text-[9px] sm:tracking-[0.2em]">
+            {part.label}
+          </span>
+        </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * Cada cifra en un círculo relleno del color principal, con su rótulo debajo y fuera: cuatro
+ * cuentas en fila.
+ *
+ * Es la de `blush`, donde los momentos del itinerario ya son medallones rellenos y la cuenta
+ * regresiva los repite. Es la única forma **rellena** de las once: las demás dibujan la cifra
+ * sobre el papel y como mucho la rodean de un filete; aquí la cifra va en negativo, en el color
+ * del texto de los botones, y por eso se lee como un botón más de la invitación y no como
+ * tipografía.
+ *
+ * El círculo crece con la cifra (`min-w` y no ancho fijo) por lo mismo que las demás: los días
+ * pueden ser tres dígitos.
+ */
+function CountdownBead({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+
+  return (
+    <Frame
+      className={clsx(
+        rowClasses(align),
+        'gap-3 sm:gap-5',
+        onImage ? 'text-inv-on-primary' : 'text-inv-ink-soft',
+        className,
+      )}
+    >
+      {cells.map((part) => (
+        <div key={part.unit} className="flex flex-col items-center gap-2">
+          <b
+            className={clsx(
+              'grid h-[3.6rem] min-w-[3.6rem] place-items-center rounded-full px-2 font-inv-display text-[1.45rem] leading-none font-normal tabular-nums sm:h-16 sm:min-w-16 sm:text-[1.65rem]',
+              onImage ? 'bg-current/15' : 'bg-inv-primary text-inv-on-primary',
+            )}
+          >
+            <Digits value={part.value} />
+          </b>
+          <span className="text-[8.5px] tracking-[0.16em] uppercase sm:text-[9.5px]">
+            {part.label}
+          </span>
+        </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * El envoltorio común: lo que hace que las once formas sean **la misma pieza** para quien no la
  * ve.
  *
  * El papel de grupo y su nombre no son de una forma ni de otra —son de la cuenta regresiva—, y
@@ -667,7 +767,7 @@ function Frame({
 /**
  * Los dos dígitos, o el hueco mientras no hay reloj.
  *
- * Se saca a su propia función porque es la única regla que las nueve formas **no pueden**
+ * Se saca a su propia función porque es la única regla que las once formas **no pueden**
  * escribir cada una a su manera: el relleno con cero y el guion doble son lo que garantiza que la
  * pieza no cambie de anchura entre el primer cuadro y el segundo, y una forma que se olvidara del
  * `padStart` haría saltar la maqueta solo por debajo de las diez unidades — que es un fallo que

@@ -606,6 +606,40 @@ const VARIANTS: {
   /* El noveno, para `gala`, y el único enmarcado por los cuatro lados: el cartucho de doble
      filete con la corona encabalgada arriba. */
   { blockKey: 'footer', variantKey: 'frame', name: 'Pie en cartucho grabado' },
+
+  /*
+   * Las doce de `arbor`, la décima estructura, juntas y no repartidas por bloque: salen de una
+   * misma idea —todo lo que se mira va dentro de un arco y la vegetación lo desborda— y leerlas
+   * seguidas es la forma de comprobar que es una sola. Ver la plantilla más abajo.
+   *
+   * Sin `minPlanRank` salvo la bienvenida, por la razón de siempre: son la composición de partida
+   * de una plantilla del catálogo, y una variante de Plus en ella la haría imposible de montar
+   * para Esencial.
+   */
+  { blockKey: 'welcome', variantKey: 'arbor', name: 'Bienvenida bajo un arco botánico', minPlanRank: 2 },
+  { blockKey: 'hero', variantKey: 'arch', name: 'Portada con retrato en arco' },
+  { blockKey: 'story', variantKey: 'dedication', name: 'Historia como dedicatoria' },
+  { blockKey: 'calendar', variantKey: 'countdown', name: 'Fecha en un renglón con cuenta regresiva' },
+  { blockKey: 'location', variantKey: 'arch', name: 'Sedes dentro de un arco' },
+  { blockKey: 'schedule', variantKey: 'vine', name: 'Itinerario en tallo con hojas alternas' },
+  { blockKey: 'gallery', variantKey: 'arch', name: 'Galería de una foto en arco' },
+  { blockKey: 'details', variantKey: 'script', name: 'Detalles con rótulo manuscrito' },
+  { blockKey: 'dresscode', variantKey: 'arches', name: 'Vestimenta en arcada de colores' },
+  { blockKey: 'rsvp', variantKey: 'arch', name: 'Confirmación bajo un arco' },
+  { blockKey: 'closing', variantKey: 'canopy', name: 'Cierre bajo ramas colgantes' },
+  { blockKey: 'footer', variantKey: 'arch', name: 'Pie con monograma en arco' },
+  { blockKey: 'welcome', variantKey: 'ribbon', name: 'Bienvenida en tarjeta con moño', minPlanRank: 2 },
+  { blockKey: 'hero', variantKey: 'polaroid', name: 'Portada con retrato en polaroid' },
+  { blockKey: 'story', variantKey: 'quote', name: 'Historia como cita destacada' },
+  { blockKey: 'calendar', variantKey: 'strip', name: 'Fecha en franja con cuenta en cuentas' },
+  { blockKey: 'location', variantKey: 'polaroid', name: 'Sedes en polaroids' },
+  { blockKey: 'schedule', variantKey: 'bubbles', name: 'Itinerario en medallones rellenos' },
+  { blockKey: 'gallery', variantKey: 'stack', name: 'Galería en montón de polaroids' },
+  { blockKey: 'details', variantKey: 'row', name: 'Detalles en fila de pictogramas' },
+  { blockKey: 'dresscode', variantKey: 'petals', name: 'Vestimenta en flor de colores' },
+  { blockKey: 'rsvp', variantKey: 'bow', name: 'Confirmación «RSVP» con moño' },
+  { blockKey: 'closing', variantKey: 'bloom', name: 'Cierre con flor de tallo largo' },
+  { blockKey: 'footer', variantKey: 'band', name: 'Pie en franja con contactos en círculo' },
 ];
 
 /**
@@ -1142,6 +1176,101 @@ const TEMPLATES: {
       { blockKey: 'rsvp', variantKey: 'engraved', isRequired: true },
       { blockKey: 'closing', variantKey: 'wreath' },
       { blockKey: 'footer', variantKey: 'frame', isRequired: true },
+    ],
+  },
+  {
+    key: 'arbor',
+    name: 'Arbor',
+    description:
+      'Jardín de salvia y crema: el retrato, las sedes y las fotos dentro de arcos, con ramas que los desbordan y follaje colgando del canto.',
+    /*
+     * **Solo XV**, como `gala`. La composición serviría para una boda de jardín —ningún componente
+     * lleva una corona ni una cifra—, pero la referencia que la trajo es de unos XV, y ofrecerla
+     * también para boda la metería en una segunda comparación sin que nadie la haya pensado ahí.
+     * Abrirla a otro tipo es añadir una clave a esta lista, cuando se quiera.
+     */
+    eventTypes: ['quince'],
+    defaultThemeKey: 'sage',
+    isActive: true,
+    /*
+     * La décima estructura, y la primera que se define por **una forma**.
+     *
+     * Las nueve anteriores se distinguen por cómo reparten la página —columnas, franjas, planos,
+     * filetes— o por lo que quitan. Esta repite un solo vano de medio punto en casi cada sección:
+     * el retrato de la portada, la puerta, las dos sedes, la galería, la confirmación, las
+     * muestras de color, el pie. Y un segundo gesto que lo acompaña siempre: las ramas **nacen en
+     * los pies del arco y lo desbordan**, o cuelgan desde el canto de arriba, como si la
+     * invitación se mirara desde debajo de un árbol.
+     *
+     * Estrena doce variantes, todas, y no por la regla de exclusividad: ninguna de las que había
+     * componía con un arco, y las que quedaban libres en XV (`location.dual-stacked`,
+     * `gallery.masonry`, `schedule.horizontal`) son retículas de otra familia. Ver
+     * `docs/COMPONENTES.md`.
+     *
+     * El orden es el de la referencia —el nombre y el retrato, la dedicatoria, aparta la fecha con
+     * la cuenta regresiva, la misa y la recepción, el itinerario, las fotos y la confirmación— con
+     * los bloques que la referencia no tenía (detalles, vestimenta, cierre y pie) donde los pone el
+     * resto del catálogo. Lo que la referencia tenía y el catálogo no —la mesa de regalos y los
+     * pases por familia— no entra: ver `docs/COMPONENTES.md`, «Lo que falta».
+     */
+    blocks: [
+      { blockKey: 'welcome', variantKey: 'arbor' },
+      /* La cuenta regresiva de esta plantilla está en la fecha, que es donde la referencia la
+         pone. Con la de la portada encendida habría dos relojes en tres pantallas. */
+      { blockKey: 'hero', variantKey: 'arch', isRequired: true, config: { showCountdown: false } },
+      { blockKey: 'story', variantKey: 'dedication', config: { eyebrow: null, title: 'Mis XV años' } },
+      { blockKey: 'calendar', variantKey: 'countdown', config: { eyebrow: null, title: '¡Aparta la fecha!', dayMark: 'heart' } },
+      { blockKey: 'location', variantKey: 'arch', config: { eyebrow: null, title: 'Dónde celebraremos' } },
+      { blockKey: 'schedule', variantKey: 'vine', config: { eyebrow: null, title: 'Itinerario' } },
+      { blockKey: 'gallery', variantKey: 'arch', config: { eyebrow: null, title: 'Recuerdos' } },
+      { blockKey: 'details', variantKey: 'script', config: { eyebrow: null, title: 'Detalles' } },
+      { blockKey: 'dresscode', variantKey: 'arches', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'rsvp', variantKey: 'arch', isRequired: true, config: { eyebrow: null, title: '¿Asistirás?' } },
+      { blockKey: 'closing', variantKey: 'canopy' },
+      { blockKey: 'footer', variantKey: 'arch', isRequired: true },
+    ],
+  },
+  {
+    key: 'blush',
+    name: 'Blush',
+    description:
+      'Rosa empolvado y papel claro: el retrato y las fotos en polaroids torcidas, flores a color apoyadas en los marcos y un moño de satín sobre la confirmación.',
+    /* Solo XV, como `gala` y `arbor`. La referencia era un cumpleaños, pero con la foto, la flor
+       y el moño es una invitación de quinceañera; abrirla a cumpleaños es añadir una clave. */
+    eventTypes: ['quince'],
+    defaultThemeKey: 'blush',
+    isActive: true,
+    /*
+     * La undécima estructura, y la primera que **no es de línea**.
+     *
+     * Todas las anteriores dibujan sus adornos con un trazo de un color —el del tema— y por eso
+     * cambian de piel con él. Esta lleva tres piezas a color (`quince/florals` en la biblioteca:
+     * la flor, el moño y la esquina de acuarela) que conservan su rosa con cualquier tema. Es lo
+     * que la hace reconocible, y también su límite: vestida de verde, las flores seguirán rosas.
+     *
+     * Su forma es la **polaroid**: el retrato, las sedes, la galería y la historia van en
+     * instantáneas blancas un poco giradas, y una flor se apoya en la esquina de alguna. El otro
+     * gesto son las dos **franjas** de rosa intenso a sangre —la fecha y el pie— que parten la
+     * invitación como en la referencia.
+     *
+     * Doce variantes nuevas. El orden es el de la referencia —portada, fecha y confirmación
+     * pronto, el itinerario, la foto y la cita, el pie con los contactos— con los bloques que no
+     * tenía (ubicación, detalles, vestimenta, cierre) donde los pone el resto del catálogo.
+     */
+    blocks: [
+      { blockKey: 'welcome', variantKey: 'ribbon' },
+      /* La cuenta regresiva va bajo la franja de la fecha, no en la portada. */
+      { blockKey: 'hero', variantKey: 'polaroid', isRequired: true, config: { showCountdown: false } },
+      { blockKey: 'calendar', variantKey: 'strip', config: { eyebrow: null, title: '¡Aparta la fecha!' } },
+      { blockKey: 'location', variantKey: 'polaroid', config: { eyebrow: null, title: 'Dónde celebraremos' } },
+      { blockKey: 'schedule', variantKey: 'bubbles', config: { eyebrow: 'Será un día', title: '¡Muy especial!' } },
+      { blockKey: 'details', variantKey: 'row', config: { eyebrow: null, title: 'Lo que habrá' } },
+      { blockKey: 'story', variantKey: 'quote', config: { eyebrow: null, title: 'Mis XV años' } },
+      { blockKey: 'gallery', variantKey: 'stack', config: { eyebrow: null, title: 'Recuerdos' } },
+      { blockKey: 'dresscode', variantKey: 'petals', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'rsvp', variantKey: 'bow', isRequired: true, config: { eyebrow: 'Por favor', title: '¿Asistirás?' } },
+      { blockKey: 'closing', variantKey: 'bloom', config: { eyebrow: null, title: '¡A celebrar!' } },
+      { blockKey: 'footer', variantKey: 'band', isRequired: true },
     ],
   },
 ];
@@ -1732,6 +1861,90 @@ const THEMES = [
       /* Rombo, el ornamento clásico de la papelería formal, y bien visible: en este tema los
          filetes son la mitad del diseño. */
       ornament: { line: '2.25rem', node: '5px', nodeRadius: '1px', nodeRotate: '45deg', opacity: '0.8' },
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'sage',
+    name: 'Sage',
+    description: 'Salvia, crema y oliva claro. Jardín al atardecer, para XV de bosque y de flores blancas.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* Crema y no marfil: más amarillo que el de «olive», que es el papel de algodón. Este es
+           la luz de la tarde sobre el papel, y es lo que deja a la salvia leerse verde y no gris. */
+        background: '#f6f0e3',
+        surface: '#fbf8f0',
+        ink: '#4a4838',
+        inkSoft: '#7c7964',
+        /* La salvia de los botones y de las cifras, un punto más oscura que la de la referencia:
+           la de allí da 3,5:1 con el crema, y la reparación de contraste del tema le pondría el
+           texto del botón en negro. Esta llega a 4,7:1 y el botón sigue escrito en crema. */
+        primary: '#66753f',
+        onPrimary: '#fbf8f0',
+        /* El oliva claro de los rótulos manuscritos: un punto más cálido y más apagado que el
+           principal, para que el nombre y los títulos no compitan con los botones. */
+        accent: '#9a915a',
+        line: '#e2dac6',
+        overlay: 'rgba(40, 44, 30, 0.42)',
+      },
+      fonts: {
+        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        /* Pinyon y no Sacramento: la referencia escribe los rótulos con una inglesa de trazo
+           contrastado, y la de «olive» es monolineal. */
+        script: "var(--font-pinyon, 'Pinyon Script'), cursive",
+      },
+      /* El radio medio es el de los botones, y aquí son píldoras: con 22px un botón de dos líneas
+         de alto ya es un óvalo. Las tarjetas que lo usen salen redondeadas, que en un jardín es lo
+         que se espera. */
+      radii: { sm: '8px', md: '22px', lg: '30px' },
+      shadows: { soft: '0 20px 48px -30px rgba(60, 66, 40, 0.45)' },
+      motion: { reveal: '0.95s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.5rem, 10vw, 8rem)' },
+      /* Cálida y un poco velada: la hora dorada de las fotos de la referencia. */
+      photo: { filter: 'saturate(0.92) contrast(0.96) sepia(0.08) brightness(1.02)' },
+      ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
+      /* Sin onda: los cantos de esta plantilla los ponen los arcos y las ramas, y una onda en las
+         franjas sería un tercer gesto. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'blush',
+    name: 'Blush',
+    description: 'Rosa empolvado sobre papel claro, con serif de alto contraste. Para XV románticos, de flores y moños.',
+    isActive: true,
+    tokens: {
+      colors: {
+        background: '#fbf1ee',
+        surface: '#fff8f6',
+        ink: '#5a3f42',
+        inkSoft: '#84666a',
+        /* El rosa de los botones y de las cuentas, más hondo que el de la referencia: el de allí
+           da 3,8:1 con el texto claro y la reparación de contraste lo pondría en negro. Este
+           llega a 4,8:1. */
+        primary: '#a5566a',
+        onPrimary: '#fff8f6',
+        /* El rosa claro de los nombres y títulos manuscritos. */
+        accent: '#bf7383',
+        line: '#efd9d8',
+        overlay: 'rgba(70, 36, 44, 0.42)',
+      },
+      fonts: {
+        /* Playfair: la serif de alto contraste de las siglas «RSVP» y del nombre del evento. */
+        display: "var(--font-playfair, 'Playfair Display'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        script: "var(--font-pinyon, 'Pinyon Script'), cursive",
+      },
+      radii: { sm: '6px', md: '24px', lg: '18px' },
+      shadows: { soft: '0 18px 40px -28px rgba(110, 50, 64, 0.5)' },
+      motion: { reveal: '0.9s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.5rem, 10vw, 7.5rem)' },
+      /* Clara y un poco rosada, como las fotos de estudio de la referencia. */
+      photo: { filter: 'saturate(0.95) contrast(0.97) brightness(1.03)' },
+      ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
+      /* Sin onda: los cantos los ponen las franjas, que van rectas. */
       edge: { height: '0px' },
     },
   },

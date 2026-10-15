@@ -1,5 +1,6 @@
 import type { BlockContent } from '@/domain/invitation/blocks/block-content';
 import type { BlockImage } from '@/domain/invitation/blocks/shared';
+import { BLOCK_CONTENT_SCHEMAS } from '@/domain/invitation/event-content';
 import type { RegisteredBlockKey } from '../registry/component-registry';
 import { CALENDAR_SAMPLES } from './calendar-samples';
 import { CLOSING_SAMPLES } from './closing-samples';
@@ -123,6 +124,16 @@ interface TemplateBlockChoice {
   readonly registryId: string;
   /** Ver `DemoTemplateBlock.removable`. */
   readonly removable?: boolean;
+  /**
+   * Lo que la plantilla dice distinto del ejemplo: el mismo `config` que lleva en
+   * `scripts/seed.ts`, mezclado encima del contenido de muestra.
+   *
+   * Hacía falta en cuanto una composición necesitó decidir **contenido** y no solo variante: la
+   * de `arbor` lleva la cuenta regresiva en la fecha y no en la portada, y sin esto la demo
+   * enseñaría los dos relojes que el catálogo apaga. Se vuelve a validar con el esquema del
+   * bloque al mezclar, así que una clave mal escrita aquí no llega a pintarse.
+   */
+  readonly config?: Readonly<Record<string, unknown>>;
 }
 
 interface TemplateDefinition {
@@ -141,7 +152,7 @@ interface TemplateDefinition {
 }
 
 /**
- * Las diez demos: nueve estructuras, y una de ellas —`botanical`— contada dos veces, una para
+ * Las doce demos: once estructuras, y una de ellas —`botanical`— contada dos veces, una para
  * boda y otra para XV.
  *
  * Cada una corresponde a una estructura del catálogo y repite su composición de bloques y sus
@@ -568,6 +579,115 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'footer', registryId: 'footer.frame' },
     ],
   },
+  {
+    key: 'arbor',
+    name: 'Arbor',
+    structureKey: 'arbor',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'Jardín de salvia y crema: el retrato, las sedes y las fotos dentro de arcos, con ramas que los desbordan y follaje colgando del canto.',
+    themeKey: 'sage',
+    cover: demoImage(QUINCE_PHOTOS.dress, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    /*
+     * La segunda que solo existe para XV, como `gala`, y la primera compuesta alrededor de **una
+     * forma**: el arco. Ver `scripts/seed.ts`.
+     *
+     * Es también la primera demo que corrige el contenido de muestra (`config`), y por dos
+     * razones que son de composición y no de texto: la cuenta regresiva va en la fecha y no en la
+     * portada, y el itinerario lleva sus dibujos —el ejemplo de XV viene «solo puntos», y aquí el
+     * dibujo de cada momento es la mitad de la sección—. Los rótulos son los de la referencia.
+     */
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.arbor', removable: true },
+      { blockKey: 'hero', registryId: 'hero.arch', config: { showCountdown: false } },
+      {
+        blockKey: 'story',
+        registryId: 'story.dedication',
+        config: { eyebrow: null, title: 'Mis XV años' },
+      },
+      {
+        blockKey: 'calendar',
+        registryId: 'calendar.countdown',
+        config: { eyebrow: null, title: '¡Aparta la fecha!', dayMark: 'heart' },
+      },
+      {
+        blockKey: 'location',
+        registryId: 'location.arch',
+        config: { eyebrow: null, title: 'Dónde celebraremos' },
+      },
+      {
+        blockKey: 'schedule',
+        registryId: 'schedule.vine',
+        config: { eyebrow: null, title: 'Itinerario', marker: 'icon' },
+      },
+      { blockKey: 'gallery', registryId: 'gallery.arch', config: { eyebrow: null, title: 'Recuerdos' } },
+      { blockKey: 'details', registryId: 'details.script', config: { eyebrow: null, title: 'Detalles' } },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.arches',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      { blockKey: 'rsvp', registryId: 'rsvp.arch', config: { eyebrow: null, title: '¿Asistirás?' } },
+      { blockKey: 'closing', registryId: 'closing.canopy' },
+      { blockKey: 'footer', registryId: 'footer.arch' },
+    ],
+  },
+  {
+    key: 'blush',
+    name: 'Blush',
+    structureKey: 'blush',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'Rosa empolvado y papel claro: el retrato y las fotos en polaroids torcidas, flores a color apoyadas en los marcos y un moño de satín sobre la confirmación.',
+    themeKey: 'blush',
+    cover: demoImage(QUINCE_PHOTOS.shoes, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    /*
+     * La tercera solo de XV, y la primera con adornos a color: la flor, el moño y la esquina de
+     * acuarela de `quince/florals`. Ver `scripts/seed.ts`. Las correcciones de `config` son las
+     * del catálogo más el itinerario con dibujos, como en `arbor`: aquí cada momento es un
+     * medallón con su dibujo, y con puntos se quedaría en una lista.
+     */
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.ribbon', removable: true },
+      { blockKey: 'hero', registryId: 'hero.polaroid', config: { showCountdown: false } },
+      {
+        blockKey: 'calendar',
+        registryId: 'calendar.strip',
+        config: { eyebrow: null, title: '¡Aparta la fecha!' },
+      },
+      {
+        blockKey: 'location',
+        registryId: 'location.polaroid',
+        config: { eyebrow: null, title: 'Dónde celebraremos' },
+      },
+      {
+        blockKey: 'schedule',
+        registryId: 'schedule.bubbles',
+        config: { eyebrow: 'Será un día', title: '¡Muy especial!', marker: 'icon' },
+      },
+      { blockKey: 'details', registryId: 'details.row', config: { eyebrow: null, title: 'Lo que habrá' } },
+      { blockKey: 'story', registryId: 'story.quote', config: { eyebrow: null, title: 'Mis XV años' } },
+      { blockKey: 'gallery', registryId: 'gallery.stack', config: { eyebrow: null, title: 'Recuerdos' } },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.petals',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.bow',
+        config: { eyebrow: 'Por favor', title: '¿Asistirás?' },
+      },
+      { blockKey: 'closing', registryId: 'closing.bloom', config: { eyebrow: null, title: '¡A celebrar!' } },
+      { blockKey: 'footer', registryId: 'footer.band' },
+    ],
+  },
 ];
 
 /**
@@ -694,6 +814,25 @@ function contentFor(blockKey: RegisteredBlockKey, sampleKey: string): TemplateBl
 }
 
 /**
+ * El contenido de muestra con el `config` de la plantilla encima, vuelto a validar.
+ *
+ * Es la misma regla que aplica el motor a una invitación de verdad —el `config` gana sobre lo
+ * proyectado (ver `docs/COMPONENTES.md`, «El contenido vive una sola vez»)— y se valida otra vez
+ * por lo mismo: el resultado tiene que cumplir el contrato del bloque. Si no lo cumple se queda
+ * el ejemplo sin tocar, que es un daño acotado en una página de venta.
+ */
+function withConfig(
+  sample: TemplateBlockContent,
+  config: Readonly<Record<string, unknown>>,
+): TemplateBlockContent {
+  const parsed = BLOCK_CONTENT_SCHEMAS[sample.blockKey].safeParse({ ...sample.content, ...config });
+
+  /* El esquema y la clave salen del mismo `blockKey`, así que el contenido validado es del tipo
+     de ese bloque; TypeScript no puede seguir esa correspondencia a través del mapa. */
+  return parsed.success ? ({ ...sample, content: parsed.data } as TemplateBlockContent) : sample;
+}
+
+/**
  * Arma los bloques de una plantilla **en el orden que declara**.
  *
  * Un bloque sin ejemplo para ese evento imaginario se omite en lugar de romper la plantilla
@@ -704,7 +843,8 @@ function assemble(definition: TemplateDefinition): readonly DemoTemplateBlock[] 
   const blocks: DemoTemplateBlock[] = [];
 
   for (const choice of definition.blocks) {
-    const content = contentFor(choice.blockKey, definition.sampleKey);
+    const sample = contentFor(choice.blockKey, definition.sampleKey);
+    const content = sample && choice.config ? withConfig(sample, choice.config) : sample;
 
     if (content) {
       blocks.push({

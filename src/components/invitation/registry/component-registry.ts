@@ -1,4 +1,6 @@
 import { CalendarBand } from '../blocks/calendar/CalendarBand';
+import { CalendarCountdown } from '../blocks/calendar/CalendarCountdown';
+import { CalendarStrip } from '../blocks/calendar/CalendarStrip';
 import { CalendarDial } from '../blocks/calendar/CalendarDial';
 import { CalendarMonth } from '../blocks/calendar/CalendarMonth';
 import { CalendarPad } from '../blocks/calendar/CalendarPad';
@@ -8,6 +10,8 @@ import { CalendarWeek } from '../blocks/calendar/CalendarWeek';
 import type { CalendarVariant } from '../blocks/calendar/calendar-variant';
 import { ClosingAlbum } from '../blocks/closing/ClosingAlbum';
 import { ClosingBouquet } from '../blocks/closing/ClosingBouquet';
+import { ClosingCanopy } from '../blocks/closing/ClosingCanopy';
+import { ClosingBloom } from '../blocks/closing/ClosingBloom';
 import { ClosingEnvelope } from '../blocks/closing/ClosingEnvelope';
 import { ClosingHorizon } from '../blocks/closing/ClosingHorizon';
 import { ClosingLetter } from '../blocks/closing/ClosingLetter';
@@ -22,10 +26,14 @@ import { DetailsList } from '../blocks/details/DetailsList';
 import { DetailsNotes } from '../blocks/details/DetailsNotes';
 import { DetailsPanel } from '../blocks/details/DetailsPanel';
 import { DetailsProgram } from '../blocks/details/DetailsProgram';
+import { DetailsScript } from '../blocks/details/DetailsScript';
+import { DetailsRow } from '../blocks/details/DetailsRow';
 import { DetailsSplit } from '../blocks/details/DetailsSplit';
 import { DetailsStack } from '../blocks/details/DetailsStack';
 import { DetailsStickers } from '../blocks/details/DetailsStickers';
 import type { DetailsVariant } from '../blocks/details/details-variant';
+import { DresscodeArches } from '../blocks/dresscode/DresscodeArches';
+import { DresscodePetals } from '../blocks/dresscode/DresscodePetals';
 import { DresscodeBands } from '../blocks/dresscode/DresscodeBands';
 import { DresscodeCards } from '../blocks/dresscode/DresscodeCards';
 import { DresscodeChart } from '../blocks/dresscode/DresscodeChart';
@@ -36,6 +44,8 @@ import { DresscodePalette } from '../blocks/dresscode/DresscodePalette';
 import { DresscodeSwatches } from '../blocks/dresscode/DresscodeSwatches';
 import { DresscodeThread } from '../blocks/dresscode/DresscodeThread';
 import type { DresscodeVariant } from '../blocks/dresscode/dresscode-variant';
+import { FooterArch } from '../blocks/footer/FooterArch';
+import { FooterBand } from '../blocks/footer/FooterBand';
 import { FooterCentered } from '../blocks/footer/FooterCentered';
 import { FooterColophon } from '../blocks/footer/FooterColophon';
 import { FooterFrame } from '../blocks/footer/FooterFrame';
@@ -46,6 +56,8 @@ import { FooterSeal } from '../blocks/footer/FooterSeal';
 import { FooterSprig } from '../blocks/footer/FooterSprig';
 import { FooterWave } from '../blocks/footer/FooterWave';
 import type { FooterVariant } from '../blocks/footer/footer-parts';
+import { GalleryArch } from '../blocks/gallery/GalleryArch';
+import { GalleryStack } from '../blocks/gallery/GalleryStack';
 import { GalleryCarousel } from '../blocks/gallery/GalleryCarousel';
 import { GalleryCinematic } from '../blocks/gallery/GalleryCinematic';
 import { GalleryEditorial } from '../blocks/gallery/GalleryEditorial';
@@ -57,6 +69,8 @@ import { GalleryParallax } from '../blocks/gallery/GalleryParallax';
 import { GalleryPlates } from '../blocks/gallery/GalleryPlates';
 import { GalleryPolaroid } from '../blocks/gallery/GalleryPolaroid';
 import type { GalleryVariant } from '../blocks/gallery/gallery-parts';
+import { HeroArch } from '../blocks/hero/HeroArch';
+import { HeroPolaroid } from '../blocks/hero/HeroPolaroid';
 import { HeroCard } from '../blocks/hero/HeroCard';
 import { HeroCentered } from '../blocks/hero/HeroCentered';
 import { HeroClassic } from '../blocks/hero/HeroClassic';
@@ -68,6 +82,8 @@ import { HeroQuince } from '../blocks/hero/HeroQuince';
 import { HeroScript } from '../blocks/hero/HeroScript';
 import { HeroSplit } from '../blocks/hero/HeroSplit';
 import type { HeroVariant } from '../blocks/hero/hero-variant';
+import { LocationArch } from '../blocks/location/LocationArch';
+import { LocationPolaroid } from '../blocks/location/LocationPolaroid';
 import { LocationDualJourney } from '../blocks/location/LocationDualJourney';
 import { LocationDualStacked } from '../blocks/location/LocationDualStacked';
 import { LocationDualVenue } from '../blocks/location/LocationDualVenue';
@@ -79,6 +95,8 @@ import { LocationSinglePlaque } from '../blocks/location/LocationSinglePlaque';
 import { LocationSinglePlate } from '../blocks/location/LocationSinglePlate';
 import { LocationSingleSplit } from '../blocks/location/LocationSingleSplit';
 import type { LocationVariant } from '../blocks/location/location-parts';
+import { RsvpArch } from '../blocks/rsvp/RsvpArch';
+import { RsvpBow } from '../blocks/rsvp/RsvpBow';
 import { RsvpCard } from '../blocks/rsvp/RsvpCard';
 import { RsvpEngraved } from '../blocks/rsvp/RsvpEngraved';
 import { RsvpHairline } from '../blocks/rsvp/RsvpHairline';
@@ -98,16 +116,22 @@ import { ScheduleRail } from '../blocks/schedule/ScheduleRail';
 import { ScheduleRibbon } from '../blocks/schedule/ScheduleRibbon';
 import { ScheduleShowcase } from '../blocks/schedule/ScheduleShowcase';
 import { ScheduleTimeline } from '../blocks/schedule/ScheduleTimeline';
+import { ScheduleVine } from '../blocks/schedule/ScheduleVine';
+import { ScheduleBubbles } from '../blocks/schedule/ScheduleBubbles';
 import { ScheduleZigzag } from '../blocks/schedule/ScheduleZigzag';
 import type { ScheduleVariant } from '../blocks/schedule/schedule-variant';
 import { StoryBow } from '../blocks/story/StoryBow';
 import { StoryCentered } from '../blocks/story/StoryCentered';
+import { StoryDedication } from '../blocks/story/StoryDedication';
+import { StoryQuote } from '../blocks/story/StoryQuote';
 import { StoryGreeting } from '../blocks/story/StoryGreeting';
 import { StoryMounted } from '../blocks/story/StoryMounted';
 import { StoryOverlay } from '../blocks/story/StoryOverlay';
 import { StoryPressed } from '../blocks/story/StoryPressed';
 import { StoryImageLeft, StoryImageRight } from '../blocks/story/StorySplit';
 import type { StoryVariant } from '../blocks/story/story-variant';
+import { WelcomeArbor } from '../blocks/welcome/WelcomeArbor';
+import { WelcomeRibbon } from '../blocks/welcome/WelcomeRibbon';
 import { WelcomeBand } from '../blocks/welcome/WelcomeBand';
 import { WelcomeBotanical } from '../blocks/welcome/WelcomeBotanical';
 import { WelcomeCountdown } from '../blocks/welcome/WelcomeCountdown';
@@ -195,6 +219,10 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
      filete inscrito, guirnaldas desbordando dos esquinas y la tiara ilustrada—. `crown` compone
      con aire; esta, con ornamento. Ver su archivo. */
   'welcome.gilded': { blockKey: 'welcome', component: WelcomeGilded },
+  /* La de `arbor`: el arco dibujado como portal, con el nombre dentro. La portada lo repite con la
+     fotografía, y las dos primeras pantallas riman. */
+  'welcome.arbor': { blockKey: 'welcome', component: WelcomeArbor },
+  'welcome.ribbon': { blockKey: 'welcome', component: WelcomeRibbon },
 
   'hero.classic': { blockKey: 'hero', component: HeroClassic },
   'hero.centered': { blockKey: 'hero', component: HeroCentered },
@@ -218,6 +246,10 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La segunda de XV: la corona, el rótulo en versalitas y el nombre en manuscrita. Donde
      `hero.quince` hace del número el titular, esta lo hace del nombre. */
   'hero.crown': { blockKey: 'hero', component: HeroCrown },
+  /* La portada de `arbor`: el nombre encima y el retrato dentro de un arco, con las ramas
+     desbordándolo por el pie. */
+  'hero.arch': { blockKey: 'hero', component: HeroArch },
+  'hero.polaroid': { blockKey: 'hero', component: HeroPolaroid },
 
   /*
    * Las dos partidas apuntan a componentes distintos que envuelven al mismo: el lado de la
@@ -239,6 +271,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* El saludo con lazo: la fotografía de banda con el canto ondulado del tema y el texto debajo,
      centrado. La hermana ilustrada de `greeting`. */
   'story.bow': { blockKey: 'story', component: StoryBow },
+  /* La dedicatoria: la cita abre en manuscrita y el título la remata. La de `arbor`. */
+  'story.dedication': { blockKey: 'story', component: StoryDedication },
+  'story.quote': { blockKey: 'story', component: StoryQuote },
 
   /*
    * El calendario tuvo **un** componente durante mucho tiempo, y no era una lista a medio hacer:
@@ -272,6 +307,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La séptima, y la única que es un objeto: la hoja de taco sobre su pila, con la cabecera de
      color, el troquel y la sombra. Compone por planos, como el resto de `silk`. */
   'calendar.pad': { blockKey: 'calendar', component: CalendarPad },
+  /* La fecha en un renglón y la cuenta regresiva debajo, sin retícula. La de `arbor`. */
+  'calendar.countdown': { blockKey: 'calendar', component: CalendarCountdown },
+  'calendar.strip': { blockKey: 'calendar', component: CalendarStrip },
 
   'details.cards': { blockKey: 'details', component: DetailsCards },
   'details.list': { blockKey: 'details', component: DetailsList },
@@ -292,6 +330,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La única centrada en un eje: el dibujo arriba, el rótulo en versalitas y un filete corto
      entre un aviso y el siguiente. */
   'details.column': { blockKey: 'details', component: DetailsColumn },
+  /* El rótulo manuscrito de cada detalle, sin icono ni caja. La de `arbor`. */
+  'details.script': { blockKey: 'details', component: DetailsScript },
+  'details.row': { blockKey: 'details', component: DetailsRow },
 
   /*
    * Seis formas de enseñar una paleta, una por plantilla. No son variaciones de la misma fila de
@@ -317,6 +358,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La única donde la paleta **no** es la sección: manda la palabra —«FORMAL»— y los tonos bajan
      a una fila de puntos. Es el caso del evento cuyo código de vestimenta es una sola palabra. */
   'dresscode.label': { blockKey: 'dresscode', component: DresscodeLabel },
+  /* Los colores en arcos esbeltos, como una arcada. La de `arbor`. */
+  'dresscode.arches': { blockKey: 'dresscode', component: DresscodeArches },
+  'dresscode.petals': { blockKey: 'dresscode', component: DresscodePetals },
 
   'schedule.vertical': { blockKey: 'schedule', component: ScheduleTimeline },
   'schedule.horizontal': { blockKey: 'schedule', component: ScheduleRail },
@@ -338,6 +382,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* El de las guías punteadas: la hora en un margen, el rótulo en el otro y una línea de puntos
      cruzando el hilo. El recurso de los índices y las cartas impresas. */
   'schedule.leaders': { blockKey: 'schedule', component: ScheduleLeaders },
+  /* Un tallo con un nudo por momento y los momentos alternando contra él. La de `arbor`. */
+  'schedule.vine': { blockKey: 'schedule', component: ScheduleVine },
+  'schedule.bubbles': { blockKey: 'schedule', component: ScheduleBubbles },
 
   'gallery.parallax': { blockKey: 'gallery', component: GalleryParallax },
   'gallery.grid': { blockKey: 'gallery', component: GalleryGrid },
@@ -355,6 +402,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* El collage: dos columnas desfasadas a propósito —no por el azar de las proporciones, como en
      `masonry`— y una fotografía a todo el ancho que cierra el escalón que dejan. */
   'gallery.offset': { blockKey: 'gallery', component: GalleryOffset },
+  /* Una foto cada vez dentro de un arco, con flechas y puntos. La de `arbor`. */
+  'gallery.arch': { blockKey: 'gallery', component: GalleryArch },
+  'gallery.stack': { blockKey: 'gallery', component: GalleryStack },
 
   /*
    * Tres pensadas para una sede y tres para dos. La intención está en el nombre, no en una
@@ -375,6 +425,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La placa: la hora abre la ficha y el nombre va entre dos filetes. La única que no usa
      `VenueFacts`, y su archivo explica por qué. */
   'location.single-plaque': { blockKey: 'location', component: LocationSinglePlaque },
+  /* Todas las sedes dentro de un mismo arco teñido. La de `arbor`. */
+  'location.arch': { blockKey: 'location', component: LocationArch },
+  'location.polaroid': { blockKey: 'location', component: LocationPolaroid },
 
   /*
    * Tres formas, no dos caminos. A dónde va el botón —WhatsApp o la plataforma— es contenido
@@ -397,6 +450,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* El cartucho grabado: doble filete alrededor y ningún fondo propio. Sobre un papel oscuro, una
      tarjeta clara abre un agujero de luz y esta no. */
   'rsvp.engraved': { blockKey: 'rsvp', component: RsvpEngraved },
+  /* La pregunta dentro de un arco de filete, sin fondo. La de `arbor`. */
+  'rsvp.arch': { blockKey: 'rsvp', component: RsvpArch },
+  'rsvp.bow': { blockKey: 'rsvp', component: RsvpBow },
 
   'closing.split': { blockKey: 'closing', component: ClosingSplit },
   'closing.letter': { blockKey: 'closing', component: ClosingLetter },
@@ -415,6 +471,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'closing.bouquet': { blockKey: 'closing', component: ClosingBouquet },
   /* El único que **envuelve** el texto: dos ramas enfrentadas cerrando una guirnalda. */
   'closing.wreath': { blockKey: 'closing', component: ClosingWreath },
+  /* Ramas colgando desde el canto de arriba sobre la despedida. La de `arbor`. */
+  'closing.canopy': { blockKey: 'closing', component: ClosingCanopy },
+  'closing.bloom': { blockKey: 'closing', component: ClosingBloom },
 
   'footer.centered': { blockKey: 'footer', component: FooterCentered },
   'footer.ribbon': { blockKey: 'footer', component: FooterRibbon },
@@ -436,6 +495,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Y el único enmarcado por los cuatro lados: el cartucho con la corona encabalgada en el filete
      de arriba. */
   'footer.frame': { blockKey: 'footer', component: FooterFrame },
+  /* El monograma dentro de un arco pequeño. La de `arbor`. */
+  'footer.arch': { blockKey: 'footer', component: FooterArch },
+  'footer.band': { blockKey: 'footer', component: FooterBand },
 };
 
 /**
