@@ -1061,6 +1061,165 @@
         "acuarela",
         "rosa"
       ]
+    },
+    {
+      "id": "corner-rose-line-001",
+      "name": "Esquina de rosas de línea",
+      "category": "quince",
+      "subcategory": "fine-line",
+      "type": "corner",
+      "orientation": "diagonal",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/quince/fine-line/corner-rose-line-001.svg",
+      "width": 271.5,
+      "height": 270.4,
+      "style": [
+        "fine-line",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "esquina",
+        "rosas",
+        "flores",
+        "línea fina"
+      ]
+    },
+    {
+      "id": "bow-ribbon-line-001",
+      "name": "Moño de cinta de línea",
+      "category": "quince",
+      "subcategory": "fine-line",
+      "type": "bow",
+      "orientation": "square",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/quince/fine-line/bow-ribbon-line-001.svg",
+      "width": 141.3,
+      "height": 143.8,
+      "style": [
+        "fine-line",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "moño",
+        "lazo",
+        "cinta",
+        "línea fina"
+      ]
+    },
+    {
+      "id": "symbol-envelope-bow-001",
+      "name": "Sobre con moño",
+      "category": "quince",
+      "subcategory": "fine-line",
+      "type": "symbol",
+      "orientation": "horizontal",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/quince/fine-line/symbol-envelope-bow-001.svg",
+      "width": 176,
+      "height": 154,
+      "style": [
+        "fine-line",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "sobre",
+        "carta",
+        "moño",
+        "confirmación"
+      ]
+    },
+    {
+      "id": "symbol-gown-line-001",
+      "name": "Vestido de XV",
+      "category": "quince",
+      "subcategory": "fine-line",
+      "type": "symbol",
+      "orientation": "vertical",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/quince/fine-line/symbol-gown-line-001.svg",
+      "width": 140,
+      "height": 166.5,
+      "style": [
+        "fine-line",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "vestido",
+        "vestimenta",
+        "gala",
+        "línea fina"
+      ]
+    },
+    {
+      "id": "symbol-butterfly-line-001",
+      "name": "Mariposa de línea",
+      "category": "quince",
+      "subcategory": "fine-line",
+      "type": "symbol",
+      "orientation": "horizontal",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/quince/fine-line/symbol-butterfly-line-001.svg",
+      "width": 128.8,
+      "height": 96.8,
+      "style": [
+        "fine-line",
+        "romantic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "xv años",
+        "mariposa",
+        "jardín",
+        "línea fina"
+      ]
     }
   ]
 }

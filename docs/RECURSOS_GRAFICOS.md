@@ -91,6 +91,7 @@ Para cambiar una por una ilustración de verdad no hay que tocar código:
 | Bodas · Símbolos (`wedding/wedding-symbols`) | 3 | — | 3 (Openclipart) |
 | XV años · Tiaras (`quince/tiaras`) | 2 | — | 2 (Openclipart) |
 | XV años · Florales a color (`quince/florals`) | 3 | 3 | — |
+| XV años · Línea fina (`quince/fine-line`) | 5 | 5 | — |
 
 ## Dónde se usan
 
@@ -104,6 +105,7 @@ Los ornamentos compartidos conservan su nombre y su API, pero pintan piezas de l
 | `FiligreeCorner` (`welcome-ornaments.tsx`) | `corner-filigree-001` | bienvenida de filigrana |
 | `Candelabra`, `Bouquet`, `SetTable` (`doodle-ornaments.tsx`) | `symbol-candelabra-001`, `symbol-bouquet-001`, `symbol-champagne-001` | vestimenta con gotas, cierre con ramo, sede en escena |
 | — (directo en `WelcomeBotanical`) | `botanical-corner-top-001` | bienvenida botánica |
+| `BowCard` y las variantes de `coquette` (directo) | las cinco de `quince/fine-line`, `tiara-filigree-001`, `symbol-champagne-001`, `symbol-bouquet-001` | las doce de `coquette` |
 
 Siguen dibujados a mano, porque a su tamaño funcionan: `CrownGlyph`, `RingsGlyph`, `WeddingRings`,
 `RibbonBow`, `DrawnFrame` y el canto rasgado (`TornEdge`).
