@@ -640,6 +640,24 @@ const VARIANTS: {
   { blockKey: 'rsvp', variantKey: 'bow', name: 'Confirmación «RSVP» con moño' },
   { blockKey: 'closing', variantKey: 'bloom', name: 'Cierre con flor de tallo largo' },
   { blockKey: 'footer', variantKey: 'band', name: 'Pie en franja con contactos en círculo' },
+
+  /*
+   * Las doce de `coquette`, la duodécima estructura: casi todo va en una tarjeta de dos filetes
+   * atada con un moño de línea (`shared/BowCard.tsx`), sobre papel rosado y con rosas de un solo
+   * trazo desbordando las esquinas. Ver la plantilla más abajo.
+   */
+  { blockKey: 'welcome', variantKey: 'keepsake', name: 'Bienvenida en tarjeta atada con moño', minPlanRank: 2 },
+  { blockKey: 'hero', variantKey: 'tiara', name: 'Portada en tarjeta con rótulo en arco y tiara' },
+  { blockKey: 'story', variantKey: 'keepsake', name: 'Historia en tarjeta prendida a una foto' },
+  { blockKey: 'calendar', variantKey: 'clock', name: 'Fecha con «Faltan» y reloj de dos puntos' },
+  { blockKey: 'location', variantKey: 'vignette', name: 'Sedes en tarjetas con dibujo' },
+  { blockKey: 'schedule', variantKey: 'hearts', name: 'Itinerario con la hora en un corazón' },
+  { blockKey: 'gallery', variantKey: 'filmstrip', name: 'Galería en tira de fotomatón' },
+  { blockKey: 'details', variantKey: 'ribbons', name: 'Detalles en tarjetas atadas, de dos en dos' },
+  { blockKey: 'dresscode', variantKey: 'atelier', name: 'Vestimenta en tarjeta con vestido dibujado' },
+  { blockKey: 'rsvp', variantKey: 'envelope', name: 'Confirmación con sobre atado' },
+  { blockKey: 'closing', variantKey: 'tiara', name: 'Cierre con retrato coronado' },
+  { blockKey: 'footer', variantKey: 'numeral', name: 'Pie con el nombre sobre un «15»' },
 ];
 
 /**
@@ -1271,6 +1289,50 @@ const TEMPLATES: {
       { blockKey: 'rsvp', variantKey: 'bow', isRequired: true, config: { eyebrow: 'Por favor', title: '¿Asistirás?' } },
       { blockKey: 'closing', variantKey: 'bloom', config: { eyebrow: null, title: '¡A celebrar!' } },
       { blockKey: 'footer', variantKey: 'band', isRequired: true },
+    ],
+  },
+  {
+    key: 'coquette',
+    name: 'Coquette',
+    description:
+      'Rosa pálido, moños y rosas de línea fina: cada sección en una tarjeta atada con un moño, el nombre a pincel y una tiara de filigrana.',
+    /* Solo XV, como `gala`, `arbor` y `blush`: la portada y el pie llevan un «15» que no es
+       contenido, y la referencia era una invitación de quinceañera. */
+    eventTypes: ['quince'],
+    defaultThemeKey: 'coquette',
+    isActive: true,
+    /*
+     * La duodécima estructura, y la primera que se define por **un objeto de papelería**.
+     *
+     * `arbor` repite un arco y `blush` una polaroid; esta repite una **tarjeta atada**: blanca,
+     * de cantos redondos, con un filete del principal por fuera, otro dorado por dentro y un moño
+     * de cinta dibujado colgando del canto de arriba (`shared/BowCard.tsx`). La historia, cada
+     * sede, los detalles, la vestimenta y la confirmación van en una, como fichas sueltas de una
+     * caja de recuerdos. Lo demás lo ponen tres gestos que se repiten: el nombre y los títulos a
+     * pincel (Ms Madi), un «15» enorme y pálido detrás del rótulo de la portada y del nombre del
+     * pie, y rosas de un solo trazo desbordando las esquinas. Todos los dibujos son de línea, así
+     * que —al revés que `blush`— cambian de color con el tema.
+     *
+     * Doce variantes nuevas. El orden es el de la referencia —la tarjeta de la portada, la tira de
+     * fotos con la dedicatoria, «Faltan», las sedes, la vestimenta, la confirmación y la firma—, con
+     * los bloques que no tenía (bienvenida, itinerario, detalles y cierre) donde los pone el resto
+     * del catálogo. La referencia no trae nada que el catálogo no tenga, así que no se descartó
+     * ninguna sección.
+     */
+    blocks: [
+      { blockKey: 'welcome', variantKey: 'keepsake' },
+      /* La cuenta regresiva va en «Faltan», no en la portada. */
+      { blockKey: 'hero', variantKey: 'tiara', isRequired: true, config: { showCountdown: false } },
+      { blockKey: 'gallery', variantKey: 'filmstrip', config: { eyebrow: null, title: 'Mis XV años' } },
+      { blockKey: 'story', variantKey: 'keepsake', config: { eyebrow: null, title: 'Gracias por estar' } },
+      { blockKey: 'calendar', variantKey: 'clock', config: { eyebrow: null, title: 'Faltan' } },
+      { blockKey: 'location', variantKey: 'vignette', config: { eyebrow: null, title: 'Detalles' } },
+      { blockKey: 'schedule', variantKey: 'hearts', config: { eyebrow: null, title: 'Itinerario' } },
+      { blockKey: 'details', variantKey: 'ribbons', config: { eyebrow: null, title: 'Para tomar en cuenta' } },
+      { blockKey: 'dresscode', variantKey: 'atelier', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'rsvp', variantKey: 'envelope', isRequired: true, config: { eyebrow: null, title: 'Confirmar asistencia' } },
+      { blockKey: 'closing', variantKey: 'tiara', config: { eyebrow: null, title: '¡Te espero!' } },
+      { blockKey: 'footer', variantKey: 'numeral', isRequired: true },
     ],
   },
 ];
@@ -1945,6 +2007,49 @@ const THEMES = [
       photo: { filter: 'saturate(0.95) contrast(0.97) brightness(1.03)' },
       ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
       /* Sin onda: los cantos los ponen las franjas, que van rectas. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'coquette',
+    name: 'Coquette',
+    description: 'Rosa pálido, coral y dorado, con manuscrita de pincel. Para XV de moños, rosas y tiara.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* El rosa del papel de la referencia, apenas más claro que el de «blush»: aquí el papel
+           es el fondo de tarjetas blancas, y tiene que separarse de ellas sin oscurecerse. */
+        background: '#f8e6e5',
+        surface: '#fffbfa',
+        ink: '#4f3437',
+        inkSoft: '#7a5a5d',
+        /* El coral rosado del nombre, los botones y los dibujos. Más hondo que el de la
+           referencia, por la regla de siempre: con el texto claro del botón da 4,8:1. */
+        primary: '#b4505a',
+        onPrimary: '#fffbfa',
+        /* El dorado viejo de la invitación, el filete de las tarjetas y el reloj. A 3,6:1 con el
+           papel: alcanza para lo que escribe, que es siempre grande. */
+        accent: '#9a7429',
+        line: '#ecd0cd',
+        overlay: 'rgba(70, 34, 40, 0.42)',
+      },
+      fonts: {
+        /* Playfair para lo que la referencia escribe en serif de contraste: «CÓDIGO DE
+           VESTIMENTA», la fecha, la invitación en dorado. */
+        display: "var(--font-playfair, 'Playfair Display'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        /* Ms Madi: el pincel seco del nombre y de los rótulos. Ver `app/layout.tsx`. */
+        script: "var(--font-msmadi, 'Ms Madi'), cursive",
+      },
+      /* Píldoras en los botones, como «VER UBICACIÓN» y «CONFIRMAR» en la referencia. */
+      radii: { sm: '8px', md: '999px', lg: '22px' },
+      shadows: { soft: '0 18px 40px -28px rgba(120, 50, 60, 0.5)' },
+      motion: { reveal: '0.9s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.5rem, 10vw, 7.5rem)' },
+      /* Cálida y luminosa, como las fotos de estudio de vestido rosa de la referencia. */
+      photo: { filter: 'saturate(0.96) contrast(0.97) brightness(1.03)' },
+      ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
+      /* Sin onda: los cantos son los de las tarjetas. */
       edge: { height: '0px' },
     },
   },

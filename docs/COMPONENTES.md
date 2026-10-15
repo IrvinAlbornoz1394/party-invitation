@@ -228,7 +228,7 @@ variante × tema × contenido × pantalla, y se abre desde **Componentes** y des
 **tipo de evento**, de plantilla, de tema y de variante en cada bloque, como en las demos de un
 mercado de plantillas. La portada la anuncia con una tarjeta por demo.
 
-Son **doce demos para once estructuras**: la de `botanical` está contada dos veces, una para boda
+Son **trece demos para doce estructuras**: la de `botanical` está contada dos veces, una para boda
 y otra para XV (`botanical` y `botanical-xv`). Cada una es una entrada propia y no un parámetro, por
 dos motivos:
 la URL se prerenderiza y se comparte con su propia vista previa, y —lo importante— boda y XV no se
@@ -442,6 +442,25 @@ De su referencia se quedó fuera la tercera columna de la franja de la fecha —
 lugar es de la ubicación y no se mantiene en dos sitios. La ubicación, los detalles más allá de la
 fila de pictogramas, la vestimenta y el cierre no venían en la referencia y se escribieron con su
 mismo lenguaje.
+
+La duodécima, `coquette`, es la primera que se define por **un objeto de papelería**: una
+tarjeta blanca de cantos redondos, con un filete del principal por fuera, otro dorado por dentro y
+un moño de cinta dibujado colgando del canto de arriba (`shared/BowCard.tsx`). La historia, cada
+sede, los detalles, la vestimenta y la confirmación van en una. La acompañan el nombre y los
+títulos a pincel (Ms Madi, cargada en `app/layout.tsx`), un «15» enorme y pálido detrás del rótulo
+de la portada y del nombre del pie, la fecha con el día dentro de un corazón
+(`shared/HeartDate.tsx`) y rosas de un solo trazo en las esquinas. Al revés que `blush`, todos sus
+dibujos son de línea (`quince/fine-line` en la biblioteca), así que cambian de color con el tema.
+Solo para XV, y doce variantes: `welcome.keepsake`, `hero.tiara`, `gallery.filmstrip`,
+`story.keepsake`, `calendar.clock`, `location.vignette`, `schedule.hearts`, `details.ribbons`,
+`dresscode.atelier`, `rsvp.envelope`, `closing.tiara` y `footer.numeral`, más la forma `colon` de
+la cuenta regresiva.
+
+Su referencia no traía ninguna sección que el catálogo no tenga, así que no se descartó nada. La
+segunda pantalla se partió en dos bloques: la tira de tres fotos con el rótulo en vertical es la
+galería, y la tarjeta con la dedicatoria, la historia. La bienvenida, el itinerario, los detalles y
+el cierre no venían y se escribieron con sus mismas piezas. La portada no pinta la foto, como la
+referencia: el primer retrato es la tira de fotos.
 
 ## Rehacer una variante o escribir otra
 

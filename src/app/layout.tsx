@@ -6,6 +6,7 @@ import {
   Fredoka,
   Jost,
   Manrope,
+  Ms_Madi,
   Pinyon_Script,
   Playfair_Display,
   Sacramento,
@@ -158,6 +159,25 @@ const fredoka = Fredoka({
   preload: false,
 });
 
+/**
+ * Ms Madi: la manuscrita de pincel de «coquette».
+ *
+ * Ni Sacramento ni Pinyon sirven para ese tema. Sacramento es un rotulador de trazo constante y
+ * Pinyon una inglesa de plumilla, ordenada y simétrica. La referencia de «coquette» escribe el
+ * nombre y los rótulos con un **pincel seco**: trazo rápido, inclinado, con el fino y el grueso
+ * de la cerda y mayúsculas grandes que se salen del renglón. Puesta en su lugar una caligrafía
+ * de plumilla, la invitación pasa de carta escrita a mano a papelería de imprenta.
+ *
+ * Sin precarga, como el resto de las decorativas.
+ */
+const msMadi = Ms_Madi({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-msmadi',
+  display: 'swap',
+  preload: false,
+});
+
 const bebas = Bebas_Neue({
   subsets: ['latin'],
   weight: '400',
@@ -166,7 +186,17 @@ const bebas = Bebas_Neue({
   preload: false,
 });
 
-const fontVariables = [jost, cormorant, sacramento, pinyon, fredoka, bebas, manrope, playfair]
+const fontVariables = [
+  jost,
+  cormorant,
+  sacramento,
+  pinyon,
+  msMadi,
+  fredoka,
+  bebas,
+  manrope,
+  playfair,
+]
   .map((font) => font.variable)
   .join(' ');
 

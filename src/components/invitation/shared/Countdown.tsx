@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import clsx from 'clsx';
 import type { Tone } from './tone';
 import { useCountdown } from './useCountdown';
@@ -40,7 +41,7 @@ import { useCountdown } from './useCountdown';
  *
  * ## Una forma por estructura, no por portada
  *
- * Son once, una por estructura del catálogo, y ese es el criterio — no «una por portada».
+ * Son doce, una por estructura del catálogo, y ese es el criterio — no «una por portada».
  * `hero.split` y `hero.quince` comparten `script` porque las dos son la portada de
  * `storytelling` (una para boda y otra para XV), y la cuenta regresiva es parte del lenguaje de
  * la estructura, no del tipo de evento. Si se separaran, cambiar de boda a XV cambiaría también
@@ -60,6 +61,7 @@ import { useCountdown } from './useCountdown';
  * - `crest`     Dos por dos, en un cuadro de filetes. Compacta.       → `gala`
  * - `arch`      Cada cifra dentro de un arco de filete, como ventanas. → `arbor`
  * - `bead`      Cada cifra en un círculo relleno, como cuentas.       → `blush`
+ * - `colon`     Cifras unidas por dos puntos, en un marco de filete.   → `coquette`
  */
 export type CountdownVariant =
   | 'boxes'
@@ -72,7 +74,8 @@ export type CountdownVariant =
   | 'bubble'
   | 'crest'
   | 'arch'
-  | 'bead';
+  | 'bead'
+  | 'colon';
 
 /**
  * Hacia dónde se alinea la fila.
@@ -134,6 +137,8 @@ export function Countdown({
       return <CountdownArch cells={cells} tone={tone} align={align} className={className} />;
     case 'bead':
       return <CountdownBead cells={cells} tone={tone} align={align} className={className} />;
+    case 'colon':
+      return <CountdownColon cells={cells} tone={tone} align={align} className={className} />;
     case 'boxes':
       return <CountdownBoxes cells={cells} tone={tone} className={className} />;
     default: {
@@ -737,6 +742,58 @@ function CountdownBead({ cells, tone, align, className }: FormProps) {
             {part.label}
           </span>
         </div>
+      ))}
+    </Frame>
+  );
+}
+
+/**
+ * Las cuatro cifras en una sola línea, unidas por dos puntos como en un reloj —«54 : 04 : 15 :
+ * 14»—, con la etiqueta debajo de cada una y todo dentro de un marco de filete redondeado.
+ *
+ * Es la forma de `coquette`, y la única que se lee como **una hora** y no como cuatro datos: las
+ * otras separan las unidades con aire, filetes o cajas; esta las encadena con el signo que se usa
+ * para escribir el tiempo. Las cifras van en el acento —el dorado de la referencia— y el marco en
+ * el principal, a media opacidad, para que el rótulo «Faltan» de encima siga siendo lo primero.
+ *
+ * Los dos puntos son decoración (`aria-hidden`): leídos en voz alta solo estorban entre una
+ * unidad y la siguiente.
+ *
+ * Con cifras de tres dígitos no se parte: la fila es una retícula de siete columnas
+ * de anchos automáticos, así que la casilla de los días crece y las demás se ajustan. Por debajo
+ * de los 340 px, el cuerpo baja con el ancho de la pantalla (`clamp` con `vw`).
+ */
+function CountdownColon({ cells, tone, align, className }: FormProps) {
+  const onImage = tone === 'onImage';
+
+  return (
+    <Frame
+      className={clsx(
+        'grid w-fit grid-flow-col items-start gap-x-1.5 rounded-inv-sm border border-solid px-4 pt-3 pb-2.5 sm:gap-x-3 sm:px-7',
+        align === 'center' && 'mx-auto',
+        onImage ? 'border-current/40 text-inv-on-primary' : 'border-inv-primary/45 text-inv-accent',
+        className,
+      )}
+    >
+      {cells.map((part, index) => (
+        <Fragment key={part.unit}>
+          {index > 0 && (
+            <span
+              aria-hidden="true"
+              className="font-inv-display text-[clamp(1.6rem,9vw,2.6rem)] leading-none"
+            >
+              :
+            </span>
+          )}
+          <span className="flex flex-col items-center">
+            <b className="font-inv-display text-[clamp(1.6rem,9vw,2.6rem)] leading-none font-normal tabular-nums">
+              <Digits value={part.value} />
+            </b>
+            <span className="mt-2 font-inv-display text-[9px] tracking-[0.08em] uppercase sm:text-[10.5px] sm:tracking-[0.14em]">
+              {part.label}
+            </span>
+          </span>
+        </Fragment>
       ))}
     </Frame>
   );

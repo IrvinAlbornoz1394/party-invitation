@@ -152,7 +152,7 @@ interface TemplateDefinition {
 }
 
 /**
- * Las doce demos: once estructuras, y una de ellas —`botanical`— contada dos veces, una para
+ * Las trece demos: doce estructuras, y una de ellas —`botanical`— contada dos veces, una para
  * boda y otra para XV.
  *
  * Cada una corresponde a una estructura del catálogo y repite su composición de bloques y sus
@@ -686,6 +686,66 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       },
       { blockKey: 'closing', registryId: 'closing.bloom', config: { eyebrow: null, title: '¡A celebrar!' } },
       { blockKey: 'footer', registryId: 'footer.band' },
+    ],
+  },
+  {
+    key: 'coquette',
+    name: 'Coquette',
+    structureKey: 'coquette',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'Rosa pálido, moños y rosas de línea fina: cada sección en una tarjeta atada con un moño, el nombre a pincel y una tiara de filigrana.',
+    themeKey: 'coquette',
+    cover: demoImage(QUINCE_PHOTOS.venue, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    /*
+     * La cuarta solo de XV, y la de la tarjeta atada con un moño (`shared/BowCard.tsx`). Ver
+     * `scripts/seed.ts`. Las correcciones de `config` son las del catálogo más el itinerario con
+     * dibujos, como en `arbor` y `blush`: aquí el dibujo de cada momento va bajo su corazón.
+     */
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.keepsake', removable: true },
+      { blockKey: 'hero', registryId: 'hero.tiara', config: { showCountdown: false } },
+      {
+        blockKey: 'gallery',
+        registryId: 'gallery.filmstrip',
+        config: { eyebrow: null, title: 'Mis XV años' },
+      },
+      {
+        blockKey: 'story',
+        registryId: 'story.keepsake',
+        config: { eyebrow: null, title: 'Gracias por estar' },
+      },
+      { blockKey: 'calendar', registryId: 'calendar.clock', config: { eyebrow: null, title: 'Faltan' } },
+      {
+        blockKey: 'location',
+        registryId: 'location.vignette',
+        config: { eyebrow: null, title: 'Detalles' },
+      },
+      {
+        blockKey: 'schedule',
+        registryId: 'schedule.hearts',
+        config: { eyebrow: null, title: 'Itinerario', marker: 'icon' },
+      },
+      {
+        blockKey: 'details',
+        registryId: 'details.ribbons',
+        config: { eyebrow: null, title: 'Para tomar en cuenta' },
+      },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.atelier',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.envelope',
+        config: { eyebrow: null, title: 'Confirmar asistencia' },
+      },
+      { blockKey: 'closing', registryId: 'closing.tiara', config: { eyebrow: null, title: '¡Te espero!' } },
+      { blockKey: 'footer', registryId: 'footer.numeral' },
     ],
   },
 ];

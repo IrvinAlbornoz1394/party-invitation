@@ -1,6 +1,7 @@
 import { CalendarBand } from '../blocks/calendar/CalendarBand';
 import { CalendarCountdown } from '../blocks/calendar/CalendarCountdown';
 import { CalendarStrip } from '../blocks/calendar/CalendarStrip';
+import { CalendarClock } from '../blocks/calendar/CalendarClock';
 import { CalendarDial } from '../blocks/calendar/CalendarDial';
 import { CalendarMonth } from '../blocks/calendar/CalendarMonth';
 import { CalendarPad } from '../blocks/calendar/CalendarPad';
@@ -12,6 +13,7 @@ import { ClosingAlbum } from '../blocks/closing/ClosingAlbum';
 import { ClosingBouquet } from '../blocks/closing/ClosingBouquet';
 import { ClosingCanopy } from '../blocks/closing/ClosingCanopy';
 import { ClosingBloom } from '../blocks/closing/ClosingBloom';
+import { ClosingTiara } from '../blocks/closing/ClosingTiara';
 import { ClosingEnvelope } from '../blocks/closing/ClosingEnvelope';
 import { ClosingHorizon } from '../blocks/closing/ClosingHorizon';
 import { ClosingLetter } from '../blocks/closing/ClosingLetter';
@@ -28,12 +30,14 @@ import { DetailsPanel } from '../blocks/details/DetailsPanel';
 import { DetailsProgram } from '../blocks/details/DetailsProgram';
 import { DetailsScript } from '../blocks/details/DetailsScript';
 import { DetailsRow } from '../blocks/details/DetailsRow';
+import { DetailsRibbons } from '../blocks/details/DetailsRibbons';
 import { DetailsSplit } from '../blocks/details/DetailsSplit';
 import { DetailsStack } from '../blocks/details/DetailsStack';
 import { DetailsStickers } from '../blocks/details/DetailsStickers';
 import type { DetailsVariant } from '../blocks/details/details-variant';
 import { DresscodeArches } from '../blocks/dresscode/DresscodeArches';
 import { DresscodePetals } from '../blocks/dresscode/DresscodePetals';
+import { DresscodeAtelier } from '../blocks/dresscode/DresscodeAtelier';
 import { DresscodeBands } from '../blocks/dresscode/DresscodeBands';
 import { DresscodeCards } from '../blocks/dresscode/DresscodeCards';
 import { DresscodeChart } from '../blocks/dresscode/DresscodeChart';
@@ -46,6 +50,7 @@ import { DresscodeThread } from '../blocks/dresscode/DresscodeThread';
 import type { DresscodeVariant } from '../blocks/dresscode/dresscode-variant';
 import { FooterArch } from '../blocks/footer/FooterArch';
 import { FooterBand } from '../blocks/footer/FooterBand';
+import { FooterNumeral } from '../blocks/footer/FooterNumeral';
 import { FooterCentered } from '../blocks/footer/FooterCentered';
 import { FooterColophon } from '../blocks/footer/FooterColophon';
 import { FooterFrame } from '../blocks/footer/FooterFrame';
@@ -58,6 +63,7 @@ import { FooterWave } from '../blocks/footer/FooterWave';
 import type { FooterVariant } from '../blocks/footer/footer-parts';
 import { GalleryArch } from '../blocks/gallery/GalleryArch';
 import { GalleryStack } from '../blocks/gallery/GalleryStack';
+import { GalleryFilmstrip } from '../blocks/gallery/GalleryFilmstrip';
 import { GalleryCarousel } from '../blocks/gallery/GalleryCarousel';
 import { GalleryCinematic } from '../blocks/gallery/GalleryCinematic';
 import { GalleryEditorial } from '../blocks/gallery/GalleryEditorial';
@@ -71,6 +77,7 @@ import { GalleryPolaroid } from '../blocks/gallery/GalleryPolaroid';
 import type { GalleryVariant } from '../blocks/gallery/gallery-parts';
 import { HeroArch } from '../blocks/hero/HeroArch';
 import { HeroPolaroid } from '../blocks/hero/HeroPolaroid';
+import { HeroTiara } from '../blocks/hero/HeroTiara';
 import { HeroCard } from '../blocks/hero/HeroCard';
 import { HeroCentered } from '../blocks/hero/HeroCentered';
 import { HeroClassic } from '../blocks/hero/HeroClassic';
@@ -84,6 +91,7 @@ import { HeroSplit } from '../blocks/hero/HeroSplit';
 import type { HeroVariant } from '../blocks/hero/hero-variant';
 import { LocationArch } from '../blocks/location/LocationArch';
 import { LocationPolaroid } from '../blocks/location/LocationPolaroid';
+import { LocationVignette } from '../blocks/location/LocationVignette';
 import { LocationDualJourney } from '../blocks/location/LocationDualJourney';
 import { LocationDualStacked } from '../blocks/location/LocationDualStacked';
 import { LocationDualVenue } from '../blocks/location/LocationDualVenue';
@@ -97,6 +105,7 @@ import { LocationSingleSplit } from '../blocks/location/LocationSingleSplit';
 import type { LocationVariant } from '../blocks/location/location-parts';
 import { RsvpArch } from '../blocks/rsvp/RsvpArch';
 import { RsvpBow } from '../blocks/rsvp/RsvpBow';
+import { RsvpEnvelope } from '../blocks/rsvp/RsvpEnvelope';
 import { RsvpCard } from '../blocks/rsvp/RsvpCard';
 import { RsvpEngraved } from '../blocks/rsvp/RsvpEngraved';
 import { RsvpHairline } from '../blocks/rsvp/RsvpHairline';
@@ -118,12 +127,14 @@ import { ScheduleShowcase } from '../blocks/schedule/ScheduleShowcase';
 import { ScheduleTimeline } from '../blocks/schedule/ScheduleTimeline';
 import { ScheduleVine } from '../blocks/schedule/ScheduleVine';
 import { ScheduleBubbles } from '../blocks/schedule/ScheduleBubbles';
+import { ScheduleHearts } from '../blocks/schedule/ScheduleHearts';
 import { ScheduleZigzag } from '../blocks/schedule/ScheduleZigzag';
 import type { ScheduleVariant } from '../blocks/schedule/schedule-variant';
 import { StoryBow } from '../blocks/story/StoryBow';
 import { StoryCentered } from '../blocks/story/StoryCentered';
 import { StoryDedication } from '../blocks/story/StoryDedication';
 import { StoryQuote } from '../blocks/story/StoryQuote';
+import { StoryKeepsake } from '../blocks/story/StoryKeepsake';
 import { StoryGreeting } from '../blocks/story/StoryGreeting';
 import { StoryMounted } from '../blocks/story/StoryMounted';
 import { StoryOverlay } from '../blocks/story/StoryOverlay';
@@ -132,6 +143,7 @@ import { StoryImageLeft, StoryImageRight } from '../blocks/story/StorySplit';
 import type { StoryVariant } from '../blocks/story/story-variant';
 import { WelcomeArbor } from '../blocks/welcome/WelcomeArbor';
 import { WelcomeRibbon } from '../blocks/welcome/WelcomeRibbon';
+import { WelcomeKeepsake } from '../blocks/welcome/WelcomeKeepsake';
 import { WelcomeBand } from '../blocks/welcome/WelcomeBand';
 import { WelcomeBotanical } from '../blocks/welcome/WelcomeBotanical';
 import { WelcomeCountdown } from '../blocks/welcome/WelcomeCountdown';
@@ -223,6 +235,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
      fotografía, y las dos primeras pantallas riman. */
   'welcome.arbor': { blockKey: 'welcome', component: WelcomeArbor },
   'welcome.ribbon': { blockKey: 'welcome', component: WelcomeRibbon },
+  /* La de `coquette`: la tarjeta de dos filetes atada con un moño de línea. */
+  'welcome.keepsake': { blockKey: 'welcome', component: WelcomeKeepsake },
 
   'hero.classic': { blockKey: 'hero', component: HeroClassic },
   'hero.centered': { blockKey: 'hero', component: HeroCentered },
@@ -250,6 +264,9 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
      desbordándolo por el pie. */
   'hero.arch': { blockKey: 'hero', component: HeroArch },
   'hero.polaroid': { blockKey: 'hero', component: HeroPolaroid },
+  /* La portada de `coquette`: el rótulo en arco sobre un «15» pálido, el nombre a pincel y la
+     tiara al pie, todo en una tarjeta de doble filete. */
+  'hero.tiara': { blockKey: 'hero', component: HeroTiara },
 
   /*
    * Las dos partidas apuntan a componentes distintos que envuelven al mismo: el lado de la
@@ -274,6 +291,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La dedicatoria: la cita abre en manuscrita y el título la remata. La de `arbor`. */
   'story.dedication': { blockKey: 'story', component: StoryDedication },
   'story.quote': { blockKey: 'story', component: StoryQuote },
+  /* La foto con la tarjeta del moño prendida encima. La de `coquette`. */
+  'story.keepsake': { blockKey: 'story', component: StoryKeepsake },
 
   /*
    * El calendario tuvo **un** componente durante mucho tiempo, y no era una lista a medio hacer:
@@ -310,6 +329,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La fecha en un renglón y la cuenta regresiva debajo, sin retícula. La de `arbor`. */
   'calendar.countdown': { blockKey: 'calendar', component: CalendarCountdown },
   'calendar.strip': { blockKey: 'calendar', component: CalendarStrip },
+  /* «Faltan» y el reloj como titular, con la fecha de remate. La de `coquette`. */
+  'calendar.clock': { blockKey: 'calendar', component: CalendarClock },
 
   'details.cards': { blockKey: 'details', component: DetailsCards },
   'details.list': { blockKey: 'details', component: DetailsList },
@@ -333,6 +354,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* El rótulo manuscrito de cada detalle, sin icono ni caja. La de `arbor`. */
   'details.script': { blockKey: 'details', component: DetailsScript },
   'details.row': { blockKey: 'details', component: DetailsRow },
+  /* Cada detalle en su tarjeta pequeña del moño, de dos en dos. La de `coquette`. */
+  'details.ribbons': { blockKey: 'details', component: DetailsRibbons },
 
   /*
    * Seis formas de enseñar una paleta, una por plantilla. No son variaciones de la misma fila de
@@ -361,6 +384,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Los colores en arcos esbeltos, como una arcada. La de `arbor`. */
   'dresscode.arches': { blockKey: 'dresscode', component: DresscodeArches },
   'dresscode.petals': { blockKey: 'dresscode', component: DresscodePetals },
+  /* El vestido dibujado y la palabra a pincel en una tarjeta. La de `coquette`. */
+  'dresscode.atelier': { blockKey: 'dresscode', component: DresscodeAtelier },
 
   'schedule.vertical': { blockKey: 'schedule', component: ScheduleTimeline },
   'schedule.horizontal': { blockKey: 'schedule', component: ScheduleRail },
@@ -385,6 +410,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Un tallo con un nudo por momento y los momentos alternando contra él. La de `arbor`. */
   'schedule.vine': { blockKey: 'schedule', component: ScheduleVine },
   'schedule.bubbles': { blockKey: 'schedule', component: ScheduleBubbles },
+  /* Sin eje: cada hora en un corazón y un moño entre momentos. La de `coquette`. */
+  'schedule.hearts': { blockKey: 'schedule', component: ScheduleHearts },
 
   'gallery.parallax': { blockKey: 'gallery', component: GalleryParallax },
   'gallery.grid': { blockKey: 'gallery', component: GalleryGrid },
@@ -405,6 +432,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Una foto cada vez dentro de un arco, con flechas y puntos. La de `arbor`. */
   'gallery.arch': { blockKey: 'gallery', component: GalleryArch },
   'gallery.stack': { blockKey: 'gallery', component: GalleryStack },
+  /* La tira de fotomatón de tres, con el título en vertical. La de `coquette`. */
+  'gallery.filmstrip': { blockKey: 'gallery', component: GalleryFilmstrip },
 
   /*
    * Tres pensadas para una sede y tres para dos. La intención está en el nombre, no en una
@@ -428,6 +457,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Todas las sedes dentro de un mismo arco teñido. La de `arbor`. */
   'location.arch': { blockKey: 'location', component: LocationArch },
   'location.polaroid': { blockKey: 'location', component: LocationPolaroid },
+  /* Cada sede como una viñeta en su tarjeta del moño. La de `coquette`. */
+  'location.vignette': { blockKey: 'location', component: LocationVignette },
 
   /*
    * Tres formas, no dos caminos. A dónde va el botón —WhatsApp o la plataforma— es contenido
@@ -453,6 +484,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La pregunta dentro de un arco de filete, sin fondo. La de `arbor`. */
   'rsvp.arch': { blockKey: 'rsvp', component: RsvpArch },
   'rsvp.bow': { blockKey: 'rsvp', component: RsvpBow },
+  /* El sobre atado junto a la invitación a responder. La de `coquette`. */
+  'rsvp.envelope': { blockKey: 'rsvp', component: RsvpEnvelope },
 
   'closing.split': { blockKey: 'closing', component: ClosingSplit },
   'closing.letter': { blockKey: 'closing', component: ClosingLetter },
@@ -474,6 +507,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* Ramas colgando desde el canto de arriba sobre la despedida. La de `arbor`. */
   'closing.canopy': { blockKey: 'closing', component: ClosingCanopy },
   'closing.bloom': { blockKey: 'closing', component: ClosingBloom },
+  /* La tiara posada sobre un retrato en óvalo. La de `coquette`. */
+  'closing.tiara': { blockKey: 'closing', component: ClosingTiara },
 
   'footer.centered': { blockKey: 'footer', component: FooterCentered },
   'footer.ribbon': { blockKey: 'footer', component: FooterRibbon },
@@ -498,6 +533,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* El monograma dentro de un arco pequeño. La de `arbor`. */
   'footer.arch': { blockKey: 'footer', component: FooterArch },
   'footer.band': { blockKey: 'footer', component: FooterBand },
+  /* El nombre a pincel sobre un «15» pálido. La de `coquette`. */
+  'footer.numeral': { blockKey: 'footer', component: FooterNumeral },
 };
 
 /**
