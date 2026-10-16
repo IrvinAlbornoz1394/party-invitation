@@ -69,6 +69,10 @@ Las de `quince/florals` (la flor, el moño y la esquina de acuarela de `blush`) 
 pintan como `<img>` con sus propios colores y no se tiñen con el tema. Son SVG originales con
 degradados, hechos como sustitutos hasta tener ilustraciones realistas.
 
+Los stickers de `wedding/scrapbook` (cinta washi, recorte de periódico, cámara instantánea,
+pastel de corazón, beso de labial y copa de cóctel) también son `multi` y siguen la misma regla;
+solo su corazón relleno (`symbol-heart-solid-001`) es `mono` y toma el color del tema.
+
 Para cambiar una por una ilustración de verdad no hay que tocar código:
 
 1. Conseguir la imagen con una licencia que cumpla la regla 1. Las vías válidas:
@@ -92,6 +96,7 @@ Para cambiar una por una ilustración de verdad no hay que tocar código:
 | XV años · Tiaras (`quince/tiaras`) | 2 | — | 2 (Openclipart) |
 | XV años · Florales a color (`quince/florals`) | 3 | 3 | — |
 | XV años · Línea fina (`quince/fine-line`) | 5 | 5 | — |
+| Bodas · Scrapbook (`wedding/scrapbook`) | 7 | 7 | — |
 
 ## Dónde se usan
 
@@ -106,6 +111,7 @@ Los ornamentos compartidos conservan su nombre y su API, pero pintan piezas de l
 | `Candelabra`, `Bouquet`, `SetTable` (`doodle-ornaments.tsx`) | `symbol-candelabra-001`, `symbol-bouquet-001`, `symbol-champagne-001` | vestimenta con gotas, cierre con ramo, sede en escena |
 | — (directo en `WelcomeBotanical`) | `botanical-corner-top-001` | bienvenida botánica |
 | `BowCard` y las variantes de `coquette` (directo) | las cinco de `quince/fine-line`, `tiara-filigree-001`, `symbol-champagne-001`, `symbol-bouquet-001` | las doce de `coquette` |
+| Las variantes de `scrapbook` (directo) | las siete de `wedding/scrapbook` | las de `scrapbook` |
 
 Siguen dibujados a mano, porque a su tamaño funcionan: `CrownGlyph`, `RingsGlyph`, `WeddingRings`,
 `RibbonBow`, `DrawnFrame` y el canto rasgado (`TornEdge`).
