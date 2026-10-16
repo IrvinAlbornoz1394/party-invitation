@@ -658,6 +658,20 @@ const VARIANTS: {
   { blockKey: 'rsvp', variantKey: 'envelope', name: 'Confirmación con sobre atado' },
   { blockKey: 'closing', variantKey: 'tiara', name: 'Cierre con retrato coronado' },
   { blockKey: 'footer', variantKey: 'numeral', name: 'Pie con el nombre sobre un «15»' },
+  /*
+   * `scrapbook`: el álbum de papel kraft cosido con un hilo rojo. Sin `minPlanRank`, como todas
+   * las de composición base: una variante de Plus en la plantilla la haría imposible de montar
+   * para Esencial.
+   */
+  { blockKey: 'hero', variantKey: 'scrapbook', name: 'Portada de álbum con polaroids apiladas' },
+  { blockKey: 'story', variantKey: 'taped', name: 'Historia con recorte pegado con cinta' },
+  { blockKey: 'calendar', variantKey: 'torn', name: 'Semana en papel rasgado con el día en un corazón' },
+  { blockKey: 'schedule', variantKey: 'thread', name: 'Itinerario cosido con hilo rojo y pegatinas' },
+  { blockKey: 'location', variantKey: 'snapshot', name: 'Sede con su foto en polaroids' },
+  { blockKey: 'gallery', variantKey: 'taped', name: 'Galería de polaroids pegadas con cinta' },
+  { blockKey: 'dresscode', variantKey: 'taped', name: 'Vestimenta en muestras pegadas con cinta' },
+  { blockKey: 'rsvp', variantKey: 'lined', name: 'Confirmación en hoja rayada' },
+  { blockKey: 'closing', variantKey: 'signed', name: 'Cierre firmado a mano' },
 ];
 
 /**
@@ -1333,6 +1347,48 @@ const TEMPLATES: {
       { blockKey: 'rsvp', variantKey: 'envelope', isRequired: true, config: { eyebrow: null, title: 'Confirmar asistencia' } },
       { blockKey: 'closing', variantKey: 'tiara', config: { eyebrow: null, title: '¡Te espero!' } },
       { blockKey: 'footer', variantKey: 'numeral', isRequired: true },
+    ],
+  },
+  {
+    key: 'scrapbook',
+    name: 'Scrapbook',
+    description:
+      'Papel kraft, polaroids y un hilo rojo que cose la invitación de arriba abajo, con pegatinas de recortes, cinta y corazones.',
+    /* Solo boda: la referencia era una invitación de boda, y la portada y la firma hablan de una
+       pareja. Al ser solo de boda puede llevarse variantes de las plantillas de XV. */
+    eventTypes: ['wedding'],
+    defaultThemeKey: 'scrapbook',
+    isActive: true,
+    /*
+     * La decimotercera estructura, y la primera que se define por **un recorrido**: un hilo rojo
+     * (`shared/RedThread.tsx`) que entra en la portada, cose el itinerario momento a momento y
+     * vuelve a asomar en la galería y la despedida, con corazones rellenos ensartados. Lo demás es
+     * un álbum de recortes: papel kraft, polaroids un poco torcidas, cinta adhesiva y pegatinas
+     * —cámara instantánea, pastel de corazón, beso de carmín, copa— de `wedding/scrapbook`.
+     *
+     * Nueve variantes nuevas y tres que ya existían. `welcome.torn` no la usaba ninguna plantilla
+     * ni ninguna demo, y su papel rasgado que deja ver la foto es el kraft del álbum; `details.column` y `footer.band`
+     * son de `gala` y `blush`, que solo se ofrecen para XV, así que en boda no compiten con nadie.
+     * La franja del pie repite la cinta corrida de la portada y cierra la invitación con ella.
+     *
+     * El orden es el de la referencia —portada, «¡Queridos invitados!», la semana en papel rasgado,
+     * el itinerario, el lugar y la vestimenta—, con la galería, los detalles, la confirmación y la
+     * despedida, que no traía, donde los pone el resto del catálogo.
+     */
+    blocks: [
+      { blockKey: 'welcome', variantKey: 'torn' },
+      /* Sin cuenta regresiva: la referencia escribe la fecha a mano y no lleva reloj. */
+      { blockKey: 'hero', variantKey: 'scrapbook', isRequired: true, config: { showCountdown: false } },
+      { blockKey: 'story', variantKey: 'taped', config: { eyebrow: null, title: '¡Queridos invitados!' } },
+      { blockKey: 'calendar', variantKey: 'torn', config: { eyebrow: null, title: null, weekStartsOn: 'monday' } },
+      { blockKey: 'schedule', variantKey: 'thread', config: { eyebrow: null, title: 'Itinerario del día' } },
+      { blockKey: 'location', variantKey: 'snapshot', config: { eyebrow: null, title: 'Lugar' } },
+      { blockKey: 'dresscode', variantKey: 'taped', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'gallery', variantKey: 'taped', config: { eyebrow: null, title: 'Nuestros momentos' } },
+      { blockKey: 'details', variantKey: 'column', config: { eyebrow: null, title: 'Detalles' } },
+      { blockKey: 'rsvp', variantKey: 'lined', isRequired: true, config: { eyebrow: null, title: 'Confirma tu asistencia' } },
+      { blockKey: 'closing', variantKey: 'signed', config: { eyebrow: null, title: 'Con amor' } },
+      { blockKey: 'footer', variantKey: 'band', isRequired: true },
     ],
   },
 ];
@@ -2050,6 +2106,47 @@ const THEMES = [
       photo: { filter: 'saturate(0.96) contrast(0.97) brightness(1.03)' },
       ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.5' },
       /* Sin onda: los cantos son los de las tarjetas. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'scrapbook',
+    name: 'Scrapbook',
+    description: 'Papel kraft claro, tinta casi negra y un rojo vino para el hilo, los corazones y los botones.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* El kraft claro de la referencia: cálido y sin llegar a amarillo, para que las polaroids
+           blancas y los recortes de periódico se separen del papel sin sombras duras. */
+        background: '#efe9df',
+        surface: '#f8f4ec',
+        ink: '#2e2626',
+        inkSoft: '#5f5450',
+        /* El rojo vino del hilo, los corazones, la fecha y el botón «MAPA». Con el texto claro del
+           botón da más de 9:1. */
+        primary: '#8c1c2b',
+        onPrimary: '#fbf7f0',
+        /* Un vino más claro para rótulos pequeños: se separa del principal sin salir de la gama. */
+        accent: '#a23b46',
+        line: '#d8cdbd',
+        overlay: 'rgba(46, 24, 26, 0.45)',
+      },
+      fonts: {
+        /* Cormorant en cursiva hace de letra a mano en las horas y la fecha del itinerario. */
+        display: "var(--font-cormorant, 'Cormorant Garamond'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        /* Pinyon: la caligrafía de los nombres y de los títulos de cada sección. */
+        script: "var(--font-pinyon, 'Pinyon Script'), cursive",
+      },
+      /* Píldoras en los botones («MAPA» en la referencia) y cantos casi rectos en el papel. */
+      radii: { sm: '4px', md: '999px', lg: '6px' },
+      shadows: { soft: '0 16px 32px -22px rgba(60, 30, 30, 0.45)' },
+      motion: { reveal: '0.9s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4rem, 9vw, 7rem)' },
+      /* Un punto de sepia: fotos reveladas, no de pantalla. */
+      photo: { filter: 'saturate(0.92) contrast(0.98) sepia(0.06)' },
+      ornament: { line: '1.5rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.55' },
+      /* Sin onda: los cantos los ponen el papel rasgado y las polaroids. */
       edge: { height: '0px' },
     },
   },

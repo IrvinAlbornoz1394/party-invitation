@@ -748,6 +748,62 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'footer', registryId: 'footer.numeral' },
     ],
   },
+  {
+    key: 'scrapbook',
+    name: 'Scrapbook',
+    structureKey: 'scrapbook',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Papel kraft, polaroids y un hilo rojo que cose la invitación de arriba abajo, con pegatinas de recortes, cinta y corazones.',
+    themeKey: 'scrapbook',
+    cover: demoImage(WEDDING_PHOTOS.couple, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    /*
+     * El álbum cosido con un hilo rojo (`shared/RedThread.tsx`). Ver `scripts/seed.ts`. Las
+     * correcciones de `config` son las del catálogo: la portada sin reloj y la semana sin título,
+     * como en la referencia.
+     */
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.torn', removable: true },
+      { blockKey: 'hero', registryId: 'hero.scrapbook', config: { showCountdown: false } },
+      {
+        blockKey: 'story',
+        registryId: 'story.taped',
+        config: { eyebrow: null, title: '¡Queridos invitados!' },
+      },
+      {
+        blockKey: 'calendar',
+        registryId: 'calendar.torn',
+        config: { eyebrow: null, title: null, weekStartsOn: 'monday' },
+      },
+      {
+        blockKey: 'schedule',
+        registryId: 'schedule.thread',
+        config: { eyebrow: null, title: 'Itinerario del día' },
+      },
+      { blockKey: 'location', registryId: 'location.snapshot', config: { eyebrow: null, title: 'Lugar' } },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.taped',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'gallery',
+        registryId: 'gallery.taped',
+        config: { eyebrow: null, title: 'Nuestros momentos' },
+      },
+      { blockKey: 'details', registryId: 'details.column', config: { eyebrow: null, title: 'Detalles' } },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.lined',
+        config: { eyebrow: null, title: 'Confirma tu asistencia' },
+      },
+      { blockKey: 'closing', registryId: 'closing.signed', config: { eyebrow: null, title: 'Con amor' } },
+      { blockKey: 'footer', registryId: 'footer.band' },
+    ],
+  },
 ];
 
 /**

@@ -9,6 +9,7 @@ import { CalendarScale } from '../blocks/calendar/CalendarScale';
 import { CalendarSheet } from '../blocks/calendar/CalendarSheet';
 import { CalendarWeek } from '../blocks/calendar/CalendarWeek';
 import type { CalendarVariant } from '../blocks/calendar/calendar-variant';
+import { CalendarTorn } from '../blocks/calendar/CalendarTorn';
 import { ClosingAlbum } from '../blocks/closing/ClosingAlbum';
 import { ClosingBouquet } from '../blocks/closing/ClosingBouquet';
 import { ClosingCanopy } from '../blocks/closing/ClosingCanopy';
@@ -22,6 +23,7 @@ import { ClosingScript } from '../blocks/closing/ClosingScript';
 import { ClosingWreath } from '../blocks/closing/ClosingWreath';
 import { ClosingSplit } from '../blocks/closing/ClosingSplit';
 import type { ClosingVariant } from '../blocks/closing/closing-parts';
+import { ClosingSigned } from '../blocks/closing/ClosingSigned';
 import { DetailsCards } from '../blocks/details/DetailsCards';
 import { DetailsColumn } from '../blocks/details/DetailsColumn';
 import { DetailsList } from '../blocks/details/DetailsList';
@@ -48,6 +50,7 @@ import { DresscodePalette } from '../blocks/dresscode/DresscodePalette';
 import { DresscodeSwatches } from '../blocks/dresscode/DresscodeSwatches';
 import { DresscodeThread } from '../blocks/dresscode/DresscodeThread';
 import type { DresscodeVariant } from '../blocks/dresscode/dresscode-variant';
+import { DresscodeTaped } from '../blocks/dresscode/DresscodeTaped';
 import { FooterArch } from '../blocks/footer/FooterArch';
 import { FooterBand } from '../blocks/footer/FooterBand';
 import { FooterNumeral } from '../blocks/footer/FooterNumeral';
@@ -75,6 +78,7 @@ import { GalleryParallax } from '../blocks/gallery/GalleryParallax';
 import { GalleryPlates } from '../blocks/gallery/GalleryPlates';
 import { GalleryPolaroid } from '../blocks/gallery/GalleryPolaroid';
 import type { GalleryVariant } from '../blocks/gallery/gallery-parts';
+import { GalleryTaped } from '../blocks/gallery/GalleryTaped';
 import { HeroArch } from '../blocks/hero/HeroArch';
 import { HeroPolaroid } from '../blocks/hero/HeroPolaroid';
 import { HeroTiara } from '../blocks/hero/HeroTiara';
@@ -89,6 +93,7 @@ import { HeroQuince } from '../blocks/hero/HeroQuince';
 import { HeroScript } from '../blocks/hero/HeroScript';
 import { HeroSplit } from '../blocks/hero/HeroSplit';
 import type { HeroVariant } from '../blocks/hero/hero-variant';
+import { HeroScrapbook } from '../blocks/hero/HeroScrapbook';
 import { LocationArch } from '../blocks/location/LocationArch';
 import { LocationPolaroid } from '../blocks/location/LocationPolaroid';
 import { LocationVignette } from '../blocks/location/LocationVignette';
@@ -103,6 +108,7 @@ import { LocationSinglePlaque } from '../blocks/location/LocationSinglePlaque';
 import { LocationSinglePlate } from '../blocks/location/LocationSinglePlate';
 import { LocationSingleSplit } from '../blocks/location/LocationSingleSplit';
 import type { LocationVariant } from '../blocks/location/location-parts';
+import { LocationSnapshot } from '../blocks/location/LocationSnapshot';
 import { RsvpArch } from '../blocks/rsvp/RsvpArch';
 import { RsvpBow } from '../blocks/rsvp/RsvpBow';
 import { RsvpEnvelope } from '../blocks/rsvp/RsvpEnvelope';
@@ -116,6 +122,7 @@ import { RsvpReplyCard } from '../blocks/rsvp/RsvpReplyCard';
 import { RsvpTicket } from '../blocks/rsvp/RsvpTicket';
 import { RsvpTorn } from '../blocks/rsvp/RsvpTorn';
 import type { RsvpVariant } from '../blocks/rsvp/rsvp-parts';
+import { RsvpLined } from '../blocks/rsvp/RsvpLined';
 import { ScheduleAgenda } from '../blocks/schedule/ScheduleAgenda';
 import { ScheduleCards } from '../blocks/schedule/ScheduleCards';
 import { ScheduleHours } from '../blocks/schedule/ScheduleHours';
@@ -130,6 +137,7 @@ import { ScheduleBubbles } from '../blocks/schedule/ScheduleBubbles';
 import { ScheduleHearts } from '../blocks/schedule/ScheduleHearts';
 import { ScheduleZigzag } from '../blocks/schedule/ScheduleZigzag';
 import type { ScheduleVariant } from '../blocks/schedule/schedule-variant';
+import { ScheduleThread } from '../blocks/schedule/ScheduleThread';
 import { StoryBow } from '../blocks/story/StoryBow';
 import { StoryCentered } from '../blocks/story/StoryCentered';
 import { StoryDedication } from '../blocks/story/StoryDedication';
@@ -141,6 +149,7 @@ import { StoryOverlay } from '../blocks/story/StoryOverlay';
 import { StoryPressed } from '../blocks/story/StoryPressed';
 import { StoryImageLeft, StoryImageRight } from '../blocks/story/StorySplit';
 import type { StoryVariant } from '../blocks/story/story-variant';
+import { StoryTaped } from '../blocks/story/StoryTaped';
 import { WelcomeArbor } from '../blocks/welcome/WelcomeArbor';
 import { WelcomeRibbon } from '../blocks/welcome/WelcomeRibbon';
 import { WelcomeKeepsake } from '../blocks/welcome/WelcomeKeepsake';
@@ -267,6 +276,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La portada de `coquette`: el rótulo en arco sobre un «15» pálido, el nombre a pincel y la
      tiara al pie, todo en una tarjeta de doble filete. */
   'hero.tiara': { blockKey: 'hero', component: HeroTiara },
+  'hero.scrapbook': { blockKey: 'hero', component: HeroScrapbook },
 
   /*
    * Las dos partidas apuntan a componentes distintos que envuelven al mismo: el lado de la
@@ -293,6 +303,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'story.quote': { blockKey: 'story', component: StoryQuote },
   /* La foto con la tarjeta del moño prendida encima. La de `coquette`. */
   'story.keepsake': { blockKey: 'story', component: StoryKeepsake },
+  'story.taped': { blockKey: 'story', component: StoryTaped },
 
   /*
    * El calendario tuvo **un** componente durante mucho tiempo, y no era una lista a medio hacer:
@@ -331,6 +342,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'calendar.strip': { blockKey: 'calendar', component: CalendarStrip },
   /* «Faltan» y el reloj como titular, con la fecha de remate. La de `coquette`. */
   'calendar.clock': { blockKey: 'calendar', component: CalendarClock },
+  'calendar.torn': { blockKey: 'calendar', component: CalendarTorn },
 
   'details.cards': { blockKey: 'details', component: DetailsCards },
   'details.list': { blockKey: 'details', component: DetailsList },
@@ -386,6 +398,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'dresscode.petals': { blockKey: 'dresscode', component: DresscodePetals },
   /* El vestido dibujado y la palabra a pincel en una tarjeta. La de `coquette`. */
   'dresscode.atelier': { blockKey: 'dresscode', component: DresscodeAtelier },
+  'dresscode.taped': { blockKey: 'dresscode', component: DresscodeTaped },
 
   'schedule.vertical': { blockKey: 'schedule', component: ScheduleTimeline },
   'schedule.horizontal': { blockKey: 'schedule', component: ScheduleRail },
@@ -412,6 +425,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'schedule.bubbles': { blockKey: 'schedule', component: ScheduleBubbles },
   /* Sin eje: cada hora en un corazón y un moño entre momentos. La de `coquette`. */
   'schedule.hearts': { blockKey: 'schedule', component: ScheduleHearts },
+  'schedule.thread': { blockKey: 'schedule', component: ScheduleThread },
 
   'gallery.parallax': { blockKey: 'gallery', component: GalleryParallax },
   'gallery.grid': { blockKey: 'gallery', component: GalleryGrid },
@@ -434,6 +448,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'gallery.stack': { blockKey: 'gallery', component: GalleryStack },
   /* La tira de fotomatón de tres, con el título en vertical. La de `coquette`. */
   'gallery.filmstrip': { blockKey: 'gallery', component: GalleryFilmstrip },
+  'gallery.taped': { blockKey: 'gallery', component: GalleryTaped },
 
   /*
    * Tres pensadas para una sede y tres para dos. La intención está en el nombre, no en una
@@ -459,6 +474,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'location.polaroid': { blockKey: 'location', component: LocationPolaroid },
   /* Cada sede como una viñeta en su tarjeta del moño. La de `coquette`. */
   'location.vignette': { blockKey: 'location', component: LocationVignette },
+  'location.snapshot': { blockKey: 'location', component: LocationSnapshot },
 
   /*
    * Tres formas, no dos caminos. A dónde va el botón —WhatsApp o la plataforma— es contenido
@@ -486,6 +502,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'rsvp.bow': { blockKey: 'rsvp', component: RsvpBow },
   /* El sobre atado junto a la invitación a responder. La de `coquette`. */
   'rsvp.envelope': { blockKey: 'rsvp', component: RsvpEnvelope },
+  'rsvp.lined': { blockKey: 'rsvp', component: RsvpLined },
 
   'closing.split': { blockKey: 'closing', component: ClosingSplit },
   'closing.letter': { blockKey: 'closing', component: ClosingLetter },
@@ -509,6 +526,7 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'closing.bloom': { blockKey: 'closing', component: ClosingBloom },
   /* La tiara posada sobre un retrato en óvalo. La de `coquette`. */
   'closing.tiara': { blockKey: 'closing', component: ClosingTiara },
+  'closing.signed': { blockKey: 'closing', component: ClosingSigned },
 
   'footer.centered': { blockKey: 'footer', component: FooterCentered },
   'footer.ribbon': { blockKey: 'footer', component: FooterRibbon },

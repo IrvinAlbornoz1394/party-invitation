@@ -462,6 +462,29 @@ galería, y la tarjeta con la dedicatoria, la historia. La bienvenida, el itiner
 el cierre no venían y se escribieron con sus mismas piezas. La portada no pinta la foto, como la
 referencia: el primer retrato es la tira de fotos.
 
+La decimotercera, `scrapbook`, es la primera **solo para boda** y la primera que se define por **un
+recorrido**: un hilo rojo (`shared/RedThread.tsx`) que entra en la portada, cose el itinerario
+momento a momento y vuelve a asomar en la ubicación, la galería y el cierre, con corazones
+rellenos ensartados. Lo demás es un álbum de recortes sobre papel kraft: polaroids un poco
+torcidas, cinta adhesiva y pegatinas a color —cámara instantánea, pastel de corazón, beso de
+carmín, copa y un recorte de periódico— de `wedding/scrapbook` en la biblioteca (`colorMode:
+'multi'`, como los florales de `blush`). El corazón sí es de un solo color y se tiñe con el tema.
+
+Al ofrecerse solo para boda solo tiene que ser disjunta de las ocho de boda, y eso le permitió
+llevarse tres variantes que ya existían: `welcome.torn`, que no usaba nadie —su papel rasgado que
+deja ver la foto es el kraft del álbum—, y `details.column` y `footer.band`, que solo usan `gala` y
+`blush`, de XV. La franja del pie repite la cinta corrida de la portada. Las otras nueve son nuevas:
+`hero.scrapbook`, `story.taped`, `calendar.torn`, `schedule.thread`, `location.snapshot`,
+`gallery.taped`, `dresscode.taped`, `rsvp.lined` y `closing.signed`. Las libres de vestimenta,
+confirmación y cierre llevaban motivos de XV —coronas, moños, flores rosas—, así que hubo que
+escribirlas.
+
+De las libres se descartó `gallery.stack` aunque era otra pila de polaroids: lleva la flor rosa a
+color de `blush`, que no se tiñe y no tiene nada que hacer en un álbum de boda en vino. La
+referencia no traía ninguna sección que el catálogo no tenga; la galería, los detalles, la
+confirmación, el cierre y el pie se escribieron con sus mismas piezas. La semana del calendario
+empieza en lunes (`weekStartsOn: 'monday'`), como en la referencia.
+
 ## Rehacer una variante o escribir otra
 
 La pregunta llega en cuanto una plantilla ya montada tiene que cambiar de aspecto en un bloque, y
