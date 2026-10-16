@@ -131,6 +131,10 @@ const STEP_FIELDS: Readonly<Partial<Record<ContentBlockKey, readonly StepField[]
     event('time'),
     event('city'),
     event('heroImageUrl'),
+    /* La música se pide aquí porque es lo primero que se oye al abrir la invitación. Solo en los
+       planes que la incluyen: `contentSteps` la quita si el plan no tiene `musica`. */
+    event('musicUrl'),
+    event('musicTitle'),
   ],
   /*
    * Los rótulos, la fotografía y **al final el texto**. El orden lo pide el propio campo: es el
@@ -156,6 +160,16 @@ const STEP_FIELDS: Readonly<Partial<Record<ContentBlockKey, readonly StepField[]
 };
 
 /** Qué lista ordenada se edita en cada sección. Las tres tienen su propio bloque. */
+/** Los campos de la música: solo en los planes con `musica`. */
+const MUSIC_FIELDS: ReadonlySet<EventFieldKey> = new Set(['musicUrl', 'musicTitle']);
+
+/** Cómo contactan a quien celebra. Ver `contentSteps` para dónde van sin confirmación. */
+const CONTACT_FIELDS: readonly StepField[] = [
+  event('contactWhatsapp'),
+  event('contactPhone'),
+  event('contactInstagram'),
+];
+
 const COLLECTIONS: Readonly<Partial<Record<ContentBlockKey, StepCollection>>> = {
   location: 'venues',
   schedule: 'schedule',
@@ -178,17 +192,38 @@ export function contentSteps(
   /* Sin el evento no hay contra qué medir lo que falta, y ningún paso se marca pendiente. Solo
      pasa con un evento fuera del alcance, que no tiene pasos de sección que marcar. */
   source: EventContentSource | null = null,
+  /* Las funcionalidades del plan del evento. Deciden los campos que no son de una sección: la
+     música (`musica`). Sin ellas se pide lo mínimo, que es lo seguro. */
+  planFeatures: ReadonlySet<string> = new Set(),
 ): readonly ContentStep[] {
-  const sections = [...blocks]
+  const ordered = [...blocks]
     .filter((block) => isContentBlockKey(block.blockKey))
-    .sort((first, second) => first.position - second.position)
+    .sort((first, second) => first.position - second.position);
+
+  /*
+   * Los contactos se piden en la confirmación —es a donde llegan las respuestas—, pero esa sección
+   * solo existe en Premium, y el pie los enseña en todos los planes. Sin confirmación van al pie;
+   * si tampoco hay pie, a la última sección, para que ningún plan se quede sin poder escribirlos.
+   */
+  const hasRsvp = ordered.some((block) => block.blockKey === 'rsvp');
+  const contactHost = hasRsvp
+    ? null
+    : (ordered.find((block) => block.blockKey === 'footer') ?? ordered.at(-1))?.blockKey;
+
+  const sections = ordered
     .map((block) => {
       const blockKey = block.blockKey as ContentBlockKey;
+      const fields = (STEP_FIELDS[blockKey] ?? []).filter(
+        (field) =>
+          field.from !== 'event' ||
+          !MUSIC_FIELDS.has(field.key) ||
+          planFeatures.has('musica'),
+      );
 
       return {
         blockKey,
         label: BLOCK_LABELS[blockKey] ?? blockKey,
-        fields: STEP_FIELDS[blockKey] ?? [],
+        fields: blockKey === contactHost ? [...fields, ...CONTACT_FIELDS] : fields,
         collection: COLLECTIONS[blockKey] ?? null,
         list: isBlockListBlock(blockKey) ? blockKey : null,
         required: block.requiredByPlan !== false,

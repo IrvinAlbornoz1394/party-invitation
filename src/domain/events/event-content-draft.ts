@@ -52,6 +52,9 @@ export interface EventContentDraft {
   readonly contactInstagram: string | null;
   /** `YYYY-MM-DD`, o null si no se pide confirmar para una fecha. */
   readonly rsvpDeadline: string | null;
+  /** La música de fondo. Solo se guarda si el plan incluye `musica`. */
+  readonly musicUrl: string | null;
+  readonly musicTitle: string | null;
 }
 
 /**
@@ -120,6 +123,17 @@ export const eventContentDraftSchema = z.object({
     .union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Revisa la fecha límite.')])
     .transform((value) => (value === '' ? null : value))
     .nullable(),
+  /*
+   * La música de fondo. Solo la pide el formulario cuando el plan incluye `musica` (Plus y
+   * Premium), y solo la guarda el servidor en ese caso —ver `saveContentDraft`—: el campo puede
+   * llegar en cualquier petición, pero en Esencial no se escribe.
+   */
+  musicUrl: z
+    .union([z.literal(''), z.url({ protocol: /^https?$/, error: 'Pega el enlace completo, con https://.' })])
+    .transform((value) => (value === '' ? null : value))
+    .nullable()
+    .default(null),
+  musicTitle: optionalText(120).default(null),
 });
 
 export type EventContentDraftInput = z.input<typeof eventContentDraftSchema>;

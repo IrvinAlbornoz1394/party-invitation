@@ -94,12 +94,15 @@ export class EditEventContent {
    * ya responde 404 por su cuenta al no encontrar el borrador.
    */
   async loadSections(scope: TenantScope, eventId: string): Promise<EditorSections> {
-    const loaded = await this.invitations.findForPreview(scope, eventId);
+    const [loaded, features] = await Promise.all([
+      this.invitations.findForPreview(scope, eventId),
+      this.events.includedFeatures(scope, eventId),
+    ]);
 
     if (!loaded) return { steps: contentSteps([]), texts: [], lists: {} };
 
     return {
-      steps: contentSteps(loaded.content.blocks, loaded.content.source),
+      steps: contentSteps(loaded.content.blocks, loaded.content.source, new Set(features)),
       texts: editableBlockTexts(loaded.content.source, loaded.content.blocks),
       lists: editableBlockLists(loaded.content.blocks),
     };
@@ -314,12 +317,15 @@ export class EditEventContent {
     clientId: string,
     eventId: string,
   ): Promise<EditorSections> {
-    const loaded = await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId);
+    const [loaded, features] = await Promise.all([
+      this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId),
+      this.events.includedFeaturesAsPlatform(credentials, clientId, eventId),
+    ]);
 
     if (!loaded) return { steps: contentSteps([]), texts: [], lists: {} };
 
     return {
-      steps: contentSteps(loaded.content.blocks, loaded.content.source),
+      steps: contentSteps(loaded.content.blocks, loaded.content.source, new Set(features)),
       texts: editableBlockTexts(loaded.content.source, loaded.content.blocks),
       lists: editableBlockLists(loaded.content.blocks),
     };

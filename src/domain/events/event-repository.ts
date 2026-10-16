@@ -301,6 +301,19 @@ export interface EventRepository {
     eventId: string,
   ): Promise<boolean>;
 
+  /**
+   * Las funcionalidades que incluye el plan del evento. Las usa el editor para pedir solo lo que
+   * el plan permite fuera de las secciones —hoy, la música—. Vacía si el evento no está en el
+   * alcance.
+   */
+  includedFeatures(scope: TenantScope, eventId: string): Promise<readonly string[]>;
+
+  includedFeaturesAsPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<readonly string[]>;
+
   /** El cliente da por terminado su contenido. Solo desde borrador. */
   sendToReview(scope: TenantScope, eventId: string): Promise<boolean>;
 

@@ -248,7 +248,9 @@ export class DrizzleEventRepository implements EventRepository {
                    contact_phone,
                    contact_whatsapp,
                    contact_instagram,
-                   to_char(rsvp_deadline, 'YYYY-MM-DD') as rsvp_deadline
+                   to_char(rsvp_deadline, 'YYYY-MM-DD') as rsvp_deadline,
+                   music_url,
+                   music_title
               from public.events
              where id = ${eventId}::uuid`,
       );
@@ -277,6 +279,8 @@ export class DrizzleEventRepository implements EventRepository {
         contactWhatsapp: row.contact_whatsapp,
         contactInstagram: row.contact_instagram,
         rsvpDeadline: row.rsvp_deadline,
+        musicUrl: row.music_url,
+        musicTitle: row.music_title,
         },
       };
     });
@@ -621,7 +625,16 @@ export class DrizzleEventRepository implements EventRepository {
                    contact_phone       = ${draft.contactPhone},
                    contact_whatsapp    = ${draft.contactWhatsapp},
                    contact_instagram   = ${draft.contactInstagram},
-                   rsvp_deadline       = ${draft.rsvpDeadline}::date
+                   /* Lo que depende del plan solo se escribe si el plan del evento lo incluye: el
+                      formulario no lo pide fuera de él, pero un campo puede llegar en cualquier
+                      petición. Sin la funcionalidad, el valor guardado se queda como estaba. */
+                   rsvp_deadline       = case when ${planIncludes('rsvp')}
+                                              then ${draft.rsvpDeadline}::date
+                                              else rsvp_deadline end,
+                   music_url           = case when ${planIncludes('musica')}
+                                              then ${draft.musicUrl} else music_url end,
+                   music_title         = case when ${planIncludes('musica')}
+                                              then ${draft.musicTitle} else music_title end
              where id = ${input.eventId}::uuid`,
       );
 
@@ -867,6 +880,20 @@ export class DrizzleEventRepository implements EventRepository {
 
       return (result.rowCount ?? 0) > 0;
     });
+  }
+
+  async includedFeatures(scope: TenantScope, eventId: string): Promise<readonly string[]> {
+    return withTenant(scope, (tx) => includedFeaturesOf(tx, eventId));
+  }
+
+  async includedFeaturesAsPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<readonly string[]> {
+    if (!(await authorizeClient(credentials, clientId))) return [];
+
+    return withTenant(clientId, (tx) => includedFeaturesOf(tx, eventId));
   }
 
   async returnToDraft(scope: TenantScope, eventId: string, actorUserId: string): Promise<boolean> {
@@ -1228,6 +1255,31 @@ async function authorizeClient(
   return authorized === true;
 }
 
+
+/**
+ * Si el plan de la fila de `events` que se está actualizando incluye una funcionalidad. Va dentro
+ * del UPDATE, así que mira el plan de **esa** fila y no uno que llegue de fuera.
+ */
+function planIncludes(featureKey: string) {
+  return sql`exists (
+    select 1 from public.plan_features pf
+     where pf.plan_key = events.plan_key
+       and pf.feature_key = ${featureKey}
+       and pf.is_included
+  )`;
+}
+
+/** Las funcionalidades que incluye el plan de un evento, leídas dentro de su contexto. */
+async function includedFeaturesOf(tx: TenantTransaction, eventId: string): Promise<readonly string[]> {
+  const result = await tx.execute<{ feature_key: string; [column: string]: unknown }>(
+    sql`select pf.feature_key
+          from public.events e
+          join public.plan_features pf on pf.plan_key = e.plan_key and pf.is_included
+         where e.id = ${eventId}::uuid`,
+  );
+
+  return result.rows.map((row) => row.feature_key);
+}
 
 /**
  * El paso de publicado a borrador, con su línea en la bitácora. Solo actúa sobre un evento

@@ -67,10 +67,13 @@ const FIELD_UI: Readonly<
   heroImageUrl: { label: 'Foto de la portada', help: 'Enlace directo a la imagen (https://…).' },
   storyImageUrl: { label: 'Foto de la historia' },
   closingImageUrl: { label: 'Foto del cierre' },
-  contactWhatsapp: { label: 'WhatsApp', help: 'A donde llegan las confirmaciones.' },
+  /* Neutra a propósito: según el plan, el campo va en la confirmación o en el pie. */
+  contactWhatsapp: { label: 'WhatsApp', help: 'Para que tus invitados te escriban o te confirmen.' },
   contactPhone: { label: 'Teléfono' },
   contactInstagram: { label: 'Instagram' },
   rsvpDeadline: { label: 'Fecha límite para confirmar', help: 'Opcional.', native: 'date' },
+  musicUrl: { label: 'Música de fondo', help: 'Enlace directo al archivo de audio (https://…).' },
+  musicTitle: { label: 'Nombre de la canción', help: 'Opcional. Se lee junto al botón de la música.' },
 };
 
 /**
@@ -112,6 +115,7 @@ const PLACEHOLDERS: Readonly<Partial<Record<EventFieldKey, string>>> = {
   contactWhatsapp: '529991234567',
   contactPhone: '999 123 4567',
   contactInstagram: '@anaydiego',
+  musicUrl: 'https://…',
 };
 
 export function StepFields({

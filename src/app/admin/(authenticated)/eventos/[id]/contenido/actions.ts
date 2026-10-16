@@ -56,6 +56,8 @@ export async function saveAdminContentAction(
     contactWhatsapp: readText(formData, 'contactWhatsapp'),
     contactInstagram: readText(formData, 'contactInstagram'),
     rsvpDeadline: readText(formData, 'rsvpDeadline'),
+    musicUrl: readText(formData, 'musicUrl'),
+    musicTitle: readText(formData, 'musicTitle'),
   };
 
   const result = await editEventContent.saveAsPlatform(
