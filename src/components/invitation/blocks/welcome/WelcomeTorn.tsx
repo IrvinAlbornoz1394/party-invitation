@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockImage } from '../../shared/BlockImage';
 import { TornEdge } from '../../shared/paper-ornaments';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.torn` — el papel rasgado que deja ver la fotografía debajo.
@@ -37,17 +39,22 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
       {/* La hoja de papel. `relative` porque el canto roto se cuelga de su borde inferior. */}
       <div className="relative h-[58%] w-full shrink-0 bg-inv-bg">
         <div className="flex h-full flex-col items-center justify-center px-8 pt-8 pb-6 text-center text-inv-ink">
-          {content.eventTypeLabel && (
+          {hasText(content.eventTypeLabel) && (
             <p className="m-0 text-[11.5px] tracking-[0.3em] text-inv-ink-soft uppercase">
               {content.eventTypeLabel}
             </p>
           )}
 
-          <h2 className="mt-6 mb-0 font-inv-display text-[clamp(2.25rem,11vw,3.25rem)] leading-[1.05] font-light">
+          <h2
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-6' : 'mt-0',
+              'mb-0 font-inv-display text-[clamp(2.25rem,11vw,3.25rem)] leading-[1.05] font-light',
+            )}
+          >
             {content.celebrantName}
           </h2>
 
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             <p className="mt-2 mb-0 text-[11px] tracking-[0.34em] text-inv-ink-soft uppercase">
               {content.celebrantLastName}
             </p>
@@ -55,7 +62,9 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
 
           {/* El filete vertical: el respiro entre el nombre y la fecha, y lo que hace que las dos
               se lean como un solo bloque centrado en lugar de como dos líneas sueltas. */}
-          <span aria-hidden="true" className="my-6 h-10 w-px bg-inv-line" />
+          {(parts || hasText(content.dateLabel)) && (
+            <span aria-hidden="true" className="my-6 h-10 w-px bg-inv-line" />
+          )}
 
           {parts ? (
             <p className="m-0 flex items-baseline justify-center gap-4 text-inv-ink">
@@ -70,7 +79,7 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
               </span>
             </p>
           ) : (
-            content.dateLabel && (
+            hasText(content.dateLabel) && (
               <p className="m-0 text-[12px] tracking-[0.26em] text-inv-ink-soft uppercase">
                 {content.dateLabel}
               </p>
@@ -113,7 +122,7 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
         />
 
         <div className="relative flex h-full flex-col items-center justify-end px-8 pb-10 text-inv-on-primary inv-on-photo">
-          {content.note && (
+          {hasText(content.note) && (
             <p className="mb-5 max-w-xs text-center text-[13px] leading-snug">{content.note}</p>
           )}
 

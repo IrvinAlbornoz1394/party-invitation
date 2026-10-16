@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { paletteIsNamed } from '@/domain/invitation/blocks/dresscode';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { BowCard } from '../../shared/BowCard';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { Swatch } from './dresscode-parts';
@@ -44,7 +46,7 @@ export function DresscodeAtelier({ content }: DresscodeVariantProps) {
   return (
     <BlockSection block="dresscode" variant="atelier">
       <BlockContainer className="max-w-md">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-center font-inv-display text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
@@ -67,7 +69,7 @@ export function DresscodeAtelier({ content }: DresscodeVariantProps) {
             <h2 className="mt-6 mb-0 font-inv-display text-[clamp(1.15rem,5.4vw,1.4rem)] leading-[1.15] font-medium tracking-[0.04em] text-balance text-inv-ink uppercase">
               {content.title}
             </h2>
-            {content.description &&
+            {hasText(content.description) &&
               (shortDescription ? (
                 <p className="mt-1 mb-0 font-inv-script text-[clamp(2.6rem,12vw,3.3rem)] leading-[1.1] text-inv-primary">
                   {content.description}
@@ -86,24 +88,33 @@ export function DresscodeAtelier({ content }: DresscodeVariantProps) {
               {content.palette.map((swatch, index) => (
                 <li key={index} title={swatch.label ?? undefined}>
                   <Swatch swatch={swatch} className="size-8! sm:size-9!" />
-                  {swatch.label && <span className="sr-only">{swatch.label}</span>}
+                  {hasText(swatch.label) && <span className="sr-only">{swatch.label}</span>}
                 </li>
               ))}
             </ul>
             {named && (
               <p aria-hidden="true" className="mx-auto mt-4 mb-0 max-w-[16rem] text-[10px] leading-relaxed tracking-[0.18em] text-inv-ink-soft uppercase">
-                {content.palette.map((swatch) => swatch.label).join(' · ')}
+                {/* Solo los nombres que hay: una muestra sin nombre no deja un punto suelto. */}
+                {content.palette
+                  .map((swatch) => swatch.label)
+                  .filter(hasText)
+                  .join(' · ')}
               </p>
             )}
           </BowCard>
         </div>
 
-        <div className="mt-12 flex flex-col items-center text-center">
-          {content.action && (
-            <ActionLink label={content.action.label} href={content.action.href} tone="onSurface" />
-          )}
-          {content.note && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
-        </div>
+        {/* El pie solo guarda el enlace y la nota: sin ninguno de los dos no se pinta, ni su margen. */}
+        {(content.action || hasText(content.note)) && (
+          <div className="mt-12 flex flex-col items-center text-center">
+            {content.action && (
+              <ActionLink label={content.action.label} href={content.action.href} tone="onSurface" />
+            )}
+            {hasText(content.note) && (
+              <BlockNote note={content.note} className={clsx('max-w-sm', content.action && 'mt-8')} />
+            )}
+          </div>
+        )}
       </BlockContainer>
     </BlockSection>
   );

@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import type { ScheduleVariantProps } from './schedule-variant';
 
@@ -83,7 +84,7 @@ export function ScheduleVine({ content }: ScheduleVariantProps) {
                     <h3 className="mt-1 mb-0 text-[11.5px] leading-snug font-medium tracking-[0.16em] text-balance text-inv-ink uppercase">
                       {item.title}
                     </h3>
-                    {item.description && (
+                    {hasText(item.description) && (
                       <p className="mt-1.5 mb-0 max-w-[12rem] text-[12px] leading-relaxed text-pretty text-inv-ink-soft">
                         {item.description}
                       </p>
@@ -95,7 +96,7 @@ export function ScheduleVine({ content }: ScheduleVariantProps) {
           </ol>
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

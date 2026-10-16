@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { ActionLink } from '../../shared/ActionLink';
@@ -6,6 +7,7 @@ import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { PolaroidFrame } from '../../shared/PolaroidFrame';
 import type { ClosingVariantProps } from './closing-parts';
+import { hasText } from '../../shared/has-text';
 
 const FLOWER = requireDesignAsset('symbol-flower-pink-001');
 const CORNER = requireDesignAsset('corner-floral-blush-001');
@@ -51,15 +53,20 @@ export function ClosingBloom({ content }: ClosingVariantProps) {
 
         <DesignAsset asset={FLOWER} className="mx-auto w-24 sm:w-28" />
 
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="mt-8 mb-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
-        <p className="mx-auto mt-4 mb-0 max-w-sm font-inv-script text-[clamp(2.1rem,9.5vw,2.9rem)] leading-[1.2] text-inv-accent">
+        <p
+          className={clsx(
+            'mx-auto mb-0 max-w-sm font-inv-script text-[clamp(2.1rem,9.5vw,2.9rem)] leading-[1.2] text-inv-accent',
+            hasText(content.eyebrow) ? 'mt-4' : 'mt-8',
+          )}
+        >
           {content.title}
         </p>
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mx-auto mt-5 mb-0 max-w-xs font-inv-display text-[12px] leading-relaxed tracking-[0.2em] text-inv-ink-soft uppercase">
             {content.message}
           </p>
@@ -70,7 +77,7 @@ export function ClosingBloom({ content }: ClosingVariantProps) {
           aria-hidden="true"
           className="mx-auto mt-6 block fill-current text-inv-accent"
         />
-        {content.signature && (
+        {hasText(content.signature) && (
           <p className="mt-6 mb-0 font-inv-script text-[clamp(1.6rem,6vw,2rem)] leading-none text-inv-primary">
             {content.signature}
           </p>

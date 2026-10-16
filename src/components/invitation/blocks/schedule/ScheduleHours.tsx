@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import type { ScheduleVariantProps } from './schedule-variant';
 
@@ -79,7 +80,7 @@ export function ScheduleHours({ content }: ScheduleVariantProps) {
                   {item.title}
                 </h3>
 
-                {item.description && (
+                {hasText(item.description) && (
                   <p className="mt-2.5 mb-0 text-[13.5px] leading-relaxed text-inv-ink-soft">
                     {item.description}
                   </p>
@@ -89,7 +90,7 @@ export function ScheduleHours({ content }: ScheduleVariantProps) {
           ))}
         </ol>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

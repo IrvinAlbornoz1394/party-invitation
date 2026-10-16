@@ -5,6 +5,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RsvpAction, RsvpDeadline, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.panel` — la confirmación a ancho completo, sobre el color del tema.
@@ -67,13 +68,13 @@ export function RsvpPanel({ content }: RsvpVariantProps) {
             tone="inverse"
           />
 
-          {content.deadlineLabel && (
+          {hasText(content.deadlineLabel) && (
             <RsvpDeadline deadlineLabel={content.deadlineLabel} tone="onImage" className="mt-8" />
           )}
 
           <RsvpAction content={content} tone="onImage" align="center" className="mt-9" />
 
-          {content.note && (
+          {hasText(content.note) && (
             <BlockNote note={content.note} tone="inverse" className="mt-10 max-w-md text-center" />
           )}
         </div>

@@ -2,6 +2,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.hairline` — la confirmación al aire: un filete corto, el rótulo en caligrafía, dos líneas
@@ -48,7 +49,7 @@ export function RsvpHairline({ content }: RsvpVariantProps) {
           className="mt-10"
         />
 
-        {content.deadlineLabel && (
+        {hasText(content.deadlineLabel) && (
           <p className="mt-8 mb-0 text-[10.5px] tracking-[0.26em] text-inv-ink-soft uppercase">
             {content.deadlineLabel}
           </p>
@@ -56,7 +57,7 @@ export function RsvpHairline({ content }: RsvpVariantProps) {
 
         <RsvpAction content={content} align="center" className="mt-8" />
 
-        {content.note && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
       </BlockContainer>
     </BlockSection>
   );

@@ -3,6 +3,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RsvpAction, RsvpDeadline, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.card` — la confirmación en una tarjeta centrada.
@@ -39,7 +40,7 @@ export function RsvpCard({ content }: RsvpVariantProps) {
               align="center"
             />
 
-            {content.deadlineLabel && (
+            {hasText(content.deadlineLabel) && (
               <RsvpDeadline deadlineLabel={content.deadlineLabel} className="mt-8" />
             )}
 
@@ -47,7 +48,7 @@ export function RsvpCard({ content }: RsvpVariantProps) {
           </div>
         </article>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

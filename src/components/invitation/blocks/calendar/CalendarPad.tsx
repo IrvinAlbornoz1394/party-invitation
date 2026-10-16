@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { DayMarkShape } from './calendar-parts';
 import type { CalendarVariantProps } from './calendar-variant';
 
@@ -48,19 +50,26 @@ import type { CalendarVariantProps } from './calendar-variant';
  */
 export function CalendarPad({ content }: CalendarVariantProps) {
   const parts = eventDateParts(content.startsAt);
+  // Sin rótulo ni título no hay cabecera: la hoja arranca arriba, sin el margen que la separaba.
+  const hasHeading = hasText(content.eyebrow) || hasText(content.title);
 
   return (
     <BlockSection block="calendar" variant="pad">
       <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.3em] text-inv-accent uppercase">
             {content.eyebrow}
           </p>
         )}
 
         {/* Ver la cabecera: sin título propio no se pinta el mes, que ya está en la hoja. */}
-        {content.title && (
-          <p className="mt-4 mb-0 font-inv-display text-[clamp(1.5rem,4vw,2.1rem)] leading-tight font-light text-inv-primary">
+        {hasText(content.title) && (
+          <p
+            className={clsx(
+              'mb-0 font-inv-display text-[clamp(1.5rem,4vw,2.1rem)] leading-tight font-light text-inv-primary',
+              hasText(content.eyebrow) ? 'mt-4' : 'mt-0',
+            )}
+          >
             {content.title}
           </p>
         )}
@@ -69,7 +78,10 @@ export function CalendarPad({ content }: CalendarVariantProps) {
         <p className="sr-only">{content.dateLabel}</p>
 
         {parts ? (
-          <div aria-hidden="true" className="relative mx-auto mt-12 w-full max-w-[16.5rem]">
+          <div
+            aria-hidden="true"
+            className={clsx('relative mx-auto w-full max-w-[16.5rem]', hasHeading && 'mt-12')}
+          >
             {/*
               Las hojas de debajo. Van desplazadas hacia abajo y a la derecha y **sin contenido**:
               lo único que tienen que hacer es asomar por dos cantos para que la de arriba se lea
@@ -112,7 +124,7 @@ export function CalendarPad({ content }: CalendarVariantProps) {
                   </span>
                 </span>
 
-                {content.timeLabel && (
+                {hasText(content.timeLabel) && (
                   <p className="mx-auto mt-6 mb-0 w-fit border-t border-inv-line pt-3 text-[11px] tracking-[0.26em] text-inv-ink uppercase tabular-nums">
                     {content.timeLabel}
                   </p>
@@ -123,12 +135,17 @@ export function CalendarPad({ content }: CalendarVariantProps) {
         ) : (
           /* Sin hoja que componer —una fecha que no se deja leer—, la frase del organizador: es lo
              que tiene que verse en una invitación ya repartida. */
-          <p className="mt-10 mb-0 font-inv-display text-[clamp(1.5rem,5vw,2.2rem)] leading-tight font-light text-inv-ink">
+          <p
+            className={clsx(
+              'mb-0 font-inv-display text-[clamp(1.5rem,5vw,2.2rem)] leading-tight font-light text-inv-ink',
+              hasHeading ? 'mt-10' : 'mt-0',
+            )}
+          >
             {content.dateLabel}
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-12 max-w-sm text-center" />
         )}
       </BlockContainer>

@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { monthSpan } from '@/domain/invitation/month-grid';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { DayMarkShape } from './calendar-parts';
 import type { CalendarVariantProps } from './calendar-variant';
 
@@ -53,6 +54,8 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
 export function CalendarDial({ content }: CalendarVariantProps) {
   const span = monthSpan(content.startsAt);
+  // Sin rótulo ni título no hay cabecera: la esfera arranca arriba, sin el margen que la separaba.
+  const hasHeading = hasText(content.eyebrow) || hasText(content.title);
 
   /* La parte del aro que queda detrás del día señalado. Ver la cabecera: el reparto de una
      circunferencia. */
@@ -61,17 +64,17 @@ export function CalendarDial({ content }: CalendarVariantProps) {
   return (
     <BlockSection block="calendar" variant="dial">
       <BlockContainer className="max-w-xl text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.3em] text-inv-accent uppercase">
             {content.eyebrow}
           </p>
         )}
 
-        {content.title && (
+        {hasText(content.title) && (
           <p
             className={clsx(
               'mb-0 font-inv-display text-[clamp(1.5rem,4vw,2.1rem)] leading-tight font-light text-inv-primary',
-              content.eyebrow ? 'mt-4' : 'mt-0',
+              hasText(content.eyebrow) ? 'mt-4' : 'mt-0',
             )}
           >
             {content.title}
@@ -87,7 +90,12 @@ export function CalendarDial({ content }: CalendarVariantProps) {
             llenar la vista en esta plantilla, pero un círculo que ocupe el ancho completo de un
             móvil deja el aro pegado al canto y pierde el aire que lo hace leerse como un objeto.
           */
-          <div className="relative mx-auto mt-12 aspect-square w-full max-w-[min(80vw,25rem)]">
+          <div
+            className={clsx(
+              'relative mx-auto aspect-square w-full max-w-[min(80vw,25rem)]',
+              hasHeading && 'mt-12',
+            )}
+          >
             <svg viewBox="0 0 200 200" aria-hidden="true" className="absolute inset-0 size-full">
               {/* El aro, del color de la línea del tema. */}
               <circle
@@ -173,7 +181,7 @@ export function CalendarDial({ content }: CalendarVariantProps) {
                 {span.monthLabel} <span className="tabular-nums">{span.year}</span>
               </p>
 
-              {content.timeLabel && (
+              {hasText(content.timeLabel) && (
                 <p className="mt-2 mb-0 text-[10.5px] tracking-[0.26em] text-inv-accent uppercase tabular-nums">
                   {content.timeLabel}
                 </p>
@@ -183,12 +191,17 @@ export function CalendarDial({ content }: CalendarVariantProps) {
         ) : (
           /* Sin esfera que graduar, la frase del organizador: es lo que tiene que verse en una
              invitación ya repartida. */
-          <p className="mt-10 mb-0 font-inv-display text-[clamp(1.6rem,5vw,2.4rem)] leading-tight font-light text-inv-ink">
+          <p
+            className={clsx(
+              'mb-0 font-inv-display text-[clamp(1.6rem,5vw,2.4rem)] leading-tight font-light text-inv-ink',
+              hasHeading ? 'mt-10' : 'mt-0',
+            )}
+          >
             {content.dateLabel}
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-12 max-w-sm text-center" />
         )}
       </BlockContainer>

@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import type { ClosingVariantProps } from './closing-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `closing.script` — la despedida escrita a mano: la frase entera en la caligrafía del tema, a
@@ -47,7 +49,7 @@ export function ClosingScript({ content }: ClosingVariantProps) {
   return (
     <BlockSection block="closing" variant="script">
       <BlockContainer className="max-w-2xl text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10px] tracking-[0.3em] text-inv-ink-soft uppercase sm:text-[11px]">
             {content.eyebrow}
           </p>
@@ -59,17 +61,22 @@ export function ClosingScript({ content }: ClosingVariantProps) {
           una calle que parte la frase en dos ideas. Y el cuerpo se acota por arriba —`3.4rem`— para
           que una despedida larga no se convierta en cinco renglones de rúbricas.
         */}
-        <p className="mt-9 mb-0 font-inv-script text-[clamp(2.1rem,7.5vw,3.4rem)] leading-[0.95] font-normal text-inv-ink">
+        <p
+          className={clsx(
+            'mb-0 font-inv-script text-[clamp(2.1rem,7.5vw,3.4rem)] leading-[0.95] font-normal text-inv-ink',
+            hasText(content.eyebrow) ? 'mt-9' : 'mt-0',
+          )}
+        >
           {content.title}
         </p>
 
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mx-auto mt-10 mb-0 max-w-md text-[14.5px] leading-relaxed text-inv-ink-soft">
             {content.message}
           </p>
         )}
 
-        {content.signature && (
+        {hasText(content.signature) && (
           <p className="mt-10 mb-0 text-[11px] tracking-[0.3em] text-inv-ink-soft uppercase">
             {content.signature}
           </p>

@@ -4,6 +4,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.mounted` — la instantánea montada y torcida, encabalgada sobre la hoja del relato.
@@ -79,7 +80,7 @@ export function StoryMounted({ content }: StoryVariantProps) {
 
             {highlight && <StoryHighlight highlight={highlight} className="mt-10" />}
 
-            {content.signature && <StorySignature signature={content.signature} className="mt-9" />}
+            {hasText(content.signature) && <StorySignature signature={content.signature} className="mt-9" />}
           </div>
         </div>
       </BlockContainer>

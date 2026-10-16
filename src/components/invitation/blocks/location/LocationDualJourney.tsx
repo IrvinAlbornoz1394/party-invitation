@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { IconBadge } from '../../shared/IconBadge';
 import { VenueFacts, type LocationVariantProps } from './location-parts';
@@ -63,7 +64,7 @@ export function LocationDualJourney({ content }: LocationVariantProps) {
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

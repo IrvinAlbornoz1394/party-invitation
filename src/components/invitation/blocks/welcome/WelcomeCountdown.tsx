@@ -2,6 +2,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { Countdown } from '../../shared/Countdown';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
 import { couple } from './welcome-name';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.countdown` — los nombres en manuscrita y lo que falta, en la propia puerta.
@@ -64,7 +65,7 @@ export function WelcomeCountdown({ content }: WelcomeVariantProps) {
           )}
         </h2>
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-6 mb-0 text-[11px] tracking-[0.38em] uppercase opacity-85">
             {content.eventTypeLabel}
           </p>
@@ -77,7 +78,7 @@ export function WelcomeCountdown({ content }: WelcomeVariantProps) {
           </>
         )}
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-7 mb-0 text-[12px] tracking-[0.24em] uppercase opacity-85">
             {content.dateLabel}
           </p>

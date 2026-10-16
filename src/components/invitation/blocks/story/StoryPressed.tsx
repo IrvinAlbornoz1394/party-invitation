@@ -5,6 +5,7 @@ import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import { StoryHighlight, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.pressed` — la crónica en un pliego: los párrafos numerados al margen y la fotografía
@@ -126,7 +127,7 @@ export function StoryPressed({ content }: StoryVariantProps) {
 
             {highlight && <StoryHighlight highlight={highlight} align="center" className="mt-12" />}
 
-            {content.signature && (
+            {hasText(content.signature) && (
               <StorySignature signature={content.signature} className="mt-9 text-center" />
             )}
           </div>

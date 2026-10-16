@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import type { CalendarVariantProps } from './calendar-variant';
 
 /**
@@ -33,18 +35,25 @@ import type { CalendarVariantProps } from './calendar-variant';
  */
 export function CalendarBand({ content }: CalendarVariantProps) {
   const parts = eventDateParts(content.startsAt);
+  // Sin rótulo ni título no hay cabecera: la fecha arranca arriba, sin el margen que la separaba.
+  const hasHeading = hasText(content.eyebrow) || hasText(content.title);
 
   return (
     <BlockSection block="calendar" variant="band">
       <BlockContainer className="max-w-sm text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.3em] text-inv-accent uppercase">
             {content.eyebrow}
           </p>
         )}
 
-        {content.title && (
-          <p className="mt-4 mb-0 font-inv-script text-[clamp(1.8rem,7vw,2.4rem)] leading-none text-inv-accent">
+        {hasText(content.title) && (
+          <p
+            className={clsx(
+              'mb-0 font-inv-script text-[clamp(1.8rem,7vw,2.4rem)] leading-none text-inv-accent',
+              hasText(content.eyebrow) && 'mt-4',
+            )}
+          >
             {content.title}
           </p>
         )}
@@ -53,7 +62,7 @@ export function CalendarBand({ content }: CalendarVariantProps) {
         <p className="sr-only">{content.dateLabel}</p>
 
         {parts ? (
-          <div aria-hidden="true" className="mt-8">
+          <div aria-hidden="true" className={clsx(hasHeading && 'mt-8')}>
             <p className="m-0 text-[12px] tracking-[0.34em] text-inv-ink uppercase">
               {parts.month}
             </p>
@@ -76,18 +85,23 @@ export function CalendarBand({ content }: CalendarVariantProps) {
             </div>
           </div>
         ) : (
-          <p className="mt-8 mb-0 font-inv-display text-[clamp(1.5rem,5vw,2.2rem)] leading-tight font-light text-inv-ink">
+          <p
+            className={clsx(
+              'mb-0 font-inv-display text-[clamp(1.5rem,5vw,2.2rem)] leading-tight font-light text-inv-ink',
+              hasHeading ? 'mt-8' : 'mt-0',
+            )}
+          >
             {content.dateLabel}
           </p>
         )}
 
-        {content.timeLabel && (
+        {hasText(content.timeLabel) && (
           <p className="mt-7 mb-0 text-[12px] tracking-[0.26em] text-inv-accent uppercase tabular-nums">
             {content.timeLabel}
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

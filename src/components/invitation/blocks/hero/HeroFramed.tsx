@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockImage } from '../../shared/BlockImage';
 import { ScrollHint } from '../../shared/ScrollHint';
@@ -6,6 +7,7 @@ import { BlockOrnament } from '../../shared/BlockOrnament';
 import { Countdown } from '../../shared/Countdown';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.framed` — el rótulo arriba, el retrato enmarcado en medio y los nombres a mano debajo.
@@ -43,6 +45,9 @@ import type { HeroVariantProps } from './hero-variant';
  * línea se come el ancho del marco y descuadra el eje. En versalitas cabe siempre.
  */
 export function HeroFramed({ content }: HeroVariantProps) {
+  /* El rótulo y la frase de arriba son opcionales: sin ellos, la primera pieza de la columna no
+     arrastra el margen que la separaba. */
+  const hasLead = hasText(content.eventTypeLabel) || hasText(content.intro);
   const parts = eventDateParts(content.startsAt);
   /* El corazón viene del vocabulario común y no de un `import` de la librería de iconos: es la
      única frontera con lucide (`shared/block-icons.ts`) y saltársela por un dibujo decorativo es
@@ -64,14 +69,19 @@ export function HeroFramed({ content }: HeroVariantProps) {
       <LeafSprig className="absolute -right-16 -bottom-6 h-24 w-[16rem] rotate-[166deg] text-inv-primary opacity-15 sm:-right-10 sm:h-32 sm:w-[22rem]" />
 
       <div className="inv-rise relative z-10 flex w-full max-w-xl flex-col items-center text-center">
-        {content.intro && (
+        {hasText(content.intro) && (
           <p className="m-0 max-w-xs text-[10.5px] leading-relaxed tracking-[0.3em] text-inv-ink-soft uppercase sm:max-w-sm sm:text-[11px]">
             {content.intro}
           </p>
         )}
 
-        {content.eventTypeLabel && (
-          <h1 className="mt-5 mb-0 font-inv-display text-[clamp(1.55rem,7vw,2.6rem)] leading-[1.1] font-light tracking-[0.14em] text-inv-primary uppercase">
+        {hasText(content.eventTypeLabel) && (
+          <h1
+            className={clsx(
+              hasText(content.intro) ? 'mt-5' : 'mt-0',
+              'mb-0 font-inv-display text-[clamp(1.55rem,7vw,2.6rem)] leading-[1.1] font-light tracking-[0.14em] text-inv-primary uppercase',
+            )}
+          >
             {content.eventTypeLabel}
           </h1>
         )}
@@ -84,7 +94,12 @@ export function HeroFramed({ content }: HeroVariantProps) {
             como el filete impreso alrededor de una lámina—. El relleno de la sección (24px) es lo
             que garantiza que los 8px del filete no se salgan por los lados en un móvil.
           */
-          <figure className="relative m-0 mt-9 w-full max-w-[19rem] sm:max-w-sm">
+          <figure
+            className={clsx(
+              hasLead ? 'mt-9' : 'mt-0',
+              'relative m-0 w-full max-w-[19rem] sm:max-w-sm',
+            )}
+          >
             <span
               aria-hidden="true"
               className="pointer-events-none absolute -inset-2 border border-inv-accent/45"
@@ -104,7 +119,12 @@ export function HeroFramed({ content }: HeroVariantProps) {
         ) : (
           /* Sin fotografía no queda un hueco ni un marco vacío —un marco vacío se ve como una
              imagen que no cargó—: queda la ramita, que es el ornamento que la portada ya usa. */
-          <LeafSprig className="mt-9 h-8 w-40 text-inv-accent opacity-70" />
+          <LeafSprig
+            className={clsx(
+              hasLead ? 'mt-9' : 'mt-0',
+              'h-8 w-40 text-inv-accent opacity-70',
+            )}
+          />
         )}
 
         <HeartMark
@@ -123,13 +143,13 @@ export function HeroFramed({ content }: HeroVariantProps) {
           {content.celebrantName}
         </p>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-3 mb-0 text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
         )}
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-7 mb-0 max-w-sm text-[14.5px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
@@ -151,7 +171,7 @@ export function HeroFramed({ content }: HeroVariantProps) {
           <DateOrnament />
         </p>
 
-        {content.city && (
+        {hasText(content.city) && (
           <p className="mt-3 mb-0 text-[12.5px] tracking-[0.12em] text-inv-ink-soft">
             {content.city}
           </p>

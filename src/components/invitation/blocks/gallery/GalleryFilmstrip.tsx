@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { actionClasses } from '../../shared/action-styles';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { Lightbox } from '../../shared/Lightbox';
@@ -50,13 +51,19 @@ export function GalleryFilmstrip({ content }: GalleryVariantProps) {
       />
 
       <BlockContainer className="max-w-md">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-center font-inv-display text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
 
-        <div className="relative mx-auto mt-6 flex w-fit items-center gap-3 sm:gap-5">
+        {/* El margen separa el título del rótulo: sin rótulo, la tira empieza arriba. */}
+        <div
+          className={clsx(
+            'relative mx-auto flex w-fit items-center gap-3 sm:gap-5',
+            hasText(content.eyebrow) && 'mt-6',
+          )}
+        >
           <h2 className="m-0 font-inv-display text-[clamp(1.6rem,8vw,2.3rem)] leading-none font-normal tracking-[0.06em] whitespace-nowrap text-inv-primary uppercase [writing-mode:vertical-rl] rotate-180">
             {content.title}
           </h2>
@@ -84,9 +91,9 @@ export function GalleryFilmstrip({ content }: GalleryVariantProps) {
           </div>
         </div>
 
-        {(content.subtitle || rest > 0) && (
+        {(hasText(content.subtitle) || rest > 0) && (
           <div className="mt-10 flex flex-col items-center text-center">
-            {content.subtitle && (
+            {hasText(content.subtitle) && (
               <p className="m-0 max-w-xs font-inv-display text-[15px] leading-snug text-inv-accent">
                 {content.subtitle}
               </p>
@@ -95,7 +102,7 @@ export function GalleryFilmstrip({ content }: GalleryVariantProps) {
               <button
                 type="button"
                 onClick={() => lightbox.open(STRIP_LENGTH)}
-                className={clsx(actionClasses('onSurface'), 'cursor-pointer', content.subtitle && 'mt-6')}
+                className={clsx(actionClasses('onSurface'), 'cursor-pointer', hasText(content.subtitle) && 'mt-6')}
               >
                 {rest === 1 ? 'Ver 1 foto más' : `Ver ${rest} fotos más`}
               </button>
@@ -103,7 +110,7 @@ export function GalleryFilmstrip({ content }: GalleryVariantProps) {
           </div>
         )}
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
 
       <Lightbox

@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import {
   FooterCredits,
   FooterLinks,
@@ -53,6 +54,10 @@ import {
  * columna tenga algo que enseñar, y no de la columna.
  */
 export function FooterColophon({ content }: FooterVariantProps) {
+  const hasMeta = hasText(content.dateLabel) || hasText(content.city);
+  const hasMessage = hasText(content.message);
+  const hasLinks = content.links.length > 0;
+
   return (
     <BlockSection block="footer" variant="colophon" className="py-14 sm:py-16">
       <BlockContainer>
@@ -69,7 +74,7 @@ export function FooterColophon({ content }: FooterVariantProps) {
             {content.names}
           </p>
 
-          {content.monogram && <FooterMonogram monogram={content.monogram} className="shrink-0" />}
+          {hasText(content.monogram) && <FooterMonogram monogram={content.monogram} className="shrink-0" />}
         </div>
 
         {/*
@@ -81,44 +86,53 @@ export function FooterColophon({ content }: FooterVariantProps) {
           En móvil el mismo borde se vuelve superior (`border-t`), que es la señal equivalente
           cuando las columnas se han convertido en filas.
         */}
-        <div className="mt-10 grid gap-7 sm:grid-cols-3 sm:gap-0">
-          <div className="sm:pr-8">
-            {(content.dateLabel || content.city) && (
-              <p className="m-0 flex flex-col gap-1 text-[12.5px] tracking-[0.2em] text-inv-ink-soft uppercase">
-                {content.dateLabel && <span>{content.dateLabel}</span>}
-                {content.city && <span>{content.city}</span>}
-              </p>
-            )}
-          </div>
+        {(hasMeta || hasMessage || hasLinks) && (
+          /* En escritorio las tres columnas se quedan aunque alguna venga vacía —es la retícula—;
+             en móvil la vacía se oculta, o su hueco sumaría dos `gap` seguidos, y el filete de
+             arriba solo va cuando hay una fila visible encima que separar. */
+          <div className="mt-10 grid gap-7 sm:grid-cols-3 sm:gap-0">
+            <div className={clsx('sm:pr-8', !hasMeta && 'hidden sm:block')}>
+              {hasMeta && (
+                <p className="m-0 flex flex-col gap-1 text-[12.5px] tracking-[0.2em] text-inv-ink-soft uppercase">
+                  {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+                  {hasText(content.city) && <span>{content.city}</span>}
+                </p>
+              )}
+            </div>
 
-          <div
-            className={clsx(
-              'sm:border-l sm:border-inv-line sm:px-8',
-              content.message && 'border-t border-inv-line pt-7 sm:border-t-0 sm:pt-0',
-            )}
-          >
-            {content.message && (
-              <p className="m-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
-                {content.message}
-              </p>
-            )}
-          </div>
+            <div
+              className={clsx(
+                'sm:border-l sm:border-inv-line sm:px-8',
+                !hasMessage && 'hidden sm:block',
+                hasMessage && hasMeta && 'border-t border-inv-line pt-7 sm:border-t-0 sm:pt-0',
+              )}
+            >
+              {hasMessage && (
+                <p className="m-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
+                  {content.message}
+                </p>
+              )}
+            </div>
 
-          <div
-            className={clsx(
-              'sm:border-l sm:border-inv-line sm:pl-8',
-              content.links.length > 0 && 'border-t border-inv-line pt-7 sm:border-t-0 sm:pt-0',
-            )}
-          >
-            <FooterLinks links={content.links} className="flex-col items-start gap-y-3" />
+            <div
+              className={clsx(
+                'sm:border-l sm:border-inv-line sm:pl-8',
+                !hasLinks && 'hidden sm:block',
+                hasLinks &&
+                  (hasMeta || hasMessage) &&
+                  'border-t border-inv-line pt-7 sm:border-t-0 sm:pt-0',
+              )}
+            >
+              <FooterLinks links={content.links} className="flex-col items-start gap-y-3" />
+            </div>
           </div>
-        </div>
+        )}
 
-        {(content.credits || content.topAction) && (
+        {(hasText(content.credits) || content.topAction) && (
           /* El folio: lo de más abajo de la página, repartido a los dos extremos como el número
              de página y el nombre de la publicación en un pliego impreso. */
           <div className="mt-12 flex flex-col items-center gap-4 border-t border-inv-line pt-6 sm:flex-row sm:justify-between">
-            {content.credits && <FooterCredits credits={content.credits} />}
+            {hasText(content.credits) && <FooterCredits credits={content.credits} />}
             {content.topAction && (
               <FooterTopLink label={content.topAction.label} href={content.topAction.href} />
             )}

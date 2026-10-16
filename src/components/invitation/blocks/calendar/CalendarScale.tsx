@@ -3,6 +3,7 @@ import { monthSpan } from '@/domain/invitation/month-grid';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { DayMarkShape } from './calendar-parts';
 import type { CalendarVariantProps } from './calendar-variant';
 
@@ -64,7 +65,7 @@ export function CalendarScale({ content }: CalendarVariantProps) {
           eyebrow={content.eyebrow}
           /* Sin título propio, el nombre del mes: es el rótulo del eje, y pedirlo escrito a mano
              sería pedir un dato que ya está en `startsAt`. Es lo mismo que hace `calendar.month`. */
-          title={content.title ?? (span ? `${span.monthLabel} ${span.year}` : content.dateLabel)}
+          title={hasText(content.title) ? content.title : (span ? `${span.monthLabel} ${span.year}` : content.dateLabel)}
         />
 
         {/* La fecha completa, para quien escucha. Ver la cabecera. */}
@@ -112,7 +113,7 @@ export function CalendarScale({ content }: CalendarVariantProps) {
                       composición que los pies de foto de `gallery.editorial`. */}
                   <span className="text-[10px] tracking-[0.24em] whitespace-nowrap text-inv-ink-soft uppercase">
                     {span.weekday}
-                    {content.timeLabel && (
+                    {hasText(content.timeLabel) && (
                       <>
                         <span className="mx-2 opacity-50">·</span>
                         <span className="tabular-nums">{content.timeLabel}</span>
@@ -170,14 +171,14 @@ export function CalendarScale({ content }: CalendarVariantProps) {
             grande, salvo que ya sea el título: sin título propio el respaldo del encabezado **es**
             `dateLabel`, y repetirla dejaría la misma línea dos veces seguidas.
           */
-          content.title && (
+          hasText(content.title) && (
             <p className="mt-10 mb-0 font-inv-display text-[clamp(1.6rem,5vw,2.4rem)] leading-tight font-light text-inv-primary">
               {content.dateLabel}
             </p>
           )
         )}
 
-        {content.note && <BlockNote note={content.note} className="mt-12 max-w-md" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 max-w-md" />}
       </BlockContainer>
     </BlockSection>
   );

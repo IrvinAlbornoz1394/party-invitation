@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockImage } from '../../shared/BlockImage';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 const CORNER = requireDesignAsset('botanical-corner-top-001');
 
@@ -61,17 +63,22 @@ export function WelcomeBotanical({ content }: WelcomeVariantProps) {
       />
 
       <div className="relative flex max-w-xs flex-col items-center text-inv-ink">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 text-[12px] tracking-[0.36em] text-inv-ink-soft uppercase">
             {content.eventTypeLabel}
           </p>
         )}
 
-        <h2 className="mt-4 mb-0 font-inv-script text-[clamp(2.75rem,14vw,4rem)] leading-[0.95] font-normal text-inv-accent">
+        <h2
+          className={clsx(
+            hasText(content.eventTypeLabel) ? 'mt-4' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(2.75rem,14vw,4rem)] leading-[0.95] font-normal text-inv-accent',
+          )}
+        >
           {content.celebrantName}
         </h2>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-3 mb-0 text-[11px] tracking-[0.36em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
@@ -81,19 +88,19 @@ export function WelcomeBotanical({ content }: WelcomeVariantProps) {
             tema porque su sitio en la composición es este, entre el nombre y la frase. */}
         <LeafSprig className="mt-7 h-7 w-36 text-inv-accent opacity-80" />
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-7 mb-0 font-inv-display text-[clamp(1.05rem,5vw,1.35rem)] leading-snug text-inv-ink italic">
             {content.note}
           </p>
         )}
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-6 mb-0 text-[12px] tracking-[0.28em] text-inv-ink-soft uppercase">
             {content.dateLabel}
           </p>
         )}
 
-        {content.venue && (
+        {hasText(content.venue) && (
           <p className="mt-2 mb-0 text-[12.5px] leading-snug text-inv-ink-soft">{content.venue}</p>
         )}
 

@@ -5,6 +5,7 @@ import { motion, useMotionTemplate, useScroll, useTransform } from 'framer-motio
 import type { GalleryItem } from '@/domain/invitation/blocks/gallery';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { useLightbox } from '../../shared/useLightbox';
@@ -106,7 +107,7 @@ export function GalleryParallax({ content }: GalleryVariantProps) {
         />
       )}
 
-      {content.note && (
+      {hasText(content.note) && (
         <BlockContainer>
           <BlockNote note={content.note} className="mt-12 pb-20 text-center" />
         </BlockContainer>

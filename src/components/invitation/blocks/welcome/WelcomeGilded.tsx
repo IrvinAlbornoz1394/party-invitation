@@ -1,6 +1,7 @@
 import { BlockImage } from '../../shared/BlockImage';
 import { BotanicalSpray, TiaraGlyph } from '../../shared/paper-ornaments';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.gilded` — la puerta enmarcada en oro: doble filete por los cuatro costados,
@@ -82,13 +83,13 @@ export function WelcomeGilded({ content }: WelcomeVariantProps) {
 
         {/* La invitación de los padres, en versalitas y arriba del todo: en una participación de
             XV son ellos los que invitan, y esa línea es lo primero que se lee. */}
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-8 mb-0 max-w-[20rem] text-[10.5px] leading-[1.9] tracking-[0.24em] uppercase opacity-90 sm:text-[11.5px]">
             {content.note}
           </p>
         )}
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-7 mb-0 font-inv-display text-[clamp(1.6rem,7vw,2.4rem)] leading-none font-light tracking-[0.2em] text-inv-accent uppercase">
             {content.eventTypeLabel}
           </p>
@@ -101,16 +102,16 @@ export function WelcomeGilded({ content }: WelcomeVariantProps) {
           {content.celebrantName}
         </h2>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-5 mb-0 text-[11px] tracking-[0.3em] uppercase opacity-85 sm:text-[12px]">
             {content.celebrantLastName}
           </p>
         )}
 
-        {(content.dateLabel || content.venue) && (
+        {(hasText(content.dateLabel) || hasText(content.venue)) && (
           <p className="mt-8 mb-0 flex flex-col items-center gap-1.5 text-[11.5px] tracking-[0.2em] uppercase opacity-85">
-            {content.dateLabel && <span>{content.dateLabel}</span>}
-            {content.venue && <span className="opacity-80">{content.venue}</span>}
+            {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+            {hasText(content.venue) && <span className="opacity-80">{content.venue}</span>}
           </p>
         )}
 

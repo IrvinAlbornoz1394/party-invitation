@@ -1,6 +1,7 @@
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
 import { CrownGlyph } from '../../shared/paper-ornaments';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.crown` — la corona grabada sobre el retrato, para unos XV.
@@ -48,7 +49,7 @@ export function WelcomeCrown({ content }: WelcomeVariantProps) {
       <div className="relative flex max-w-sm flex-col items-center">
         <CrownGlyph className="h-10 w-16 text-inv-accent" />
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-7 mb-0 text-[11.5px] tracking-[0.34em] uppercase opacity-85">
             {content.eventTypeLabel}
           </p>
@@ -60,7 +61,7 @@ export function WelcomeCrown({ content }: WelcomeVariantProps) {
           {content.celebrantName}
         </h2>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-4 mb-0 font-inv-display text-[12.5px] tracking-[0.3em] uppercase opacity-90">
             {content.celebrantLastName}
           </p>
@@ -68,18 +69,20 @@ export function WelcomeCrown({ content }: WelcomeVariantProps) {
 
         {/* Un filete entre el nombre y lo práctico, del ancho del texto: es lo que separa el
             titular del dato sin meter una línea de más. */}
-        <span
-          aria-hidden="true"
-          className="mt-7 block h-px w-16 bg-current opacity-40"
-        />
+        {(hasText(content.note) || hasText(content.dateLabel)) && (
+          <span
+            aria-hidden="true"
+            className="mt-7 block h-px w-16 bg-current opacity-40"
+          />
+        )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-7 mb-0 max-w-[19rem] text-[13.5px] leading-relaxed tracking-[0.02em] opacity-90">
             {content.note}
           </p>
         )}
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-6 mb-0 text-[12px] tracking-[0.26em] uppercase opacity-85">
             {content.dateLabel}
           </p>

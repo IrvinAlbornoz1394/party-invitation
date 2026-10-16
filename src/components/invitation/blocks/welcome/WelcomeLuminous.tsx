@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
 import { RingsGlyph } from './welcome-ornaments';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.luminous` — la manuscrita encendida sobre un fondo de flores en penumbra.
@@ -41,15 +43,20 @@ export function WelcomeLuminous({ content }: WelcomeVariantProps) {
       }
     >
       <div className="relative flex max-w-sm flex-col items-center">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 font-inv-script text-[clamp(2.75rem,15vw,4.75rem)] leading-[0.9] drop-shadow-[0_0_16px_currentColor]">
             {content.eventTypeLabel}
           </p>
         )}
 
-        <h2 className="mt-8 mb-0 font-inv-display text-[clamp(1.6rem,7vw,2.4rem)] leading-tight font-normal text-inv-accent">
+        <h2
+          className={clsx(
+            hasText(content.eventTypeLabel) ? 'mt-8' : 'mt-0',
+            'mb-0 font-inv-display text-[clamp(1.6rem,7vw,2.4rem)] leading-tight font-normal text-inv-accent',
+          )}
+        >
           {content.celebrantName}
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             <span className="mt-2 block text-[11px] tracking-[0.34em] uppercase opacity-90">
               {content.celebrantLastName}
             </span>
@@ -58,13 +65,13 @@ export function WelcomeLuminous({ content }: WelcomeVariantProps) {
 
         <RingsGlyph className="mt-6 h-9 w-14 text-inv-accent" />
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-6 mb-0 max-w-[19rem] text-[13.5px] leading-relaxed tracking-[0.02em] opacity-90">
             {content.note}
           </p>
         )}
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-6 mb-0 text-[12px] tracking-[0.26em] uppercase opacity-85">
             {content.dateLabel}
           </p>

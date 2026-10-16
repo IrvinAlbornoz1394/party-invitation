@@ -5,6 +5,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
 import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.image-left` y `story.image-right` — la historia a dos columnas.
@@ -62,7 +63,7 @@ function StorySplit({ content, side }: StoryVariantProps & { readonly side: 'lef
                 arrancaba en el margen, justo encima del filete, y las dos piezas se leían
                 descuadradas — se ve en cualquier móvil. */}
             {highlight && <StoryHighlight highlight={highlight} className="mt-9" />}
-            {content.signature && (
+            {hasText(content.signature) && (
               <StorySignature signature={content.signature} className={highlight ? 'mt-8 pl-5' : 'mt-8'} />
             )}
           </div>

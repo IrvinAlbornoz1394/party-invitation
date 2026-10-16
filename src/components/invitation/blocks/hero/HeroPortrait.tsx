@@ -5,6 +5,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.portrait` — el retrato se deshace en el papel y el nombre nace de ahí.
@@ -43,6 +44,9 @@ import type { HeroVariantProps } from './hero-variant';
  * fecha no se deja partir, se pinta esa misma frase y la portada no se entera.
  */
 export function HeroPortrait({ content }: HeroVariantProps) {
+  /* El rótulo y la frase de arriba son opcionales: sin ellos, la primera pieza de la columna no
+     arrastra el margen que la separaba. */
+  const hasLead = hasText(content.eventTypeLabel) || hasText(content.intro);
   const parts = eventDateParts(content.startsAt);
 
   return (
@@ -83,14 +87,19 @@ export function HeroPortrait({ content }: HeroVariantProps) {
         empezaría por debajo de la foto y se leerían dos piezas pegadas en vez de una sola.
       */}
       <div className="inv-rise relative z-10 mx-auto -mt-[clamp(2.5rem,9vw,5rem)] flex w-full max-w-2xl flex-col items-center px-6 pb-14 text-center sm:px-10 sm:pb-20">
-        {content.intro && (
+        {hasText(content.intro) && (
           <p className="m-0 max-w-sm text-[11px] leading-relaxed tracking-[0.24em] text-inv-ink-soft uppercase">
             {content.intro}
           </p>
         )}
 
-        {content.eventTypeLabel && (
-          <p className="mt-4 mb-0 font-inv-script text-[clamp(1.4rem,5.5vw,2rem)] leading-none text-inv-accent">
+        {hasText(content.eventTypeLabel) && (
+          <p
+            className={clsx(
+              hasText(content.intro) ? 'mt-4' : 'mt-0',
+              'mb-0 font-inv-script text-[clamp(1.4rem,5.5vw,2rem)] leading-none text-inv-accent',
+            )}
+          >
             {content.eventTypeLabel}
           </p>
         )}
@@ -100,9 +109,14 @@ export function HeroPortrait({ content }: HeroVariantProps) {
           no una ficha. La `script` del tema decide la letra: en «corporate» apunta a un palo seco
           y la misma portada sale sobria sin tocar este archivo.
         */}
-        <h1 className="mt-3 mb-0 font-inv-script text-[clamp(3.25rem,17vw,7rem)] leading-[0.86] font-normal text-inv-primary">
+        <h1
+          className={clsx(
+            hasLead ? 'mt-3' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(3.25rem,17vw,7rem)] leading-[0.86] font-normal text-inv-primary',
+          )}
+        >
           {content.celebrantName}
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             /* Un pelo más pequeño y desplazado: dos líneas de caligrafía del mismo cuerpo y en
                el mismo eje se leen como un bloque de texto, no como una firma. */
             <span className="mt-2 block translate-x-[0.06em] text-[0.78em]">
@@ -111,7 +125,7 @@ export function HeroPortrait({ content }: HeroVariantProps) {
           )}
         </h1>
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-6 mb-0 max-w-md text-[15px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
@@ -119,7 +133,7 @@ export function HeroPortrait({ content }: HeroVariantProps) {
 
         <EventDate parts={parts} label={content.dateLabel} />
 
-        {content.city && (
+        {hasText(content.city) && (
           <p className="mt-6 mb-0 max-w-sm text-[13px] leading-relaxed tracking-[0.08em] text-inv-ink-soft">
             {content.city}
           </p>

@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { CalendarDays, MapPin } from 'lucide-react';
 import { BlockImage } from '../../shared/BlockImage';
 import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.classic` — la portada de siempre: foto a sangre y el nombre apoyado abajo.
@@ -42,6 +44,9 @@ import type { HeroVariantProps } from './hero-variant';
  * creada, y verla presentable desde el minuto uno es parte de que el admin la pueda armar.
  */
 export function HeroClassic({ content }: HeroVariantProps) {
+  /* El rótulo y la frase de arriba son opcionales: sin ellos, la primera pieza de la columna no
+     arrastra el margen que la separaba. */
+  const hasLead = hasText(content.eventTypeLabel) || hasText(content.intro);
   return (
     <section
       data-block="hero"
@@ -60,7 +65,7 @@ export function HeroClassic({ content }: HeroVariantProps) {
       {/* El relleno de arriba es el doble que el de abajo: es lo único que mantiene el bloque por
           debajo del centro ahora que el aire se reparte. Ver el comentario de la variante. */}
       <div className="inv-rise mx-auto w-full max-w-5xl px-6 pt-28 pb-14 sm:px-10 sm:pt-36 sm:pb-20">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 flex items-center gap-3 text-[11px] tracking-[0.32em] uppercase opacity-85">
             {/* El filete acompaña al rótulo en lugar de subrayarlo: marca dónde empieza la
                 columna de texto y da un punto de apoyo horizontal a un bloque muy vertical. */}
@@ -69,23 +74,33 @@ export function HeroClassic({ content }: HeroVariantProps) {
           </p>
         )}
 
-        {content.intro && (
-          <p className="mt-6 mb-0 max-w-md text-[15px] leading-relaxed opacity-90">
+        {hasText(content.intro) && (
+          <p
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-6' : 'mt-0',
+              'mb-0 max-w-md text-[15px] leading-relaxed opacity-90',
+            )}
+          >
             {content.intro}
           </p>
         )}
 
-        <h1 className="mt-3 mb-0 font-inv-display text-[clamp(3rem,11vw,6.25rem)] leading-[0.92] font-light">
+        <h1
+          className={clsx(
+            hasLead ? 'mt-3' : 'mt-0',
+            'mb-0 font-inv-display text-[clamp(3rem,11vw,6.25rem)] leading-[0.92] font-light',
+          )}
+        >
           {content.celebrantName}
         </h1>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-4 mb-0 text-[13px] tracking-[0.4em] uppercase opacity-85">
             {content.celebrantLastName}
           </p>
         )}
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-6 mb-0 max-w-xl text-[15px] leading-relaxed opacity-90">
             {content.tagline}
           </p>
@@ -96,7 +111,7 @@ export function HeroClassic({ content }: HeroVariantProps) {
             <CalendarDays size={16} strokeWidth={1.6} aria-hidden="true" />
             {content.dateLabel}
           </span>
-          {content.city && (
+          {hasText(content.city) && (
             <span className="inline-flex items-center gap-2">
               <MapPin size={16} strokeWidth={1.6} aria-hidden="true" />
               {content.city}

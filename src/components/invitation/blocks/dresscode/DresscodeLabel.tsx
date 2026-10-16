@@ -4,6 +4,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
 
@@ -61,7 +62,7 @@ export function DresscodeLabel({ content }: DresscodeVariantProps) {
           del tema y con la medida corta. Un texto largo —«formal de jardín, y te pedimos reservar
           el blanco»— sigue leyéndose, solo que en tres renglones en lugar de uno.
         */}
-        {content.description && (
+        {hasText(content.description) && (
           <p className="mx-auto mt-8 mb-0 max-w-xs text-[clamp(0.95rem,3.4vw,1.15rem)] leading-relaxed tracking-[0.2em] text-inv-ink uppercase">
             {content.description}
           </p>
@@ -79,7 +80,7 @@ export function DresscodeLabel({ content }: DresscodeVariantProps) {
             // son legítimas.
             <li key={index} className="flex flex-col items-center gap-2">
               <Swatch swatch={swatch} className="size-7 sm:size-8" />
-              {swatch.label && (
+              {hasText(swatch.label) && (
                 <span className="text-[8.5px] leading-snug tracking-[0.14em] text-inv-ink-soft uppercase">
                   {swatch.label}
                 </span>
@@ -94,7 +95,7 @@ export function DresscodeLabel({ content }: DresscodeVariantProps) {
           </div>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

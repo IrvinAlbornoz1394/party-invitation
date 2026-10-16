@@ -2,6 +2,7 @@
 
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { Reveal } from '../../shared/Reveal';
@@ -91,7 +92,7 @@ export function GalleryPlates({ content }: GalleryVariantProps) {
                   />
                 </div>
 
-                {item.caption && (
+                {hasText(item.caption) && (
                   <figcaption className="mt-2.5 text-center text-[8.5px] tracking-[0.18em] text-inv-ink-soft uppercase sm:text-[9.5px] sm:tracking-[0.22em]">
                     {item.caption}
                   </figcaption>
@@ -101,7 +102,7 @@ export function GalleryPlates({ content }: GalleryVariantProps) {
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
 
       <Lightbox

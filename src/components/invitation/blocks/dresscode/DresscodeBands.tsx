@@ -1,6 +1,7 @@
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { paletteIsNamed } from '@/domain/invitation/blocks/dresscode';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
@@ -61,7 +62,7 @@ export function DresscodeBands({ content }: DresscodeVariantProps) {
           <li key={index} className="relative flex min-w-0 items-end justify-center pb-5">
             <Swatch swatch={swatch} shape="block" className="absolute inset-0 -z-10" />
 
-            {swatch.label && (
+            {hasText(swatch.label) && (
               /* Girado noventa grados: en una franja de cincuenta píxeles, «Azul noche» en
                  horizontal no cabe ni partido en dos. En vertical cabe cualquiera. */
               <span className="[writing-mode:vertical-rl] rotate-180 text-[8.5px] tracking-[0.22em] whitespace-nowrap text-inv-on-primary uppercase opacity-80">
@@ -84,7 +85,7 @@ export function DresscodeBands({ content }: DresscodeVariantProps) {
             tone="inverse"
           />
 
-          {content.description && (
+          {hasText(content.description) && (
             <p className="mt-7 mb-0 max-w-md text-[15px] leading-relaxed opacity-90">
               {content.description}
             </p>
@@ -99,7 +100,7 @@ export function DresscodeBands({ content }: DresscodeVariantProps) {
             />
           )}
 
-          {content.note && (
+          {hasText(content.note) && (
             <p className="mt-8 mb-0 max-w-sm text-[13px] leading-relaxed opacity-80">
               {content.note}
             </p>

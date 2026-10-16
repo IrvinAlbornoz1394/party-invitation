@@ -1,6 +1,7 @@
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { VenueFacts, type LocationVariantProps } from './location-parts';
 
@@ -60,7 +61,7 @@ export function LocationSingle({ content }: LocationVariantProps) {
         </div>
       ))}
 
-      {content.note && (
+      {hasText(content.note) && (
         <BlockContainer className="py-12">
           <BlockNote note={content.note} className="text-center" />
         </BlockContainer>

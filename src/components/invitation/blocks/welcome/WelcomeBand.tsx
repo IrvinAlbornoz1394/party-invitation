@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.band` — el retrato a sangre y la postal apoyada encima.
@@ -76,17 +78,22 @@ export function WelcomeBand({ content }: WelcomeVariantProps) {
         recortada contra ella.
       */}
       <div className="relative mx-auto w-full max-w-sm rounded-inv-lg border border-inv-line/70 bg-inv-surface/95 px-7 py-8 text-center shadow-inv-soft backdrop-blur-[3px] sm:px-8">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 text-[10.5px] tracking-[0.3em] text-inv-ink-soft uppercase">
             {content.eventTypeLabel}
           </p>
         )}
 
-        <h2 className="mt-3 mb-0 font-inv-script text-[clamp(2.5rem,13vw,3.6rem)] leading-[0.95] font-normal text-inv-primary">
+        <h2
+          className={clsx(
+            hasText(content.eventTypeLabel) ? 'mt-3' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(2.5rem,13vw,3.6rem)] leading-[0.95] font-normal text-inv-primary',
+          )}
+        >
           {content.celebrantName}
         </h2>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-2.5 mb-0 text-[10px] tracking-[0.3em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
@@ -100,13 +107,13 @@ export function WelcomeBand({ content }: WelcomeVariantProps) {
           <span className="h-px w-10 bg-inv-line" />
         </p>
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-5 mb-0 text-[11.5px] tracking-[0.22em] text-inv-ink uppercase">
             {content.dateLabel}
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-4 mb-0 text-[13.5px] leading-relaxed text-inv-ink-soft">{content.note}</p>
         )}
 

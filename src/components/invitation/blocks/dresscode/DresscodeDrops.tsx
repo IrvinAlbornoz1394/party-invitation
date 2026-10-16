@@ -4,6 +4,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Candelabra } from '../../shared/doodle-ornaments';
 import { METALLIC_SHEEN } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
@@ -55,7 +56,7 @@ export function DresscodeDrops({ content }: DresscodeVariantProps) {
         <div className="mt-12 flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:gap-12">
           <Candelabra className="w-24 shrink-0 text-inv-primary sm:w-28" />
 
-          {content.description && (
+          {hasText(content.description) && (
             <p className="m-0 text-center text-[15px] leading-relaxed text-inv-ink-soft sm:text-left">
               {content.description}
             </p>
@@ -94,7 +95,7 @@ export function DresscodeDrops({ content }: DresscodeVariantProps) {
                 )}
               </span>
 
-              {swatch.label && (
+              {hasText(swatch.label) && (
                 <span className="text-center text-[9.5px] leading-snug tracking-[0.14em] text-inv-ink-soft uppercase">
                   {swatch.label}
                 </span>
@@ -109,7 +110,7 @@ export function DresscodeDrops({ content }: DresscodeVariantProps) {
           </div>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

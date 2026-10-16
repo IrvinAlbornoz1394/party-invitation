@@ -3,6 +3,7 @@ import { blockIconComponent } from '../../shared/block-icons';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { TextLink } from '../../shared/TextLink';
 import type { DetailsVariantProps } from './details-variant';
 
@@ -88,7 +89,7 @@ export function DetailsStack({ content }: DetailsVariantProps) {
                     {item.title}
                   </h3>
 
-                  {item.description && (
+                  {hasText(item.description) && (
                     <p className="mt-2 mb-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
                       {item.description}
                     </p>
@@ -101,7 +102,7 @@ export function DetailsStack({ content }: DetailsVariantProps) {
           })}
         </ul>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

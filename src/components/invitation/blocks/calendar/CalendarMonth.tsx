@@ -3,6 +3,7 @@ import { monthGrid } from '@/domain/invitation/month-grid';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { TornEdge } from '../../shared/paper-ornaments';
 import { DayMarkShape } from './calendar-parts';
 import type { CalendarVariantProps } from './calendar-variant';
@@ -63,7 +64,7 @@ export function CalendarMonth({ content }: CalendarVariantProps) {
           eyebrow={content.eyebrow}
           /* Sin título propio, el nombre del mes. Es lo que hace un calendario de papel, y evita
              pedir un dato —«Junio»— que el sistema ya tiene en `startsAt`. */
-          title={content.title ?? (grid ? `${grid.monthLabel} ${grid.year}` : content.dateLabel)}
+          title={hasText(content.title) ? content.title : (grid ? `${grid.monthLabel} ${grid.year}` : content.dateLabel)}
           align="center"
           tone="inverse"
           titleCase="caps"
@@ -118,14 +119,14 @@ export function CalendarMonth({ content }: CalendarVariantProps) {
             evento no trae título propio, el respaldo del encabezado **es** `dateLabel`, y
             repetirla aquí dejaría la misma frase dos veces seguidas en la misma franja.
           */
-          content.title && (
+          hasText(content.title) && (
             <p className="mt-10 mb-0 text-center font-inv-display text-[clamp(1.6rem,5vw,2.4rem)] leading-tight font-light">
               {content.dateLabel}
             </p>
           )
         )}
 
-        {content.timeLabel && (
+        {hasText(content.timeLabel) && (
           <p className="mt-8 mb-0 text-center text-[12px] tracking-[0.26em] uppercase opacity-85">
             {content.timeLabel}
           </p>
@@ -138,7 +139,7 @@ export function CalendarMonth({ content }: CalendarVariantProps) {
 
           La nota se queda —un evento real puede llevarla— y arranca de la hora directamente.
         */}
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} tone="inverse" className="mx-auto mt-9 max-w-sm text-center" />
         )}
       </BlockContainer>

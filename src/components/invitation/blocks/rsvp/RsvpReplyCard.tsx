@@ -1,6 +1,7 @@
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.reply-card` — la tarjeta de respuesta que venía dentro del sobre.
@@ -43,7 +44,7 @@ export function RsvpReplyCard({ content }: RsvpVariantProps) {
               R.S.V.P.
             </p>
 
-            {content.eyebrow && (
+            {hasText(content.eyebrow) && (
               <p className="mt-5 mb-0 text-[11px] tracking-[0.3em] text-inv-accent uppercase">
                 {content.eyebrow}
               </p>
@@ -55,7 +56,7 @@ export function RsvpReplyCard({ content }: RsvpVariantProps) {
               {content.title}
             </h2>
 
-            {content.subtitle && (
+            {hasText(content.subtitle) && (
               <p className="mt-4 mb-0 max-w-sm text-[14.5px] leading-relaxed text-inv-ink-soft">
                 {content.subtitle}
               </p>
@@ -63,7 +64,7 @@ export function RsvpReplyCard({ content }: RsvpVariantProps) {
 
             {/* Aquí es donde irá el saludo a la familia y su cupo. Ver la nota de arriba. */}
 
-            {content.deadlineLabel && (
+            {hasText(content.deadlineLabel) && (
               <p className="mt-10 mb-0 font-inv-script text-[clamp(1.3rem,3vw,1.7rem)] leading-none text-inv-accent">
                 Se agradece respuesta {content.deadlineLabel.toLowerCase()}
               </p>
@@ -73,7 +74,7 @@ export function RsvpReplyCard({ content }: RsvpVariantProps) {
           </div>
         </article>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

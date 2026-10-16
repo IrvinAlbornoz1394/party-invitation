@@ -4,6 +4,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
 import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.centered` — la historia en una sola columna, con la foto de banda.
@@ -48,7 +49,7 @@ export function StoryCentered({ content }: StoryVariantProps) {
 
         {highlight && <StoryHighlight highlight={highlight} align="center" className="mt-10" />}
 
-        {content.signature && (
+        {hasText(content.signature) && (
           <StorySignature signature={content.signature} className="mt-10 text-center" />
         )}
       </BlockContainer>

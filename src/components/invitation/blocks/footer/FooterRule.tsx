@@ -1,4 +1,5 @@
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import {
   FooterCredits,
   FooterLinks,
@@ -42,19 +43,19 @@ export function FooterRule({ content }: FooterVariantProps) {
           {content.names}
         </p>
 
-        {(content.dateLabel || content.city) && (
+        {(hasText(content.dateLabel) || hasText(content.city)) && (
           <p className="mt-4 mb-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] tracking-[0.18em] text-inv-ink-soft">
-            {content.dateLabel && <span>{content.dateLabel}</span>}
-            {content.dateLabel && content.city && (
+            {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+            {hasText(content.dateLabel) && hasText(content.city) && (
               <span aria-hidden="true" className="opacity-60">
                 ·
               </span>
             )}
-            {content.city && <span>{content.city}</span>}
+            {hasText(content.city) && <span>{content.city}</span>}
           </p>
         )}
 
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mt-7 mb-0 max-w-sm text-[13.5px] leading-relaxed text-inv-ink-soft">
             {content.message}
           </p>
@@ -62,12 +63,12 @@ export function FooterRule({ content }: FooterVariantProps) {
 
         <FooterLinks links={content.links} className="mt-8 justify-center" />
 
-        {(content.credits || content.topAction) && (
+        {(hasText(content.credits) || content.topAction) && (
           <div className="mt-12 flex flex-col items-center gap-4">
             {content.topAction && (
               <FooterTopLink label={content.topAction.label} href={content.topAction.href} />
             )}
-            {content.credits && <FooterCredits credits={content.credits} />}
+            {hasText(content.credits) && <FooterCredits credits={content.credits} />}
           </div>
         )}
       </BlockContainer>

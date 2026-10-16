@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import { requireDesignAsset } from '@/lib/design-assets';
@@ -7,6 +8,7 @@ import { DesignAsset } from '../../shared/DesignAsset';
 import { PolaroidFrame } from '../../shared/PolaroidFrame';
 import { StoryProse, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 const FLOWER = requireDesignAsset('symbol-flower-pink-001');
 
@@ -31,7 +33,7 @@ export function StoryQuote({ content }: StoryVariantProps) {
   return (
     <BlockSection block="story" variant="quote">
       <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
@@ -39,7 +41,10 @@ export function StoryQuote({ content }: StoryVariantProps) {
         <h2
           className={
             highlight
-              ? 'mt-3 mb-0 font-inv-script text-[clamp(2.5rem,11vw,3.4rem)] leading-[1.1] font-normal text-inv-accent'
+              ? clsx(
+                  hasText(content.eyebrow) ? 'mt-3' : 'mt-0',
+                  'mb-0 font-inv-script text-[clamp(2.5rem,11vw,3.4rem)] leading-[1.1] font-normal text-inv-accent',
+                )
               : 'sr-only'
           }
         >
@@ -59,7 +64,13 @@ export function StoryQuote({ content }: StoryVariantProps) {
           </div>
         )}
 
-        <figure className="m-0 mt-12">
+        {/* Con el título solo para lectores de pantalla, sin rótulo ni foto, la cita abre la sección. */}
+        <figure
+          className={clsx(
+            'm-0',
+            hasText(content.eyebrow) || highlight || content.image ? 'mt-12' : null,
+          )}
+        >
           <span
             aria-hidden="true"
             className="block font-inv-display text-[3.5rem] leading-[0.6] text-inv-accent/70"
@@ -69,7 +80,7 @@ export function StoryQuote({ content }: StoryVariantProps) {
           <blockquote className="m-0 mt-3 text-balance font-inv-display text-[clamp(1.25rem,5.6vw,1.6rem)] leading-[1.35] text-inv-ink">
             {highlight ? highlight.quote : content.title}
           </blockquote>
-          {highlight?.author && (
+          {highlight && hasText(highlight.author) && (
             <figcaption className="mt-4 text-[10.5px] tracking-[0.26em] text-inv-ink-soft uppercase">
               {highlight.author}
             </figcaption>
@@ -81,14 +92,14 @@ export function StoryQuote({ content }: StoryVariantProps) {
           <span className="h-px w-16 bg-current opacity-45" />
         </p>
 
-        {content.subtitle && (
+        {hasText(content.subtitle) && (
           <p className="mx-auto mt-9 mb-0 max-w-xs text-[11px] leading-relaxed tracking-[0.2em] text-inv-primary uppercase">
             {content.subtitle}
           </p>
         )}
         <StoryProse body={content.body} className="mx-auto mt-5 max-w-sm" />
 
-        {content.signature && <StorySignature signature={content.signature} className="mt-9" />}
+        {hasText(content.signature) && <StorySignature signature={content.signature} className="mt-9" />}
       </BlockContainer>
     </BlockSection>
   );

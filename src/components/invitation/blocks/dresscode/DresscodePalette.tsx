@@ -2,6 +2,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import { paletteIsNamed } from '@/domain/invitation/blocks/dresscode';
 import { Swatch } from './dresscode-parts';
@@ -40,7 +41,7 @@ export function DresscodePalette({ content }: DresscodeVariantProps) {
 
           <LeafSprig className="mt-6 h-7 w-40 text-inv-accent opacity-80" />
 
-          {content.description && (
+          {hasText(content.description) && (
             <p className="mt-7 mb-0 max-w-md text-[15px] leading-relaxed text-inv-ink-soft">
               {content.description}
             </p>
@@ -57,7 +58,7 @@ export function DresscodePalette({ content }: DresscodeVariantProps) {
               <li key={index} className="flex w-16 flex-col items-center gap-2.5 sm:w-20">
                 <Swatch swatch={swatch} />
 
-                {swatch.label && (
+                {hasText(swatch.label) && (
                   <span className="text-[9.5px] leading-snug tracking-[0.16em] text-inv-ink-soft uppercase">
                     {swatch.label}
                   </span>
@@ -75,7 +76,7 @@ export function DresscodePalette({ content }: DresscodeVariantProps) {
             />
           )}
 
-          {content.note && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
+          {hasText(content.note) && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
         </div>
       </BlockContainer>
     </BlockSection>

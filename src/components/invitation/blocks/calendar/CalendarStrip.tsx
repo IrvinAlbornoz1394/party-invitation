@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { CalendarDays, Clock } from 'lucide-react';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Countdown } from '../../shared/Countdown';
 import type { CalendarVariantProps } from './calendar-variant';
 
@@ -24,23 +26,32 @@ import type { CalendarVariantProps } from './calendar-variant';
  */
 export function CalendarStrip({ content }: CalendarVariantProps) {
   const parts = eventDateParts(content.startsAt);
+  // Sin rótulo ni título no hay cabecera: ni su contenedor ni el margen que la separaba de la banda.
+  const hasHeading = hasText(content.eyebrow) || hasText(content.title);
 
   return (
     <BlockSection block="calendar" variant="strip">
-      <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
-          <p className="m-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
-            {content.eyebrow}
-          </p>
-        )}
-        {content.title && (
-          <h2 className="mt-3 mb-0 font-inv-script text-[clamp(2.4rem,10vw,3.2rem)] leading-[1.1] font-normal text-inv-accent">
-            {content.title}
-          </h2>
-        )}
-      </BlockContainer>
+      {hasHeading && (
+        <BlockContainer className="max-w-md text-center">
+          {hasText(content.eyebrow) && (
+            <p className="m-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
+              {content.eyebrow}
+            </p>
+          )}
+          {hasText(content.title) && (
+            <h2
+              className={clsx(
+                'mb-0 font-inv-script text-[clamp(2.4rem,10vw,3.2rem)] leading-[1.1] font-normal text-inv-accent',
+                hasText(content.eyebrow) ? 'mt-3' : 'mt-0',
+              )}
+            >
+              {content.title}
+            </h2>
+          )}
+        </BlockContainer>
+      )}
 
-      <div className="mt-10 w-full bg-inv-primary/[0.13] py-9">
+      <div className={clsx('w-full bg-inv-primary/[0.13] py-9', hasHeading && 'mt-10')}>
         <dl className="mx-auto m-0 grid max-w-md grid-flow-col auto-cols-fr divide-x divide-inv-primary/25 px-4 text-center">
           <div className="flex flex-col items-center px-3">
             <dt className="sr-only">Fecha</dt>
@@ -63,7 +74,7 @@ export function CalendarStrip({ content }: CalendarVariantProps) {
               </dd>
             )}
           </div>
-          {content.timeLabel && (
+          {hasText(content.timeLabel) && (
             <div className="flex flex-col items-center px-3">
               <dt className="sr-only">Hora</dt>
               <Clock size={26} strokeWidth={1.2} aria-hidden="true" className="text-inv-primary" />
@@ -82,7 +93,7 @@ export function CalendarStrip({ content }: CalendarVariantProps) {
 
       <BlockContainer className="max-w-md text-center">
         <Countdown startsAt={content.startsAt} variant="bead" tone="onSurface" className="mt-10" />
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

@@ -7,6 +7,7 @@ import { BowCard } from '../../shared/BowCard';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { StoryProse, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 const TIARA = requireDesignAsset('tiara-filigree-001');
 const ROSES = requireDesignAsset('corner-rose-line-001');
@@ -44,15 +45,20 @@ export function StoryKeepsake({ content }: StoryVariantProps) {
 
       <BlockContainer className="max-w-xl">
         <div className="text-center">
-          {content.eyebrow && (
+          {hasText(content.eyebrow) && (
             <p className="m-0 font-inv-display text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
               {content.eyebrow}
             </p>
           )}
-          <h2 className="mt-2 mb-0 font-inv-script text-[clamp(2.8rem,12vw,3.8rem)] leading-[1.1] font-normal text-inv-primary">
+          <h2
+            className={clsx(
+              hasText(content.eyebrow) ? 'mt-2' : 'mt-0',
+              'mb-0 font-inv-script text-[clamp(2.8rem,12vw,3.8rem)] leading-[1.1] font-normal text-inv-primary',
+            )}
+          >
             {content.title}
           </h2>
-          {content.subtitle && (
+          {hasText(content.subtitle) && (
             <p className="mx-auto mt-3 mb-0 max-w-xs font-inv-display text-[15px] leading-snug text-inv-accent">
               {content.subtitle}
             </p>
@@ -88,7 +94,7 @@ export function StoryKeepsake({ content }: StoryVariantProps) {
             {highlight && (
               <blockquote className="m-0 font-inv-display text-[clamp(0.95rem,3.9vw,1.08rem)] leading-[1.45] text-pretty text-inv-primary">
                 &ldquo;{highlight.quote}&rdquo;
-                {highlight.author && (
+                {hasText(highlight.author) && (
                   <footer className="mt-2 text-[10px] tracking-[0.22em] text-inv-ink-soft uppercase not-italic">
                     {highlight.author}
                   </footer>
@@ -102,7 +108,7 @@ export function StoryKeepsake({ content }: StoryVariantProps) {
                 highlight ? 'mt-4 space-y-3' : 'space-y-3',
               )}
             />
-            {content.signature && (
+            {hasText(content.signature) && (
               <StorySignature signature={content.signature} className="mt-5 text-inv-primary" />
             )}
           </BowCard>

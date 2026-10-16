@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { Reveal } from '../../shared/Reveal';
@@ -106,15 +107,21 @@ export function GalleryPolaroid({ content }: GalleryVariantProps) {
                   sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 88vw"
                 />
 
-                <figcaption className="flex h-16 items-center justify-center px-3 text-center font-inv-script text-[1.4rem] leading-none text-inv-ink">
-                  {item.caption}
-                </figcaption>
+                {/* El faldón es parte del marco y se queda aunque no haya pie, en blanco como en
+                    una instantánea de verdad; lo que no se pinta es un `figcaption` vacío. */}
+                {hasText(item.caption) ? (
+                  <figcaption className="flex h-16 items-center justify-center px-3 text-center font-inv-script text-[1.4rem] leading-none text-inv-ink">
+                    {item.caption}
+                  </figcaption>
+                ) : (
+                  <div aria-hidden="true" className="h-16" />
+                )}
               </figure>
             </Reveal>
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-12 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 text-center" />}
       </BlockContainer>
 
       <Lightbox

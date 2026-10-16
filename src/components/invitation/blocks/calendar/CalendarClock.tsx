@@ -1,5 +1,7 @@
+import clsx from 'clsx';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Countdown } from '../../shared/Countdown';
 import { HeartDate } from '../../shared/HeartDate';
 import type { CalendarVariantProps } from './calendar-variant';
@@ -20,29 +22,36 @@ import type { CalendarVariantProps } from './calendar-variant';
  * La marca del día (`dayMark`) no se usa: el día ya va siempre en un corazón.
  */
 export function CalendarClock({ content }: CalendarVariantProps) {
+  // Sin rótulo ni título no hay cabecera: la cuenta arranca arriba, sin el margen que la separaba.
+  const hasHeading = hasText(content.eyebrow) || hasText(content.title);
   return (
     <BlockSection block="calendar" variant="clock">
       <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 font-inv-display text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
-        {content.title && (
-          <h2 className="mt-1 mb-0 font-inv-script text-[clamp(3.4rem,16vw,4.6rem)] leading-[1.1] font-normal text-inv-primary">
+        {hasText(content.title) && (
+          <h2
+            className={clsx(
+              'mb-0 font-inv-script text-[clamp(3.4rem,16vw,4.6rem)] leading-[1.1] font-normal text-inv-primary',
+              hasText(content.eyebrow) ? 'mt-1' : 'mt-0',
+            )}
+          >
             {content.title}
           </h2>
         )}
 
-        <Countdown startsAt={content.startsAt} variant="colon" tone="onSurface" className="mt-6" />
+        <Countdown startsAt={content.startsAt} variant="colon" tone="onSurface" className={clsx(hasHeading && 'mt-6')} />
 
         <HeartDate startsAt={content.startsAt} dateLabel={content.dateLabel} className="mt-9" />
-        {content.timeLabel && (
+        {hasText(content.timeLabel) && (
           <p className="mt-2 mb-0 font-inv-display text-[13px] tracking-[0.2em] text-inv-ink-soft uppercase tabular-nums">
             {content.timeLabel}
           </p>
         )}
-        {content.note && <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />}
       </BlockContainer>
     </BlockSection>
   );

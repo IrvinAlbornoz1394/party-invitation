@@ -3,6 +3,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
 
@@ -83,7 +84,7 @@ export function DresscodeDiscs({ content }: DresscodeVariantProps) {
           <p className="mx-auto mt-8 mb-0 max-w-sm text-center text-[10.5px] leading-relaxed tracking-[0.18em] text-inv-ink-soft uppercase">
             {content.palette
               .map((swatch) => swatch.label)
-              .filter((label): label is string => label !== null)
+              .filter(hasText)
               .join(' · ')}
           </p>
         )}
@@ -94,7 +95,7 @@ export function DresscodeDiscs({ content }: DresscodeVariantProps) {
           </div>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

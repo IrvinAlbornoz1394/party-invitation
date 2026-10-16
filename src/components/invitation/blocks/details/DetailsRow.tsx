@@ -5,6 +5,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { PolaroidFrame } from '../../shared/PolaroidFrame';
 import { TextLink } from '../../shared/TextLink';
 import type { DetailsVariantProps } from './details-variant';
@@ -61,7 +62,7 @@ export function DetailsRow({ content }: DetailsVariantProps) {
                 <h3 className="mt-3 mb-0 max-w-[8rem] font-inv-display text-[12px] leading-snug font-normal tracking-[0.16em] text-balance text-inv-ink uppercase">
                   {item.title}
                 </h3>
-                {item.description && (
+                {hasText(item.description) && (
                   <p className="mt-2 mb-0 max-w-[10rem] text-[12px] leading-relaxed text-pretty text-inv-ink-soft">
                     {item.description}
                   </p>
@@ -81,7 +82,7 @@ export function DetailsRow({ content }: DetailsVariantProps) {
           <span className="h-px w-16 bg-current opacity-45" />
         </p>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

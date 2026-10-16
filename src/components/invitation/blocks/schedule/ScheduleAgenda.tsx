@@ -1,6 +1,7 @@
 import { BlockHeading } from '../../shared/BlockHeading';
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { ScheduleTime } from './schedule-parts';
 import type { ScheduleVariantProps } from './schedule-variant';
@@ -65,7 +66,7 @@ export function ScheduleAgenda({ content }: ScheduleVariantProps) {
                     {item.title}
                   </h3>
 
-                  {item.description && (
+                  {hasText(item.description) && (
                     <p className="mt-2 mb-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
                       {item.description}
                     </p>
@@ -76,7 +77,7 @@ export function ScheduleAgenda({ content }: ScheduleVariantProps) {
           })}
         </ol>
 
-        {content.note && <BlockNote note={content.note} className="mt-8" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8" />}
       </BlockContainer>
     </BlockSection>
   );

@@ -3,6 +3,7 @@ import { dayStrip } from '@/domain/invitation/day-strip';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { DayMarkShape } from './calendar-parts';
 import type { CalendarVariantProps } from './calendar-variant';
 
@@ -49,7 +50,7 @@ export function CalendarSheet({ content }: CalendarVariantProps) {
   return (
     <BlockSection block="calendar" variant="sheet">
       <BlockContainer className="max-w-md text-center">
-        {content.title && (
+        {hasText(content.title) && (
           <BlockHeading
             eyebrow={content.eyebrow}
             title={content.title}
@@ -113,7 +114,7 @@ export function CalendarSheet({ content }: CalendarVariantProps) {
             */}
             <p className="mt-7 mb-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] tracking-[0.24em] text-inv-ink-soft uppercase">
               <span className="tabular-nums">{strip.year}</span>
-              {content.timeLabel && (
+              {hasText(content.timeLabel) && (
                 <>
                   <span aria-hidden="true" className="opacity-60">
                     ·
@@ -131,7 +132,7 @@ export function CalendarSheet({ content }: CalendarVariantProps) {
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

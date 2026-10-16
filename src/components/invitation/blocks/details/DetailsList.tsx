@@ -4,6 +4,7 @@ import { IconBadge } from '../../shared/IconBadge';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { TextLink } from '../../shared/TextLink';
 import type { DetailsVariantProps } from './details-variant';
 
@@ -63,7 +64,7 @@ export function DetailsList({ content }: DetailsVariantProps) {
                       {item.title}
                     </h3>
 
-                    {item.description && (
+                    {hasText(item.description) && (
                       <p className="mt-1.5 mb-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
                         {item.description}
                       </p>
@@ -75,7 +76,7 @@ export function DetailsList({ content }: DetailsVariantProps) {
               ))}
             </ul>
 
-            {content.note && <BlockNote note={content.note} className="mt-8" />}
+            {hasText(content.note) && <BlockNote note={content.note} className="mt-8" />}
           </div>
         </div>
       </BlockContainer>

@@ -2,6 +2,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { paletteIsNamed } from '@/domain/invitation/blocks/dresscode';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
@@ -57,7 +58,7 @@ export function DresscodeCards({ content }: DresscodeVariantProps) {
 
               {/* El rótulo va centrado y con su propio aire aunque falte: sin nombre la ficha se
                   queda en la muestra y no abre un hueco, que es lo que pasaría reservándolo. */}
-              {swatch.label && (
+              {hasText(swatch.label) && (
                 <span className="text-center text-[9.5px] leading-snug tracking-[0.16em] text-inv-ink-soft uppercase">
                   {swatch.label}
                 </span>
@@ -72,7 +73,7 @@ export function DresscodeCards({ content }: DresscodeVariantProps) {
           </div>
         )}
 
-        {content.note && <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />}
       </BlockContainer>
     </BlockSection>
   );

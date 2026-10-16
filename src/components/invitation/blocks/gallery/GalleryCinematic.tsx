@@ -5,6 +5,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import type { GalleryItem } from '@/domain/invitation/blocks/gallery';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { useLightbox } from '../../shared/useLightbox';
@@ -74,7 +75,7 @@ export function GalleryCinematic({ content }: GalleryVariantProps) {
         ))}
       </div>
 
-      {content.note && (
+      {hasText(content.note) && (
         <BlockContainer>
           <BlockNote note={content.note} className="mt-14 text-center" />
         </BlockContainer>
@@ -124,7 +125,7 @@ function CinematicFrame({
         />
       </motion.div>
 
-      {item.caption && (
+      {hasText(item.caption) && (
         /* Subtítulo de cine: centrado abajo, sobre un degradado que solo oscurece lo justo para
            que se lea encima de cualquier fotograma. */
         <p className="pointer-events-none absolute inset-x-0 bottom-0 m-0 bg-linear-to-t from-black/55 to-transparent px-6 pt-14 pb-6 text-center text-[13px] tracking-[0.16em] text-white/90 uppercase">

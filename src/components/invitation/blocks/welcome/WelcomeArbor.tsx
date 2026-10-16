@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockImage } from '../../shared/BlockImage';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 const FAN = requireDesignAsset('botanical-corner-bottom-001');
 const DIVIDER = requireDesignAsset('botanical-divider-002');
@@ -59,31 +61,39 @@ export function WelcomeArbor({ content }: WelcomeVariantProps) {
       <div className="relative w-[min(82vw,21rem)]">
         <div className="relative rounded-t-full border border-inv-accent/55 p-[6px]">
           <div className="flex min-h-[min(62svh,27rem)] flex-col items-center justify-center rounded-t-full border border-inv-accent/30 px-7 pt-20 pb-12 text-center">
-            {content.eventTypeLabel && (
+            {hasText(content.eventTypeLabel) && (
               <p className="m-0 text-[10.5px] tracking-[0.34em] text-inv-ink-soft uppercase">
                 {content.eventTypeLabel}
               </p>
             )}
-            <h2 className="mt-3 mb-0 font-inv-script text-[clamp(3rem,15vw,4.4rem)] leading-[1.05] font-normal text-inv-accent">
+            <h2
+              className={clsx(
+                hasText(content.eventTypeLabel) ? 'mt-3' : 'mt-0',
+                'mb-0 font-inv-script text-[clamp(3rem,15vw,4.4rem)] leading-[1.05] font-normal text-inv-accent',
+              )}
+            >
               {content.celebrantName}
             </h2>
-            {content.celebrantLastName && (
+            {hasText(content.celebrantLastName) && (
               <p className="mt-1 mb-0 text-[10px] tracking-[0.32em] text-inv-ink-soft uppercase">
                 {content.celebrantLastName}
               </p>
             )}
-            <DesignAsset asset={DIVIDER} className="mt-6 w-28 text-inv-primary opacity-85" />
-            {content.note && (
+            {/* El divisor separa el nombre de los datos de abajo; sin ninguno, no separa nada. */}
+            {(hasText(content.note) || hasText(content.dateLabel) || hasText(content.venue)) && (
+              <DesignAsset asset={DIVIDER} className="mt-6 w-28 text-inv-primary opacity-85" />
+            )}
+            {hasText(content.note) && (
               <p className="mt-6 mb-0 font-inv-display text-[clamp(1rem,4.6vw,1.2rem)] leading-snug text-inv-ink italic">
                 {content.note}
               </p>
             )}
-            {content.dateLabel && (
+            {hasText(content.dateLabel) && (
               <p className="mt-5 mb-0 text-[11px] tracking-[0.24em] text-inv-primary uppercase">
                 {content.dateLabel}
               </p>
             )}
-            {content.venue && (
+            {hasText(content.venue) && (
               <p className="mt-2 mb-0 text-[12px] leading-snug text-inv-ink-soft">
                 {content.venue}
               </p>

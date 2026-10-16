@@ -5,6 +5,7 @@ import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { externalLinkAttributes } from '../../shared/href';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import type { ClosingVariantProps } from './closing-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `closing.envelope` — la despedida dentro de un sobre, con la tarjeta asomando.
@@ -54,7 +55,7 @@ export function ClosingEnvelope({ content }: ClosingVariantProps) {
 
           <LeafSprig className="mt-6 h-7 w-40 text-inv-accent opacity-80" />
 
-          {content.message && (
+          {hasText(content.message) && (
             <p className="mt-7 mb-0 max-w-md text-[15px] leading-relaxed text-inv-ink-soft">
               {content.message}
             </p>
@@ -112,7 +113,7 @@ export function ClosingEnvelope({ content }: ClosingVariantProps) {
 
             {/* La firma va sobre el cuerpo del sobre, así que en `onPrimary`: es la pareja de
                 contraste que el tema garantiza sobre `primary`. */}
-            {content.signature && (
+            {hasText(content.signature) && (
               <p className="absolute inset-x-0 bottom-[9%] m-0 px-6 font-inv-script text-[clamp(1.5rem,7vw,2.1rem)] leading-none text-inv-on-primary">
                 {content.signature}
               </p>

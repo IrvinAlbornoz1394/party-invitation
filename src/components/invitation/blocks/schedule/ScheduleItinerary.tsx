@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import type { ScheduleVariantProps } from './schedule-variant';
@@ -112,7 +113,7 @@ export function ScheduleItinerary({ content }: ScheduleVariantProps) {
                     {item.title}
                   </h3>
 
-                  {item.description && (
+                  {hasText(item.description) && (
                     <p className="mt-2 mb-0 text-[14px] leading-relaxed text-inv-ink-soft">
                       {item.description}
                     </p>
@@ -123,7 +124,7 @@ export function ScheduleItinerary({ content }: ScheduleVariantProps) {
           })}
         </ol>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

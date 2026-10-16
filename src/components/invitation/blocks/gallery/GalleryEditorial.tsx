@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { Reveal } from '../../shared/Reveal';
@@ -89,7 +90,7 @@ export function GalleryEditorial({ content }: GalleryVariantProps) {
                   <span className="font-inv-display text-[13px] tabular-nums text-inv-accent">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  {item.caption && (
+                  {hasText(item.caption) && (
                     <span className="text-[12px] leading-relaxed tracking-[0.14em] text-inv-ink-soft uppercase">
                       {item.caption}
                     </span>
@@ -100,7 +101,7 @@ export function GalleryEditorial({ content }: GalleryVariantProps) {
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-14" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-14" />}
       </BlockContainer>
 
       <Lightbox

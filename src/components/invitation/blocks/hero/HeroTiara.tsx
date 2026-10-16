@@ -5,6 +5,7 @@ import { DesignAsset } from '../../shared/DesignAsset';
 import { HeartDate } from '../../shared/HeartDate';
 import { ScrollHint } from '../../shared/ScrollHint';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 const ROSES = requireDesignAsset('corner-rose-line-001');
 const BOW = requireDesignAsset('bow-ribbon-line-001');
@@ -76,7 +77,7 @@ export function HeroTiara({ content }: HeroVariantProps) {
               >
                 15
               </text>
-              {content.eventTypeLabel && (
+              {hasText(content.eventTypeLabel) && (
                 <>
                   <path id={arcId} d="M28 104A136 136 0 0 1 272 104" fill="none" />
                   <text
@@ -90,7 +91,7 @@ export function HeroTiara({ content }: HeroVariantProps) {
                 </>
               )}
             </svg>
-            {content.eventTypeLabel && <p className="sr-only">{content.eventTypeLabel}</p>}
+            {hasText(content.eventTypeLabel) && <p className="sr-only">{content.eventTypeLabel}</p>}
 
             <p aria-hidden="true" className="mt-3 mb-0 flex items-center gap-2 text-inv-primary">
               <span className="h-px w-14 bg-current opacity-50" />
@@ -101,14 +102,14 @@ export function HeroTiara({ content }: HeroVariantProps) {
             <h1 className="mt-2 mb-0 font-inv-script text-[clamp(3.6rem,19vw,5.2rem)] leading-[1.05] font-normal text-inv-primary">
               {content.celebrantName}
             </h1>
-            {content.intro && (
+            {hasText(content.intro) && (
               <p className="mx-auto mt-4 mb-0 max-w-[15rem] font-inv-display text-[clamp(1.1rem,5vw,1.3rem)] leading-[1.15] text-inv-accent">
                 {content.intro}
               </p>
             )}
 
             <HeartDate startsAt={content.startsAt} dateLabel={content.dateLabel} className="mt-6" />
-            {content.city && (
+            {hasText(content.city) && (
               <p className="mt-1 mb-0 text-[12.5px] tracking-[0.08em] text-inv-ink-soft">
                 {content.city}
               </p>
@@ -116,7 +117,7 @@ export function HeroTiara({ content }: HeroVariantProps) {
 
             <DesignAsset asset={TIARA} className="mt-7 w-44 text-inv-primary opacity-80 sm:w-48" />
 
-            {content.tagline && (
+            {hasText(content.tagline) && (
               <p className="mx-auto mt-6 mb-0 max-w-[16rem] text-[14px] leading-relaxed text-inv-ink-soft">
                 {content.tagline}
               </p>

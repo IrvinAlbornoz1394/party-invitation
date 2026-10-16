@@ -11,6 +11,7 @@ import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { Lightbox } from '../../shared/Lightbox';
@@ -170,7 +171,7 @@ export function GalleryStack({ content }: GalleryVariantProps) {
           {`Fotografía ${current + 1} de ${total}`}
         </p>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
 
       <Lightbox

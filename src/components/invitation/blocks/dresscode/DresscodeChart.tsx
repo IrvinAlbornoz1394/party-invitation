@@ -2,6 +2,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { paletteIsNamed } from '@/domain/invitation/blocks/dresscode';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
@@ -44,7 +45,7 @@ export function DresscodeChart({ content }: DresscodeVariantProps) {
       <BlockContainer className="max-w-3xl">
         <BlockHeading eyebrow={content.eyebrow} title={content.title} />
 
-        {content.description && (
+        {hasText(content.description) && (
           <p className="mt-6 mb-0 max-w-xl text-[15px] leading-relaxed text-inv-ink-soft">
             {content.description}
           </p>
@@ -85,7 +86,7 @@ export function DresscodeChart({ content }: DresscodeVariantProps) {
               <span className="block font-inv-display text-[9.5px] tracking-[0.2em] text-inv-accent tabular-nums">
                 {String(index + 1).padStart(2, '0')}
               </span>
-              {swatch.label && (
+              {hasText(swatch.label) && (
                 <span className="mt-1 block text-[9px] leading-snug tracking-[0.12em] text-inv-ink-soft uppercase sm:text-[10px]">
                   {swatch.label}
                 </span>
@@ -103,7 +104,7 @@ export function DresscodeChart({ content }: DresscodeVariantProps) {
           />
         )}
 
-        {content.note && <BlockNote note={content.note} className="mt-8 max-w-md" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 max-w-md" />}
       </BlockContainer>
     </BlockSection>
   );

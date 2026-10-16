@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import type { ComponentType } from 'react';
 import type { ClosingContent } from '@/domain/invitation/blocks/closing';
 import { ActionLink } from '../../shared/ActionLink';
+import { hasText } from '../../shared/has-text';
 
 /**
  * Las piezas del mensaje final, compartidas por sus tres componentes.
@@ -49,7 +50,7 @@ export function ClosingMessage({
           solo delante quedaba descuadrado, por lo mismo que en `shared/BlockHeading.tsx`. Aquí
           son dos filetes lisos de 24px y no el ornamento del tema, así que no hay nudo que
           proteger; se acortan los dos juntos si hace falta sitio. */}
-      {content.eyebrow && (
+      {hasText(content.eyebrow) && (
         <p
           className={clsx(
             /* El mismo escalón de móvil que en `shared/BlockHeading.tsx`: los dos rótulos son la
@@ -67,7 +68,9 @@ export function ClosingMessage({
 
       <p
         className={clsx(
-          'mt-6 mb-0 font-inv-display text-[clamp(1.8rem,4.2vw,2.9rem)] leading-[1.15] font-light',
+          'mb-0 font-inv-display text-[clamp(1.8rem,4.2vw,2.9rem)] leading-[1.15] font-light',
+          /* El aire de arriba es la distancia al rótulo: sin él, la frase abre el bloque. */
+          hasText(content.eyebrow) ? 'mt-6' : 'mt-0',
           onImage ? 'text-inv-on-primary' : 'text-inv-primary',
           centered && 'mx-auto max-w-2xl',
         )}
@@ -75,7 +78,7 @@ export function ClosingMessage({
         {content.title}
       </p>
 
-      {content.message && (
+      {hasText(content.message) && (
         <p
           className={clsx(
             'mt-6 mb-0 max-w-xl text-[15px] leading-relaxed',
@@ -87,7 +90,7 @@ export function ClosingMessage({
         </p>
       )}
 
-      {content.signature && (
+      {hasText(content.signature) && (
         <p
           className={clsx(
             'mt-8 mb-0 font-inv-script text-[clamp(1.6rem,3.5vw,2.1rem)] leading-none',

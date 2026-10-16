@@ -6,6 +6,7 @@ import { blockIconComponent } from '../../shared/block-icons';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { BowCard } from '../../shared/BowCard';
 import { DesignAsset } from '../../shared/DesignAsset';
@@ -73,7 +74,7 @@ export function LocationVignette({ content }: LocationVariantProps) {
                 <BowCard>
                   <article className="flex flex-col items-center">
                     <h3 className="m-0 font-inv-script text-[clamp(2.4rem,11vw,3rem)] leading-[1.1] font-normal text-inv-ink">
-                      {venue.label ?? venue.name}
+                      {hasText(venue.label) ? venue.label : venue.name}
                     </h3>
 
                     {venue.image ? (
@@ -86,22 +87,22 @@ export function LocationVignette({ content }: LocationVariantProps) {
                       <Icon size={64} strokeWidth={0.9} aria-hidden="true" className="mt-4 text-inv-primary" />
                     )}
 
-                    {venue.timeLabel && (
+                    {hasText(venue.timeLabel) && (
                       <p className="mt-5 mb-0 font-inv-display text-[1.45rem] leading-none text-inv-primary tabular-nums">
                         {venue.timeLabel}
                       </p>
                     )}
-                    {venue.label && (
+                    {hasText(venue.label) && (
                       <p className="mt-3 mb-0 font-inv-display text-[1.3rem] leading-tight text-inv-ink">
                         {venue.name}
                       </p>
                     )}
-                    {venue.address && (
+                    {hasText(venue.address) && (
                       <p className="mx-auto mt-2 mb-0 max-w-[15rem] text-[13px] leading-relaxed text-inv-ink-soft">
                         {venue.address}
                       </p>
                     )}
-                    {venue.detail && (
+                    {hasText(venue.detail) && (
                       <p className="mx-auto mt-1 mb-0 max-w-[15rem] text-[12.5px] leading-relaxed text-inv-ink-soft">
                         {venue.detail}
                       </p>
@@ -120,7 +121,7 @@ export function LocationVignette({ content }: LocationVariantProps) {
           })}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-12 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

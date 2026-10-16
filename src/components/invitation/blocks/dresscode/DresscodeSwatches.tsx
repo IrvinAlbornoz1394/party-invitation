@@ -4,6 +4,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
 
@@ -89,7 +90,7 @@ export function DresscodeSwatches({ content }: DresscodeVariantProps) {
                 <Swatch swatch={swatch} shape="block" />
               </span>
 
-              {swatch.label && (
+              {hasText(swatch.label) && (
                 <span className="min-w-0 text-[11px] leading-snug tracking-[0.2em] text-inv-ink uppercase sm:text-[11.5px]">
                   {swatch.label}
                 </span>
@@ -104,7 +105,7 @@ export function DresscodeSwatches({ content }: DresscodeVariantProps) {
           </div>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

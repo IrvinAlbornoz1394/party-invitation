@@ -1,9 +1,11 @@
+import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import type { DayMark } from '@/domain/invitation/blocks/calendar';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Countdown } from '../../shared/Countdown';
 import { DesignAsset } from '../../shared/DesignAsset';
 import type { CalendarVariantProps } from './calendar-variant';
@@ -32,17 +34,24 @@ const CLUSTER = requireDesignAsset('botanical-sprig-cluster-001');
  */
 export function CalendarCountdown({ content }: CalendarVariantProps) {
   const parts = eventDateParts(content.startsAt);
+  // Sin rótulo ni título no hay cabecera: la fecha arranca arriba, sin el margen que la separaba.
+  const hasHeading = hasText(content.eyebrow) || hasText(content.title);
 
   return (
     <BlockSection block="calendar" variant="countdown">
       <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
-        {content.title && (
-          <h2 className="mt-4 mb-0 font-inv-script text-[clamp(2.4rem,10vw,3.3rem)] leading-[1.1] font-normal text-inv-accent">
+        {hasText(content.title) && (
+          <h2
+            className={clsx(
+              'mb-0 font-inv-script text-[clamp(2.4rem,10vw,3.3rem)] leading-[1.1] font-normal text-inv-accent',
+              hasText(content.eyebrow) ? 'mt-4' : 'mt-0',
+            )}
+          >
             {content.title}
           </h2>
         )}
@@ -51,7 +60,10 @@ export function CalendarCountdown({ content }: CalendarVariantProps) {
         {parts ? (
           <p
             aria-hidden="true"
-            className="mt-7 mb-0 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 font-inv-display text-[clamp(1.45rem,6.6vw,2rem)] leading-none text-inv-primary sm:gap-x-5"
+            className={clsx(
+              'mb-0 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 font-inv-display text-[clamp(1.45rem,6.6vw,2rem)] leading-none text-inv-primary sm:gap-x-5',
+              hasHeading ? 'mt-7' : 'mt-0',
+            )}
           >
             <span className="tabular-nums">{parts.day}</span>
             <MarkGlyph mark={content.dayMark} />
@@ -60,11 +72,16 @@ export function CalendarCountdown({ content }: CalendarVariantProps) {
             <span className="tabular-nums">{parts.year}</span>
           </p>
         ) : (
-          <p className="mt-7 mb-0 font-inv-display text-[clamp(1.4rem,5vw,1.9rem)] leading-tight text-inv-primary">
+          <p
+            className={clsx(
+              'mb-0 font-inv-display text-[clamp(1.4rem,5vw,1.9rem)] leading-tight text-inv-primary',
+              hasHeading ? 'mt-7' : 'mt-0',
+            )}
+          >
             {content.dateLabel}
           </p>
         )}
-        {content.timeLabel && (
+        {hasText(content.timeLabel) && (
           <p className="mt-4 mb-0 text-[11px] tracking-[0.26em] text-inv-ink-soft uppercase tabular-nums">
             {content.timeLabel}
           </p>
@@ -74,7 +91,7 @@ export function CalendarCountdown({ content }: CalendarVariantProps) {
 
         <Countdown startsAt={content.startsAt} variant="arch" tone="onSurface" className="mt-8" />
 
-        {content.note && (
+        {hasText(content.note) && (
           <BlockNote note={content.note} className="mx-auto mt-8 max-w-sm text-center" />
         )}
       </BlockContainer>

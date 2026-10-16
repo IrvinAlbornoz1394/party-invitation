@@ -3,6 +3,7 @@
 import { aspectRatioOf } from '@/domain/invitation/blocks/gallery';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { Reveal } from '../../shared/Reveal';
@@ -74,7 +75,7 @@ export function GalleryMasonry({ content }: GalleryVariantProps) {
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
 
       <Lightbox

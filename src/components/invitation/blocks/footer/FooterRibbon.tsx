@@ -1,5 +1,6 @@
 import { BlockCurve } from '../../shared/BlockCurve';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import {
   FooterCredits,
   FooterLinks,
@@ -51,7 +52,7 @@ export function FooterRibbon({ content }: FooterVariantProps) {
       <BlockContainer className="pt-[var(--inv-edge-height,0px)]">
         <div className="flex flex-col gap-10 md:flex-row md:items-center md:justify-between md:gap-14">
           <div className="flex items-center gap-5">
-            {content.monogram && (
+            {hasText(content.monogram) && (
               <FooterMonogram monogram={content.monogram} tone="inverse" className="shrink-0" />
             )}
 
@@ -60,37 +61,41 @@ export function FooterRibbon({ content }: FooterVariantProps) {
                 {content.names}
               </p>
 
-              {(content.dateLabel || content.city) && (
+              {(hasText(content.dateLabel) || hasText(content.city)) && (
                 <p className="mt-2 mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] tracking-[0.2em] uppercase opacity-80">
-                  {content.dateLabel && <span>{content.dateLabel}</span>}
-                  {content.dateLabel && content.city && (
+                  {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+                  {hasText(content.dateLabel) && hasText(content.city) && (
                     <span aria-hidden="true" className="opacity-60">
                       ·
                     </span>
                   )}
-                  {content.city && <span>{content.city}</span>}
+                  {hasText(content.city) && <span>{content.city}</span>}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex flex-col gap-5 md:items-end">
-            {content.message && (
-              <p className="m-0 max-w-sm text-[14px] leading-relaxed opacity-85 md:text-right">
-                {content.message}
-              </p>
-            )}
+          {/* Sin mensaje ni contactos la columna no se pinta: vacía, en móvil sumaba el `gap`
+              de la fila debajo del nombre. */}
+          {(hasText(content.message) || content.links.length > 0) && (
+            <div className="flex flex-col gap-5 md:items-end">
+              {hasText(content.message) && (
+                <p className="m-0 max-w-sm text-[14px] leading-relaxed opacity-85 md:text-right">
+                  {content.message}
+                </p>
+              )}
 
-            <FooterLinks links={content.links} tone="inverse" className="md:justify-end" />
-          </div>
+              <FooterLinks links={content.links} tone="inverse" className="md:justify-end" />
+            </div>
+          )}
         </div>
 
-        {(content.credits || content.topAction) && (
+        {(hasText(content.credits) || content.topAction) && (
           /* El filete que separa los créditos se saca del color del texto y no del filete del
              tema: `line` está calculado para el papel claro y sobre el color principal
              desaparecería. */
           <div className="mt-10 flex flex-col items-center gap-4 border-t border-current/20 pt-6 sm:flex-row sm:justify-between">
-            {content.credits && <FooterCredits credits={content.credits} tone="inverse" />}
+            {hasText(content.credits) && <FooterCredits credits={content.credits} tone="inverse" />}
             {content.topAction && (
               <FooterTopLink
                 label={content.topAction.label}

@@ -3,6 +3,7 @@ import { Countdown } from '../../shared/Countdown';
 import { BotanicalSpray, CrownGlyph } from '../../shared/paper-ornaments';
 import { ScrollHint } from '../../shared/ScrollHint';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.crown` — la corona arriba, el rótulo en versalitas, el retrato enmarcado en un filete y
@@ -58,7 +59,7 @@ export function HeroCrown({ content }: HeroVariantProps) {
       <div className="inv-rise relative z-10 flex w-full max-w-sm flex-col items-center text-center">
         <CrownGlyph className="h-11 w-[4.5rem] text-inv-accent sm:h-12 sm:w-20" />
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <h1 className="mt-5 mb-0 font-inv-display text-[clamp(1.15rem,4.5vw,1.6rem)] leading-tight font-light tracking-[0.3em] text-inv-ink uppercase">
             {content.eventTypeLabel}
           </h1>
@@ -88,13 +89,13 @@ export function HeroCrown({ content }: HeroVariantProps) {
           {content.celebrantName}
         </p>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-3 mb-0 text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
         )}
 
-        {content.intro && (
+        {hasText(content.intro) && (
           <p className="mt-7 mb-0 max-w-xs text-[10.5px] leading-relaxed tracking-[0.22em] text-inv-ink-soft uppercase sm:text-[11px]">
             {content.intro}
           </p>
@@ -105,7 +106,7 @@ export function HeroCrown({ content }: HeroVariantProps) {
           `whitespace-pre-line` es lo que hace que sus saltos de línea se respeten: sin él, cuatro
           nombres escritos en cuatro renglones salen en un párrafo corrido. Ver la cabecera.
         */}
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-6 mb-0 max-w-xs text-[12.5px] leading-relaxed whitespace-pre-line text-inv-ink">
             {content.tagline}
           </p>

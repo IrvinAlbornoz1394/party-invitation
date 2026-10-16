@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { paletteIsNamed } from '@/domain/invitation/blocks/dresscode';
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
 
@@ -84,7 +86,7 @@ export function DresscodeThread({ content }: DresscodeVariantProps) {
             <li key={index} className="relative flex items-center gap-5">
               <Swatch swatch={swatch} />
 
-              {swatch.label && (
+              {hasText(swatch.label) && (
                 <span className="min-w-0 text-left text-[10.5px] leading-snug tracking-[0.18em] text-inv-ink-soft uppercase sm:text-[11.5px]">
                   {swatch.label}
                 </span>
@@ -93,13 +95,18 @@ export function DresscodeThread({ content }: DresscodeVariantProps) {
           ))}
         </ul>
 
-        <div className="mt-12 flex flex-col items-center text-center">
-          {content.action && (
-            <ActionLink label={content.action.label} href={content.action.href} tone="onSurface" />
-          )}
+        {/* El pie solo guarda el enlace y la nota: sin ninguno de los dos no se pinta, ni su margen. */}
+        {(content.action || hasText(content.note)) && (
+          <div className="mt-12 flex flex-col items-center text-center">
+            {content.action && (
+              <ActionLink label={content.action.label} href={content.action.href} tone="onSurface" />
+            )}
 
-          {content.note && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
-        </div>
+            {hasText(content.note) && (
+              <BlockNote note={content.note} className={clsx('max-w-sm', content.action && 'mt-8')} />
+            )}
+          </div>
+        )}
       </BlockContainer>
     </BlockSection>
   );

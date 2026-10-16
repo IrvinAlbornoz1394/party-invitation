@@ -5,6 +5,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { TextLink } from '../../shared/TextLink';
 import type { DetailsVariantProps } from './details-variant';
@@ -59,7 +60,7 @@ export function DetailsScript({ content }: DetailsVariantProps) {
                 <h3 className="m-0 font-inv-script text-[clamp(1.65rem,7vw,2.1rem)] leading-[1.15] font-normal text-inv-accent">
                   {item.title}
                 </h3>
-                {item.description && (
+                {hasText(item.description) && (
                   <p className="mt-2 mb-0 text-[14px] leading-relaxed text-inv-ink">
                     {item.description}
                   </p>
@@ -70,7 +71,7 @@ export function DetailsScript({ content }: DetailsVariantProps) {
           })}
         </ul>
 
-        {content.note && <BlockNote note={content.note} className="mt-12 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

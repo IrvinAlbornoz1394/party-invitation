@@ -6,6 +6,7 @@ import { blockIconComponent } from '../../shared/block-icons';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { PolaroidFrame } from '../../shared/PolaroidFrame';
@@ -71,7 +72,7 @@ export function LocationPolaroid({ content }: LocationVariantProps) {
                   </span>
                 )}
 
-                {venue.label && (
+                {hasText(venue.label) && (
                   <p
                     className={clsx(
                       'mb-0 text-[10px] tracking-[0.3em] text-inv-ink-soft uppercase',
@@ -81,20 +82,26 @@ export function LocationPolaroid({ content }: LocationVariantProps) {
                     {venue.label}
                   </p>
                 )}
-                <h3 className="mt-2 mb-0 font-inv-display text-[clamp(1.3rem,5.6vw,1.6rem)] leading-tight font-normal text-inv-ink">
+                {/* Sin rótulo, el nombre hereda la distancia a la foto o al medallón que tenía el rótulo. */}
+                <h3
+                  className={clsx(
+                    'mb-0 font-inv-display text-[clamp(1.3rem,5.6vw,1.6rem)] leading-tight font-normal text-inv-ink',
+                    hasText(venue.label) ? 'mt-2' : venue.image ? 'mt-9' : 'mt-5',
+                  )}
+                >
                   {venue.name}
                 </h3>
-                {venue.address && (
+                {hasText(venue.address) && (
                   <p className="mx-auto mt-2 mb-0 max-w-[17rem] text-[13px] leading-relaxed text-inv-ink-soft">
                     {venue.address}
                   </p>
                 )}
-                {venue.detail && (
+                {hasText(venue.detail) && (
                   <p className="mx-auto mt-1 mb-0 max-w-[17rem] text-[12px] leading-relaxed text-inv-ink-soft opacity-85">
                     {venue.detail}
                   </p>
                 )}
-                {venue.timeLabel && (
+                {hasText(venue.timeLabel) && (
                   <p className="mt-4 mb-0 flex items-center gap-2.5 font-inv-display text-[13px] tracking-[0.22em] text-inv-primary uppercase tabular-nums">
                     <Heart size={9} strokeWidth={0} aria-hidden="true" className="fill-current opacity-70" />
                     {venue.timeLabel}
@@ -113,7 +120,7 @@ export function LocationPolaroid({ content }: LocationVariantProps) {
           })}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-12 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

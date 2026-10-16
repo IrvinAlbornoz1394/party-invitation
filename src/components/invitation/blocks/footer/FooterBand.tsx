@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { externalLinkAttributes } from '../../shared/href';
 import { FooterCredits, FooterTopLink, type FooterVariantProps } from './footer-parts';
 
@@ -35,16 +36,16 @@ export function FooterBand({ content }: FooterVariantProps) {
         <p className="m-0 font-inv-script text-[clamp(2rem,8vw,2.6rem)] leading-[1.15] text-inv-accent">
           {content.names}
         </p>
-        {(content.dateLabel || content.city) && (
+        {(hasText(content.dateLabel) || hasText(content.city)) && (
           <p className="mt-3 mb-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-inv-display text-[11px] tracking-[0.22em] text-inv-ink-soft uppercase">
-            {content.dateLabel && <span>{content.dateLabel}</span>}
-            {content.dateLabel && content.city && (
+            {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+            {hasText(content.dateLabel) && hasText(content.city) && (
               <Heart size={8} strokeWidth={0} aria-hidden="true" className="fill-current opacity-60" />
             )}
-            {content.city && <span>{content.city}</span>}
+            {hasText(content.city) && <span>{content.city}</span>}
           </p>
         )}
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mt-6 mb-0 max-w-xs text-[13.5px] leading-relaxed text-inv-ink">
             {content.message}
           </p>
@@ -84,9 +85,9 @@ export function FooterBand({ content }: FooterVariantProps) {
           className="mt-8 fill-current text-inv-accent"
         />
 
-        {(content.credits || content.topAction) && (
+        {(hasText(content.credits) || content.topAction) && (
           <div className="mt-8 flex w-full flex-col items-center gap-4 border-t border-inv-primary/20 pt-7">
-            {content.credits && <FooterCredits credits={content.credits} />}
+            {hasText(content.credits) && <FooterCredits credits={content.credits} />}
             {content.topAction && (
               <FooterTopLink label={content.topAction.label} href={content.topAction.href} />
             )}

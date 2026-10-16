@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { ChevronUp } from 'lucide-react';
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.spotlight` — el retrato a sangre, el nombre en manuscrita y una sola indicación.
@@ -50,28 +52,33 @@ export function WelcomeSpotlight({ content }: WelcomeVariantProps) {
       }
     >
       <div className="mx-auto flex w-full max-w-md flex-col items-center">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 text-[11px] tracking-[0.34em] uppercase opacity-80">
             {content.eventTypeLabel}
           </p>
         )}
 
-        <h2 className="mt-5 mb-0 font-inv-script text-[clamp(3rem,15vw,5.5rem)] leading-[0.9] font-normal">
+        <h2
+          className={clsx(
+            hasText(content.eventTypeLabel) ? 'mt-5' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(3rem,15vw,5.5rem)] leading-[0.9] font-normal',
+          )}
+        >
           {content.celebrantName}
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             <span className="mt-1 block text-[0.42em] tracking-[0.36em] uppercase opacity-85">
               {content.celebrantLastName}
             </span>
           )}
         </h2>
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-6 mb-0 text-[12px] tracking-[0.26em] uppercase opacity-80">
             {content.dateLabel}
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-4 mb-0 max-w-xs text-[14px] leading-relaxed opacity-85">
             {content.note}
           </p>

@@ -5,6 +5,7 @@ import { Countdown } from '../../shared/Countdown';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { ScrollHint } from '../../shared/ScrollHint';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 const FAN = requireDesignAsset('botanical-corner-bottom-001');
 const EUCALYPTUS = requireDesignAsset('botanical-eucalyptus-001');
@@ -55,7 +56,7 @@ export function HeroArch({ content }: HeroVariantProps) {
         <h1 className="m-0 font-inv-script text-[clamp(3.2rem,16vw,5rem)] leading-[1.05] font-normal text-inv-accent">
           {content.celebrantName}
         </h1>
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-1 mb-0 text-[10.5px] tracking-[0.34em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
@@ -87,17 +88,17 @@ export function HeroArch({ content }: HeroVariantProps) {
           <DesignAsset asset={CLUSTER} className="mt-8 w-28 text-inv-primary opacity-90" />
         )}
 
-        {content.intro && (
+        {hasText(content.intro) && (
           <p className="mt-10 mb-0 max-w-xs font-inv-display text-[clamp(1.05rem,4.6vw,1.3rem)] leading-snug text-inv-ink italic">
             {content.intro}
           </p>
         )}
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-4 mb-0 font-inv-script text-[clamp(2rem,9vw,2.7rem)] leading-none text-inv-accent">
             {content.eventTypeLabel}
           </p>
         )}
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-5 mb-0 max-w-xs text-[14px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
@@ -105,7 +106,7 @@ export function HeroArch({ content }: HeroVariantProps) {
         <p className="mt-7 mb-0 text-[11.5px] tracking-[0.26em] text-inv-primary uppercase">
           {content.dateLabel}
         </p>
-        {content.city && (
+        {hasText(content.city) && (
           <p className="mt-2 mb-0 text-[12.5px] tracking-[0.1em] text-inv-ink-soft">
             {content.city}
           </p>

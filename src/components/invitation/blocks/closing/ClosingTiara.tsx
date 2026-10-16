@@ -1,9 +1,11 @@
+import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import type { ClosingVariantProps } from './closing-parts';
+import { hasText } from '../../shared/has-text';
 
 const TIARA = requireDesignAsset('tiara-filigree-001');
 const BOW = requireDesignAsset('bow-ribbon-line-001');
@@ -51,21 +53,26 @@ export function ClosingTiara({ content }: ClosingVariantProps) {
           <DesignAsset asset={TIARA} className="mx-auto w-40 text-inv-primary opacity-80" />
         )}
 
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="mt-9 mb-0 font-inv-display text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
-        <p className="mx-auto mt-4 mb-0 max-w-sm font-inv-script text-[clamp(2.6rem,12vw,3.4rem)] leading-[1.15] text-inv-primary">
+        <p
+          className={clsx(
+            'mx-auto mb-0 max-w-sm font-inv-script text-[clamp(2.6rem,12vw,3.4rem)] leading-[1.15] text-inv-primary',
+            hasText(content.eyebrow) ? 'mt-4' : 'mt-9',
+          )}
+        >
           {content.title}
         </p>
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mx-auto mt-4 mb-0 max-w-xs font-inv-display text-[clamp(1rem,4.4vw,1.15rem)] leading-snug text-inv-accent">
             {content.message}
           </p>
         )}
         <DesignAsset asset={BOW} className="mx-auto mt-6 w-8 text-inv-primary opacity-70" />
-        {content.signature && (
+        {hasText(content.signature) && (
           <p className="mt-4 mb-0 font-inv-script text-[clamp(1.9rem,8vw,2.4rem)] leading-none text-inv-ink">
             {content.signature}
           </p>

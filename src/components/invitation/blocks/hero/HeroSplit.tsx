@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { CalendarDays, MapPin } from 'lucide-react';
 import { BlockImage } from '../../shared/BlockImage';
 import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.split` — la fotografía a un lado y la invitación impresa al otro.
@@ -24,6 +26,9 @@ import type { HeroVariantProps } from './hero-variant';
  * quedaría cortada al abrir y se recolocaría sola al primer desplazamiento.
  */
 export function HeroSplit({ content }: HeroVariantProps) {
+  /* El rótulo y la frase de arriba son opcionales: sin ellos, la primera pieza de la columna no
+     arrastra el margen que la separaba. */
+  const hasLead = hasText(content.eventTypeLabel) || hasText(content.intro);
   return (
     <section
       data-block="hero"
@@ -39,23 +44,33 @@ export function HeroSplit({ content }: HeroVariantProps) {
       </div>
 
       <div className="inv-rise flex flex-col justify-center bg-inv-surface px-7 py-14 sm:px-12 md:px-14 md:py-20">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 text-[11px] tracking-[0.32em] text-inv-accent uppercase">
             {content.eventTypeLabel}
           </p>
         )}
 
-        {content.intro && (
-          <p className="mt-6 mb-0 max-w-md text-[15px] leading-relaxed text-inv-ink-soft">
+        {hasText(content.intro) && (
+          <p
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-6' : 'mt-0',
+              'mb-0 max-w-md text-[15px] leading-relaxed text-inv-ink-soft',
+            )}
+          >
             {content.intro}
           </p>
         )}
 
-        <h1 className="mt-3 mb-0 font-inv-display text-[clamp(2.5rem,7vw,4.5rem)] leading-[0.98] font-light text-inv-primary">
+        <h1
+          className={clsx(
+            hasLead ? 'mt-3' : 'mt-0',
+            'mb-0 font-inv-display text-[clamp(2.5rem,7vw,4.5rem)] leading-[0.98] font-light text-inv-primary',
+          )}
+        >
           {content.celebrantName}
         </h1>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-4 mb-0 text-[12px] tracking-[0.36em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
@@ -66,7 +81,7 @@ export function HeroSplit({ content }: HeroVariantProps) {
             una columna que, sin él, es una sola tirada de texto. */}
         <span aria-hidden="true" className="mt-8 h-px w-16 bg-inv-line" />
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-8 mb-0 max-w-md text-[15px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
@@ -82,7 +97,7 @@ export function HeroSplit({ content }: HeroVariantProps) {
             />
             {content.dateLabel}
           </span>
-          {content.city && (
+          {hasText(content.city) && (
             <span className="inline-flex items-center gap-2">
               <MapPin size={16} strokeWidth={1.6} aria-hidden="true" className="text-inv-accent" />
               {content.city}

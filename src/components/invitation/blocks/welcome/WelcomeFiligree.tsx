@@ -2,6 +2,7 @@ import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
 import { FiligreeCorner } from './welcome-ornaments';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.filigree` — la participación grabada: cuatro esquinas de filigrana sobre la fotografía.
@@ -56,7 +57,7 @@ export function WelcomeFiligree({ content }: WelcomeVariantProps) {
           {content.celebrantName}
         </h2>
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-3 mb-0 text-[11px] tracking-[0.42em] uppercase opacity-90">
             {content.eventTypeLabel}
           </p>
@@ -67,7 +68,7 @@ export function WelcomeFiligree({ content }: WelcomeVariantProps) {
           y la hora y el sitio a la derecha. Es la maqueta de una participación, y funciona en un
           móvil porque las dos columnas son estrechas de nacimiento.
         */}
-        {(parts || content.dateLabel) && (
+        {(parts || hasText(content.dateLabel)) && (
           <div className="mt-9 flex w-full items-stretch justify-center gap-5">
             {parts ? (
               <>
@@ -80,18 +81,24 @@ export function WelcomeFiligree({ content }: WelcomeVariantProps) {
                   </span>
                 </span>
 
-                <span aria-hidden="true" className="w-px shrink-0 bg-current/35" />
+                {/* Sin hora ni sitio, la columna derecha quedaría vacía y el filete separaría
+                    el día de nada: se queda la cifra sola. */}
+                {(parts.time || hasText(content.venue)) && (
+                  <>
+                    <span aria-hidden="true" className="w-px shrink-0 bg-current/35" />
 
-                <span className="flex max-w-[13rem] flex-col justify-center gap-1 text-left">
-                  {parts.time && (
-                    <span className="text-[13px] tracking-[0.12em] tabular-nums">
-                      {parts.time} h
+                    <span className="flex max-w-[13rem] flex-col justify-center gap-1 text-left">
+                      {parts.time && (
+                        <span className="text-[13px] tracking-[0.12em] tabular-nums">
+                          {parts.time} h
+                        </span>
+                      )}
+                      {hasText(content.venue) && (
+                        <span className="text-[13px] leading-snug opacity-90">{content.venue}</span>
+                      )}
                     </span>
-                  )}
-                  {content.venue && (
-                    <span className="text-[13px] leading-snug opacity-90">{content.venue}</span>
-                  )}
-                </span>
+                  </>
+                )}
               </>
             ) : (
               <p className="m-0 text-[12px] tracking-[0.24em] uppercase opacity-90">
@@ -101,7 +108,7 @@ export function WelcomeFiligree({ content }: WelcomeVariantProps) {
           </div>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-8 mb-0 max-w-xs font-inv-display text-[15px] italic opacity-90">
             {content.note}
           </p>

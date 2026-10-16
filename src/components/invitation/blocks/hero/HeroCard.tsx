@@ -1,9 +1,11 @@
+import clsx from 'clsx';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockOrnament } from '../../shared/BlockOrnament';
 import { Countdown } from '../../shared/Countdown';
 import { ScrollHint } from '../../shared/ScrollHint';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.card` — la fotografía a sangre y, encima, una tarjeta de papel con la invitación entera.
@@ -79,7 +81,7 @@ export function HeroCard({ content }: HeroVariantProps) {
         borde por los cuatro lados con fotografía alrededor.
       */}
       <article className="inv-rise relative z-10 w-full max-w-sm rounded-inv-md bg-inv-surface px-7 py-11 text-center shadow-inv-soft sm:px-10 sm:py-14">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 text-[10px] tracking-[0.3em] text-inv-accent uppercase sm:text-[11px]">
             {content.eventTypeLabel}
           </p>
@@ -92,7 +94,12 @@ export function HeroCard({ content }: HeroVariantProps) {
           2027»— y porque así la línea puede partirse por un hueco y no por la mitad de un punto.
         */}
         {parts && (
-          <p className="mt-5 mb-0 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[12px] tracking-[0.28em] text-inv-ink uppercase sm:text-[13px]">
+          <p
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-5' : 'mt-0',
+              'mb-0 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[12px] tracking-[0.28em] text-inv-ink uppercase sm:text-[13px]',
+            )}
+          >
             <span className="tabular-nums">{parts.day}</span>
             <Dot />
             <span>{parts.month}</span>
@@ -113,7 +120,7 @@ export function HeroCard({ content }: HeroVariantProps) {
           {content.celebrantName}
         </h1>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-5 mb-0 text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
@@ -121,23 +128,23 @@ export function HeroCard({ content }: HeroVariantProps) {
 
         {/* La frase de invitación, en versalitas y no en redonda: en la tarjeta hay una sola pieza
             manuscrita —el nombre— y todo lo demás la acompaña en el registro impreso. */}
-        {content.intro && (
+        {hasText(content.intro) && (
           <p className="mt-8 mb-0 text-[10.5px] leading-[1.9] tracking-[0.22em] text-inv-ink-soft uppercase sm:text-[11px]">
             {content.intro}
           </p>
         )}
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-6 mb-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
         )}
 
-        {(showsDateLabel(content.dateLabel, parts) || parts?.time || content.city) && (
+        {(showsDateLabel(content.dateLabel, parts) || parts?.time || hasText(content.city)) && (
           <p className="mt-7 mb-0 flex flex-col items-center gap-1.5 text-[12px] tracking-[0.14em] text-inv-ink-soft">
             {showsDateLabel(content.dateLabel, parts) && <span>{content.dateLabel}</span>}
             {parts?.time && <span className="tabular-nums">{parts.time} h</span>}
-            {content.city && <span>{content.city}</span>}
+            {hasText(content.city) && <span>{content.city}</span>}
           </p>
         )}
 

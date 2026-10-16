@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Bouquet } from '../../shared/doodle-ornaments';
 import type { ClosingVariantProps } from './closing-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `closing.bouquet` — la despedida entre dos ramilletes dibujados, con la firma en manuscrita a
@@ -34,17 +36,22 @@ export function ClosingBouquet({ content }: ClosingVariantProps) {
           <Bouquet className="w-14 shrink-0 text-inv-primary sm:w-20" />
 
           <div className="min-w-0 flex-1 pb-2 text-center">
-            {content.eyebrow && (
+            {hasText(content.eyebrow) && (
               <p className="m-0 text-[10.5px] tracking-[0.26em] text-inv-accent uppercase">
                 {content.eyebrow}
               </p>
             )}
 
-            <p className="mt-5 mb-0 text-[15px] leading-relaxed text-inv-ink-soft">
+            <p
+              className={clsx(
+                'mb-0 text-[15px] leading-relaxed text-inv-ink-soft',
+                hasText(content.eyebrow) ? 'mt-5' : 'mt-0',
+              )}
+            >
               {content.title}
             </p>
 
-            {content.signature ? (
+            {hasText(content.signature) ? (
               <p className="mt-6 mb-0 font-inv-script text-[clamp(2rem,8vw,3rem)] leading-[1.05] text-inv-primary">
                 {content.signature}
               </p>
@@ -55,7 +62,7 @@ export function ClosingBouquet({ content }: ClosingVariantProps) {
           <Bouquet className="w-14 shrink-0 -scale-x-100 text-inv-primary sm:w-20" />
         </div>
 
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mx-auto mt-8 mb-0 max-w-md text-center text-[14px] leading-relaxed text-inv-ink-soft">
             {content.message}
           </p>

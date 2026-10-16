@@ -1,5 +1,7 @@
+import clsx from 'clsx';
 import { BlockCurve } from '../../shared/BlockCurve';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import {
   FooterCredits,
   FooterLinks,
@@ -43,29 +45,34 @@ export function FooterWave({ content }: FooterVariantProps) {
       <BlockCurve edge="top" className="text-inv-bg" />
 
       <BlockContainer className="flex flex-col items-center pt-[var(--inv-edge-height,0px)]">
-        {content.monogram && (
+        {hasText(content.monogram) && (
           <p className="m-0 font-inv-script text-[2rem] leading-none opacity-90">
             {content.monogram}
           </p>
         )}
 
-        <p className="inv-outline-text mt-6 mb-0 font-inv-display text-[clamp(1.9rem,8vw,3.2rem)] leading-[1.05] font-bold tracking-[0.04em] uppercase">
+        <p
+          className={clsx(
+            'inv-outline-text mb-0 font-inv-display text-[clamp(1.9rem,8vw,3.2rem)] leading-[1.05] font-bold tracking-[0.04em] uppercase',
+            hasText(content.monogram) ? 'mt-6' : 'mt-0',
+          )}
+        >
           {content.names}
         </p>
 
-        {(content.dateLabel || content.city) && (
+        {(hasText(content.dateLabel) || hasText(content.city)) && (
           <p className="mt-5 mb-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] tracking-[0.2em] uppercase opacity-85">
-            {content.dateLabel && <span>{content.dateLabel}</span>}
-            {content.dateLabel && content.city && (
+            {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+            {hasText(content.dateLabel) && hasText(content.city) && (
               <span aria-hidden="true" className="opacity-60">
                 ·
               </span>
             )}
-            {content.city && <span>{content.city}</span>}
+            {hasText(content.city) && <span>{content.city}</span>}
           </p>
         )}
 
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mt-7 mb-0 max-w-sm text-[14px] leading-relaxed opacity-90">
             {content.message}
           </p>
@@ -73,7 +80,7 @@ export function FooterWave({ content }: FooterVariantProps) {
 
         <FooterLinks links={content.links} tone="inverse" className="mt-8 justify-center" />
 
-        {(content.credits || content.topAction) && (
+        {(hasText(content.credits) || content.topAction) && (
           <div className="mt-11 flex w-full flex-col items-center gap-4 border-t border-current/20 pt-6">
             {content.topAction && (
               <FooterTopLink
@@ -82,7 +89,7 @@ export function FooterWave({ content }: FooterVariantProps) {
                 tone="inverse"
               />
             )}
-            {content.credits && <FooterCredits credits={content.credits} tone="inverse" />}
+            {hasText(content.credits) && <FooterCredits credits={content.credits} tone="inverse" />}
           </div>
         )}
       </BlockContainer>

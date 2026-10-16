@@ -3,6 +3,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
 
@@ -38,7 +39,7 @@ export function DresscodePetals({ content }: DresscodeVariantProps) {
             align="center"
             titleFont="script"
           />
-          {content.description && (
+          {hasText(content.description) && (
             <p className="mt-6 mb-0 max-w-sm text-[14.5px] leading-relaxed text-inv-ink">
               {content.description}
             </p>
@@ -59,7 +60,8 @@ export function DresscodePetals({ content }: DresscodeVariantProps) {
 
           {named && (
             <ul className="m-0 mt-10 flex list-none flex-wrap justify-center gap-x-6 gap-y-3 p-0">
-              {content.palette.map((swatch, index) => (
+              {/* Solo las muestras con nombre: el punto de color sin su rótulo no dice nada. */}
+              {content.palette.filter((swatch) => hasText(swatch.label)).map((swatch, index) => (
                 <li
                   key={index}
                   className="flex items-center gap-2 text-[10px] tracking-[0.18em] text-inv-ink-soft uppercase"
@@ -83,7 +85,7 @@ export function DresscodePetals({ content }: DresscodeVariantProps) {
               className="mt-10"
             />
           )}
-          {content.note && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
+          {hasText(content.note) && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
         </div>
       </BlockContainer>
     </BlockSection>

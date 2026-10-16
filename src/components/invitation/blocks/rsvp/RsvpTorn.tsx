@@ -5,6 +5,7 @@ import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { TornEdge } from '../../shared/paper-ornaments';
 import { RsvpAction, RsvpDeadline, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.torn` — la petición sobre un papel de otro tono, rasgado por los dos cantos.
@@ -90,13 +91,13 @@ export function RsvpTorn({ content }: RsvpVariantProps) {
             className="mt-6"
           />
 
-          {content.deadlineLabel && (
+          {hasText(content.deadlineLabel) && (
             <RsvpDeadline deadlineLabel={content.deadlineLabel} className="mt-8" />
           )}
 
           <RsvpAction content={content} align="center" className="mt-9" />
 
-          {content.note && <BlockNote note={content.note} className="mt-9 max-w-sm" />}
+          {hasText(content.note) && <BlockNote note={content.note} className="mt-9 max-w-sm" />}
         </div>
       </BlockContainer>
     </BlockSection>

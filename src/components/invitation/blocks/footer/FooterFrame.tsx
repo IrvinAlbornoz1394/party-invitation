@@ -1,4 +1,5 @@
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { CrownGlyph } from '../../shared/paper-ornaments';
 import {
   FooterCredits,
@@ -45,19 +46,19 @@ export function FooterFrame({ content }: FooterVariantProps) {
               {content.names}
             </p>
 
-            {(content.dateLabel || content.city) && (
+            {(hasText(content.dateLabel) || hasText(content.city)) && (
               <p className="mt-5 mb-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10.5px] tracking-[0.24em] text-inv-ink-soft uppercase">
-                {content.dateLabel && <span>{content.dateLabel}</span>}
-                {content.dateLabel && content.city && (
+                {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+                {hasText(content.dateLabel) && hasText(content.city) && (
                   <span aria-hidden="true" className="opacity-60">
                     ·
                   </span>
                 )}
-                {content.city && <span>{content.city}</span>}
+                {hasText(content.city) && <span>{content.city}</span>}
               </p>
             )}
 
-            {content.message && (
+            {hasText(content.message) && (
               <p className="mt-6 mb-0 max-w-xs text-[13px] leading-relaxed text-inv-ink-soft">
                 {content.message}
               </p>
@@ -65,12 +66,12 @@ export function FooterFrame({ content }: FooterVariantProps) {
 
             <FooterLinks links={content.links} className="mt-7 justify-center" />
 
-            {(content.credits || content.topAction) && (
+            {(hasText(content.credits) || content.topAction) && (
               <div className="mt-9 flex w-full flex-col items-center gap-3 border-t border-inv-accent/25 pt-6">
                 {content.topAction && (
                   <FooterTopLink label={content.topAction.label} href={content.topAction.href} />
                 )}
-                {content.credits && <FooterCredits credits={content.credits} />}
+                {hasText(content.credits) && <FooterCredits credits={content.credits} />}
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { blockIconComponent } from '../../shared/block-icons';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.engraved` — la confirmación grabada: un doble filete alrededor, el dibujo arriba, el
@@ -52,7 +53,7 @@ export function RsvpEngraved({ content }: RsvpVariantProps) {
               className="mt-6"
             />
 
-            {content.deadlineLabel && (
+            {hasText(content.deadlineLabel) && (
               <p className="mt-7 mb-0 text-[11px] tracking-[0.24em] text-inv-ink-soft uppercase">
                 {content.deadlineLabel}
               </p>
@@ -62,7 +63,7 @@ export function RsvpEngraved({ content }: RsvpVariantProps) {
           </div>
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

@@ -2,6 +2,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { IconBadge } from '../../shared/IconBadge';
 import { venueIcon } from './venue-icon';
@@ -67,13 +68,13 @@ export function LocationSinglePlaque({ content }: LocationVariantProps) {
                 <IconBadge icon={venueIcon(venue.kind)} size="lg" />
               )}
 
-              {venue.timeLabel && (
+              {hasText(venue.timeLabel) && (
                 <p className="mt-8 mb-0 text-[13px] tracking-[0.24em] text-inv-accent uppercase tabular-nums">
                   {venue.timeLabel}
                 </p>
               )}
 
-              {venue.label && (
+              {hasText(venue.label) && (
                 <p className="mt-4 mb-0 text-[11px] tracking-[0.3em] text-inv-ink-soft uppercase">
                   {venue.label}
                 </p>
@@ -86,13 +87,13 @@ export function LocationSinglePlaque({ content }: LocationVariantProps) {
                 {venue.name}
               </p>
 
-              {venue.address && (
+              {hasText(venue.address) && (
                 <p className="mt-5 mb-0 max-w-xs text-[13.5px] leading-relaxed text-inv-ink-soft">
                   {venue.address}
                 </p>
               )}
 
-              {venue.detail && (
+              {hasText(venue.detail) && (
                 <p className="mt-2 mb-0 max-w-xs text-[13px] leading-relaxed text-inv-ink-soft opacity-80">
                   {venue.detail}
                 </p>
@@ -110,7 +111,7 @@ export function LocationSinglePlaque({ content }: LocationVariantProps) {
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-10 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-10 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

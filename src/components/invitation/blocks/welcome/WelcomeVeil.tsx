@@ -1,6 +1,7 @@
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockOrnament } from '../../shared/BlockOrnament';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.veil` — el arco: la ventana de medio punto con el retrato dentro y la participación
@@ -77,7 +78,7 @@ export function WelcomeVeil({ content }: WelcomeVariantProps) {
           </div>
         </figure>
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-8 mb-0 text-[10.5px] tracking-[0.34em] text-inv-ink-soft uppercase">
             {content.eventTypeLabel}
           </p>
@@ -85,20 +86,20 @@ export function WelcomeVeil({ content }: WelcomeVariantProps) {
 
         <h2 className="mt-3 mb-0 font-inv-display text-[clamp(2.1rem,9.5vw,3.4rem)] leading-[0.98] font-light text-inv-ink">
           {content.celebrantName}
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             <span className="mt-3 block text-[11px] tracking-[0.36em] text-inv-ink-soft uppercase">
               {content.celebrantLastName}
             </span>
           )}
         </h2>
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-5 mb-0 text-[11.5px] tracking-[0.24em] text-inv-ink-soft uppercase">
             {content.dateLabel}
           </p>
         )}
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-4 mb-0 max-w-xs text-[13.5px] leading-relaxed text-inv-ink-soft">
             {content.note}
           </p>

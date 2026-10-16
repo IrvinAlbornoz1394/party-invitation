@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { BlockOrnament } from './BlockOrnament';
+import { hasText } from './has-text';
 
 /**
  * El encabezado de un bloque: rótulo, título y bajada.
@@ -79,7 +80,7 @@ export function BlockHeading({
 
   return (
     <header className={clsx(centered && 'text-center', className)}>
-      {eyebrow && (
+      {hasText(eyebrow) && (
         <p
           className={clsx(
             /*
@@ -120,7 +121,10 @@ export function BlockHeading({
 
       <h2
         className={clsx(
-          'mt-5 mb-0 leading-tight font-light',
+          /* El margen de arriba separa el título del antetítulo; sin antetítulo sería un hueco
+             vacío encima de la sección. */
+          'mb-0 leading-tight font-light',
+          hasText(eyebrow) ? 'mt-5' : 'mt-0',
           titleFont === 'script'
             ? 'font-inv-script text-[clamp(2.4rem,6vw,3.6rem)]'
             : caps
@@ -135,7 +139,7 @@ export function BlockHeading({
         {title}
       </h2>
 
-      {subtitle && (
+      {hasText(subtitle) && (
         <p
           className={clsx(
             'mt-3 mb-0 max-w-xl text-[15px] leading-relaxed',

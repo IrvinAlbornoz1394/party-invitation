@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BowCard } from '../../shared/BowCard';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { HeartDate } from '../../shared/HeartDate';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 const ROSES = requireDesignAsset('corner-rose-line-001');
 const BUTTERFLY = requireDesignAsset('symbol-butterfly-line-001');
@@ -44,29 +46,34 @@ export function WelcomeKeepsake({ content }: WelcomeVariantProps) {
       />
 
       <BowCard className="relative w-[min(84vw,20rem)]" innerClassName="pt-14 pb-10">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 font-inv-display text-[11px] tracking-[0.34em] text-inv-ink-soft uppercase">
             {content.eventTypeLabel}
           </p>
         )}
-        <h2 className="mt-3 mb-0 font-inv-script text-[clamp(3.6rem,18vw,4.8rem)] leading-[1.05] font-normal text-inv-primary">
+        <h2
+          className={clsx(
+            hasText(content.eventTypeLabel) ? 'mt-3' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(3.6rem,18vw,4.8rem)] leading-[1.05] font-normal text-inv-primary',
+          )}
+        >
           {content.celebrantName}
         </h2>
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mt-4 mb-0 font-inv-display text-[clamp(1.05rem,4.8vw,1.25rem)] leading-snug text-inv-accent">
             {content.note}
           </p>
         )}
-        {content.startsAt && content.dateLabel ? (
+        {content.startsAt && hasText(content.dateLabel) ? (
           <HeartDate startsAt={content.startsAt} dateLabel={content.dateLabel} className="mt-6" />
         ) : (
-          content.dateLabel && (
+          hasText(content.dateLabel) && (
             <p className="mt-6 mb-0 font-inv-display text-[13px] tracking-[0.2em] text-inv-primary uppercase">
               {content.dateLabel}
             </p>
           )
         )}
-        {content.venue && (
+        {hasText(content.venue) && (
           <p className="mt-3 mb-0 text-[13px] leading-snug text-inv-ink-soft">{content.venue}</p>
         )}
       </BowCard>

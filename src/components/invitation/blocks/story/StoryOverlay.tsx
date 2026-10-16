@@ -4,6 +4,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
 import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.overlay` — la historia en una tarjeta sobre la fotografía.
@@ -47,7 +48,7 @@ export function StoryOverlay({ content }: StoryVariantProps) {
           <BlockHeading eyebrow={content.eyebrow} title={content.title} subtitle={content.subtitle} />
           <StoryProse body={content.body} className="mt-7" />
           {highlight && <StoryHighlight highlight={highlight} className="mt-9" />}
-          {content.signature && (
+          {hasText(content.signature) && (
             <StorySignature signature={content.signature} className={highlight ? 'mt-8 pl-5' : 'mt-8'} />
           )}
         </article>

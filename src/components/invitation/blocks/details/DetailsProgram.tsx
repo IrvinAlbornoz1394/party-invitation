@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { blockIconComponent } from '../../shared/block-icons';
 import { LeafSprig } from '../../shared/paper-ornaments';
 import { TextLink } from '../../shared/TextLink';
@@ -91,14 +93,24 @@ export function DetailsProgram({ content }: DetailsVariantProps) {
                   {item.title}
                 </h3>
 
-                <div className="min-w-0 sm:border-l sm:border-inv-line sm:pl-6">
-                  {item.description && (
+                {/* Sin descripción ni enlace la celda se queda en la retícula —sin ella el rótulo
+                    siguiente caería en la columna del texto y el filete se partiría—, pero en
+                    móvil, donde todo va en una columna, se oculta para no dejar un hueco. */}
+                <div
+                  className={clsx(
+                    'min-w-0 sm:border-l sm:border-inv-line sm:pl-6',
+                    !hasText(item.description) && !item.action && 'hidden sm:block',
+                  )}
+                >
+                  {hasText(item.description) && (
                     <p className="m-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
                       {item.description}
                     </p>
                   )}
 
-                  {item.action && <TextLink action={item.action} className="mt-3" />}
+                  {item.action && (
+                    <TextLink action={item.action} className={clsx(hasText(item.description) && 'mt-3')} />
+                  )}
                 </div>
               </li>
             );
@@ -109,7 +121,7 @@ export function DetailsProgram({ content }: DetailsVariantProps) {
             entrada y la nota, donde no hay filete que lo haga. */}
         <LeafSprig className="mx-auto mt-12 h-6 w-28 text-inv-accent opacity-70" />
 
-        {content.note && <BlockNote note={content.note} className="mx-auto mt-8 max-w-md text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mx-auto mt-8 max-w-md text-center" />}
       </BlockContainer>
     </BlockSection>
   );

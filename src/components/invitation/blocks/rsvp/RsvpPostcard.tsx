@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { Stamp } from 'lucide-react';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.postcard` — el reverso de una postal.
@@ -45,17 +47,22 @@ export function RsvpPostcard({ content }: RsvpVariantProps) {
       <BlockContainer className="max-w-4xl">
         <article className="grid overflow-hidden rounded-inv-sm border border-inv-line bg-inv-surface sm:grid-cols-2">
           <div className="flex flex-col justify-center px-7 py-10 sm:px-10 sm:py-12">
-            {content.eyebrow && (
+            {hasText(content.eyebrow) && (
               <p className="m-0 text-[11px] tracking-[0.3em] text-inv-accent uppercase">
                 {content.eyebrow}
               </p>
             )}
 
-            <h2 className="mt-5 mb-0 font-inv-display text-[clamp(1.5rem,3.2vw,2.1rem)] leading-tight font-light text-inv-primary">
+            <h2
+              className={clsx(
+                'mb-0 font-inv-display text-[clamp(1.5rem,3.2vw,2.1rem)] leading-tight font-light text-inv-primary',
+                hasText(content.eyebrow) ? 'mt-5' : 'mt-0',
+              )}
+            >
               {content.title}
             </h2>
 
-            {content.subtitle && (
+            {hasText(content.subtitle) && (
               <p className="mt-4 mb-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
                 {content.subtitle}
               </p>
@@ -64,7 +71,7 @@ export function RsvpPostcard({ content }: RsvpVariantProps) {
 
           <div className="flex flex-col border-t border-inv-line px-7 py-10 sm:border-t-0 sm:border-l sm:px-10 sm:py-12">
             <div className="flex items-start justify-between gap-6">
-              {content.deadlineLabel ? (
+              {hasText(content.deadlineLabel) ? (
                 /* El matasellos: un círculo de trazo discontinuo, como el sellado de correos. */
                 <p className="m-0 grid size-20 shrink-0 place-items-center sm:size-24 rounded-full border border-dashed border-inv-line px-3 text-center text-[10.5px] leading-tight tracking-[0.12em] text-inv-ink-soft uppercase">
                   {content.deadlineLabel}
@@ -88,7 +95,7 @@ export function RsvpPostcard({ content }: RsvpVariantProps) {
           </div>
         </article>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

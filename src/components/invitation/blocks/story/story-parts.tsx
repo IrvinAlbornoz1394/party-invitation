@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import type { StoryContent } from '@/domain/invitation/blocks/story';
+import { hasText } from '../../shared/has-text';
 
 /**
  * Las piezas de una historia, compartidas por sus cuatro variantes.
@@ -74,7 +75,7 @@ export function StoryHighlight({
       >
         {highlight.quote}
       </blockquote>
-      {highlight.author && (
+      {hasText(highlight.author) && (
         <figcaption
           className={clsx(
             'mt-3 text-[12px] tracking-[0.2em] text-inv-ink-soft uppercase',

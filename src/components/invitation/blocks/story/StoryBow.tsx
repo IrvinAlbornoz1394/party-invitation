@@ -6,6 +6,7 @@ import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RibbonBow } from '../../shared/doodle-ornaments';
 import { StoryHighlight, StoryProse, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.bow` — el saludo con el lazo: la fotografía en una banda de canto ondulado, el lazo
@@ -60,7 +61,7 @@ export function StoryBow({ content }: StoryVariantProps) {
           titleCase="caps"
         />
 
-        {content.subtitle && (
+        {hasText(content.subtitle) && (
           <p className="mt-7 mb-0 text-[15.5px] leading-snug font-medium text-inv-ink">
             {content.subtitle}
           </p>
@@ -70,7 +71,7 @@ export function StoryBow({ content }: StoryVariantProps) {
 
         {highlight && <StoryHighlight highlight={highlight} align="center" className="mt-10" />}
 
-        {content.signature && <StorySignature signature={content.signature} className="mt-8" />}
+        {hasText(content.signature) && <StorySignature signature={content.signature} className="mt-8" />}
       </BlockContainer>
     </BlockSection>
   );

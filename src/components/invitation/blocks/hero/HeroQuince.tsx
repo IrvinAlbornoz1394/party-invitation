@@ -3,6 +3,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.quince` — el retrato a toda página y la cifra grabada en una pestaña de papel que sube
@@ -101,7 +102,7 @@ export function HeroQuince({ content }: HeroVariantProps) {
           <span className="h-px w-8 bg-inv-line sm:w-12" />
         </p>
 
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="mt-5 mb-0 text-[10.5px] tracking-[0.34em] text-inv-ink-soft uppercase">
             {content.eventTypeLabel}
           </p>
@@ -111,13 +112,13 @@ export function HeroQuince({ content }: HeroVariantProps) {
           {content.celebrantName}
         </h1>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-3 mb-0 font-inv-display text-[11.5px] tracking-[0.3em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
         )}
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-5 mb-0 max-w-md text-[14.5px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
@@ -142,7 +143,7 @@ export function HeroQuince({ content }: HeroVariantProps) {
             <span>{content.dateLabel}</span>
           )}
 
-          {content.city && (
+          {hasText(content.city) && (
             <>
               <span aria-hidden="true" className="h-3 w-px bg-inv-line" />
               <span className="text-inv-ink-soft">{content.city}</span>

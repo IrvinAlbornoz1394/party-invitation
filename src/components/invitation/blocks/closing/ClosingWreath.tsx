@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { BotanicalSpray } from '../../shared/paper-ornaments';
 import type { ClosingVariantProps } from './closing-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `closing.wreath` — la despedida dentro de una guirnalda: dos ramas enfrentadas que se cierran
@@ -38,23 +40,28 @@ export function ClosingWreath({ content }: ClosingVariantProps) {
       <BotanicalSpray className="absolute -right-12 -bottom-2 h-20 w-[13rem] rotate-180 text-inv-accent opacity-50 sm:h-24 sm:w-[17rem]" />
 
       <BlockContainer className="relative z-10 max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.3em] text-inv-accent uppercase">
             {content.eyebrow}
           </p>
         )}
 
-        <p className="mt-7 mb-0 text-[13px] leading-relaxed tracking-[0.14em] text-inv-ink uppercase">
+        <p
+          className={clsx(
+            'mb-0 text-[13px] leading-relaxed tracking-[0.14em] text-inv-ink uppercase',
+            hasText(content.eyebrow) ? 'mt-7' : 'mt-0',
+          )}
+        >
           {content.title}
         </p>
 
-        {content.message && (
+        {hasText(content.message) && (
           <p className="mx-auto mt-6 mb-0 max-w-xs text-[13.5px] leading-relaxed text-inv-ink-soft">
             {content.message}
           </p>
         )}
 
-        {content.signature && (
+        {hasText(content.signature) && (
           <p className="mt-8 mb-0 font-inv-script text-[clamp(2.2rem,9vw,3.2rem)] leading-none text-inv-accent">
             {content.signature}
           </p>

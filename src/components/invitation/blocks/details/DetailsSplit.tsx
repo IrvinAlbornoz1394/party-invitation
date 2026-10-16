@@ -3,6 +3,7 @@ import { IconBadge } from '../../shared/IconBadge';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { TextLink } from '../../shared/TextLink';
 import type { DetailsVariantProps } from './details-variant';
 
@@ -45,7 +46,7 @@ export function DetailsSplit({ content }: DetailsVariantProps) {
               </figure>
             )}
 
-            {content.note && <BlockNote note={content.note} className="mt-6" />}
+            {hasText(content.note) && <BlockNote note={content.note} className="mt-6" />}
           </div>
 
           <ul className="grid list-none grid-cols-1 gap-x-8 gap-y-8 p-0 sm:grid-cols-2">
@@ -59,7 +60,7 @@ export function DetailsSplit({ content }: DetailsVariantProps) {
                   {item.title}
                 </h3>
 
-                {item.description && (
+                {hasText(item.description) && (
                   <p className="mt-2 mb-0 text-[14.5px] leading-relaxed text-inv-ink-soft">
                     {item.description}
                   </p>

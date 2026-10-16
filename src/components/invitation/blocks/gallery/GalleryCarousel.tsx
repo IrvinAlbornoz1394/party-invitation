@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { aspectRatioOf, type GalleryItem } from '@/domain/invitation/blocks/gallery';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { Lightbox } from '../../shared/Lightbox';
 import { useLightbox } from '../../shared/useLightbox';
@@ -245,7 +246,7 @@ export function GalleryCarousel({ content }: GalleryVariantProps) {
           </RunwayArrow>
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-6 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-6 text-center" />}
       </BlockContainer>
 
       <Lightbox

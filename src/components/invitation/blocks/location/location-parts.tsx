@@ -4,6 +4,7 @@ import type { LocationContent, LocationVenue } from '@/domain/invitation/blocks/
 import { ActionLink } from '../../shared/ActionLink';
 import { BlockImage } from '../../shared/BlockImage';
 import { IconBadge } from '../../shared/IconBadge';
+import { hasText } from '../../shared/has-text';
 import { TextLink } from '../../shared/TextLink';
 import { venueIcon } from './venue-icon';
 
@@ -100,7 +101,7 @@ export function VenueFacts({
 
   return (
     <div className={clsx(centered && 'text-center', onImage && 'text-inv-on-primary', className)}>
-      {venue.label && (
+      {hasText(venue.label) && (
         <p
           className={clsx(
             'm-0 flex items-center gap-3 text-[11px] tracking-[0.3em] uppercase',
@@ -114,9 +115,11 @@ export function VenueFacts({
         </p>
       )}
 
+      {/* El margen de arriba separa el nombre del rótulo: sin rótulo, el nombre abre la ficha. */}
       <h3
         className={clsx(
-          'mt-4 mb-0 font-inv-display leading-tight font-light',
+          'mb-0 font-inv-display leading-tight font-light',
+          hasText(venue.label) ? 'mt-4' : 'mt-0',
           caps && 'tracking-[0.18em] uppercase',
           emphasis === 'hero'
             ? caps
@@ -131,7 +134,7 @@ export function VenueFacts({
         {venue.name}
       </h3>
 
-      {venue.timeLabel && (
+      {hasText(venue.timeLabel) && (
         <p
           className={clsx(
             'mt-3 mb-0 font-inv-display text-[1.15rem] leading-none tabular-nums',
@@ -142,7 +145,7 @@ export function VenueFacts({
         </p>
       )}
 
-      {venue.address && (
+      {hasText(venue.address) && (
         <p
           className={clsx(
             'mt-4 mb-0 max-w-sm text-[14.5px] leading-relaxed',
@@ -154,7 +157,7 @@ export function VenueFacts({
         </p>
       )}
 
-      {venue.detail && (
+      {hasText(venue.detail) && (
         <p
           className={clsx(
             'mt-2 mb-0 max-w-sm text-[13.5px] leading-relaxed',

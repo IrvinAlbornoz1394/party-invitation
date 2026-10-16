@@ -1,5 +1,6 @@
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { VenueFacts, VenueMedia, type LocationVariantProps } from './location-parts';
 
@@ -46,7 +47,7 @@ export function LocationSingleSplit({ content }: LocationVariantProps) {
           ))}
         </div>
 
-        {content.note && <BlockNote note={content.note} className="mt-14 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-14 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

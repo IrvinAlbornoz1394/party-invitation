@@ -1,4 +1,6 @@
+import clsx from 'clsx';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import {
   FooterCredits,
   FooterLinks,
@@ -37,6 +39,8 @@ import {
 const REPEATS = 4;
 
 export function FooterMarquee({ content }: FooterVariantProps) {
+  const hasMeta = hasText(content.dateLabel) || hasText(content.city);
+  const hasMessage = hasText(content.message);
   const copy = Array.from({ length: REPEATS }, (_, index) => index);
 
   return (
@@ -63,37 +67,59 @@ export function FooterMarquee({ content }: FooterVariantProps) {
       </div>
 
       <BlockContainer className="py-12">
-        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
-          <div>
-            {/* El nombre, una sola vez y solo para lectura asistida: en pantalla ya está en la
-                cinta, ocho veces y en cuerpo de cartel. */}
-            <span className="sr-only">{content.names}</span>
+        {/* El nombre, una sola vez y solo para lectura asistida: en pantalla ya está en la
+            cinta, ocho veces y en cuerpo de cartel. Va fuera de la fila para que se lea aunque
+            la fila no se pinte; `sr-only` es absoluto y no ocupa sitio en el flujo. */}
+        <span className="sr-only">{content.names}</span>
 
-            {(content.dateLabel || content.city) && (
-              <p className="m-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12.5px] tracking-[0.2em] text-inv-ink-soft uppercase sm:justify-start">
-                {content.dateLabel && <span>{content.dateLabel}</span>}
-                {content.dateLabel && content.city && (
-                  <span aria-hidden="true" className="opacity-50">
-                    ·
-                  </span>
+        {(hasMeta || hasMessage || content.links.length > 0) && (
+          <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
+            {(hasMeta || hasMessage) && (
+              <div>
+                {hasMeta && (
+                  <p className="m-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12.5px] tracking-[0.2em] text-inv-ink-soft uppercase sm:justify-start">
+                    {hasText(content.dateLabel) && <span>{content.dateLabel}</span>}
+                    {hasText(content.dateLabel) && hasText(content.city) && (
+                      <span aria-hidden="true" className="opacity-50">
+                        ·
+                      </span>
+                    )}
+                    {hasText(content.city) && <span>{content.city}</span>}
+                  </p>
                 )}
-                {content.city && <span>{content.city}</span>}
-              </p>
+
+                {hasMessage && (
+                  <p
+                    className={clsx(
+                      'mb-0 max-w-sm text-[14px] leading-relaxed text-inv-ink-soft',
+                      hasMeta ? 'mt-3' : 'mt-0',
+                    )}
+                  >
+                    {content.message}
+                  </p>
+                )}
+              </div>
             )}
 
-            {content.message && (
-              <p className="mt-3 mb-0 max-w-sm text-[14px] leading-relaxed text-inv-ink-soft">
-                {content.message}
-              </p>
-            )}
+            {/* Solos, los contactos siguen al extremo derecho como cuando tenían el texto al lado. */}
+            <FooterLinks
+              links={content.links}
+              className={clsx(
+                'justify-center sm:justify-end',
+                !(hasMeta || hasMessage) && 'sm:ml-auto',
+              )}
+            />
           </div>
+        )}
 
-          <FooterLinks links={content.links} className="justify-center sm:justify-end" />
-        </div>
-
-        {(content.credits || content.topAction) && (
-          <div className="mt-10 flex flex-col items-center gap-4 border-t border-inv-line pt-6 sm:flex-row sm:justify-between">
-            {content.credits && <FooterCredits credits={content.credits} />}
+        {(hasText(content.credits) || content.topAction) && (
+          <div
+            className={clsx(
+              'flex flex-col items-center gap-4 border-t border-inv-line pt-6 sm:flex-row sm:justify-between',
+              (hasMeta || hasMessage || content.links.length > 0) && 'mt-10',
+            )}
+          >
+            {hasText(content.credits) && <FooterCredits credits={content.credits} />}
             {content.topAction && (
               <FooterTopLink label={content.topAction.label} href={content.topAction.href} />
             )}

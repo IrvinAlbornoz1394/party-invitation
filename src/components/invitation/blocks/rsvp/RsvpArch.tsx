@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 const FAN = requireDesignAsset('botanical-corner-bottom-001');
 
@@ -26,20 +28,25 @@ export function RsvpArch({ content }: RsvpVariantProps) {
       <BlockContainer className="max-w-md">
         <div className="relative mx-auto max-w-[22rem]">
           <div className="rounded-t-full border border-inv-accent/45 px-7 pt-20 pb-12 text-center sm:px-10">
-            {content.eyebrow && (
+            {hasText(content.eyebrow) && (
               <p className="m-0 text-[10px] tracking-[0.3em] text-inv-ink-soft uppercase">
                 {content.eyebrow}
               </p>
             )}
-            <h2 className="mt-3 mb-0 font-inv-script text-[clamp(2.4rem,10vw,3.2rem)] leading-[1.1] font-normal text-inv-accent">
+            <h2
+              className={clsx(
+                'mb-0 font-inv-script text-[clamp(2.4rem,10vw,3.2rem)] leading-[1.1] font-normal text-inv-accent',
+                hasText(content.eyebrow) ? 'mt-3' : 'mt-0',
+              )}
+            >
               {content.title}
             </h2>
-            {content.subtitle && (
+            {hasText(content.subtitle) && (
               <p className="mx-auto mt-5 mb-0 max-w-[16rem] text-[14px] leading-relaxed font-medium text-inv-ink">
                 {content.subtitle}
               </p>
             )}
-            {content.deadlineLabel && (
+            {hasText(content.deadlineLabel) && (
               <p className="mt-5 mb-0 text-[10.5px] tracking-[0.24em] text-inv-primary uppercase">
                 {content.deadlineLabel}
               </p>
@@ -47,7 +54,7 @@ export function RsvpArch({ content }: RsvpVariantProps) {
 
             <RsvpAction content={content} align="center" className="mt-8" />
 
-            {content.note && (
+            {hasText(content.note) && (
               <p className="mx-auto mt-8 mb-0 max-w-[16rem] font-inv-script text-[clamp(1.35rem,5.6vw,1.65rem)] leading-[1.25] text-inv-accent">
                 {content.note}
               </p>

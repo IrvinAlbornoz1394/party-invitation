@@ -3,6 +3,7 @@ import { BlockImage } from '../../shared/BlockImage';
 import { Countdown } from '../../shared/Countdown';
 import { ScrollHint } from '../../shared/ScrollHint';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.script` — la fotografía a pantalla completa y los nombres en caligrafía sobre ella, sin
@@ -89,7 +90,7 @@ export function HeroScript({ content }: HeroVariantProps) {
           )}
         </h1>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-7 mb-0 text-[11px] tracking-[0.34em] uppercase opacity-85 sm:text-[12px]">
             {content.celebrantLastName}
           </p>

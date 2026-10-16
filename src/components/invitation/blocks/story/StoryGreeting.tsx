@@ -3,6 +3,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { StoryHighlight, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `story.greeting` — la alocución: el rótulo en caligrafía, una entradilla en negrita y el cuerpo
@@ -54,7 +55,7 @@ export function StoryGreeting({ content }: StoryVariantProps) {
           titleFont="script"
         />
 
-        {content.subtitle && (
+        {hasText(content.subtitle) && (
           <p className="mt-9 mb-0 text-[16px] leading-snug font-medium text-inv-ink">
             {content.subtitle}
           </p>
@@ -83,7 +84,7 @@ export function StoryGreeting({ content }: StoryVariantProps) {
           <StoryHighlight highlight={highlight} align="center" className="mt-10" />
         )}
 
-        {content.signature && (
+        {hasText(content.signature) && (
           <StorySignature signature={content.signature} className="mt-9" />
         )}
       </BlockContainer>

@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { BlockImage } from '../../shared/BlockImage';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
 import { couple, initials } from './welcome-name';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `welcome.monogram` — el monograma enorme sobre la fotografía, como una marca de agua.
@@ -48,13 +50,18 @@ export function WelcomeMonogram({ content }: WelcomeVariantProps) {
       }
     >
       <div className="relative flex w-full max-w-sm flex-col items-center">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 rounded-full bg-black/45 px-5 py-1.5 text-[11px] tracking-[0.22em] uppercase backdrop-blur-[2px]">
             {content.eventTypeLabel}
           </p>
         )}
 
-        <p className="mt-3 mb-0 font-inv-script text-[clamp(1.4rem,6vw,2rem)] leading-none opacity-95">
+        <p
+          className={clsx(
+            hasText(content.eventTypeLabel) ? 'mt-3' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(1.4rem,6vw,2rem)] leading-none opacity-95',
+          )}
+        >
           {content.celebrantName}
         </p>
 
@@ -82,13 +89,13 @@ export function WelcomeMonogram({ content }: WelcomeVariantProps) {
           )}
         </p>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-1 mb-0 text-[11px] tracking-[0.34em] uppercase opacity-85">
             {content.celebrantLastName}
           </p>
         )}
 
-        {content.dateLabel && (
+        {hasText(content.dateLabel) && (
           <p className="mt-6 mb-0 text-[12px] tracking-[0.26em] uppercase opacity-85">
             {content.dateLabel}
           </p>

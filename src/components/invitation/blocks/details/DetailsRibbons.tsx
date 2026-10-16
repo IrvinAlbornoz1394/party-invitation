@@ -4,6 +4,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockImage } from '../../shared/BlockImage';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { BowCard } from '../../shared/BowCard';
 import { TextLink } from '../../shared/TextLink';
 import type { DetailsVariantProps } from './details-variant';
@@ -58,7 +59,7 @@ export function DetailsRibbons({ content }: DetailsVariantProps) {
                   <h3 className="mt-2 mb-0 font-inv-script text-[clamp(1.7rem,7.5vw,2.1rem)] leading-[1.1] font-normal text-balance text-inv-ink">
                     {item.title}
                   </h3>
-                  {item.description && (
+                  {hasText(item.description) && (
                     <p className="mt-2 mb-0 text-[12.5px] leading-relaxed text-pretty text-inv-ink-soft">
                       {item.description}
                     </p>
@@ -70,7 +71,7 @@ export function DetailsRibbons({ content }: DetailsVariantProps) {
           })}
         </ul>
 
-        {content.note && <BlockNote note={content.note} className="mt-12 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

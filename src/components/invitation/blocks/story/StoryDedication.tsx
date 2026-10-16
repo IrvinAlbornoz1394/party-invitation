@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { visibleHighlight } from '@/domain/invitation/blocks/story';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { ArchFrame } from '../../shared/ArchFrame';
@@ -6,6 +7,7 @@ import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { StoryProse, StorySignature } from './story-parts';
 import type { StoryVariantProps } from './story-variant';
+import { hasText } from '../../shared/has-text';
 
 const FAN = requireDesignAsset('botanical-corner-bottom-001');
 const CLUSTER = requireDesignAsset('botanical-sprig-cluster-001');
@@ -29,6 +31,10 @@ const CLUSTER = requireDesignAsset('botanical-sprig-cluster-001');
  */
 export function StoryDedication({ content }: StoryVariantProps) {
   const highlight = visibleHighlight(content);
+  /* Todo lo que va encima del título es opcional: cada pieza solo se separa de lo que de verdad
+     tiene encima, para que la columna no arranque con un hueco. */
+  const hasEyebrow = hasText(content.eyebrow);
+  const hasSubtitle = hasText(content.subtitle);
 
   return (
     <BlockSection block="story" variant="dedication" className="relative isolate">
@@ -47,18 +53,18 @@ export function StoryDedication({ content }: StoryVariantProps) {
       />
 
       <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
 
         {highlight && (
-          <figure className="m-0 mt-5">
+          <figure className={clsx('m-0', hasEyebrow && 'mt-5')}>
             <blockquote className="m-0 font-inv-script text-[clamp(1.55rem,6.4vw,2.05rem)] leading-[1.3] text-inv-accent">
               {highlight.quote}
             </blockquote>
-            {highlight.author && (
+            {hasText(highlight.author) && (
               <figcaption className="mt-3 text-[10.5px] tracking-[0.26em] text-inv-ink-soft uppercase">
                 {highlight.author}
               </figcaption>
@@ -66,13 +72,23 @@ export function StoryDedication({ content }: StoryVariantProps) {
           </figure>
         )}
 
-        {content.subtitle && (
-          <p className="mx-auto mt-8 mb-0 max-w-xs text-[14.5px] leading-relaxed text-inv-ink">
+        {hasSubtitle && (
+          <p
+            className={clsx(
+              'mx-auto mb-0 max-w-xs text-[14.5px] leading-relaxed text-inv-ink',
+              hasEyebrow || highlight ? 'mt-8' : 'mt-0',
+            )}
+          >
             {content.subtitle}
           </p>
         )}
 
-        <h2 className="mt-5 mb-0 font-inv-script text-[clamp(2.7rem,12vw,3.8rem)] leading-[1.1] font-normal text-inv-accent">
+        <h2
+          className={clsx(
+            'mb-0 font-inv-script text-[clamp(2.7rem,12vw,3.8rem)] leading-[1.1] font-normal text-inv-accent',
+            hasEyebrow || highlight || hasSubtitle ? 'mt-5' : 'mt-0',
+          )}
+        >
           {content.title}
         </h2>
 
@@ -84,7 +100,7 @@ export function StoryDedication({ content }: StoryVariantProps) {
           </ArchFrame>
         )}
 
-        {content.signature && <StorySignature signature={content.signature} className="mt-10" />}
+        {hasText(content.signature) && <StorySignature signature={content.signature} className="mt-10" />}
       </BlockContainer>
     </BlockSection>
   );

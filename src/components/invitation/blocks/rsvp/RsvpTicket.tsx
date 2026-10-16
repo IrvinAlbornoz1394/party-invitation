@@ -3,6 +3,7 @@ import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `rsvp.ticket` — la confirmación con forma de pase.
@@ -61,7 +62,7 @@ export function RsvpTicket({ content }: RsvpVariantProps) {
 
             <CalendarCheck size={24} strokeWidth={1.5} aria-hidden="true" className="text-inv-accent" />
 
-            {content.deadlineLabel ? (
+            {hasText(content.deadlineLabel) ? (
               <>
                 <p className="m-0 text-[11px] tracking-[0.28em] text-inv-ink-soft uppercase">
                   Confirma
@@ -78,7 +79,7 @@ export function RsvpTicket({ content }: RsvpVariantProps) {
           </div>
         </article>
 
-        {content.note && <BlockNote note={content.note} className="mt-8 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-8 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

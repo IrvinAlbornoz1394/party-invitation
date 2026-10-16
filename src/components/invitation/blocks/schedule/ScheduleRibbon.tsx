@@ -1,6 +1,7 @@
 import { blockIconComponent } from '../../shared/block-icons';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { RibbonBow } from '../../shared/doodle-ornaments';
 import { ScheduleTime } from './schedule-parts';
@@ -116,7 +117,7 @@ export function ScheduleRibbon({ content }: ScheduleVariantProps) {
                     {item.title}
                   </h3>
 
-                  {item.description && (
+                  {hasText(item.description) && (
                     <p className="mt-2 mb-0 max-w-xs text-[13.5px] leading-relaxed text-inv-ink-soft">
                       {item.description}
                     </p>
@@ -127,7 +128,7 @@ export function ScheduleRibbon({ content }: ScheduleVariantProps) {
           })}
         </ol>
 
-        {content.note && <BlockNote note={content.note} className="mt-12 text-center" />}
+        {hasText(content.note) && <BlockNote note={content.note} className="mt-12 text-center" />}
       </BlockContainer>
     </BlockSection>
   );

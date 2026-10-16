@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { BowCard } from '../../shared/BowCard';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 const ENVELOPE = requireDesignAsset('symbol-envelope-bow-001');
 const ROSES = requireDesignAsset('corner-rose-line-001');
@@ -28,13 +30,18 @@ export function RsvpEnvelope({ content }: RsvpVariantProps) {
   return (
     <BlockSection block="rsvp" variant="envelope">
       <BlockContainer className="max-w-md">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="m-0 text-center font-inv-display text-[11px] tracking-[0.32em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
         )}
 
-        <div className="relative mx-auto mt-8 w-[min(90vw,24rem)]">
+        <div
+          className={clsx(
+            'relative mx-auto w-[min(90vw,24rem)]',
+            hasText(content.eyebrow) && 'mt-8',
+          )}
+        >
           <DesignAsset
             asset={BUTTERFLY}
             rotate={16}
@@ -50,7 +57,7 @@ export function RsvpEnvelope({ content }: RsvpVariantProps) {
             <h2 className="m-0 font-inv-script text-[clamp(2.3rem,10.5vw,3rem)] leading-[1.1] font-normal text-inv-primary">
               {content.title}
             </h2>
-            {content.deadlineLabel && (
+            {hasText(content.deadlineLabel) && (
               <p className="mt-2 mb-0 font-inv-display text-[11px] tracking-[0.22em] text-inv-ink-soft uppercase">
                 {content.deadlineLabel}
               </p>
@@ -58,7 +65,7 @@ export function RsvpEnvelope({ content }: RsvpVariantProps) {
 
             {/* Sin texto, el sobre se queda solo y centrado: la columna vacía de al lado se leería
                 como un párrafo que no cargó. */}
-            {content.subtitle ? (
+            {hasText(content.subtitle) ? (
               <div className="mt-6 grid grid-cols-[42%_1fr] items-center gap-4 text-left">
                 <DesignAsset asset={ENVELOPE} className="w-full text-inv-primary" />
                 <p className="m-0 font-inv-display text-[clamp(0.9rem,3.8vw,1rem)] leading-snug text-pretty text-inv-ink-soft">
@@ -71,7 +78,7 @@ export function RsvpEnvelope({ content }: RsvpVariantProps) {
 
             <RsvpAction content={content} align="center" className="mt-7" />
 
-            {content.note && (
+            {hasText(content.note) && (
               <p className="mx-auto mt-6 mb-0 max-w-[17rem] text-[12.5px] leading-relaxed text-inv-ink-soft">
                 {content.note}
               </p>

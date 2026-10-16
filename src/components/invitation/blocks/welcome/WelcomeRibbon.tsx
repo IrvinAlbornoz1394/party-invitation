@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './welcome-parts';
+import { hasText } from '../../shared/has-text';
 
 const BOW = requireDesignAsset('symbol-bow-satin-001');
 const CORNER = requireDesignAsset('corner-floral-blush-001');
@@ -52,40 +54,48 @@ export function WelcomeRibbon({ content }: WelcomeVariantProps) {
             className="pointer-events-none absolute -top-8 left-1/2 w-40 -translate-x-1/2 drop-shadow-[0_6px_6px_rgba(120,60,75,0.18)] sm:w-44"
           />
 
-          {content.eventTypeLabel && (
+          {hasText(content.eventTypeLabel) && (
             <p className="m-0 text-[10.5px] tracking-[0.32em] text-inv-ink-soft uppercase">
               {content.eventTypeLabel}
             </p>
           )}
-          <h2 className="mt-4 mb-0 font-inv-script text-[clamp(3rem,15vw,4.2rem)] leading-[1.05] font-normal text-inv-accent">
+          <h2
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-4' : 'mt-0',
+              'mb-0 font-inv-script text-[clamp(3rem,15vw,4.2rem)] leading-[1.05] font-normal text-inv-accent',
+            )}
+          >
             {content.celebrantName}
           </h2>
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             <p className="mt-1 mb-0 font-inv-display text-[12px] tracking-[0.3em] text-inv-ink-soft uppercase">
               {content.celebrantLastName}
             </p>
           )}
 
-          <p
-            aria-hidden="true"
-            className="mt-6 mb-0 flex items-center justify-center gap-3 text-inv-accent"
-          >
-            <span className="h-px w-10 bg-current opacity-50" />
-            <Heart size={11} strokeWidth={0} className="fill-current" />
-            <span className="h-px w-10 bg-current opacity-50" />
-          </p>
+          {/* El filete separa el nombre de los datos; sin ninguno, la tarjeta remata en el nombre. */}
+          {(hasText(content.note) || hasText(content.dateLabel) || hasText(content.venue)) && (
+            <p
+              aria-hidden="true"
+              className="mt-6 mb-0 flex items-center justify-center gap-3 text-inv-accent"
+            >
+              <span className="h-px w-10 bg-current opacity-50" />
+              <Heart size={11} strokeWidth={0} className="fill-current" />
+              <span className="h-px w-10 bg-current opacity-50" />
+            </p>
+          )}
 
-          {content.note && (
+          {hasText(content.note) && (
             <p className="mt-6 mb-0 font-inv-display text-[clamp(1rem,4.6vw,1.2rem)] leading-snug text-inv-ink italic">
               {content.note}
             </p>
           )}
-          {content.dateLabel && (
+          {hasText(content.dateLabel) && (
             <p className="mt-5 mb-0 font-inv-display text-[13px] tracking-[0.22em] text-inv-primary uppercase">
               {content.dateLabel}
             </p>
           )}
-          {content.venue && (
+          {hasText(content.venue) && (
             <p className="mt-2 mb-0 text-[12px] leading-snug text-inv-ink-soft">{content.venue}</p>
           )}
         </div>

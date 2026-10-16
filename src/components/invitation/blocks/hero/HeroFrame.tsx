@@ -1,9 +1,11 @@
+import clsx from 'clsx';
 import { eventDateParts } from '@/domain/invitation/event-date';
 import { BlockImage } from '../../shared/BlockImage';
 import { Countdown } from '../../shared/Countdown';
 import { DrawnFrame, WeddingRings } from '../../shared/doodle-ornaments';
 import { ScrollHint } from '../../shared/ScrollHint';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.frame` — el rótulo en letras vaciadas, el retrato dentro de un marco dibujado a mano y
@@ -37,6 +39,7 @@ import type { HeroVariantProps } from './hero-variant';
  * `blur` y opacidad baja, así que en un tema oscuro se leen como un halo y no como dos pegotes.
  */
 export function HeroFrame({ content }: HeroVariantProps) {
+  const pair = isPair(content.celebrantName);
   const parts = eventDateParts(content.startsAt);
 
   return (
@@ -55,14 +58,19 @@ export function HeroFrame({ content }: HeroVariantProps) {
       />
 
       <div className="inv-rise flex w-full max-w-md flex-col items-center text-center">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <h1 className="inv-outline-text m-0 font-inv-display text-[clamp(2.4rem,11vw,4rem)] leading-[1.05] font-semibold tracking-[0.04em] text-inv-primary uppercase">
             {content.eventTypeLabel}
           </h1>
         )}
 
-        {isPair(content.celebrantName) && (
-          <WeddingRings className="mt-6 w-20 text-inv-accent sm:w-24" />
+        {pair && (
+          <WeddingRings
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-6' : 'mt-0',
+              'w-20 text-inv-accent sm:w-24',
+            )}
+          />
         )}
 
         {content.image && (
@@ -72,7 +80,12 @@ export function HeroFrame({ content }: HeroVariantProps) {
             alrededor de una lámina. El relleno de la sección es lo que garantiza que esos doce
             píxeles no se salgan por los lados en un móvil.
           */
-          <figure className="relative m-0 mt-9 w-full max-w-[17rem]">
+          <figure
+            className={clsx(
+              hasText(content.eventTypeLabel) || pair ? 'mt-9' : 'mt-0',
+              'relative m-0 w-full max-w-[17rem]',
+            )}
+          >
             <DrawnFrame className="absolute -inset-3 h-[calc(100%+1.5rem)] w-[calc(100%+1.5rem)] text-inv-primary" />
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-inv-sm bg-inv-primary/5">
               <BlockImage
@@ -85,17 +98,22 @@ export function HeroFrame({ content }: HeroVariantProps) {
           </figure>
         )}
 
-        <p className="mt-10 mb-0 font-inv-script text-[clamp(2.4rem,12vw,3.6rem)] leading-[0.95] text-inv-primary">
+        <p
+          className={clsx(
+            hasText(content.eventTypeLabel) || pair || content.image ? 'mt-10' : 'mt-0',
+            'mb-0 font-inv-script text-[clamp(2.4rem,12vw,3.6rem)] leading-[0.95] text-inv-primary',
+          )}
+        >
           {content.celebrantName}
         </p>
 
-        {content.celebrantLastName && (
+        {hasText(content.celebrantLastName) && (
           <p className="mt-3 mb-0 text-[11px] tracking-[0.3em] text-inv-ink-soft uppercase">
             {content.celebrantLastName}
           </p>
         )}
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mt-6 mb-0 max-w-sm text-[14.5px] leading-relaxed text-inv-ink-soft">
             {content.tagline}
           </p>
@@ -106,7 +124,7 @@ export function HeroFrame({ content }: HeroVariantProps) {
           {parts?.time && <span className="tabular-nums">· {parts.time}</span>}
         </p>
 
-        {content.city && (
+        {hasText(content.city) && (
           <p className="mt-2 mb-0 text-[12.5px] text-inv-ink-soft">{content.city}</p>
         )}
 

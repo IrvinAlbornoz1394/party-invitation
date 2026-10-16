@@ -4,6 +4,7 @@ import { ActionLink } from '../../shared/ActionLink';
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
+import { hasText } from '../../shared/has-text';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { Swatch } from './dresscode-parts';
 import type { DresscodeVariantProps } from './dresscode-variant';
@@ -36,7 +37,7 @@ export function DresscodeArches({ content }: DresscodeVariantProps) {
             titleFont="script"
           />
           <DesignAsset asset={DIVIDER} className="mt-5 w-28 text-inv-primary opacity-80" />
-          {content.description && (
+          {hasText(content.description) && (
             <p className="mt-6 mb-0 max-w-sm text-[14.5px] leading-relaxed text-inv-ink">
               {content.description}
             </p>
@@ -51,7 +52,7 @@ export function DresscodeArches({ content }: DresscodeVariantProps) {
                 <span className="block h-20 w-full overflow-hidden rounded-t-full ring-1 ring-inv-line sm:h-24">
                   <Swatch swatch={swatch} shape="block" />
                 </span>
-                {swatch.label && (
+                {hasText(swatch.label) && (
                   <span className="text-[8.5px] leading-snug tracking-[0.14em] text-inv-ink-soft uppercase sm:text-[9px]">
                     {swatch.label}
                   </span>
@@ -68,7 +69,7 @@ export function DresscodeArches({ content }: DresscodeVariantProps) {
               className="mt-10"
             />
           )}
-          {content.note && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
+          {hasText(content.note) && <BlockNote note={content.note} className="mt-8 max-w-sm" />}
         </div>
       </BlockContainer>
     </BlockSection>

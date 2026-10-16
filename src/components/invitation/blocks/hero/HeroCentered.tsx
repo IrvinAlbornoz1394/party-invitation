@@ -1,7 +1,9 @@
+import clsx from 'clsx';
 import { BlockImage } from '../../shared/BlockImage';
 import { ScrollHint } from '../../shared/ScrollHint';
 import { Countdown } from '../../shared/Countdown';
 import type { HeroVariantProps } from './hero-variant';
+import { hasText } from '../../shared/has-text';
 
 /**
  * `hero.centered` — portada de invitación formal: todo al centro, dentro de un marco.
@@ -25,6 +27,9 @@ import type { HeroVariantProps } from './hero-variant';
  * dato. Un tema que no quiera manuscrita solo tiene que apuntar `fonts.script` a otra familia.
  */
 export function HeroCentered({ content }: HeroVariantProps) {
+  /* El rótulo y la frase de arriba son opcionales: sin ellos, la primera pieza de la columna no
+     arrastra el margen que la separaba. */
+  const hasLead = hasText(content.eventTypeLabel) || hasText(content.intro);
   return (
     <section
       data-block="hero"
@@ -48,7 +53,7 @@ export function HeroCentered({ content }: HeroVariantProps) {
       />
 
       <div className="inv-rise relative mx-auto w-full max-w-2xl px-6 py-20 sm:px-12 sm:py-24">
-        {content.eventTypeLabel && (
+        {hasText(content.eventTypeLabel) && (
           <p className="m-0 flex items-center justify-center gap-3 text-[11px] tracking-[0.34em] uppercase opacity-85">
             <span aria-hidden="true" className="h-px w-6 bg-current opacity-60" />
             {content.eventTypeLabel}
@@ -56,15 +61,25 @@ export function HeroCentered({ content }: HeroVariantProps) {
           </p>
         )}
 
-        {content.intro && (
-          <p className="mt-8 mb-0 font-inv-script text-[clamp(1.5rem,5vw,2.25rem)] leading-tight opacity-95">
+        {hasText(content.intro) && (
+          <p
+            className={clsx(
+              hasText(content.eventTypeLabel) ? 'mt-8' : 'mt-0',
+              'mb-0 font-inv-script text-[clamp(1.5rem,5vw,2.25rem)] leading-tight opacity-95',
+            )}
+          >
             {content.intro}
           </p>
         )}
 
-        <h1 className="mt-4 mb-0 font-inv-display text-[clamp(2.75rem,10vw,5.25rem)] leading-[0.98] font-light">
+        <h1
+          className={clsx(
+            hasLead ? 'mt-4' : 'mt-0',
+            'mb-0 font-inv-display text-[clamp(2.75rem,10vw,5.25rem)] leading-[0.98] font-light',
+          )}
+        >
           {content.celebrantName}
-          {content.celebrantLastName && (
+          {hasText(content.celebrantLastName) && (
             <span className="mt-4 block text-[13px] tracking-[0.42em] uppercase opacity-85">
               {content.celebrantLastName}
             </span>
@@ -73,7 +88,7 @@ export function HeroCentered({ content }: HeroVariantProps) {
 
         <p className="mx-auto mt-7 mb-0 flex max-w-md flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[12px] tracking-[0.22em] uppercase opacity-90">
           <span>{content.dateLabel}</span>
-          {content.city && (
+          {hasText(content.city) && (
             <>
               <span aria-hidden="true" className="opacity-50">
                 ·
@@ -83,7 +98,7 @@ export function HeroCentered({ content }: HeroVariantProps) {
           )}
         </p>
 
-        {content.tagline && (
+        {hasText(content.tagline) && (
           <p className="mx-auto mt-6 mb-0 max-w-lg text-[15px] leading-relaxed opacity-85">
             {content.tagline}
           </p>

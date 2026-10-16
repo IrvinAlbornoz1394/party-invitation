@@ -1,5 +1,6 @@
 import { BlockHeading } from '../../shared/BlockHeading';
 import { BlockNote } from '../../shared/BlockNote';
+import { hasText } from '../../shared/has-text';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { IconBadge } from '../../shared/IconBadge';
 import { VenueFacts, VenueMedia, type LocationVariantProps } from './location-parts';
@@ -88,7 +89,7 @@ export function LocationSinglePlate({ content }: LocationVariantProps) {
         ))}
       </div>
 
-      {content.note && (
+      {hasText(content.note) && (
         <BlockContainer className="max-w-xl">
           <BlockNote note={content.note} className="mt-12 text-center" />
         </BlockContainer>

@@ -1,8 +1,10 @@
+import clsx from 'clsx';
 import { Heart } from 'lucide-react';
 import { requireDesignAsset } from '@/lib/design-assets';
 import { BlockContainer, BlockSection } from '../../shared/BlockSection';
 import { DesignAsset } from '../../shared/DesignAsset';
 import { RsvpAction, type RsvpVariantProps } from './rsvp-parts';
+import { hasText } from '../../shared/has-text';
 
 const BOW = requireDesignAsset('symbol-bow-satin-001');
 
@@ -32,7 +34,7 @@ export function RsvpBow({ content }: RsvpVariantProps) {
       />
 
       <BlockContainer className="max-w-md text-center">
-        {content.eyebrow && (
+        {hasText(content.eyebrow) && (
           <p className="mt-6 mb-0 text-[10.5px] tracking-[0.34em] text-inv-ink-soft uppercase">
             {content.eyebrow}
           </p>
@@ -41,7 +43,11 @@ export function RsvpBow({ content }: RsvpVariantProps) {
           size={10}
           strokeWidth={0}
           aria-hidden="true"
-          className="mx-auto mt-3 block fill-current text-inv-accent"
+          /* Sin rótulo, el corazón hereda la distancia al moño que llevaba el rótulo. */
+          className={clsx(
+            'mx-auto block fill-current text-inv-accent',
+            hasText(content.eyebrow) ? 'mt-3' : 'mt-6',
+          )}
         />
 
         <p
@@ -53,7 +59,7 @@ export function RsvpBow({ content }: RsvpVariantProps) {
           VP
         </p>
 
-        {content.deadlineLabel && (
+        {hasText(content.deadlineLabel) && (
           <p className="mt-7 mb-0 font-inv-display text-[12.5px] tracking-[0.26em] text-inv-ink-soft uppercase">
             {content.deadlineLabel}
           </p>
@@ -62,7 +68,7 @@ export function RsvpBow({ content }: RsvpVariantProps) {
         <h2 className="mt-7 mb-0 font-inv-script text-[clamp(2.1rem,9vw,2.7rem)] leading-[1.1] font-normal text-inv-accent">
           {content.title}
         </h2>
-        {content.subtitle && (
+        {hasText(content.subtitle) && (
           <p className="mx-auto mt-4 mb-0 max-w-[17rem] text-[14px] leading-relaxed text-inv-ink">
             {content.subtitle}
           </p>
@@ -70,7 +76,7 @@ export function RsvpBow({ content }: RsvpVariantProps) {
 
         <RsvpAction content={content} align="center" className="mt-8" />
 
-        {content.note && (
+        {hasText(content.note) && (
           <p className="mx-auto mt-8 mb-0 max-w-[17rem] text-[12.5px] leading-relaxed text-inv-ink-soft">
             {content.note}
           </p>
