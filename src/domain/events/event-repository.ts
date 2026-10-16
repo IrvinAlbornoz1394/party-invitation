@@ -2,6 +2,11 @@ import type { TenantScope } from '@/domain/auth/actor';
 import type { BlockConfigPatch } from './event-block-texts';
 import type { EventCollections } from './event-collections';
 import type { EventContentDraft } from './event-content-draft';
+import type {
+  EditableEventDetails,
+  EventDetails,
+  UpdateEventDetailsResult,
+} from './event-details';
 import type { NewEvent } from './new-event';
 import type { PlatformCredentials } from '../auth/platform-credentials';
 
@@ -43,6 +48,27 @@ export interface EventSummary {
    * a la plataforma. Ver la columna en el esquema para cuándo se apaga sola.
    */
   readonly clientFillsContent: boolean;
+}
+
+/**
+ * La ficha de un evento: lo que se le vendió y cuánto le dura.
+ *
+ * Va aparte de `EventSummary` porque solo la necesita una pantalla —la del contenido, desde la
+ * plataforma— y arrastra tres catálogos. Meterla en el resumen haría pagar esos joins a todas
+ * las listas, que no la enseñan.
+ */
+export interface EventOverview {
+  readonly planName: string;
+  readonly planPriceCents: number;
+  readonly planCurrency: string;
+  readonly planDurationMonths: number;
+  readonly eventTypeName: string;
+  readonly templateName: string;
+  readonly themeName: string;
+  readonly startsAt: Date;
+  /** Nulas hasta que se publica: la vigencia empieza a correr ese día. */
+  readonly publishedAt: Date | null;
+  readonly expiresAt: Date | null;
 }
 
 /**
@@ -278,6 +304,22 @@ export interface EventRepository {
   /** El cliente da por terminado su contenido. Solo desde borrador. */
   sendToReview(scope: TenantScope, eventId: string): Promise<boolean>;
 
+  /**
+   * Regresa a borrador un evento publicado porque su contenido cambió. Devuelve si lo hizo: con el
+   * evento en cualquier otro estado no toca nada y responde falso.
+   *
+   * La invitación deja de verse en su dirección hasta que se vuelva a publicar. La fecha de
+   * publicación y la vigencia se conservan: volver a publicar no reinicia los meses del plan.
+   */
+  returnToDraft(scope: TenantScope, eventId: string, actorUserId: string): Promise<boolean>;
+
+  /** Lo mismo, pedido por la plataforma: abre antes el contexto del cliente con autorización. */
+  returnToDraftAsPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<boolean>;
+
   /** Enciende o apaga la espera del contenido del cliente. */
   setClientFillsContent(input: {
     readonly credentials: PlatformCredentials;
@@ -298,6 +340,34 @@ export interface EventRepository {
     clientId: string,
     eventId: string,
   ): Promise<EventSummary | null>;
+
+  /** Lo que el formulario «Editar evento» necesita para arrancar. `null` igual que `findForPlatform`. */
+  findDetailsForPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<EditableEventDetails | null>;
+
+  /**
+   * Corrige los datos del alta: título, fecha y hora, plan, plantilla y tema.
+   *
+   * Si cambia el plan o la plantilla, rehace en la misma transacción qué secciones lleva la
+   * invitación, con la misma regla del alta. Y si el evento ya está publicado y cambia el plan,
+   * recalcula la vigencia desde la fecha de publicación con la duración del plan nuevo.
+   */
+  updateDetails(input: {
+    readonly credentials: PlatformCredentials;
+    readonly clientId: string;
+    readonly eventId: string;
+    readonly details: EventDetails;
+  }): Promise<UpdateEventDetailsResult>;
+
+  /** La ficha del evento, leída por la plataforma. `null` igual que `findForPlatform`. */
+  findOverviewForPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<EventOverview | null>;
 
   /**
    * Por dónde se le puede avisar a un cliente, y cómo se llama.

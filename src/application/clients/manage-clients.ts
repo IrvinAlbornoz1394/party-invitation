@@ -6,6 +6,7 @@ import type {
   ClientRepository,
   ClientSummary,
   CreateClientResult,
+  UpdateClientResult,
 } from '@/domain/clients/client-repository';
 import { type ClientActor, displayNameOf } from '@/domain/auth/actor';
 import { normalizeEmail } from '@/domain/auth/email-address';
@@ -132,5 +133,46 @@ export class CreateClient {
     }
 
     return result;
+  }
+}
+
+export interface UpdateClientCommand {
+  readonly clientId: string;
+  readonly name: string;
+  readonly contactEmail: string;
+  readonly contactPhone: string;
+}
+
+/**
+ * Corregir los datos de un cliente: nombre, correo y teléfono.
+ *
+ * Las mismas reglas que el alta, y por eso las mismas normalizaciones. El correo es el delicado:
+ * es también la identidad de su responsable, y la función de la base de datos mueve las dos
+ * cosas juntas. No se le manda ningún aviso — el correo nuevo entra igual pidiendo su código, y
+ * un «tus datos cambiaron» a una dirección que acaba de corregirse no le dice nada a nadie.
+ */
+export class UpdateClient {
+  constructor(private readonly clients: ClientRepository) {}
+
+  async execute(
+    credentials: PlatformCredentials,
+    command: UpdateClientCommand,
+  ): Promise<UpdateClientResult> {
+    if (!canAdministerPlatform(credentials.actor)) return { outcome: 'forbidden' };
+
+    const name = command.name.trim();
+    if (name.length < 2) return { outcome: 'invalid-name' };
+
+    const contactEmail = normalizeEmail(command.contactEmail);
+    if (contactEmail === null) return { outcome: 'invalid-email' };
+
+    const contactPhone = command.contactPhone.trim();
+
+    return this.clients.update(credentials, {
+      clientId: command.clientId,
+      name,
+      contactEmail,
+      contactPhone: contactPhone.length > 0 ? contactPhone : null,
+    });
   }
 }

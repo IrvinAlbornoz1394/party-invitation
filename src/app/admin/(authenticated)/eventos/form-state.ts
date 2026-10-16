@@ -35,3 +35,19 @@ export const INITIAL_NEW_EVENT_STATE: NewEventState = {
   errors: {},
   created: null,
 };
+
+/**
+ * El estado del formulario «Editar evento». Como el del alta, con motivo por campo: son siete
+ * controles y un mensaje general obligaría a buscar cuál está mal.
+ */
+export interface EditEventState {
+  readonly status: 'idle' | 'success' | 'error';
+  readonly message: string;
+  readonly errors: Readonly<Record<string, string>>;
+}
+
+export const INITIAL_EDIT_EVENT_STATE: EditEventState = {
+  status: 'idle',
+  message: '',
+  errors: {},
+};

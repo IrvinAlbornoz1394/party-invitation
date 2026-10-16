@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import type { ActionState } from '@/app/action-state';
-import { createClient } from '@/infrastructure/container';
+import { createClient, updateClient } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 
 /**
@@ -78,6 +78,48 @@ export async function createClientAction(
        * intentándolo por qué exactamente no puede.
        */
       return { status: 'error', message: 'No se pudo crear el cliente.' };
+  }
+}
+
+/**
+ * Corregir nombre, correo y teléfono de un cliente. Las mismas tres capas que el alta: esta
+ * comprobación, la del caso de uso y la de `app.update_client()`.
+ */
+export async function updateClientAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const credentials = await requirePlatformCredentials();
+  const clientId = readText(formData, 'clientId');
+
+  const result = await updateClient.execute(credentials, {
+    clientId,
+    name: readText(formData, 'name'),
+    contactEmail: readText(formData, 'contactEmail'),
+    contactPhone: readText(formData, 'contactPhone'),
+  });
+
+  switch (result.outcome) {
+    case 'updated':
+      revalidatePath('/admin/clientes');
+      revalidatePath(`/admin/clientes/${clientId}`);
+
+      return { status: 'success', message: 'Datos del cliente actualizados.' };
+
+    case 'email-taken':
+      return {
+        status: 'error',
+        message: 'Ese correo ya tiene una cuenta en la plataforma.',
+      };
+
+    case 'invalid-email':
+      return { status: 'error', message: 'Revisa el correo del cliente.' };
+
+    case 'invalid-name':
+      return { status: 'error', message: 'Escribe el nombre del cliente.' };
+
+    case 'forbidden':
+      return { status: 'error', message: 'No se pudo actualizar el cliente.' };
   }
 }
 

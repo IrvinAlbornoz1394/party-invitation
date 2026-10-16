@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { Alert, Button } from 'antd';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import type { EditableBlockLists } from '@/domain/events/event-block-lists';
 import {
   eventFieldExamples,
   eventFieldLabels,
@@ -76,6 +77,14 @@ import '../content-editor.css';
  * «vacío», y un formulario que grita a media palabra es peor que uno que espera. Quien informa es
  * el guardado explícito.
  *
+ * ## La palomita de un paso dice si la sección está completa
+ *
+ * No que ya se pasó por ella. Antes se marcaba todo lo que quedaba a la izquierda del paso actual,
+ * y eso llevaba a ver nueve palomitas y un «todavía falta información» al intentar publicar. Ahora
+ * cada paso trae lo que le falta (`ContentStep.missing`, la misma regla que la publicación) y se
+ * pinta como completo, pendiente u opcional —este último cuando el plan del evento no incluye la
+ * sección y, por tanto, no hace falta llenarla para publicar—.
+ *
  * ## El último paso es la invitación entera
  *
  * Ahí va el render completo y las acciones que cierran el trabajo: **publicar** si mira un admin,
@@ -98,6 +107,7 @@ export function ContentWizard({
   steps,
   collections: initialCollections,
   blockTexts,
+  blockLists,
   timeZone,
   action,
   initialState,
@@ -113,6 +123,8 @@ export function ContentWizard({
   readonly steps: readonly ContentStep[];
   readonly collections: EventCollections;
   readonly blockTexts: readonly EditableBlockTexts[];
+  /** Los detalles y los colores, que viven en el `config` de su sección. */
+  readonly blockLists: EditableBlockLists;
   readonly timeZone: string;
   readonly action: (state: ContentState, formData: FormData) => Promise<ContentState>;
   readonly initialState: ContentState;
@@ -136,6 +148,8 @@ export function ContentWizard({
   const [texts, setTexts] = useState<Record<string, Record<string, string>>>(() =>
     Object.fromEntries(blockTexts.map((block) => [block.blockKey, { ...block.values }])),
   );
+
+  const [lists, setLists] = useState<EditableBlockLists>(blockLists);
 
   const lastStep = Math.max(steps.length - 1, 0);
   const [step, setStep] = useState(openAtPreview ? lastStep : 0);
@@ -176,6 +190,11 @@ export function ContentWizard({
    */
   const changeCollections: Dispatch<SetStateAction<EditableCollections>> = (value) => {
     setCollections(value);
+    setEdits((count) => count + 1);
+  };
+
+  const changeLists: Dispatch<SetStateAction<EditableBlockLists>> = (value) => {
+    setLists(value);
     setEdits((count) => count + 1);
   };
 
@@ -251,22 +270,33 @@ export function ContentWizard({
       */}
       <nav className="wizard-steps" aria-label="Pasos del contenido">
         <ol className="wizard-steps__list">
-          {steps.map((candidate, index) => (
-            <li key={candidate.label}>
-              <button
-                type="button"
-                className="wizard-steps__step"
-                data-state={index === step ? 'current' : index < step ? 'done' : 'todo'}
-                aria-current={index === step ? 'step' : undefined}
-                onClick={() => setStep(index)}
-              >
-                <span className="wizard-steps__number">
-                  {index < step ? <Check size={13} /> : index + 1}
-                </span>
-                {candidate.label}
-              </button>
-            </li>
-          ))}
+          {steps.map((candidate, index) => {
+            const status = stepStatus(candidate);
+
+            return (
+              <li key={candidate.label}>
+                <button
+                  type="button"
+                  className="wizard-steps__step"
+                  data-state={index === step ? 'current' : status}
+                  aria-current={index === step ? 'step' : undefined}
+                  title={STATUS_TITLES[status]}
+                  onClick={() => setStep(index)}
+                >
+                  <span className="wizard-steps__number">
+                    {status === 'done' && index !== step ? <Check size={13} /> : index + 1}
+                  </span>
+                  {candidate.label}
+                  {status === 'optional' && (
+                    <span className="wizard-steps__tag">opcional</span>
+                  )}
+                  {/* El estado también en palabras: el color y el icono solos no le dicen nada a
+                      un lector de pantalla. */}
+                  <span className="dash-sr-only">{` (${STATUS_TITLES[status]})`}</span>
+                </button>
+              </li>
+            );
+          })}
         </ol>
       </nav>
 
@@ -285,6 +315,7 @@ export function ContentWizard({
             <input type="hidden" name="eventId" value={eventId} />
             <input type="hidden" name="collections" value={JSON.stringify(collections)} />
             <input type="hidden" name="blocks" value={JSON.stringify(texts)} />
+            <input type="hidden" name="lists" value={JSON.stringify(lists)} />
 
             {steps.map((candidate, index) =>
               candidate.blockKey === null ? null : (
@@ -295,6 +326,7 @@ export function ContentWizard({
                 */
                 <div key={candidate.label} hidden={index !== step}>
                   <SectionCard title={candidate.label}>
+                    <StepNotice step={candidate} />
                     <StepFields
                       step={candidate}
                       draft={draft}
@@ -308,6 +340,8 @@ export function ContentWizard({
                       blockTexts={blockTexts}
                       texts={texts}
                       onTextChange={changeText}
+                      lists={lists}
+                      setLists={changeLists}
                     />
                   </SectionCard>
                 </div>
@@ -388,6 +422,69 @@ export function ContentWizard({
         </aside>
       </div>
     </>
+  );
+}
+
+/**
+ * En qué punto está una sección.
+ *
+ * - `done`      Se puede pintar tal como está.
+ * - `pending`   La incluye el plan y le falta algo: frena la publicación.
+ * - `optional`  El plan no la incluye y está incompleta: no frena nada.
+ * - `todo`      El último paso, que no es una sección.
+ */
+type StepStatus = 'done' | 'pending' | 'optional' | 'todo';
+
+function stepStatus(step: ContentStep): StepStatus {
+  if (step.blockKey === null) return 'todo';
+  if (step.missing.length === 0) return 'done';
+
+  return step.required ? 'pending' : 'optional';
+}
+
+const STATUS_TITLES: Readonly<Record<StepStatus, string>> = {
+  done: 'Completa',
+  pending: 'Le falta información para publicar',
+  optional: 'Opcional: no está incluida en el plan del evento',
+  todo: 'Revisa la invitación completa',
+};
+
+/**
+ * El aviso de arriba de cada paso: qué le falta para publicar, o que es opcional.
+ *
+ * Es la misma lista que enseña la vista previa al intentar publicar, puesta en la sección donde se
+ * arregla. Sin esto, «La lista de detalles» se leía al final y había que adivinar en qué paso
+ * estaba el hueco.
+ */
+function StepNotice({ step }: { readonly step: ContentStep }) {
+  if (step.missing.length === 0) return null;
+
+  if (!step.required) {
+    return (
+      <Alert
+        className="content-editor__step-alert"
+        type="info"
+        showIcon
+        title="Sección opcional"
+        description="El plan del evento no incluye esta sección: puedes llenarla si quieres, pero no hace falta para publicar."
+      />
+    );
+  }
+
+  return (
+    <Alert
+      className="content-editor__step-alert"
+      type="warning"
+      showIcon
+      title="Falta esto para poder publicar"
+      description={
+        <ul className="content-editor__missing">
+          {step.missing.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      }
+    />
   );
 }
 

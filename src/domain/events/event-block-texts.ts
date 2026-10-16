@@ -370,10 +370,10 @@ export type BlockTextsResult =
       readonly errors: Readonly<Record<string, string>>;
     };
 
-/** Lo que hay que fundir en el `config` de un bloque. Solo los campos que este formulario edita. */
+/** Lo que hay que fundir en el `config` de un bloque: textos (aquí) o listas (`event-block-lists.ts`). */
 export interface BlockConfigPatch {
   readonly blockKey: string;
-  readonly config: Readonly<Record<string, string | null>>;
+  readonly config: Readonly<Record<string, unknown>>;
 }
 
 /**

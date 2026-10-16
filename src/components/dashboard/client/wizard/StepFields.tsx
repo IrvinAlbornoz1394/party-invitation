@@ -5,6 +5,10 @@ import { Select } from 'antd';
 import type { GalleryRow, ScheduleRow, VenueRow } from '@/domain/events/event-collections';
 import type { EventFieldExamples } from '@/domain/events/content-hints';
 import type { ContentStep, EventFieldKey } from '@/domain/events/content-steps';
+import { BLOCK_LIST_MAX, type EditableBlockLists } from '@/domain/events/event-block-lists';
+import type { BlockIcon } from '@/domain/invitation/blocks/shared';
+import type { DetailItem } from '@/domain/invitation/blocks/details';
+import type { DresscodeSwatch } from '@/domain/invitation/blocks/dresscode';
 import type { EditableBlockTexts } from '@/domain/events/event-block-texts';
 import type { EventContentDraft } from '@/domain/events/event-content-draft';
 import { BlockTextFields } from '../BlockTextFields';
@@ -69,6 +73,33 @@ const FIELD_UI: Readonly<
   rsvpDeadline: { label: 'Fecha límite para confirmar', help: 'Opcional.', native: 'date' },
 };
 
+/**
+ * Cómo se llama cada icono en el selector de un detalle. El orden es el de uso más frecuente en
+ * una invitación, no el alfabético: lo primero que se busca es el estacionamiento y los regalos.
+ */
+const ICON_OPTIONS: readonly { readonly value: BlockIcon; readonly label: string }[] = [
+  { value: 'info', label: 'Información' },
+  { value: 'parking', label: 'Estacionamiento' },
+  { value: 'gift', label: 'Regalos' },
+  { value: 'dress', label: 'Vestimenta' },
+  { value: 'guests', label: 'Invitados / niños' },
+  { value: 'church', label: 'Ceremonia' },
+  { value: 'location', label: 'Lugar' },
+  { value: 'car', label: 'Transporte' },
+  { value: 'food', label: 'Comida' },
+  { value: 'toast', label: 'Brindis' },
+  { value: 'cake', label: 'Pastel' },
+  { value: 'music', label: 'Música' },
+  { value: 'party', label: 'Fiesta' },
+  { value: 'camera', label: 'Fotos' },
+  { value: 'flowers', label: 'Flores' },
+  { value: 'heart', label: 'Corazón' },
+  { value: 'sparkles', label: 'Destellos' },
+  { value: 'calendar', label: 'Fecha' },
+  { value: 'clock', label: 'Hora' },
+  { value: 'phone', label: 'Teléfono' },
+];
+
 /** El ejemplo de un campo, si lo hay. Los que no lo tienen —fechas, enlaces— no lo necesitan. */
 function exampleOf(field: EventFieldKey, examples: EventFieldExamples): string | undefined {
   if (field in examples) return examples[field as keyof EventFieldExamples];
@@ -96,6 +127,8 @@ export function StepFields({
   blockTexts,
   texts,
   onTextChange,
+  lists,
+  setLists,
 }: {
   readonly step: ContentStep;
   readonly draft: EventContentDraft;
@@ -114,6 +147,8 @@ export function StepFields({
   readonly blockTexts: readonly EditableBlockTexts[];
   readonly texts: Readonly<Record<string, Record<string, string>>>;
   readonly onTextChange: (blockKey: string, field: string, value: string) => void;
+  readonly lists: EditableBlockLists;
+  readonly setLists: Dispatch<SetStateAction<EditableBlockLists>>;
 }) {
   const block = blockTexts.find((candidate) => candidate.blockKey === step.blockKey);
 
@@ -135,6 +170,7 @@ export function StepFields({
     <>
       {renderFields()}
       {renderCollection()}
+      {renderList()}
       {block && trailing.length > 0 && renderTexts(block, trailing)}
     </>
   );
@@ -240,6 +276,116 @@ export function StepFields({
         errors={errors}
       />
     );
+  }
+
+  /**
+   * La lista que la sección guarda en su `config`: los detalles o los colores de la vestimenta.
+   * Ver `domain/events/event-block-lists.ts` para por qué no son colecciones del evento.
+   */
+  function renderList(): ReactNode {
+    if (step.list === 'details') {
+      return (
+        <CollectionEditor<DetailItem>
+          title="Los detalles"
+          description="Avisos cortos: estacionamiento, regalos, si pueden ir niños. Un título y una frase."
+          rows={lists.details ?? []}
+          max={BLOCK_LIST_MAX.details}
+          addLabel="Añadir un detalle"
+          emptyLabel="Todavía no hay detalles. Añade al menos uno."
+          rowTitle={(row) => row.title}
+          makeEmpty={() => ({ icon: 'info', title: '', description: null, action: null })}
+          onChange={(details) => setLists((current) => ({ ...current, details }))}
+          renderRow={(row, index, update) => (
+            <>
+              <div className="content-editor__row">
+                <RowField
+                  label="Título"
+                  error={errors[`lists.details.${index}.title`]}
+                  value={row.title}
+                  onChange={(title) => update({ title: title ?? '' })}
+                  placeholder="Estacionamiento"
+                />
+                <RowField
+                  label="Icono"
+                  error={errors[`lists.details.${index}.icon`]}
+                  node={
+                    <Select
+                      value={row.icon}
+                      onChange={(icon) => update({ icon })}
+                      style={{ width: '100%' }}
+                      options={ICON_OPTIONS.map((option) => ({ ...option }))}
+                    />
+                  }
+                />
+              </div>
+              <RowField
+                label="Descripción"
+                error={errors[`lists.details.${index}.description`]}
+                value={row.description ?? ''}
+                onChange={(description) => update({ description })}
+                placeholder="Hay lugar dentro de la hacienda, sin costo."
+              />
+            </>
+          )}
+        />
+      );
+    }
+
+    if (step.list === 'dresscode') {
+      return (
+        <CollectionEditor<DresscodeSwatch>
+          title="Los colores"
+          description="Entre dos y seis. Con nombre, la sección también se entiende sin ver el color."
+          rows={lists.dresscode ?? []}
+          max={BLOCK_LIST_MAX.dresscode}
+          addLabel="Añadir un color"
+          emptyLabel="Todavía no hay colores. Añade al menos dos."
+          rowTitle={(row, index) => row.label || row.color || `Color ${index + 1}`}
+          makeEmpty={() => ({ color: '#c9a227', label: null, finish: 'flat' })}
+          onChange={(dresscode) => setLists((current) => ({ ...current, dresscode }))}
+          renderRow={(row, index, update) => (
+            <div className="content-editor__row">
+              <RowField
+                label="Color"
+                error={errors[`lists.dresscode.${index}.color`]}
+                node={
+                  <input
+                    className="dash-native-input"
+                    type="color"
+                    value={row.color}
+                    onChange={(event) => update({ color: event.target.value })}
+                  />
+                }
+              />
+              <RowField
+                label="Nombre"
+                error={errors[`lists.dresscode.${index}.label`]}
+                value={row.label ?? ''}
+                onChange={(label) => update({ label })}
+                placeholder="Verde oliva"
+              />
+              <RowField
+                label="Acabado"
+                error={errors[`lists.dresscode.${index}.finish`]}
+                node={
+                  <Select
+                    value={row.finish}
+                    onChange={(finish) => update({ finish })}
+                    style={{ width: '100%' }}
+                    options={[
+                      { value: 'flat', label: 'Liso' },
+                      { value: 'metallic', label: 'Metálico' },
+                    ]}
+                  />
+                }
+              />
+            </div>
+          )}
+        />
+      );
+    }
+
+    return null;
   }
 
   /** La lista ordenada de este paso, si tiene una. Las tres son las de siempre. */

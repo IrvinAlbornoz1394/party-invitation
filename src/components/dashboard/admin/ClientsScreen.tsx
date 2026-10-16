@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Alert, Button, Input } from 'antd';
+import { Alert, Button, Input, Tooltip } from 'antd';
 import type { TableProps } from 'antd';
-import { Plus, Search } from 'lucide-react';
+import { Pencil, Plus, Search } from 'lucide-react';
 import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import type { ClientSummary } from '@/domain/clients/client-repository';
 import { formatDate, pluralize } from '../format';
@@ -13,6 +13,7 @@ import { PageHeader } from '../primitives/PageHeader';
 import { SectionCard } from '../primitives/SectionCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { clientStatus } from '../primitives/status-display';
+import { EditClientDialog } from './EditClientDialog';
 import { NewClientDialog } from './NewClientDialog';
 
 /**
@@ -27,6 +28,22 @@ export function ClientsScreen({ clients }: { readonly clients: readonly ClientSu
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [feedback, setFeedback] = useState<ActionState>(IDLE_ACTION_STATE);
   const [query, setQuery] = useState('');
+  /*
+   * El cliente que se edita y si el diálogo está abierto van por separado: al cerrar se apaga
+   * `isEditOpen` pero el cliente se conserva, para que el diálogo pueda animar su salida con
+   * los datos todavía dentro en vez de vaciarse de golpe.
+   */
+  const [editing, setEditing] = useState<ClientSummary | null>(null);
+  const [isEditOpen, setEditOpen] = useState(false);
+
+  const columns = useMemo(
+    () =>
+      buildColumns((client) => {
+        setEditing(client);
+        setEditOpen(true);
+      }),
+    [],
+  );
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -97,7 +114,7 @@ export function ClientsScreen({ clients }: { readonly clients: readonly ClientSu
         <DataTable
           rows={filtered}
           rowKey="id"
-          minWidth={720}
+          minWidth={784}
           columns={columns}
           rowHref={(client) => `/admin/clientes/${client.id}`}
           empty={
@@ -120,50 +137,88 @@ export function ClientsScreen({ clients }: { readonly clients: readonly ClientSu
         onClose={() => setDialogOpen(false)}
         onResult={setFeedback}
       />
+
+      {editing && (
+        <EditClientDialog
+          /* La llave reinicia el estado de la acción al cambiar de cliente: sin ella, el error
+             de guardar a uno aparecería al abrir el siguiente. */
+          key={editing.id}
+          client={editing}
+          open={isEditOpen}
+          onClose={() => setEditOpen(false)}
+          onResult={setFeedback}
+        />
+      )}
     </>
   );
 }
 
-const columns: TableProps<ClientSummary>['columns'] = [
-  {
-    title: 'Cliente',
-    dataIndex: 'name',
-    key: 'name',
-    render: (_value, client) => (
-      <IdentityCell primary={client.name} secondary={client.contactEmail ?? undefined} />
-    ),
-  },
-  {
-    title: 'Identificador',
-    dataIndex: 'slug',
-    key: 'slug',
-    width: 176,
-    render: (slug: string) => <CodeCell>{slug}</CodeCell>,
-  },
-  {
-    title: 'Eventos',
-    dataIndex: 'eventCount',
-    key: 'eventCount',
-    width: 104,
-    align: 'right',
-    // Ordenable porque «quién tiene más eventos» es una pregunta real, y ordenar por ella a
-    // ojo en una tabla de treinta filas no se puede.
-    sorter: (a, b) => a.eventCount - b.eventCount,
-    render: (count: number) => (count === 0 ? <EmptyCell /> : count),
-  },
-  {
-    title: 'Estado',
-    dataIndex: 'status',
-    key: 'status',
-    width: 128,
-    render: (status: string) => <StatusPill appearance={clientStatus(status)} />,
-  },
-  {
-    title: 'Alta',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 128,
-    sorter: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-    render: (date: Date) => <span className="dash-cell__secondary">{formatDate(date)}</span>,
-  },
-];
+function buildColumns(
+  onEdit: (client: ClientSummary) => void,
+): TableProps<ClientSummary>['columns'] {
+  return [
+    {
+      title: 'Cliente',
+      dataIndex: 'name',
+      key: 'name',
+      render: (_value, client) => (
+        <IdentityCell primary={client.name} secondary={client.contactEmail ?? undefined} />
+      ),
+    },
+    {
+      title: 'Identificador',
+      dataIndex: 'slug',
+      key: 'slug',
+      width: 176,
+      render: (slug: string) => <CodeCell>{slug}</CodeCell>,
+    },
+    {
+      title: 'Eventos',
+      dataIndex: 'eventCount',
+      key: 'eventCount',
+      width: 104,
+      align: 'right',
+      // Ordenable porque «quién tiene más eventos» es una pregunta real, y ordenar por ella a
+      // ojo en una tabla de treinta filas no se puede.
+      sorter: (a, b) => a.eventCount - b.eventCount,
+      render: (count: number) => (count === 0 ? <EmptyCell /> : count),
+    },
+    {
+      title: 'Estado',
+      dataIndex: 'status',
+      key: 'status',
+      width: 128,
+      render: (status: string) => <StatusPill appearance={clientStatus(status)} />,
+    },
+    {
+      title: 'Alta',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 128,
+      sorter: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      render: (date: Date) => <span className="dash-cell__secondary">{formatDate(date)}</span>,
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 64,
+      align: 'right',
+      render: (_value, client) => (
+        <Tooltip title="Editar cliente">
+          <Button
+            type="text"
+            icon={<Pencil size={15} strokeWidth={1.9} aria-hidden="true" />}
+            aria-label={`Editar ${client.name}`}
+            /* La fila entera lleva a la ficha; editar no debe además navegar, ni con el ratón
+               ni con Enter o espacio, que la fila también escucha. */
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(client);
+            }}
+            onKeyDown={(event) => event.stopPropagation()}
+          />
+        </Tooltip>
+      ),
+    },
+  ];
+}

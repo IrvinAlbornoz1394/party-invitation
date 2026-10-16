@@ -1,9 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createEvent } from '@/infrastructure/container';
+import type { EditableEventDetails } from '@/domain/events/event-details';
+import { createEvent, editEventDetails } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
-import { INITIAL_NEW_EVENT_STATE, type NewEventState } from './form-state';
+import {
+  INITIAL_NEW_EVENT_STATE,
+  type EditEventState,
+  type NewEventState,
+} from './form-state';
 
 /**
  * Alta de un evento.
@@ -114,6 +119,78 @@ export async function createEventAction(
         status: 'error',
         message: 'No se pudo crear el evento.',
       };
+  }
+}
+
+/**
+ * Los datos actuales de un evento, para arrancar el formulario «Editar evento».
+ *
+ * Es una acción y no una prop porque el diálogo se abre desde tablas —la lista de eventos y la
+ * ficha de un cliente— cuyas filas no traen plantilla, tema ni hora local. Traerlos para todas
+ * las filas por si alguien pulsa el lápiz en una sería pagar por adelantado lo que casi nunca se
+ * usa.
+ */
+export async function loadEventDetailsAction(
+  eventId: string,
+): Promise<EditableEventDetails | null> {
+  const credentials = await requirePlatformCredentials();
+
+  return editEventDetails.load(credentials, eventId);
+}
+
+/** Guarda «Editar evento». Las mismas tres capas que el alta; ver la cabecera del archivo. */
+export async function updateEventDetailsAction(
+  _previous: EditEventState,
+  formData: FormData,
+): Promise<EditEventState> {
+  const credentials = await requirePlatformCredentials();
+  const eventId = readText(formData, 'eventId');
+
+  const result = await editEventDetails.save(credentials, eventId, {
+    title: readText(formData, 'title'),
+    date: readText(formData, 'date'),
+    time: readText(formData, 'time'),
+    timeZone: readText(formData, 'timeZone'),
+    planKey: readText(formData, 'planKey'),
+    templateId: readText(formData, 'templateId'),
+    themeId: readText(formData, 'themeId'),
+  });
+
+  switch (result.outcome) {
+    case 'updated':
+      /* El cliente no viaja en el formulario, así que se revalida su rama entera: la ficha del
+         cliente que abrió el diálogo cuelga de ahí. */
+      revalidatePath('/admin/eventos', 'layout');
+      revalidatePath('/admin/clientes', 'layout');
+      revalidatePath('/admin');
+
+      return {
+        status: 'success',
+        message: result.unpublished
+          ? 'Evento actualizado. Volvió a borrador: publícalo de nuevo cuando esté listo.'
+          : 'Evento actualizado.',
+        errors: {},
+      };
+
+    case 'invalid':
+      return { status: 'error', message: 'Revisa los campos marcados.', errors: result.errors };
+
+    case 'incompatible-template':
+      return {
+        status: 'error',
+        message: 'Esa plantilla no se ofrece para este tipo de evento o para el plan elegido.',
+        errors: { templateId: 'Elige una plantilla que encaje con el plan.' },
+      };
+
+    case 'unknown-catalog':
+      return {
+        status: 'error',
+        message: 'El plan, la plantilla o el tema ya no existen. Recarga la página.',
+        errors: {},
+      };
+
+    case 'forbidden':
+      return { status: 'error', message: 'No se pudo actualizar el evento.', errors: {} };
   }
 }
 

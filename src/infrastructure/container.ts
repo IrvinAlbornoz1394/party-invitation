@@ -33,13 +33,20 @@ import {
 } from '@/application/catalog/browse-catalog';
 import { BrowseShowcase } from '@/application/catalog/browse-showcase';
 import { LoadPlanFeatures } from '@/application/catalog/load-plan-features';
-import { CreateClient, ListClients, LoadOwnClient } from '@/application/clients/manage-clients';
+import {
+  CreateClient,
+  ListClients,
+  LoadOwnClient,
+  UpdateClient,
+} from '@/application/clients/manage-clients';
 import { CreateEvent, LoadNewEventOptions } from '@/application/events/create-event';
+import { EditEventDetails } from '@/application/events/edit-event-details';
 import { PublishEvent } from '@/application/events/publish-event';
 import { ShareContentLink } from '@/application/events/share-content-link';
 import { SubmitEventContent } from '@/application/events/submit-event-content';
 import {
   FindEventForPlatform,
+  FindEventOverviewForPlatform,
   ListAllEvents,
   ListClientEvents,
   ListEventsOfClient,
@@ -302,6 +309,7 @@ export const setEventAccessStatus = new SetEventAccessStatus(userRepository);
 /** Panel de plataforma (`/admin`). */
 export const listClients = new ListClients(clientRepository);
 export const createClient = new CreateClient(clientRepository, lazyInvitationNotifier);
+export const updateClient = new UpdateClient(clientRepository);
 /*
  * La conversión se arma AQUÍ, lejos de los demás casos de uso de prospectos, porque depende del
  * alta de clientes y no al revés. Es el mismo criterio que ya ordena este archivo: manda la
@@ -331,6 +339,8 @@ export const loadNewEventOptions = new LoadNewEventOptions(catalogRepository);
  * instancia por caso de uso, con sus dependencias resueltas en un solo sitio.
  */
 export const findEventForPlatform = new FindEventForPlatform(eventRepository);
+export const findEventOverviewForPlatform = new FindEventOverviewForPlatform(eventRepository);
+export const editEventDetails = new EditEventDetails(eventRepository, findEventForPlatform);
 export const publishEvent = new PublishEvent(eventRepository, invitationRepository);
 export const submitEventContent = new SubmitEventContent(
   eventRepository,

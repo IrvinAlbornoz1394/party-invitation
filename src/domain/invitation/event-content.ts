@@ -116,6 +116,17 @@ export interface EventBlockRecord {
   readonly registryId: string;
   readonly position: number;
   readonly config: Record<string, unknown>;
+  /**
+   * Si el plan del evento incluye esta sección, y por tanto si hay que llenarla para publicar.
+   *
+   * Lo decide el plan contratado **hoy**, no el que tenía el evento al crearse: una plantilla
+   * puede traer doce secciones y el plan cubrir nueve, y solo esas nueve son obligatorias. Las
+   * demás se pueden llenar —y entonces se pintan— pero no frenan la publicación.
+   *
+   * Sin el dato (`undefined`) la sección cuenta como obligatoria: falla cerrado, igual que el
+   * alta del evento ante un catálogo incompleto.
+   */
+  readonly requiredByPlan?: boolean;
 }
 
 /** Un bloque listo para pintar: su contenido ya validado y con qué variante se pinta. */

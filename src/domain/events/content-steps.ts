@@ -1,6 +1,11 @@
 import type { ContentBlockKey } from '@/domain/invitation/blocks/block-content';
-import { isContentBlockKey, type EventBlockRecord } from '@/domain/invitation/event-content';
-import { BLOCK_LABELS } from './content-completeness';
+import {
+  isContentBlockKey,
+  type EventBlockRecord,
+  type EventContentSource,
+} from '@/domain/invitation/event-content';
+import { BLOCK_LABELS, missingOf } from './content-completeness';
+import { isBlockListBlock, type BlockListBlockKey } from './event-block-lists';
 import type { EventContentDraft } from './event-content-draft';
 
 /**
@@ -75,6 +80,21 @@ export interface ContentStep {
   readonly fields: readonly StepField[];
   /** La lista ordenada que se edita aquí, si el paso tiene una. */
   readonly collection: StepCollection | null;
+  /**
+   * La lista que la sección guarda en su propio `config` —los detalles, los colores—, si la
+   * tiene. Ver `event-block-lists.ts`.
+   */
+  readonly list: BlockListBlockKey | null;
+  /**
+   * Si el plan del evento incluye la sección. Solo las que lo incluyen son obligatorias para
+   * publicar; las demás se enseñan como opcionales. Ver `content-completeness.ts`.
+   */
+  readonly required: boolean;
+  /**
+   * Lo que le falta a la sección para pintarse, con las mismas palabras que la lista de
+   * pendientes. Vacío si está completa. Es lo que pone o quita la palomita del paso.
+   */
+  readonly missing: readonly string[];
 }
 
 /**
@@ -153,7 +173,12 @@ export const PREVIEW_STEP_LABEL = 'Vista previa';
  * cambiar si su plan se lo permite. O sea que reordenar las secciones reordena también los pasos,
  * y eso es lo correcto: se llena en el orden en que se lee.
  */
-export function contentSteps(blocks: readonly EventBlockRecord[]): readonly ContentStep[] {
+export function contentSteps(
+  blocks: readonly EventBlockRecord[],
+  /* Sin el evento no hay contra qué medir lo que falta, y ningún paso se marca pendiente. Solo
+     pasa con un evento fuera del alcance, que no tiene pasos de sección que marcar. */
+  source: EventContentSource | null = null,
+): readonly ContentStep[] {
   const sections = [...blocks]
     .filter((block) => isContentBlockKey(block.blockKey))
     .sort((first, second) => first.position - second.position)
@@ -165,11 +190,22 @@ export function contentSteps(blocks: readonly EventBlockRecord[]): readonly Cont
         label: BLOCK_LABELS[blockKey] ?? blockKey,
         fields: STEP_FIELDS[blockKey] ?? [],
         collection: COLLECTIONS[blockKey] ?? null,
+        list: isBlockListBlock(blockKey) ? blockKey : null,
+        required: block.requiredByPlan !== false,
+        missing: source ? missingOf(source, block) : [],
       };
     });
 
   return [
     ...sections,
-    { blockKey: null, label: PREVIEW_STEP_LABEL, fields: [], collection: null },
+    {
+      blockKey: null,
+      label: PREVIEW_STEP_LABEL,
+      fields: [],
+      collection: null,
+      list: null,
+      required: false,
+      missing: [],
+    },
   ];
 }

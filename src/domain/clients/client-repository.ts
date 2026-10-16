@@ -63,6 +63,23 @@ export type CreateClientResult =
   | { readonly outcome: 'invalid-email' }
   | { readonly outcome: 'forbidden' };
 
+/** Lo que se puede corregir de un cliente después del alta. El identificador no: ver `app.update_client()`. */
+export interface ClientChanges {
+  readonly clientId: string;
+  readonly name: string;
+  /** Si cambia, se mueve también la cuenta de su responsable. Ver `NewClient.contactEmail`. */
+  readonly contactEmail: string;
+  readonly contactPhone: string | null;
+}
+
+export type UpdateClientResult =
+  | { readonly outcome: 'updated' }
+  | { readonly outcome: 'email-taken' }
+  | { readonly outcome: 'invalid-email' }
+  | { readonly outcome: 'invalid-name' }
+  /** No existe, o la sesión no es de plataforma. No se distinguen. */
+  | { readonly outcome: 'forbidden' };
+
 /** Lo que un cliente sabe de sí mismo. Lo que ve en su propio panel. */
 export interface ClientProfile {
   readonly id: string;
@@ -92,4 +109,7 @@ export interface ClientRepository {
    * inaccesible para siempre.
    */
   create(credentials: PlatformCredentials, input: NewClient): Promise<CreateClientResult>;
+
+  /** Corrige nombre, correo y teléfono. Por función SECURITY DEFINER, igual que el alta. */
+  update(credentials: PlatformCredentials, changes: ClientChanges): Promise<UpdateClientResult>;
 }

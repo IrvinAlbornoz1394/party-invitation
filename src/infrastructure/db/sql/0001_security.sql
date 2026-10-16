@@ -1475,6 +1475,110 @@ exception
 end;
 $$;
 
+-- ── Editar un cliente ─────────────────────────────────────────────────────────
+--
+-- Nombre, correo y teléfono. El identificador no se toca: es lo que se dicta en soporte y lo
+-- que aparece en las referencias internas, y cambiarlo rompería esa memoria sin ganar nada.
+--
+-- Es una función y no un UPDATE con contexto de tenant por el correo. En el alta, el correo del
+-- cliente y el de la cuenta de su responsable son **el mismo** (ver `app.create_client()`), y
+-- cambiar solo el de `clients` los separaría en silencio: los avisos saldrían a la dirección
+-- nueva y el responsable seguiría entrando —o intentando entrar— con la vieja. La corrección más
+-- común es justo esa, una errata en el correo del alta, y con la errata nadie ha podido entrar.
+--
+-- Por eso, si el correo cambia, se mueve también la identidad de quien tenía el viejo y es dueño
+-- de este cliente. `users` está sellada para el rol de la aplicación; esta es la vía.
+create or replace function app.update_client(
+  p_session_hash    text,
+  p_client_id       uuid,
+  p_name            text,
+  p_contact_email   text,
+  p_contact_phone   text,
+  p_ip              inet
+)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_actor_id  uuid := app.platform_actor(p_session_hash);
+  v_old_email text;
+  v_email     text := lower(trim(coalesce(p_contact_email, '')));
+  v_phone     text := nullif(trim(coalesce(p_contact_phone, '')), '');
+  v_name      text := trim(coalesce(p_name, ''));
+  v_owner_id  uuid;
+begin
+  if v_actor_id is null then
+    return 'forbidden';
+  end if;
+
+  select c.contact_email into v_old_email
+  from public.clients c
+  where c.id = p_client_id
+  for update;
+
+  if not found then
+    return 'not_found';
+  end if;
+
+  if v_email = '' then
+    return 'invalid_email';
+  end if;
+
+  if v_name = '' then
+    return 'invalid_name';
+  end if;
+
+  if v_email is distinct from v_old_email then
+    -- El dueño cuya identidad lleva el correo de contacto actual. Puede no haberlo: un cliente
+    -- dado de alta antes de unificar los dos correos, o uno cuyo dueño cambió. Entonces solo
+    -- cambia el contacto, que es lo único que ese correo era.
+    select u.id into v_owner_id
+    from public.users u
+    join public.memberships m on m.user_id = u.id
+    where m.client_id = p_client_id
+      and m.event_id is null
+      and m.role = 'owner'
+      and u.email = v_old_email
+    limit 1;
+
+    if exists (
+      select 1 from public.users u
+      where u.email = v_email and u.id is distinct from v_owner_id
+    ) then
+      return 'email_taken';
+    end if;
+
+    if v_owner_id is not null then
+      update public.users set email = v_email where id = v_owner_id;
+    end if;
+  end if;
+
+  update public.clients
+     set name = v_name, contact_email = v_email, contact_phone = v_phone
+   where id = p_client_id;
+
+  insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip)
+  values (
+    p_client_id, v_actor_id, 'client.updated', 'client', p_client_id,
+    jsonb_build_object(
+      'name', v_name,
+      'contact_email', v_email,
+      'previous_email', v_old_email,
+      'owner_email_moved', v_owner_id is not null
+    ),
+    p_ip
+  );
+
+  return 'updated';
+exception
+  -- Dos ediciones a la vez hacia el mismo correo: la segunda choca con el único de `users`.
+  when unique_violation then
+    return 'email_taken';
+end;
+$$;
+
 -- ── Limpieza de credenciales vencidas ─────────────────────────────────────────
 -- Para ejecutar periódicamente. Un código o una sesión vencida ya no sirve para
 -- entrar, pero seguir guardando su hash es superficie de ataque sin beneficio.
@@ -2021,6 +2125,7 @@ grant execute on function app.list_clients_for_platform(text) to mievento_app;
 grant execute on function app.list_events_for_platform(text) to mievento_app;
 grant execute on function app.authorize_client_context(text, uuid, inet) to mievento_app;
 grant execute on function app.create_client(text, text, text, text, text, text, inet) to mievento_app;
+grant execute on function app.update_client(text, uuid, text, text, text, inet) to mievento_app;
 grant execute on function app.revoke_user_sessions(uuid, uuid, uuid) to mievento_app;
 grant execute on function app.resolve_invitation_access(text, text, inet) to mievento_app;
 grant execute on function app.current_client_id() to mievento_app;

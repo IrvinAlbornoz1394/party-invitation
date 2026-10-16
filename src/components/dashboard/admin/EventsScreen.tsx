@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Segmented, Select } from 'antd';
+import { Alert, Button, Input, Segmented, Select } from 'antd';
 import type { TableProps } from 'antd';
 import { Plus, Search } from 'lucide-react';
 import {
+  INITIAL_EDIT_EVENT_STATE,
   INITIAL_NEW_EVENT_STATE,
+  type EditEventState,
   type NewEventState,
 } from '@/app/admin/(authenticated)/eventos/form-state';
 import type { NewEventOptions } from '@/application/events/create-event';
@@ -20,6 +22,8 @@ import { PageHeader } from '../primitives/PageHeader';
 import { SectionCard } from '../primitives/SectionCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { eventStatus } from '../primitives/status-display';
+import { EditEventDialog } from './EditEventDialog';
+import { editEventColumn } from './edit-event-column';
 import { NewEventDialog, NewEventNotice } from './NewEventDialog';
 
 /**
@@ -72,6 +76,21 @@ export function EventsScreen({
   const [status, setStatus] = useState<StatusFilter>('todos');
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [feedback, setFeedback] = useState<NewEventState>(INITIAL_NEW_EVENT_STATE);
+  /* El evento que se edita se conserva al cerrar, para que el diálogo anime su salida lleno. */
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [editFeedback, setEditFeedback] = useState<EditEventState>(INITIAL_EDIT_EVENT_STATE);
+
+  const tableColumns = useMemo(
+    () => [
+      ...columns,
+      editEventColumn((event) => {
+        setEditingId(event.id);
+        setEditOpen(true);
+      }),
+    ],
+    [],
+  );
 
   /*
    * `replace` y no `push`: cambiar de cliente es afinar la misma vista, no navegar. Con `push`,
@@ -149,6 +168,19 @@ export function EventsScreen({
 
       <NewEventNotice state={feedback} onDismiss={() => setFeedback(INITIAL_NEW_EVENT_STATE)} />
 
+      <div role="status" aria-live="polite">
+        {editFeedback.message && (
+          <Alert
+            className="dash-page-alert"
+            type={editFeedback.status === 'error' ? 'error' : 'success'}
+            showIcon
+            closable
+            message={editFeedback.message}
+            onClose={() => setEditFeedback(INITIAL_EDIT_EVENT_STATE)}
+          />
+        )}
+      </div>
+
       <div className="dash-toolbar">
         <div className="dash-toolbar__filters">
           <Select
@@ -203,8 +235,8 @@ export function EventsScreen({
         <DataTable
           rows={filtered}
           rowKey="id"
-          minWidth={760}
-          columns={columns}
+          minWidth={824}
+          columns={tableColumns}
           /*
            * La fila lleva al **contenido del evento** y ya no a la ficha de su cliente.
            *
@@ -252,11 +284,22 @@ export function EventsScreen({
         options={options}
         clients={clients}
       />
+
+      {editingId && (
+        <EditEventDialog
+          key={editingId}
+          eventId={editingId}
+          open={isEditOpen}
+          onClose={() => setEditOpen(false)}
+          onResult={setEditFeedback}
+          options={options}
+        />
+      )}
     </>
   );
 }
 
-const columns: TableProps<EventSummary>['columns'] = [
+const columns: NonNullable<TableProps<EventSummary>['columns']> = [
   {
     title: 'Evento',
     dataIndex: 'title',

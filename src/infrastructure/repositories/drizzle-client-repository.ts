@@ -3,11 +3,13 @@ import 'server-only';
 import { sql } from 'drizzle-orm';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
 import type {
+  ClientChanges,
   ClientProfile,
   ClientRepository,
   ClientSummary,
   CreateClientResult,
   NewClient,
+  UpdateClientResult,
 } from '@/domain/clients/client-repository';
 import { hashSessionToken } from '../auth/credential-hashing';
 import { db } from '../db/client';
@@ -115,6 +117,36 @@ export class DrizzleClientRepository implements ClientRepository {
         return { outcome: 'email-taken' };
       case 'invalid_email':
         return { outcome: 'invalid-email' };
+      default:
+        return { outcome: 'forbidden' };
+    }
+  }
+
+  async update(
+    credentials: PlatformCredentials,
+    changes: ClientChanges,
+  ): Promise<UpdateClientResult> {
+    const result = await db.execute<{ status: string; [column: string]: unknown }>(
+      sql`select app.update_client(
+            ${hashSessionToken(credentials.sessionToken)},
+            ${changes.clientId}::uuid,
+            ${changes.name},
+            ${changes.contactEmail},
+            ${changes.contactPhone},
+            ${credentials.clientIp}::inet
+          ) as status`,
+    );
+
+    switch (result.rows.at(0)?.status) {
+      case 'updated':
+        return { outcome: 'updated' };
+      case 'email_taken':
+        return { outcome: 'email-taken' };
+      case 'invalid_email':
+        return { outcome: 'invalid-email' };
+      case 'invalid_name':
+        return { outcome: 'invalid-name' };
+      /* `forbidden`, `not_found` o nada: falla cerrado, igual que el alta. */
       default:
         return { outcome: 'forbidden' };
     }

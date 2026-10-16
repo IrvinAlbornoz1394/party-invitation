@@ -75,6 +75,7 @@ export async function saveEventContentAction(
     draft,
     collections,
     parseBlockTextsField(readText(formData, 'blocks')),
+    parseBlockTextsField(readText(formData, 'lists')),
   );
 
   switch (result.outcome) {
@@ -89,7 +90,13 @@ export async function saveEventContentAction(
       revalidatePath(`/panel/eventos/${eventId}/contenido`);
       revalidatePath(`/panel/eventos/${eventId}`);
 
-      return { ...INITIAL_CONTENT_STATE, status: 'success', message: 'Contenido guardado.' };
+      return {
+        ...INITIAL_CONTENT_STATE,
+        status: 'success',
+        message: result.unpublished
+          ? 'Contenido guardado. Tu invitación dejó de estar publicada mientras revisamos los cambios.'
+          : 'Contenido guardado.',
+      };
 
     case 'invalid':
       return {

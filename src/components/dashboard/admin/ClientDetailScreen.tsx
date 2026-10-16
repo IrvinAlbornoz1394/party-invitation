@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from 'antd';
+import { useMemo, useState } from 'react';
+import { Alert, Button } from 'antd';
 import type { TableProps } from 'antd';
 import Link from 'next/link';
-import { ArrowLeft, CalendarDays, CircleCheck, Clock, Plus } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CircleCheck, Clock, Pencil, Plus } from 'lucide-react';
+import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import {
+  INITIAL_EDIT_EVENT_STATE,
   INITIAL_NEW_EVENT_STATE,
+  type EditEventState,
   type NewEventState,
 } from '@/app/admin/(authenticated)/eventos/form-state';
 import type { NewEventOptions } from '@/application/events/create-event';
@@ -22,6 +25,9 @@ import { SectionCard } from '../primitives/SectionCard';
 import { StatCard } from '../primitives/StatCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { clientStatus, eventStatus } from '../primitives/status-display';
+import { EditClientDialog } from './EditClientDialog';
+import { EditEventDialog } from './EditEventDialog';
+import { editEventColumn } from './edit-event-column';
 import { NewEventDialog, NewEventNotice } from './NewEventDialog';
 
 /**
@@ -55,6 +61,23 @@ export function ClientDetailScreen({
 }) {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [feedback, setFeedback] = useState<NewEventState>(INITIAL_NEW_EVENT_STATE);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [editFeedback, setEditFeedback] = useState<ActionState>(IDLE_ACTION_STATE);
+  /* «Editar evento»: el evento se conserva al cerrar para que el diálogo anime su salida lleno. */
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [isEventEditOpen, setEventEditOpen] = useState(false);
+  const [eventFeedback, setEventFeedback] = useState<EditEventState>(INITIAL_EDIT_EVENT_STATE);
+
+  const tableColumns = useMemo(
+    () => [
+      ...columns,
+      editEventColumn((event) => {
+        setEditingEventId(event.id);
+        setEventEditOpen(true);
+      }),
+    ],
+    [],
+  );
 
   const published = events.filter((event) => event.status === 'published').length;
   const upcoming = events
@@ -74,6 +97,13 @@ export function ClientDetailScreen({
                 Todos los clientes
               </Button>
             </Link>
+            <Button
+              size="large"
+              icon={<Pencil size={16} strokeWidth={2} />}
+              onClick={() => setEditOpen(true)}
+            >
+              Editar
+            </Button>
             {/*
               El alta vive en la cabecera y no dentro de la tarjeta de eventos porque es la acción
               principal de esta pantalla: se entra a la ficha de un cliente sobre todo para darle
@@ -92,6 +122,29 @@ export function ClientDetailScreen({
       />
 
       <NewEventNotice state={feedback} onDismiss={() => setFeedback(INITIAL_NEW_EVENT_STATE)} />
+
+      <div role="status" aria-live="polite">
+        {editFeedback.message && (
+          <Alert
+            className="dash-page-alert"
+            type={editFeedback.status === 'error' ? 'error' : 'success'}
+            showIcon
+            closable
+            message={editFeedback.message}
+            onClose={() => setEditFeedback(IDLE_ACTION_STATE)}
+          />
+        )}
+        {eventFeedback.message && (
+          <Alert
+            className="dash-page-alert"
+            type={eventFeedback.status === 'error' ? 'error' : 'success'}
+            showIcon
+            closable
+            message={eventFeedback.message}
+            onClose={() => setEventFeedback(INITIAL_EDIT_EVENT_STATE)}
+          />
+        )}
+      </div>
 
       <div className="dash-grid">
         <StatCard icon={CalendarDays} tone="azure" label="Eventos" value={events.length} />
@@ -129,8 +182,11 @@ export function ClientDetailScreen({
           <DataTable
             rows={events}
             rowKey="id"
-            minWidth={620}
-            columns={columns}
+            /* Igual que en `/admin/eventos`: la fila lleva a editar la invitación —su contenido— y
+               el lápiz del final, a editar el evento —plan, plantilla, fecha—. */
+            rowHref={(event) => `/admin/eventos/${event.id}/contenido`}
+            minWidth={684}
+            columns={tableColumns}
             empty={{
               title: 'Este cliente todavía no tiene eventos',
               description:
@@ -160,6 +216,24 @@ export function ClientDetailScreen({
         igualmente en el formulario, oculto — que no se vea no lo hace de fiar, y por eso quien
         autoriza sigue siendo la base de datos. Ver `NewEventDialog`.
       */}
+      <EditClientDialog
+        client={client}
+        open={isEditOpen}
+        onClose={() => setEditOpen(false)}
+        onResult={setEditFeedback}
+      />
+
+      {editingEventId && (
+        <EditEventDialog
+          key={editingEventId}
+          eventId={editingEventId}
+          open={isEventEditOpen}
+          onClose={() => setEventEditOpen(false)}
+          onResult={setEventFeedback}
+          options={options}
+        />
+      )}
+
       <NewEventDialog
         open={isDialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -171,7 +245,7 @@ export function ClientDetailScreen({
   );
 }
 
-const columns: TableProps<EventSummary>['columns'] = [
+const columns: NonNullable<TableProps<EventSummary>['columns']> = [
   {
     title: 'Evento',
     dataIndex: 'title',

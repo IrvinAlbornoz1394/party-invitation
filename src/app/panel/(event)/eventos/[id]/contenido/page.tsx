@@ -69,6 +69,7 @@ export default async function EventContentPage({
       steps={sections.steps}
       collections={collections}
       blockTexts={sections.texts}
+      blockLists={sections.lists}
       timeZone={TIME_ZONE_LABEL}
       action={saveEventContentAction}
       initialState={INITIAL_CONTENT_STATE}

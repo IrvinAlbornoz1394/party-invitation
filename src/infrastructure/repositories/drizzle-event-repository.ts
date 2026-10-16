@@ -12,18 +12,24 @@ import {
 } from '@/domain/events/event-collections';
 import type { BlockConfigPatch } from '@/domain/events/event-block-texts';
 import type { EventContentDraft } from '@/domain/events/event-content-draft';
+import type {
+  EditableEventDetails,
+  EventDetails,
+  UpdateEventDetailsResult,
+} from '@/domain/events/event-details';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
 import type {
   CreateEventResult,
   EventContentForm,
   EventRepository,
+  EventOverview,
   EventSummary,
   NewEventRecord,
   ClientContact,
 } from '@/domain/events/event-repository';
 import { hashSessionToken } from '../auth/credential-hashing';
 import { db } from '../db/client';
-import { events } from '../db/schema';
+import { eventTypes, events, plans, templates, themes } from '../db/schema';
 import { withAuthorizedClientContext, withTenant, type TenantTransaction } from '../db/tenant';
 
 type PlatformEventRow = {
@@ -707,7 +713,8 @@ export class DrizzleEventRepository implements EventRepository {
     credentials: PlatformCredentials,
   ): Promise<readonly EventSummary[]> {
     const result = await db.execute<PlatformEventRow>(
-      sql`select id, client_id, client_name, title, slug, status, starts_at, plan_key, access_code
+      sql`select id, client_id, client_name, title, slug, status, starts_at, plan_key, access_code,
+                 client_fills_content
           from app.list_events_for_platform(${hashSessionToken(credentials.sessionToken)})`,
     );
 
@@ -826,8 +833,13 @@ export class DrizzleEventRepository implements EventRepository {
         const result = await tx.execute(
           sql`update public.events e
                  set status = 'published',
-                     published_at = now(),
-                     expires_at = now() + make_interval(months => p.duration_months),
+                     /* Se conservan si ya existen: un evento que volvió a borrador por una
+                        edición no gana meses de vigencia al republicarse. */
+                     published_at = coalesce(e.published_at, now()),
+                     expires_at = coalesce(
+                       e.expires_at,
+                       now() + make_interval(months => p.duration_months)
+                     ),
                      updated_at = now()
                 from public.plans p
                where e.id = ${eventId}::uuid
@@ -855,6 +867,24 @@ export class DrizzleEventRepository implements EventRepository {
 
       return (result.rowCount ?? 0) > 0;
     });
+  }
+
+  async returnToDraft(scope: TenantScope, eventId: string, actorUserId: string): Promise<boolean> {
+    return withTenant(scope, (tx) => returnPublishedToDraft(tx, eventId, actorUserId, null));
+  }
+
+  async returnToDraftAsPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<boolean> {
+    const returned = await withAuthorizedClientContext(
+      hashSessionToken(credentials.sessionToken),
+      clientId,
+      (tx) => returnPublishedToDraft(tx, eventId, credentials.actor.userId, credentials.clientIp),
+    );
+
+    return returned ?? false;
   }
 
   async setClientFillsContent(input: {
@@ -888,6 +918,257 @@ export class DrizzleEventRepository implements EventRepository {
     if (!(await authorizeClient(credentials, clientId))) return null;
 
     return findEventInClient(clientId, eventId);
+  }
+
+  async findDetailsForPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<EditableEventDetails | null> {
+    if (!(await authorizeClient(credentials, clientId))) return null;
+
+    return withTenant(clientId, async (tx) => {
+      /* La fecha y la hora se parten en Postgres con la zona de la fila, por lo mismo que en
+         `loadContentDraft`: partirlas aquí daría el día en la zona del servidor. */
+      const result = await tx.execute<{
+        id: string;
+        client_id: string;
+        status: string;
+        title: string;
+        event_type_key: string;
+        plan_key: string;
+        template_id: string;
+        theme_id: string;
+        date: string;
+        time: string;
+        time_zone: string;
+        [column: string]: unknown;
+      }>(
+        sql`select id, client_id, status::text as status, title, event_type_key, plan_key,
+                   template_id, theme_id, time_zone,
+                   to_char(starts_at at time zone time_zone, 'YYYY-MM-DD') as date,
+                   to_char(starts_at at time zone time_zone, 'HH24:MI') as time
+              from public.events
+             where id = ${eventId}::uuid
+             limit 1`,
+      );
+
+      const row = result.rows.at(0);
+      if (!row) return null;
+
+      return {
+        id: row.id,
+        clientId: row.client_id,
+        status: row.status,
+        title: row.title,
+        eventTypeKey: row.event_type_key,
+        planKey: row.plan_key,
+        templateId: row.template_id,
+        themeId: row.theme_id,
+        date: row.date,
+        time: row.time,
+        timeZone: row.time_zone,
+      };
+    });
+  }
+
+  async updateDetails(input: {
+    readonly credentials: PlatformCredentials;
+    readonly clientId: string;
+    readonly eventId: string;
+    readonly details: EventDetails;
+  }): Promise<UpdateEventDetailsResult> {
+    const { credentials, clientId, eventId, details } = input;
+
+    try {
+      const outcome = await withAuthorizedClientContext(
+        hashSessionToken(credentials.sessionToken),
+        clientId,
+        async (
+          tx,
+        ): Promise<
+          Exclude<UpdateEventDetailsResult['outcome'], 'updated'> | 'updated' | 'updated-unpublished'
+        > => {
+          /* Se bloquea la fila: dos ediciones a la vez no deben recomponer las secciones dos
+             veces partiendo del mismo estado. */
+          const current = await tx.execute<{
+            plan_key: string;
+            template_id: string;
+            event_type_key: string;
+            status: string;
+            [column: string]: unknown;
+          }>(
+            sql`select plan_key, template_id, event_type_key, status::text as status
+                  from public.events
+                 where id = ${eventId}::uuid
+                 for update`,
+          );
+
+          const before = current.rows.at(0);
+          if (!before) return 'forbidden';
+
+          /*
+           * La plantilla tiene que ofrecerse para el tipo del evento y para el plan elegido: son
+           * las dos relaciones que declara el catálogo, las mismas con las que el formulario
+           * acota la lista. Se comprueba aquí porque la lista del navegador no es de fiar.
+           */
+          const compatible = await tx.execute<{ ok: boolean; [column: string]: unknown }>(
+            sql`select exists (
+                     select 1 from public.template_plans
+                      where template_id = ${details.templateId}::uuid
+                        and plan_key = ${details.planKey}
+                   ) and exists (
+                     select 1 from public.template_event_types
+                      where template_id = ${details.templateId}::uuid
+                        and event_type_key = ${before.event_type_key}
+                   ) as ok`,
+          );
+
+          if (compatible.rows.at(0)?.ok !== true) return 'incompatible-template';
+
+          const planChanged = before.plan_key !== details.planKey;
+          const templateChanged = before.template_id !== details.templateId;
+
+          /*
+           * La vigencia solo se toca si el evento ya la tiene —está o estuvo publicado— y cambió
+           * el plan. Se mide desde la publicación y no desde hoy: subir de plan no regala meses
+           * de más, solo cambia cuántos le tocaban desde el principio.
+           */
+          /*
+           * Un evento publicado vuelve a borrador si cambió **algo**: la invitación deja de verse
+           * hasta que se revise y se vuelva a publicar. Guardar el diálogo sin tocar nada no lo
+           * despublica — por eso se compara con la fila, que en el SET todavía tiene los valores
+           * de antes.
+           */
+          const updated = await tx.execute<{ status: string; [column: string]: unknown }>(
+            sql`update public.events e
+                   set status = case
+                         when e.status = 'published'
+                          and (e.title, e.starts_at, e.time_zone, e.plan_key, e.template_id, e.theme_id)
+                              is distinct from (
+                                ${details.title}::text,
+                                (${`${details.date} ${details.time}`}::timestamp
+                                  at time zone ${details.timeZone}),
+                                ${details.timeZone}::text,
+                                ${details.planKey}::text,
+                                ${details.templateId}::uuid,
+                                ${details.themeId}::uuid
+                              )
+                           then 'draft'::event_status
+                         else e.status
+                       end,
+                       title = ${details.title},
+                       starts_at = (${`${details.date} ${details.time}`}::timestamp
+                                     at time zone ${details.timeZone}),
+                       time_zone = ${details.timeZone},
+                       plan_key = ${details.planKey},
+                       template_id = ${details.templateId}::uuid,
+                       theme_id = ${details.themeId}::uuid,
+                       expires_at = case
+                         when ${planChanged} and e.published_at is not null
+                           then e.published_at + make_interval(
+                             months => (select p.duration_months from public.plans p
+                                         where p.key = ${details.planKey}))
+                         else e.expires_at
+                       end
+                 where e.id = ${eventId}::uuid
+             returning e.status::text as status`,
+          );
+
+          const unpublished =
+            before.status === 'published' && updated.rows.at(0)?.status === 'draft';
+
+          if (templateChanged) {
+            await recomposeFromTemplate(tx, {
+              clientId,
+              eventId,
+              previousTemplateId: before.template_id,
+              templateId: details.templateId,
+              planKey: details.planKey,
+            });
+          } else if (planChanged) {
+            await reapplyPlan(tx, {
+              eventId,
+              templateId: details.templateId,
+              planKey: details.planKey,
+            });
+          }
+
+          await tx.execute(
+            sql`insert into public.audit_log
+                  (client_id, user_id, action, entity_type, entity_id, metadata, ip)
+                values (
+                  ${clientId}::uuid,
+                  ${credentials.actor.userId}::uuid,
+                  'event.details_updated',
+                  'event',
+                  ${eventId}::uuid,
+                  ${JSON.stringify({
+                    title: details.title,
+                    date: details.date,
+                    time: details.time,
+                    timeZone: details.timeZone,
+                    planKey: details.planKey,
+                    previousPlanKey: before.plan_key,
+                    templateId: details.templateId,
+                    previousTemplateId: before.template_id,
+                    themeId: details.themeId,
+                    unpublished,
+                  })}::jsonb,
+                  ${credentials.clientIp}::inet
+                )`,
+          );
+
+          return unpublished ? 'updated-unpublished' : 'updated';
+        },
+      );
+
+      if (outcome === 'updated' || outcome === 'updated-unpublished') {
+        return { outcome: 'updated', unpublished: outcome === 'updated-unpublished' };
+      }
+
+      return { outcome: outcome ?? 'forbidden' };
+    } catch (error) {
+      /* Un plan o un tema que no existen. Desde el formulario no puede pasar. */
+      if (postgresErrorCode(error) === FOREIGN_KEY_VIOLATION) {
+        return { outcome: 'unknown-catalog' };
+      }
+
+      throw error;
+    }
+  }
+
+  async findOverviewForPlatform(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<EventOverview | null> {
+    if (!(await authorizeClient(credentials, clientId))) return null;
+
+    return withTenant(clientId, async (tx) => {
+      const rows = await tx
+        .select({
+          planName: plans.name,
+          planPriceCents: plans.priceCents,
+          planCurrency: plans.currency,
+          planDurationMonths: plans.durationMonths,
+          eventTypeName: eventTypes.name,
+          templateName: templates.name,
+          themeName: themes.name,
+          startsAt: events.startsAt,
+          publishedAt: events.publishedAt,
+          expiresAt: events.expiresAt,
+        })
+        .from(events)
+        .innerJoin(plans, eq(plans.key, events.planKey))
+        .innerJoin(eventTypes, eq(eventTypes.key, events.eventTypeKey))
+        .innerJoin(templates, eq(templates.id, events.templateId))
+        .innerJoin(themes, eq(themes.id, events.themeId))
+        .where(eq(events.id, eventId))
+        .limit(1);
+
+      return rows.at(0) ?? null;
+    });
   }
 
   async findClientContact(
@@ -947,6 +1228,165 @@ async function authorizeClient(
   return authorized === true;
 }
 
+
+/**
+ * El paso de publicado a borrador, con su línea en la bitácora. Solo actúa sobre un evento
+ * publicado; en cualquier otro estado no escribe nada.
+ */
+async function returnPublishedToDraft(
+  tx: TenantTransaction,
+  eventId: string,
+  actorUserId: string,
+  ip: string | null,
+): Promise<boolean> {
+  const result = await tx.execute<{ client_id: string; [column: string]: unknown }>(
+    sql`update public.events
+           set status = 'draft'
+         where id = ${eventId}::uuid
+           and status = 'published'
+     returning client_id`,
+  );
+
+  const row = result.rows.at(0);
+  if (!row) return false;
+
+  await tx.execute(
+    sql`insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, ip)
+        values (
+          ${row.client_id}::uuid,
+          ${actorUserId}::uuid,
+          'event.returned_to_draft',
+          'event',
+          ${eventId}::uuid,
+          ${ip}::inet
+        )`,
+  );
+
+  return true;
+}
+
+/**
+ * Si una sección entra en un plan: la misma expresión que el alta (`create`) y que
+ * `scripts/sync-event-blocks.ts`. Su funcionalidad tiene que estar incluida —o no tener ninguna—
+ * y su variante no puede exigir un plan superior.
+ */
+const BLOCK_ALLOWED_BY_PLAN = sql`(
+  coalesce(pf.is_included, b.feature_key is null) and cv.min_plan_rank <= p.rank
+)`;
+
+/**
+ * Rehace la composición de un evento al cambiarle la plantilla.
+ *
+ * - Las secciones de la plantilla nueva toman su variante y su posición, y se encienden según el
+ *   plan. Las que el evento no tenía se añaden.
+ * - Los textos se conservan. De la configuración vieja se quitan solo los valores que eran el
+ *   **valor por defecto de la plantilla anterior** —esos los pone la nueva—; lo que escribió
+ *   alguien se queda encima.
+ * - Las secciones que la plantilla nueva no tiene **no se borran**: se apagan y se mandan al
+ *   final, en su orden. Su configuración guarda textos que alguien escribió, y volver a la
+ *   plantilla de antes no debería costar reescribirlos.
+ */
+async function recomposeFromTemplate(
+  tx: TenantTransaction,
+  input: {
+    readonly clientId: string;
+    readonly eventId: string;
+    readonly previousTemplateId: string;
+    readonly templateId: string;
+    readonly planKey: string;
+  },
+): Promise<void> {
+  const { clientId, eventId, previousTemplateId, templateId, planKey } = input;
+
+  /* Primero las que se quedan fuera, para que su posición nueva no choque con la de las que
+     entran. No hay índice único sobre la posición, pero el orden tiene que salir limpio. */
+  await tx.execute(
+    sql`update public.event_blocks eb
+           set is_enabled = false,
+               position = leftover.position
+          from (
+            select eb2.id,
+                   (select coalesce(max(tb.position), 0) from public.template_blocks tb
+                     where tb.template_id = ${templateId}::uuid)
+                   + row_number() over (order by eb2.position) as position
+              from public.event_blocks eb2
+             where eb2.event_id = ${eventId}::uuid
+               and not exists (
+                 select 1 from public.template_blocks tb
+                  where tb.template_id = ${templateId}::uuid and tb.block_key = eb2.block_key
+               )
+          ) leftover
+         where eb.id = leftover.id`,
+  );
+
+  await tx.execute(
+    sql`insert into public.event_blocks as existing
+          (event_id, client_id, block_key, variant_id, position, is_enabled, config)
+        select ${eventId}::uuid,
+               ${clientId}::uuid,
+               tb.block_key,
+               tb.default_variant_id,
+               tb.position,
+               ${BLOCK_ALLOWED_BY_PLAN},
+               tb.default_config
+          from public.template_blocks tb
+          join public.blocks b on b.key = tb.block_key
+          join public.component_variants cv on cv.id = tb.default_variant_id
+          join public.plans p on p.key = ${planKey}
+          left join public.plan_features pf
+            on pf.plan_key = p.key and pf.feature_key = b.feature_key
+         where tb.template_id = ${templateId}::uuid
+        on conflict (event_id, block_key) do update
+           set variant_id = excluded.variant_id,
+               position = excluded.position,
+               is_enabled = excluded.is_enabled,
+               config = excluded.config || (
+                 select coalesce(jsonb_object_agg(kv.key, kv.value), '{}'::jsonb)
+                   from jsonb_each(existing.config) as kv
+                  where (
+                    select old.default_config -> kv.key
+                      from public.template_blocks old
+                     where old.template_id = ${previousTemplateId}::uuid
+                       and old.block_key = existing.block_key
+                  ) is distinct from kv.value
+               )`,
+  );
+}
+
+/**
+ * Vuelve a decidir qué secciones entran cuando solo cambia el plan.
+ *
+ * Las de la plantilla se encienden o se apagan con la regla del alta. Las que no son de la
+ * plantilla —las que dejó apagadas un cambio de plantilla anterior— solo pueden apagarse: subir
+ * de plan no debe resucitar secciones de un diseño que ya no se usa.
+ */
+async function reapplyPlan(
+  tx: TenantTransaction,
+  input: { readonly eventId: string; readonly templateId: string; readonly planKey: string },
+): Promise<void> {
+  await tx.execute(
+    sql`update public.event_blocks eb
+           set is_enabled = case
+                 when exists (
+                   select 1 from public.template_blocks tb
+                    where tb.template_id = ${input.templateId}::uuid
+                      and tb.block_key = eb.block_key
+                 ) then allowed.ok
+                 else eb.is_enabled and allowed.ok
+               end
+          from (
+            select eb2.id, ${BLOCK_ALLOWED_BY_PLAN} as ok
+              from public.event_blocks eb2
+              join public.blocks b on b.key = eb2.block_key
+              join public.component_variants cv on cv.id = eb2.variant_id
+              join public.plans p on p.key = ${input.planKey}
+              left join public.plan_features pf
+                on pf.plan_key = p.key and pf.feature_key = b.feature_key
+             where eb2.event_id = ${input.eventId}::uuid
+          ) allowed
+         where eb.id = allowed.id`,
+  );
+}
 
 /** `unique_violation` y `foreign_key_violation` de Postgres. */
 const UNIQUE_VIOLATION = '23505';

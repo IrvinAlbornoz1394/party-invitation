@@ -93,6 +93,35 @@
   color: var(--dash-accent);
 }
 
+/* Le falta algo que el plan exige. El ámbar del aviso del panel (`.dash-cell__warning`) y no el
+   rojo de error: no está roto, está a medias. Borde y disco a la vez, para que se distinga
+   también sin percibir el color. */
+.wizard-steps__step[data-state='pending'] {
+  border-color: #d9b48f;
+  border-style: dashed;
+}
+.wizard-steps__step[data-state='pending'] .wizard-steps__number {
+  background: #f6ead9;
+  color: #a2683a;
+}
+
+/* Fuera del plan: se puede llenar, pero no cuenta. Se apaga un poco y lleva su rótulo. */
+.wizard-steps__step[data-state='optional'] {
+  border-style: dashed;
+}
+.wizard-steps__tag {
+  font-size: 11px;
+  color: var(--dash-muted);
+}
+
+.content-editor__step-alert {
+  margin-bottom: var(--dash-gap);
+}
+.content-editor__missing {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
 
 .content-editor__form {
   display: grid;

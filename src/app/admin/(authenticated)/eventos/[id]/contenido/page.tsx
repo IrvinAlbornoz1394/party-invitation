@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { EventPublishPanel } from '@/components/dashboard/admin/EventPublishPanel';
 import { ContentWizard } from '@/components/dashboard/client/wizard/ContentWizard';
-import { editEventContent, findEventForPlatform } from '@/infrastructure/container';
+import { siteUrl } from '@/components/dashboard/site-url';
+import { invitationUrl } from '@/domain/events/invitation-url';
+import {
+  editEventContent,
+  findEventForPlatform,
+  findEventOverviewForPlatform,
+} from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 import {
   publishEventAction,
@@ -48,10 +54,11 @@ export default async function AdminEventContentPage({
 
   if (event === null) notFound();
 
-  const [form, collections, sections] = await Promise.all([
+  const [form, collections, sections, overview] = await Promise.all([
     editEventContent.loadAsPlatform(credentials, event.clientId, id),
     editEventContent.loadCollectionsAsPlatform(credentials, event.clientId, id),
     editEventContent.loadSectionsAsPlatform(credentials, event.clientId, id),
+    findEventOverviewForPlatform.execute(credentials, event.clientId, id),
   ]);
 
   if (!form || !collections) notFound();
@@ -64,6 +71,7 @@ export default async function AdminEventContentPage({
       steps={sections.steps}
       collections={collections}
       blockTexts={sections.texts}
+      blockLists={sections.lists}
       timeZone={TIME_ZONE_LABEL}
       action={saveAdminContentAction}
       initialState={INITIAL_ADMIN_CONTENT_STATE}
@@ -81,6 +89,8 @@ export default async function AdminEventContentPage({
           publishAction={publishEventAction}
           shareAction={shareContentLinkAction}
           initialState={INITIAL_PUBLISH_STATE}
+          invitationUrl={invitationUrl(siteUrl(), event.slug, event.accessCode)}
+          overview={overview}
         />
       }
     />

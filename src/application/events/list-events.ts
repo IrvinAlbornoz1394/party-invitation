@@ -1,7 +1,11 @@
 import type { TenantScope } from '@/domain/auth/actor';
 import { canAdministerPlatform } from '@/domain/auth/actor';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
-import type { EventRepository, EventSummary } from '@/domain/events/event-repository';
+import type {
+  EventOverview,
+  EventRepository,
+  EventSummary,
+} from '@/domain/events/event-repository';
 
 /**
  * Listar eventos: el mismo dato, dos caminos con permisos distintos.
@@ -88,5 +92,23 @@ export class FindEventForPlatform {
     const all = await this.events.listAllForPlatform(credentials);
 
     return all.find((event) => event.id === eventId) ?? null;
+  }
+}
+
+/**
+ * La ficha de un evento —plan, vigencia, plantilla— para la pantalla de contenido de la
+ * plataforma. Recibe el cliente ya resuelto por `FindEventForPlatform`.
+ */
+export class FindEventOverviewForPlatform {
+  constructor(private readonly events: EventRepository) {}
+
+  async execute(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<EventOverview | null> {
+    if (!canAdministerPlatform(credentials.actor)) return null;
+
+    return this.events.findOverviewForPlatform(credentials, clientId, eventId);
   }
 }

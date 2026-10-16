@@ -9,10 +9,10 @@ import {
 } from '@/app/admin/(authenticated)/eventos/form-state';
 import type { NewEventOptions } from '@/application/events/create-event';
 import type { ClientSummary } from '@/domain/clients/client-repository';
-import type { TemplateSummary } from '@/domain/catalog/catalog-repository';
 import { slugifyEventName } from '@/domain/events/event-slug';
 import { DEFAULT_EVENT_TIME_ZONE, EVENT_TIME_ZONES } from '@/domain/events/event-time-zone';
 import { InvitationCell } from '../primitives/InvitationCell';
+import { matchesTemplate as matches, templateOf } from './event-template-options';
 
 /**
  * Alta de un evento. El mismo formulario para las dos pantallas que lo abren.
@@ -516,7 +516,7 @@ export function NewEventNotice({
  * El error sustituye a la ayuda en lugar de apilarse debajo: son dos frases sobre el mismo
  * control y la que importa cuando hay error es la del error.
  */
-function FieldItem({
+export function FieldItem({
   id,
   label,
   help,
@@ -555,24 +555,6 @@ function FieldItem({
       )}
     </div>
   );
-}
-
-function templateOf(options: NewEventOptions, templateId: string): TemplateSummary | undefined {
-  return options.templates.find((template) => template.id === templateId);
-}
-
-/** Una plantilla encaja si el catálogo la declara para ese tipo y para ese plan. */
-function matches(
-  template: TemplateSummary | undefined,
-  eventTypeKey: string,
-  planKey: string,
-): boolean {
-  if (!template) return false;
-  if (eventTypeKey !== '' && !template.eventTypes.some((type) => type.key === eventTypeKey)) {
-    return false;
-  }
-
-  return planKey === '' || template.planKeys.includes(planKey);
 }
 
 /**

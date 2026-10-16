@@ -1,4 +1,4 @@
-import { asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import type { TenantScope } from '@/domain/auth/actor';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
 import type {
@@ -13,12 +13,14 @@ import { hashSessionToken } from '../auth/credential-hashing';
 import { db } from '../db/client';
 import { withAuthorizedClientContext, withTenant, type TenantTransaction } from '../db/tenant';
 import {
+  blocks as catalogBlocks,
   componentVariants,
   eventBlocks,
   eventGalleryItems,
   eventScheduleItems,
   eventVenues,
   events,
+  planFeatures,
   themes,
 } from '../db/schema';
 
@@ -132,9 +134,21 @@ const blocks = await tx
     registryId: componentVariants.registryId,
     position: eventBlocks.position,
     config: eventBlocks.config,
+    /*
+     * La misma regla que apaga un bloque al crear el evento (`coalesce(pf.is_included,
+     * b.feature_key is null)`, ver `DrizzleEventRepository`), pero contra el plan que el evento
+     * tiene ahora. Es lo que decide qué secciones son obligatorias para publicar.
+     */
+    requiredByPlan: sql<boolean>`coalesce(${planFeatures.isIncluded}, ${catalogBlocks.featureKey} is null)`,
   })
   .from(eventBlocks)
   .innerJoin(componentVariants, eq(componentVariants.id, eventBlocks.variantId))
+  .innerJoin(catalogBlocks, eq(catalogBlocks.key, eventBlocks.blockKey))
+  .innerJoin(events, eq(events.id, eventBlocks.eventId))
+  .leftJoin(
+    planFeatures,
+    and(eq(planFeatures.planKey, events.planKey), eq(planFeatures.featureKey, catalogBlocks.featureKey)),
+  )
   /* Los bloques apagados no se leen siquiera. Filtrarlos después traería a memoria el
      `config` de secciones que nadie va a ver. */
   .where(sql`${eventBlocks.eventId} = ${eventId} and ${eventBlocks.isEnabled}`)

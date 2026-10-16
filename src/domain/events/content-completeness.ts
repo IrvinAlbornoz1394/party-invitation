@@ -36,6 +36,14 @@ import {
  * necesita una destacada **y** el resto. Así que cada variante declara cuántas necesita para
  * verse como se diseñó, y esa es la cifra que se le pide al cliente. Ver {@link PHOTOS_REQUIRED}.
  *
+ * ## Solo las secciones que el plan incluye
+ *
+ * Una plantilla puede traer más secciones de las que el plan contratado cubre, y lo obligatorio lo
+ * dicta el plan, no la plantilla: con doce secciones y un plan que cubre nueve, se piden nueve. Las
+ * demás (`requiredByPlan: false`) se pueden llenar —y si validan, se pintan—, pero que estén
+ * vacías no frena la publicación. Quien decide si un bloque entra en el plan es la lectura del
+ * evento, con la misma regla que lo apaga o lo enciende al crearlo.
+ *
  * ## Lo que esto NO comprueba
  *
  * Que el contenido sea bueno. Un evento con la sede llamada «aaa» está completo para este
@@ -74,6 +82,8 @@ export function checkContentCompleteness(
     /* Un bloque que el código no sabe pintar no se puede juzgar, y sobre todo no debe impedir
        publicar: es un problema del catálogo, no del contenido de este cliente. */
     if (!isContentBlockKey(block.blockKey)) continue;
+    /* Fuera del plan: se puede llenar, pero no es obligatoria. Ver la cabecera. */
+    if (block.requiredByPlan === false) continue;
 
     const missing = missingOf(source, block);
 
@@ -89,8 +99,14 @@ export function checkContentCompleteness(
   return { complete: incomplete.length === 0, blocks: incomplete };
 }
 
-/** Lo que le falta a un bloque, en palabras. Vacío si está completo. */
-function missingOf(source: EventContentSource, block: EventBlockRecord): readonly string[] {
+/**
+ * Lo que le falta a un bloque, en palabras. Vacío si está completo.
+ *
+ * Se exporta para los pasos del editor (`content-steps.ts`), que marcan cada sección como
+ * completa o pendiente con esta misma regla: así la palomita del paso y la lista de lo que falta
+ * para publicar no pueden decir cosas distintas.
+ */
+export function missingOf(source: EventContentSource, block: EventBlockRecord): readonly string[] {
   const assembled = assembleBlockContent(source, block);
 
   if (assembled === null) {

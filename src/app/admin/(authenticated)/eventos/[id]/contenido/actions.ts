@@ -65,6 +65,7 @@ export async function saveAdminContentAction(
     draft,
     parseCollections(readText(formData, 'collections')),
     parseBlockTextsField(readText(formData, 'blocks')),
+    parseBlockTextsField(readText(formData, 'lists')),
   );
 
   switch (result.outcome) {
@@ -75,7 +76,9 @@ export async function saveAdminContentAction(
       return {
         ...INITIAL_ADMIN_CONTENT_STATE,
         status: 'success',
-        message: 'Contenido guardado. El evento ya no espera al cliente.',
+        message: result.unpublished
+          ? 'Contenido guardado. La invitación volvió a borrador: publícala de nuevo cuando esté lista.'
+          : 'Contenido guardado. El evento ya no espera al cliente.',
       };
     case 'invalid':
       return {

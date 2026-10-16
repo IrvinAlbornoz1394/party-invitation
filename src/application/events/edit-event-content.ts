@@ -8,6 +8,12 @@ import {
   type BlockConfigPatch,
   type EditableBlockTexts,
 } from '@/domain/events/event-block-texts';
+import {
+  editableBlockLists,
+  mergeConfigPatches,
+  parseBlockLists,
+  type EditableBlockLists,
+} from '@/domain/events/event-block-lists';
 import { eventCollectionsSchema, type EventCollections } from '@/domain/events/event-collections';
 import {
   eventContentDraftSchema,
@@ -21,10 +27,16 @@ import type { InvitationRepository } from '@/domain/events/invitation-repository
 export interface EditorSections {
   readonly steps: readonly ContentStep[];
   readonly texts: readonly EditableBlockTexts[];
+  /** Las listas que viven en el `config` de su sección: los detalles y los colores. */
+  readonly lists: EditableBlockLists;
 }
 
 export type SaveContentResult =
-  | { readonly outcome: 'saved' }
+  /**
+   * `unpublished`: el evento estaba publicado, lo guardado cambió la invitación y volvió a
+   * borrador. Ver `contentFingerprint`.
+   */
+  | { readonly outcome: 'saved'; readonly unpublished: boolean }
   /** Campos con su motivo, listos para pintar junto a cada control. */
   | { readonly outcome: 'invalid'; readonly errors: Readonly<Record<string, string>> }
   /** El evento no está en el alcance de quien pide. Indistinguible de que no exista. */
@@ -84,11 +96,12 @@ export class EditEventContent {
   async loadSections(scope: TenantScope, eventId: string): Promise<EditorSections> {
     const loaded = await this.invitations.findForPreview(scope, eventId);
 
-    if (!loaded) return { steps: contentSteps([]), texts: [] };
+    if (!loaded) return { steps: contentSteps([]), texts: [], lists: {} };
 
     return {
-      steps: contentSteps(loaded.content.blocks),
+      steps: contentSteps(loaded.content.blocks, loaded.content.source),
       texts: editableBlockTexts(loaded.content.source, loaded.content.blocks),
+      lists: editableBlockLists(loaded.content.blocks),
     };
   }
 
@@ -112,6 +125,8 @@ export class EditEventContent {
     collections: unknown,
     /* Los textos de cada sección, del mismo campo oculto y con el mismo `unknown` por delante. */
     blockTexts: unknown,
+    /* Las listas que guarda cada sección —detalles y colores—, también de un campo oculto. */
+    blockLists: unknown,
   ): Promise<SaveContentResult> {
     const parsed = eventContentDraftSchema.safeParse(input);
     const parsedCollections = eventCollectionsSchema.safeParse(collections);
@@ -146,10 +161,8 @@ export class EditEventContent {
      * igual: de esa lectura solo salen qué bloques hay y qué campos pone la proyección, y ninguna
      * de las dos cosas cambia porque el cliente corrija su fecha en el mismo guardado.
      */
-    const texts = this.blockTextPatches(
-      await this.invitations.findForPreview(actor, eventId),
-      blockTexts,
-    );
+    const before = await this.invitations.findForPreview(actor, eventId);
+    const texts = this.blockTextPatches(before, blockTexts, blockLists);
 
     if (texts.outcome === 'invalid') return texts;
 
@@ -190,7 +203,15 @@ export class EditEventContent {
       patches: texts.patches,
     });
 
-    return savedTexts ? { outcome: 'saved' } : { outcome: 'not-found' };
+    if (!savedTexts) return { outcome: 'not-found' };
+
+    /* Si la invitación cambió y estaba publicada, vuelve a borrador. Ver `contentFingerprint`. */
+    const after = await this.invitations.findForPreview(actor, eventId);
+    const unpublished =
+      contentFingerprint(before) !== contentFingerprint(after) &&
+      (await this.events.returnToDraft(actor, eventId, actor.userId));
+
+    return { outcome: 'saved', unpublished };
   }
 
   /**
@@ -204,6 +225,7 @@ export class EditEventContent {
   private blockTextPatches(
     loaded: { readonly content: InvitationContent } | null,
     blockTexts: unknown,
+    blockLists: unknown,
   ):
     | { readonly outcome: 'valid'; readonly patches: readonly BlockConfigPatch[] }
     | { readonly outcome: 'invalid'; readonly errors: Readonly<Record<string, string>> } {
@@ -211,11 +233,26 @@ export class EditEventContent {
        guardado que viene detrás dirá «not-found» por su cuenta, que es el mismo motivo. */
     if (!loaded) return { outcome: 'valid', patches: [] };
 
-    return parseBlockTexts(
+    const texts = parseBlockTexts(
       loaded.content.source,
       loaded.content.blocks,
       coerceBlockTexts(blockTexts),
     );
+    const lists = parseBlockLists(loaded.content.blocks, blockLists);
+
+    /* Los motivos de las dos partes juntos: quien guarda ve de una vez todo lo que tiene que
+       corregir, y no primero los textos y al volver a guardar las listas. */
+    if (texts.outcome === 'invalid' || lists.outcome === 'invalid') {
+      return {
+        outcome: 'invalid',
+        errors: {
+          ...(texts.outcome === 'invalid' ? texts.errors : {}),
+          ...(lists.outcome === 'invalid' ? lists.errors : {}),
+        },
+      };
+    }
+
+    return { outcome: 'valid', patches: mergeConfigPatches(texts.patches, lists.patches) };
   }
 
   /**
@@ -279,11 +316,12 @@ export class EditEventContent {
   ): Promise<EditorSections> {
     const loaded = await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId);
 
-    if (!loaded) return { steps: contentSteps([]), texts: [] };
+    if (!loaded) return { steps: contentSteps([]), texts: [], lists: {} };
 
     return {
-      steps: contentSteps(loaded.content.blocks),
+      steps: contentSteps(loaded.content.blocks, loaded.content.source),
       texts: editableBlockTexts(loaded.content.source, loaded.content.blocks),
+      lists: editableBlockLists(loaded.content.blocks),
     };
   }
 
@@ -294,6 +332,7 @@ export class EditEventContent {
     input: EventContentDraftInput,
     collections: unknown,
     blockTexts: unknown,
+    blockLists: unknown,
   ): Promise<SaveContentResult> {
     const parsed = eventContentDraftSchema.safeParse(input);
     const parsedCollections = eventCollectionsSchema.safeParse(collections);
@@ -305,10 +344,8 @@ export class EditEventContent {
     /* Los mismos contratos que en el camino del cliente, y por eso la comprobación es la misma
        función: el borrador de un admin no puede saltarse una regla que al cliente sí se le
        aplica. */
-    const texts = this.blockTextPatches(
-      await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId),
-      blockTexts,
-    );
+    const before = await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId);
+    const texts = this.blockTextPatches(before, blockTexts, blockLists);
 
     if (texts.outcome === 'invalid') return texts;
 
@@ -351,8 +388,30 @@ export class EditEventContent {
      */
     await this.events.setClientFillsContent({ credentials, clientId, eventId, value: false });
 
-    return { outcome: 'saved' };
+    const after = await this.invitations.findForPreviewAsPlatform(credentials, clientId, eventId);
+    const unpublished =
+      contentFingerprint(before) !== contentFingerprint(after) &&
+      (await this.events.returnToDraftAsPlatform(credentials, clientId, eventId));
+
+    return { outcome: 'saved', unpublished };
   }
+}
+
+/**
+ * Una huella de la invitación tal como la verán los invitados, para saber si un guardado cambió
+ * algo.
+ *
+ * Un evento publicado vuelve a borrador cuando se edita su contenido, pero **solo si cambió de
+ * verdad**. «Guardar» y el avance de paso guardan aunque no se haya tocado nada, y despublicar
+ * por eso tumbaría una invitación ya repartida con solo recorrer sus pasos.
+ *
+ * Se compara la lectura de la vista previa —la misma que hace el invitado— antes y después, y no
+ * lo que llegó del formulario: así da igual cuál de las tres escrituras cambió algo, y lo que se
+ * reescribe idéntico no cuenta. La lectura no lleva marcas de tiempo ni identificadores de fila,
+ * así que dos lecturas del mismo contenido dan la misma huella.
+ */
+function contentFingerprint(loaded: { readonly content: InvitationContent } | null): string {
+  return loaded ? JSON.stringify(loaded.content) : '';
 }
 
 /** Los motivos de Zod, uno por campo, listos para pintar debajo de cada control. */

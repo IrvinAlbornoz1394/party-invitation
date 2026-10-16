@@ -5,7 +5,10 @@ import { Alert, Button, Modal, Tag } from 'antd';
 import { Copy, Link2, Rocket } from 'lucide-react';
 import type { IncompleteBlock } from '@/domain/events/content-completeness';
 import { EVENT_STATUS_LABELS, isEventStatus } from '@/domain/events/event-status';
+import type { EventOverview } from '@/domain/events/event-repository';
 import type { PublishState } from '@/app/admin/(authenticated)/eventos/[id]/contenido/form-state';
+import { formatDate, formatDaysUntil, formatLongDate, formatMoney, pluralize } from '../format';
+import { InvitationLink } from '../primitives/InvitationLink';
 
 /**
  * Lo que la plataforma puede hacer con un evento además de escribir su contenido: publicarlo y
@@ -27,6 +30,18 @@ import type { PublishState } from '@/app/admin/(authenticated)/eventos/[id]/cont
  * Cuando la acción responde «incompleto» devuelve la lista por secciones, y aquí se pinta entera.
  * Un «faltan datos» a secas obliga a abrir las cinco tarjetas buscando el hueco; «Ubicación: la
  * dirección de la sede» se arregla en diez segundos.
+ *
+ * ## Publicado, el enlace queda a la mano
+ *
+ * En cuanto el evento está publicado se enseña la dirección de la invitación con dos botones:
+ * copiarla y abrirla. Es lo siguiente que se hace después de publicar —avisarle al cliente,
+ * normalmente pegándosela por WhatsApp, y mirar que se vea bien en su dirección de verdad—, y sin
+ * esto había que ir a la lista de eventos a buscarla. Antes de publicar no se enseña: la dirección
+ * todavía contesta «aún no está disponible», y mandarla así confunde a quien la abre.
+ *
+ * Junto al enlace va la ficha del evento: qué plan se le vendió, hasta cuándo dura y con qué
+ * plantilla se armó. Es lo que se pregunta en cuanto el cliente llama —«¿hasta cuándo se ve?»,
+ * «¿mi plan incluye…?»— y antes había que ir a buscarlo a otra pantalla.
  */
 export function EventPublishPanel({
   eventId,
@@ -35,8 +50,14 @@ export function EventPublishPanel({
   publishAction,
   shareAction,
   initialState,
+  invitationUrl,
+  overview,
 }: {
   readonly eventId: string;
+  /** La dirección completa de la invitación, `/<slug>/<código>`, con el dominio delante. */
+  readonly invitationUrl: string;
+  /** Plan, vigencia y diseño. `null` si no se pudo leer; entonces solo se enseña el enlace. */
+  readonly overview: EventOverview | null;
   readonly status: string;
   readonly clientFillsContent: boolean;
   readonly publishAction: (state: PublishState, formData: FormData) => Promise<PublishState>;
@@ -49,6 +70,9 @@ export function EventPublishPanel({
 
   const label = isEventStatus(status) ? EVENT_STATUS_LABELS[status] : status;
   const publishable = status === 'draft' || status === 'review';
+  /* El estado llega del servidor, que la acción de publicar revalida; el éxito de la acción cubre
+     el instante entre que contesta y llega la página nueva. */
+  const published = status === 'published' || publishState.status === 'success';
 
   /* El aviso de la última acción que se ejecutó. Los dos estados son independientes —cada uno con
      su `useActionState`— y enseñar los dos a la vez apilaría mensajes que hablan de cosas
@@ -107,6 +131,13 @@ export function EventPublishPanel({
         />
       )}
 
+      {published && (
+        <div className="dash-publish__invitation">
+          {overview && <EventOverviewList overview={overview} />}
+          <InvitationLink url={invitationUrl} label="Enlace de la invitación publicada" />
+        </div>
+      )}
+
       {/*
         El formulario de publicar vive dentro del diálogo: así el botón que confirma **es** el
         que envía, y no hay un estado intermedio de «confirmado pero sin mandar» que se pueda
@@ -135,6 +166,59 @@ export function EventPublishPanel({
         </form>
       </Modal>
     </section>
+  );
+}
+
+/**
+ * La ficha del evento publicado, en cuatro datos.
+ *
+ * La vigencia dice la fecha y cuánto falta: «vence el 16 oct 2027 · dentro de 365 días». Con
+ * solo la fecha, saber si hay que avisarle al cliente que renueve obliga a hacer la cuenta.
+ * Recién publicado, mientras llega la página revalidada, `expiresAt` todavía es nula y se
+ * enseña la duración del plan en su lugar.
+ */
+function EventOverviewList({ overview }: { readonly overview: EventOverview }) {
+  const duration = pluralize(overview.planDurationMonths, 'mes', 'meses');
+
+  return (
+    <dl className="dash-publish__overview">
+      <div>
+        <dt>Plan</dt>
+        <dd>
+          <strong>{overview.planName}</strong>
+          <span>{formatMoney(overview.planPriceCents, overview.planCurrency)}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Vigencia</dt>
+        <dd>
+          {overview.expiresAt ? (
+            <>
+              <strong>Hasta el {formatDate(overview.expiresAt)}</strong>
+              <span>
+                {duration}, {formatDaysUntil(overview.expiresAt)}
+              </span>
+            </>
+          ) : (
+            <strong>{duration} desde hoy</strong>
+          )}
+        </dd>
+      </div>
+      <div>
+        <dt>Evento</dt>
+        <dd>
+          <strong>{overview.eventTypeName}</strong>
+          <span>{formatLongDate(overview.startsAt)}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Diseño</dt>
+        <dd>
+          <strong>{overview.templateName}</strong>
+          <span>Tema {overview.themeName}</span>
+        </dd>
+      </div>
+    </dl>
   );
 }
 

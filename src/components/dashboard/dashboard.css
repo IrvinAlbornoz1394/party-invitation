@@ -1099,6 +1099,43 @@
 .dash-publish__alert {
   margin-top: var(--dash-gap);
 }
+/* El enlace de la invitación publicada, debajo del aviso y separado de él por un filete: es lo
+   que se queda en pantalla cuando el aviso de «publicado» ya no está. */
+.dash-publish__invitation {
+  margin-top: var(--dash-gap);
+  padding-top: var(--dash-gap);
+  border-top: 1px solid var(--dash-border);
+}
+/* La ficha del evento publicado: cuatro datos en rejilla, encima del enlace. Cada uno con su
+   rótulo pequeño, el dato principal y una línea de apoyo en gris. */
+.dash-publish__overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--dash-gap-sm) var(--dash-gap);
+  margin: 0 0 var(--dash-gap);
+}
+.dash-publish__overview dt {
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+.dash-publish__overview dd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--dash-ink);
+}
+.dash-publish__overview dd strong {
+  font-weight: 600;
+}
+.dash-publish__overview dd span {
+  font-size: 12.5px;
+  color: var(--dash-muted);
+}
 .dash-publish__missing {
   margin: 8px 0 0;
   padding-left: 18px;
