@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { tenantScopeOf } from '@/domain/auth/actor';
 import { ClientEventDetailScreen } from '@/components/dashboard/client/ClientEventDetailScreen';
-import { listClientEvents } from '@/infrastructure/container';
+import { summarizeGuestList } from '@/domain/guests/guest-group';
+import { listClientEvents, listGuests } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
 
 /**
@@ -41,11 +42,19 @@ export default async function ClientEventDetailPage({
 
   if (!event) notFound();
 
+  /* `null` cuando el plan no incluye `panel_confirmaciones`: la ficha dice entonces que las
+     respuestas llegan por WhatsApp. */
+  const guests = await listGuests.execute(tenantScopeOf(membership), id, 'rsvp');
+
   /*
    * `eventId === null` en la membresía significa alcance CLIENTE, es decir que esta persona
    * alcanza más eventos que este. Es lo que decide si la ficha ofrece la vuelta a la lista.
    */
   return (
-    <ClientEventDetailScreen event={event} canReachClient={membership.eventId === null} />
+    <ClientEventDetailScreen
+      event={event}
+      canReachClient={membership.eventId === null}
+      rsvp={guests ? summarizeGuestList(guests.groups) : null}
+    />
   );
 }

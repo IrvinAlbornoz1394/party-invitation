@@ -3,8 +3,10 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { InvitationRenderer } from '@/components/invitation/InvitationRenderer';
+import { InvitationVisitor } from '@/components/invitation/InvitationVisitor';
 import { InvitationUnavailable } from '@/components/marketing/InvitationUnavailable';
 import type { InvitationAccessResult } from '@/domain/events/invitation';
+import { asManagedRsvp } from '@/domain/invitation/blocks/rsvp';
 import { assembleInvitation } from '@/domain/invitation/event-content';
 import { parseInvitationTheme } from '@/domain/invitation/theme';
 import { resolveInvitation } from '@/infrastructure/container';
@@ -108,14 +110,28 @@ export default async function InvitationPage({ params }: PageProps) {
    * contraste (`theme.ts`). Ninguna lanza — una invitación repartida no puede caerse porque un
    * bloque esté a medio configurar.
    */
-  const { content } = access;
+  const { content, guest } = access;
+
+  /*
+   * La única decisión sobre quién mira: una familia que llega por su propio enlace, en un plan con
+   * confirmación en línea, responde en la plataforma. Cualquier otro —el enlace general, o una
+   * familia de un plan que ya no la incluye— confirma por WhatsApp. Ver `asManagedRsvp`.
+   */
+  const assembled = assembleInvitation(content.source, content.blocks);
+  const blocks = guest?.canReply
+    ? assembled.map((block) =>
+        block.blockKey === 'rsvp' ? { ...block, content: asManagedRsvp(block.content) } : block,
+      )
+    : assembled;
 
   return (
-    <InvitationRenderer
-      theme={parseInvitationTheme(content.themeTokens)}
-      blocks={assembleInvitation(content.source, content.blocks)}
-      musicUrl={content.musicUrl}
-      musicTitle={content.musicTitle}
-    />
+    <InvitationVisitor slug={slug} code={code} guest={guest?.canReply ? guest : null}>
+      <InvitationRenderer
+        theme={parseInvitationTheme(content.themeTokens)}
+        blocks={blocks}
+        musicUrl={content.musicUrl}
+        musicTitle={content.musicTitle}
+      />
+    </InvitationVisitor>
   );
 }

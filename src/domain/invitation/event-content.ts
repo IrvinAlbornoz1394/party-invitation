@@ -294,9 +294,9 @@ function projectFromEvent(
     case 'rsvp':
       return {
         deadlineLabel: deadlineLabelOf(source.rsvpDeadline),
-        /* El destino por defecto es el WhatsApp del organizador, que es lo que tienen los planes
-           sin panel. Un evento con panel lo sobreescribe con `{ kind: 'managed' }` en su config,
-           y quién puede hacerlo lo decide el plan al guardarlo — nunca aquí. */
+        /* El destino es siempre el WhatsApp del organizador. La familia que llega por su propio
+           enlace en un plan con `rsvp` responde en la plataforma, y eso lo decide la página
+           pública con `asManagedRsvp` — nunca aquí, que no sabe quién está mirando. */
         destination: source.contactWhatsapp
           ? { kind: 'whatsapp', phone: source.contactWhatsapp, message: rsvpMessageOf(source) }
           : undefined,

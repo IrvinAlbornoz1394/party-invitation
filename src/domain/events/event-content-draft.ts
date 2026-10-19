@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WHATSAPP_NUMBER_HINT, normalizeWhatsappNumber } from './whatsapp-number';
 
 /**
  * Lo que el cliente captura de su propio evento.
@@ -73,25 +74,14 @@ const optionalText = (max: number) =>
     .nullable();
 
 /**
- * El WhatsApp del organizador, guardado ya como lo exige `wa.me`: solo dígitos y con lada.
+ * El WhatsApp del organizador, guardado ya como lo exige `wa.me`. Ver `normalizeWhatsappNumber`.
  *
- * Se limpia aquí y no se rechaza porque la gente lo escribe como lo ve en su teléfono —«+52 999
- * 123 4567», «(999) 123-4567»—, y la confirmación solo acepta dígitos: guardado tal cual, el
- * bloque no validaba y la sección desaparecía de la invitación sin que nadie lo notara. Con diez
- * dígitos se da por número mexicano y se le antepone el 52, que es lo que casi siempre falta.
+ * Guardado tal cual, con espacios o «+», el bloque de confirmación no validaba y la sección
+ * desaparecía de la invitación sin que nadie lo notara.
  */
 const optionalWhatsapp = optionalText(40)
-  .transform((value) => {
-    if (value === null) return null;
-
-    const digits = value.replace(/\D/g, '');
-
-    return digits.length === 10 ? `52${digits}` : digits;
-  })
-  .refine(
-    (value) => value === null || /^\d{11,15}$/.test(value),
-    'Escribe el número con lada: 10 dígitos, o con la lada de tu país (52 999 123 4567).',
-  );
+  .transform((value) => (value === null ? null : (normalizeWhatsappNumber(value) ?? '')))
+  .refine((value) => value !== '', WHATSAPP_NUMBER_HINT);
 
 /**
  * URL opcional de una imagen.

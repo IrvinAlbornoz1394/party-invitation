@@ -2,8 +2,9 @@
 
 import { Button } from 'antd';
 import Link from 'next/link';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
 import type { EventSummary } from '@/domain/events/event-repository';
+import type { RsvpSummary } from '@/domain/guests/guest-group';
 import { invitationUrl } from '@/domain/events/invitation-url';
 import { formatDaysUntil, formatLongDate, isUpcoming } from '../format';
 import { CodeCell } from '../primitives/Cell';
@@ -15,25 +16,24 @@ import { SectionCard } from '../primitives/SectionCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { eventStatus } from '../primitives/status-display';
 import { siteUrl } from '../site-url';
+import { RsvpSummaryCard } from './RsvpSummaryCard';
 
 /**
  * Un evento visto por su cliente.
  *
- * PENDIENTE: por ahora es la ficha de datos. Los invitados, las confirmaciones y el contenido
- * de la invitación entran aquí en la siguiente tanda — las tablas ya existen en el esquema
- * (`guest_groups`, `guests`, `rsvp_responses`) pero todavía no hay ni puerto de dominio ni
- * caso de uso que las lea, y montar la pantalla antes que el camino de datos daría una
- * interfaz que enseña cifras inventadas.
- *
- * El bloque de invitados se deja como estado vacío explicado, y no oculto, a propósito: dice
- * que la funcionalidad existe y está en camino, en vez de dejar un hueco que se lee como que
- * falta algo.
+ * El enlace para repartir, los datos del evento y cómo van las respuestas. Esto último depende
+ * del plan: con `panel_confirmaciones` es el resumen de las familias; sin él, las respuestas
+ * llegan al WhatsApp del organizador y la tarjeta lo dice, en vez de enseñar un contador que
+ * nunca se movería.
  */
 export function ClientEventDetailScreen({
   event,
   canReachClient,
+  rsvp,
 }: {
   readonly event: EventSummary;
+  /** El resumen de confirmaciones, o `null` si el plan no las registra en la plataforma. */
+  readonly rsvp: RsvpSummary | null;
   /** Si quien mira alcanza el cliente entero y no solo este evento. */
   readonly canReachClient: boolean;
 }) {
@@ -100,13 +100,20 @@ export function ClientEventDetailScreen({
           />
         </SectionCard>
 
-        <SectionCard title="Invitados">
-          <EmptyState
-            icon={Users}
-            title="Aún no hay confirmaciones"
-            description="Cuando tus invitados empiecen a responder desde la invitación, verás aquí quién viene y cuántos son."
+        {rsvp ? (
+          <RsvpSummaryCard
+            summary={rsvp}
+            action={{ label: 'Ver confirmaciones', href: `/panel/eventos/${event.id}/confirmaciones` }}
           />
-        </SectionCard>
+        ) : (
+          <SectionCard title="Confirmaciones">
+            <EmptyState
+              icon={MessageCircle}
+              title="Te llegan por WhatsApp"
+              description="Tus invitados confirman o avisan que no podrán asistir desde la invitación, y su mensaje llega directo al WhatsApp que registraste."
+            />
+          </SectionCard>
+        )}
       </div>
     </>
   );

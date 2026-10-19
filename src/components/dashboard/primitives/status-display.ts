@@ -89,3 +89,16 @@ export const prospectStatus = (value: string): StatusAppearance => lookup(PROSPE
 /** Activo / inactivo, para las filas de catálogo. */
 export const activeStatus = (isActive: boolean): StatusAppearance =>
   isActive ? { label: 'Activo', tone: 'positive' } : { label: 'Inactivo', tone: 'neutral' };
+
+/**
+ * La respuesta de una familia. «Pendiente» en ámbar y no en gris: es la única que pide que
+ * alguien haga algo —escribirle a esa familia— antes de cerrar la lista.
+ */
+export const rsvpStatus = (
+  reply: { readonly status: 'confirmed' | 'declined'; readonly attendees: number } | null,
+): StatusAppearance => {
+  if (reply === null) return { label: 'Pendiente', tone: 'attention' };
+  if (reply.status === 'declined') return { label: 'No asistirá', tone: 'neutral' };
+
+  return { label: `Confirmó ${reply.attendees}`, tone: 'positive' };
+};

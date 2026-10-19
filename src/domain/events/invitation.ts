@@ -57,11 +57,36 @@ export interface InvitationContent {
  * ruta en un oráculo con el que enumerar qué eventos existen antes de atacar su
  * código. Quien no tiene el enlace correcto no debe poder deducir nada.
  */
+/**
+ * La familia que abre la invitación, cuando el código del enlace es el suyo.
+ *
+ * Es **contexto de quien visita**, no contenido del evento: cambia con cada enlace y por eso no
+ * vive en `event_blocks.config`. Ver la nota de personalización en
+ * `domain/invitation/blocks/rsvp.ts`.
+ */
+export interface InvitationGuest {
+  readonly name: string;
+  readonly seats: number;
+  /**
+   * Si su respuesta se registra en la plataforma. Lo decide el plan del evento —`rsvp`—, y sin él
+   * la familia ve la invitación igual pero confirma por WhatsApp como todos.
+   */
+  readonly canReply: boolean;
+  /** Lo último que respondió, para enseñárselo en lugar de volver a preguntar. */
+  readonly reply: {
+    readonly status: 'confirmed' | 'declined';
+    readonly attendees: number;
+    readonly message: string | null;
+  } | null;
+}
+
 export type InvitationAccessResult =
   | {
       readonly outcome: 'granted';
       readonly invitation: Invitation;
       readonly content: InvitationContent;
+      /** `null` con el enlace general del evento. */
+      readonly guest: InvitationGuest | null;
     }
   /**
    * El código es correcto pero la invitación todavía no se puede ver.

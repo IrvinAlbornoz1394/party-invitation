@@ -26,16 +26,15 @@ import { createContext } from 'react';
  */
 
 /**
- * Lo que el invitado responde: por ahora, si va o no va.
+ * Lo que la familia responde: cuántos van, o que no van y —si quieren— por qué.
  *
- * Crecerá con el número de acompañantes y un mensaje cuando exista la lista de invitados del
- * panel — y para entonces el cupo vendrá de la familia que abre el enlace, no de un campo que el
- * invitado rellena. Ver la nota sobre personalización en `domain/invitation/blocks/rsvp.ts`.
+ * El tope de `attendees` es el cupo de la familia que abre el enlace (`useRsvpGuest`), no un campo
+ * que el invitado rellene a su gusto; el servidor lo vuelve a comprobar. Es la misma forma que
+ * `rsvpReplySchema` en el dominio, que es quien la valida al llegar.
  */
-export interface RsvpSubmission {
-  /** `true` confirma asistencia; `false` avisa de que no podrá ir. */
-  readonly attending: boolean;
-}
+export type RsvpSubmission =
+  | { readonly attending: true; readonly attendees: number }
+  | { readonly attending: false; readonly message: string | null };
 
 export type RsvpResult =
   | { readonly status: 'ok' }

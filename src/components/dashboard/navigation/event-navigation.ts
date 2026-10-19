@@ -38,10 +38,10 @@ import type { Crumb, NavGroup, Navigation } from './nav-model';
  *
  * ## Las secciones que todavía no existen
  *
- * `SECTIONS` declara las ocho del modelo acordado, y hoy solo dos tienen pantalla: el resumen del
- * evento y el contenido. Las demás llevan `pending: true` y **no se pintan**. Están escritas
- * porque este archivo es donde se lee la matriz de un vistazo —y porque el día que se escriba la
- * pantalla de invitados, activarla es quitar una palabra— pero un menú lleno de enlaces a 404 es
+ * `SECTIONS` declara las ocho del modelo acordado, y no todas tienen pantalla todavía: las que no
+ * —diseño, mesas, recordatorios— llevan `pending: true` y **no se pintan**. Están escritas
+ * porque este archivo es donde se lee la matriz de un vistazo —y el día que se escriba la
+ * pantalla, activarla es quitar una palabra, como pasó con invitados—, pero un menú lleno de enlaces a 404 es
  * peor que uno corto.
  */
 interface EventSection {
@@ -101,8 +101,8 @@ const SECTIONS: readonly EventSection[] = [
   { key: 'diseno', label: 'Diseño', icon: Palette, path: '/diseno', feature: 'variantes_intercambiables', roles: WRITERS, pending: true },
 
   // Gestión: lo de Premium. El visor las ve todas, en lectura.
-  { key: 'invitados', label: 'Invitados', icon: Users, path: '/invitados', feature: 'gestion_invitados', roles: EVERYONE, pending: true },
-  { key: 'confirmaciones', label: 'Confirmaciones', icon: ListChecks, path: '/confirmaciones', feature: 'panel_confirmaciones', roles: EVERYONE, pending: true },
+  { key: 'invitados', label: 'Invitados', icon: Users, path: '/invitados', feature: 'gestion_invitados', roles: EVERYONE },
+  { key: 'confirmaciones', label: 'Confirmaciones', icon: ListChecks, path: '/confirmaciones', feature: 'panel_confirmaciones', roles: EVERYONE },
   { key: 'mesas', label: 'Mesas', icon: Table2, path: '/mesas', feature: 'gestion_mesas', roles: EVERYONE, pending: true },
   { key: 'recordatorios', label: 'Recordatorios', icon: Bell, path: '/recordatorios', feature: 'recordatorios', roles: WRITERS, pending: true },
 ];

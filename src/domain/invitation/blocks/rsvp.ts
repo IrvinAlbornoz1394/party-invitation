@@ -24,36 +24,27 @@ import { blockActionSchema, blockImageSchema, line } from './shared';
  * variante del registro sería exactamente eso disfrazado: el catálogo tendría el doble de
  * entradas y elegir diseño y elegir mecanismo serían la misma decisión, cuando son dos.
  *
- * Aquí el destino es **contenido**: se guarda en el evento, los tres componentes lo obedecen y
- * cambiar de plan es cambiar un campo, no reasignar el bloque ni volver a maquetar nada. Quién
- * puede elegir `managed` lo decide el plan, y eso se comprueba donde se guarda —en el panel—,
- * no donde se pinta.
+ * Aquí el destino es **contenido**: los componentes lo obedecen sin preguntar por qué, y cambiar
+ * de camino es cambiar un campo, no reasignar el bloque ni volver a maquetar nada. Quién recibe
+ * `managed` lo deciden el plan y el enlace, en el servidor —ver abajo—, no donde se pinta.
  *
- * ## El estado de `managed` hoy
+ * ## Quién confirma en la plataforma
  *
- * El registro en la plataforma todavía no existe. Los componentes ya están preparados: piden la
- * confirmación a la pasarela de `rsvp-gateway.ts`, que es un único punto de conexión. Mientras
- * no haya una de verdad, responde «no disponible» y el bloque lo dice en lugar de fingir que
- * guardó algo — que es el peor fallo posible en el único sitio donde alguien confía en que su
- * respuesta llegó.
+ * Solo una familia, desde **su** enlace, y solo si el plan del evento incluye `rsvp`. El enlace
+ * general de la invitación —el mismo para todos— confirma por WhatsApp aunque el evento sea
+ * Premium: una respuesta guardada sin saber de quién es no sirve para contar lugares.
  *
- * ## La personalización por familia: qué falta y dónde NO va
+ * Por eso `managed` no se guarda en el evento: lo decide la página pública al ver de quién es el
+ * código, con {@link asManagedRsvp}. El contenido guardado sigue siendo el de WhatsApp y le sirve
+ * de salida a quien llega por el enlace general.
  *
- * Más adelante, en el plan superior, la invitación se repartirá personalizada: cada familia
- * recibirá su enlace y el bloque podrá saludarla por su nombre —«Familia Robles Cámara»— y
- * decirle cuántos lugares tiene apartados. Eso lo gestionará el organizador desde la lista de
- * invitados de su panel, que es donde `guest_groups` y `guests` ya están modelados.
+ * ## La familia: contexto de quien visita, no contenido
  *
- * Hoy no está, y los componentes se han dejado **sin hueco reservado** a propósito. La razón es
- * de arquitectura y conviene fijarla ahora para no equivocarse después: el nombre de la familia
- * y su cupo **no son contenido de este bloque**. `event_blocks.config` guarda lo que es igual
- * para todos los invitados de un evento; el nombre de quien está mirando cambia con cada enlace.
- * Meterlo aquí obligaría a guardar una configuración por familia, que es exactamente lo que la
- * tabla de invitados existe para evitar.
- *
- * Cuando llegue, entrará como **contexto de quien visita** —igual que la pasarela de
- * confirmación—, resuelto en el servidor a partir del código del enlace. Los componentes lo
- * leerán con un hook y lo pintarán donde hoy no hay nada; el contrato de contenido no cambia.
+ * El bloque saluda a la familia por su nombre y le pregunta cuántos van, hasta su cupo. Ese
+ * nombre y ese cupo **no son contenido de este bloque**: `event_blocks.config` guarda lo que es
+ * igual para todos los invitados de un evento, y el nombre de quien está mirando cambia con cada
+ * enlace. Entran como contexto de quien visita —`useRsvpGuest`, igual que la pasarela—, resuelto
+ * en el servidor a partir del código del enlace.
  */
 
 /** Solo dígitos, con lada de país y sin signos: el formato que exige `wa.me`. */
@@ -133,4 +124,23 @@ export type RsvpContentInput = z.input<typeof rsvpContentSchema>;
  */
 export function whatsappUrl(phone: string, message: string): string {
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * La confirmación de una familia que responde en la plataforma.
+ *
+ * Sustituye el destino de WhatsApp por `managed` y quita el enlace de «no podré asistir», que en
+ * este camino es un botón del propio bloque. El rótulo del botón se cambia solo si habla de
+ * WhatsApp —el de las plantillas dice «Confirmar por WhatsApp»—: cualquier otro lo escribió
+ * alguien y se respeta.
+ */
+export function asManagedRsvp(content: RsvpContent): RsvpContent {
+  return {
+    ...content,
+    destination: { kind: 'managed' },
+    declineAction: null,
+    confirmLabel: /whatsapp/i.test(content.confirmLabel)
+      ? 'Confirmar asistencia'
+      : content.confirmLabel,
+  };
 }

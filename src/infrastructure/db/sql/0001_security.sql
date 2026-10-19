@@ -1185,11 +1185,12 @@ create or replace function app.resolve_invitation_access(
   p_code      text,
   p_client_ip inet default null
 )
--- `guest_group_id` es la familia dueña del código, cuando el que se usó es de una. Hoy siempre
--- responde NULL: solo se resuelve el código del evento, que es el mismo para todos los invitados
--- y el único que existe en los planes sin panel. El plan Premium reparte un enlace por familia
--- con EL MISMO formato de URL —/<slug>/<código>—, así que cuando entre, lo único que cambia es
--- el WHERE de aquí abajo: ni la firma, ni el repositorio, ni la ruta.
+-- `guest_group_id` es la familia dueña del código, cuando el que se usó es de una. El código
+-- del evento es el mismo para todos los invitados y responde NULL; el plan Premium reparte
+-- además un enlace por familia con EL MISMO formato de URL —/<slug>/<código>—, y ese responde
+-- la familia. Los dos códigos tienen la misma forma y el mismo límite por IP: para quien prueba
+-- códigos, un evento con cien familias no es más fácil de acertar que uno sin ninguna, porque
+-- el slug tiene que casar también.
 returns table (
   event_id       uuid,
   client_id      uuid,
@@ -1216,6 +1217,7 @@ declare
   v_org_id       uuid;
   v_status       text;
   v_expired      boolean;
+  v_group_id     uuid;
 begin
   if p_client_ip is not null then
     select count(*) into v_failures
@@ -1256,6 +1258,20 @@ begin
     and e.access_code = p_code
   limit 1;
 
+  -- Si no es el código del evento, puede ser el de una de sus familias. El slug se exige igual:
+  -- el código de una familia es único dentro de su evento, no en toda la plataforma.
+  if v_event_id is null then
+    select e.id, e.client_id, e.status::text,
+           e.expires_at is not null and e.expires_at <= now(),
+           g.id
+      into v_event_id, v_org_id, v_status, v_expired, v_group_id
+    from public.guest_groups g
+    join public.events e on e.id = g.event_id
+    where e.slug = p_slug
+      and g.invite_code = p_code
+    limit 1;
+  end if;
+
   -- El intento cuenta como acertado cuando el código era el bueno, publicado o no: el
   -- límite por IP existe para frenar a quien prueba códigos, y quien tiene el correcto no
   -- está probando nada. Contarlo como fallo le gastaría el presupuesto a un invitado que
@@ -1275,7 +1291,7 @@ begin
     return;
   end if;
 
-  return query select v_event_id, v_org_id, null::uuid, false, v_status, false;
+  return query select v_event_id, v_org_id, v_group_id, false, v_status, false;
 end;
 $$;
 

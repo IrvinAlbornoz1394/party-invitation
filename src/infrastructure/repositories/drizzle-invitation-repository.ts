@@ -12,6 +12,7 @@ import { zonedIsoInstant } from '@/domain/invitation/event-date';
 import { hashSessionToken } from '../auth/credential-hashing';
 import { db } from '../db/client';
 import { withAuthorizedClientContext, withTenant, type TenantTransaction } from '../db/tenant';
+import { loadInvitationGuest } from './drizzle-guest-repository';
 import {
   blocks as catalogBlocks,
   componentVariants,
@@ -35,12 +36,8 @@ type AccessRow = {
   event_id: string | null;
   client_id: string | null;
   /**
-   * La familia dueña del código, cuando el que se usó es de una.
-   *
-   * Hoy siempre llega `null`: la función solo resuelve el código del evento. La columna existe ya
-   * porque el plan Premium reparte un enlace por familia con **el mismo formato de URL**, y
-   * cuando eso entre, aquí es donde llegará la respuesta — sin cambiar la firma, ni el
-   * repositorio, ni la ruta.
+   * La familia dueña del código, cuando el que se usó es de una. `null` con el código general
+   * del evento.
    */
   guest_group_id: string | null;
   rate_limited: boolean;
@@ -266,7 +263,11 @@ export class DrizzleInvitationRepository implements InvitationRepository {
 
       if (!loaded) return { outcome: 'denied' };
 
-      return { outcome: 'granted', ...loaded };
+      const guest = access.guest_group_id
+        ? await loadInvitationGuest(tx, access.event_id, access.guest_group_id)
+        : null;
+
+      return { outcome: 'granted', ...loaded, guest };
     });
   }
 

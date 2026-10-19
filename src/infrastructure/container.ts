@@ -62,6 +62,12 @@ import {
   SubmitProspect,
 } from '@/application/prospects/manage-prospects';
 import { ResolveInvitation } from '@/application/events/resolve-invitation';
+import {
+  DeleteGuestGroup,
+  ListGuests,
+  SaveGuestGroup,
+  SubmitRsvp,
+} from '@/application/guests/manage-guests';
 import type { InvitationNotifier } from '@/domain/auth/invitation-notifier';
 import type { EventNotifier } from '@/domain/events/event-notifier';
 import type { ProspectNotifier } from '@/domain/prospects/prospect-notifier';
@@ -88,6 +94,7 @@ import { DrizzleAuthRepository } from './repositories/drizzle-auth-repository';
 import { DrizzleCatalogRepository } from './repositories/drizzle-catalog-repository';
 import { DrizzleClientRepository } from './repositories/drizzle-client-repository';
 import { DrizzleEventRepository } from './repositories/drizzle-event-repository';
+import { DrizzleGuestRepository } from './repositories/drizzle-guest-repository';
 import { DrizzleInvitationRepository } from './repositories/drizzle-invitation-repository';
 import { DrizzleProspectRepository } from './repositories/drizzle-prospect-repository';
 import { DrizzleUserRepository } from './repositories/drizzle-user-repository';
@@ -375,3 +382,14 @@ export const loadPlanFeatures = new LoadPlanFeatures(catalogRepository);
 export const listClientEvents = new ListClientEvents(eventRepository);
 export const editEventContent = new EditEventContent(eventRepository, invitationRepository);
 export const loadOwnClient = new LoadOwnClient(clientRepository);
+
+/**
+ * Invitados por familia y sus confirmaciones. `submitRsvp` es el único que atiende a la
+ * invitación pública; los otros tres, al panel.
+ */
+const guestRepository = new DrizzleGuestRepository();
+
+export const listGuests = new ListGuests(guestRepository, eventRepository);
+export const saveGuestGroup = new SaveGuestGroup(guestRepository, eventRepository);
+export const deleteGuestGroup = new DeleteGuestGroup(guestRepository, eventRepository);
+export const submitRsvp = new SubmitRsvp(guestRepository);
