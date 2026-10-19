@@ -75,7 +75,9 @@ const FEATURES = [
   { key: 'galeria', name: 'Galería de fotos', category: 'invitacion' },
   { key: 'ubicacion', name: 'Ubicación con Google Maps', category: 'invitacion' },
   { key: 'compartir_whatsapp', name: 'Compartir por WhatsApp', category: 'invitacion' },
-  { key: 'rsvp', name: 'Confirmación de asistencia', category: 'gestion' },
+  /* La confirmación **registrada** en la plataforma. El bloque de confirmar —por WhatsApp— va en
+     todos los planes y no depende de esta llave: ver `rsvp` en `BLOCKS`. */
+  { key: 'rsvp', name: 'Confirmación de asistencia en línea', category: 'gestion' },
   { key: 'panel_confirmaciones', name: 'Panel básico de confirmaciones', category: 'gestion' },
   { key: 'gestion_invitados', name: 'Gestión de invitados por familia', category: 'gestion' },
   { key: 'gestion_mesas', name: 'Gestión de mesas', category: 'gestion' },
@@ -126,8 +128,8 @@ const PLANS = [
  * trae casi todas. La frontera es la **gestión**, y cae entre Plus y Premium.
  *
  * Esencial y Plus reparten **una sola URL**, igual para todos los invitados, y su botón de
- * confirmar no hace más que abrir WhatsApp con el mensaje escrito. No hay lista de invitados,
- * así que no hay nada que gestionar: por eso ninguno de los dos tiene `rsvp`,
+ * confirmar —y el de «no podré asistir»— no hace más que abrir WhatsApp con el mensaje escrito.
+ * No hay lista de invitados, así que no hay nada que gestionar: por eso ninguno de los dos tiene `rsvp`,
  * `panel_confirmaciones` ni `recordatorios`. Un panel vacío sería peor que no tenerlo.
  *
  * Premium es el único que da acceso al panel, carga invitados por familia y le entrega a cada
@@ -312,7 +314,14 @@ const BLOCKS = [
   { key: 'schedule', name: 'Cronograma', featureKey: 'cronograma' },
   { key: 'gallery', name: 'Galería', featureKey: 'galeria' },
   { key: 'location', name: 'Ubicación', featureKey: 'ubicacion' },
-  { key: 'rsvp', name: 'Confirmación de asistencia', featureKey: 'rsvp' },
+  /*
+   * La confirmación cuelga de `plantilla` —la tienen los tres planes— y no de `rsvp`. Estuvo
+   * colgada de `rsvp`, que solo tiene Premium, y eso apagaba el bloque al crear cualquier evento
+   * de Esencial o Plus: sus invitaciones salían sin botón de confirmar, justo los planes cuyo
+   * único camino es el WhatsApp. Que el bloque exista es de todos los planes; `rsvp` decide solo
+   * si la confirmación se registra en la plataforma (`destination.kind === 'managed'`).
+   */
+  { key: 'rsvp', name: 'Confirmación de asistencia', featureKey: 'plantilla' },
   { key: 'closing', name: 'Mensaje final', featureKey: 'plantilla' },
   { key: 'footer', name: 'Pie de página', featureKey: 'plantilla' },
 ] as const;

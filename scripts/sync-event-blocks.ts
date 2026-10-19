@@ -24,6 +24,9 @@
  * - **No reordena.** Cada bloque nuevo entra en la posición que ocupa en su plantilla y empuja
  *   hacia abajo a los que estaban de ahí en adelante; el orden relativo de lo que ya había se
  *   conserva intacto, que es lo que el plan Plus vende poder tocar.
+ * - **Realinea el encendido con el plan.** Antes de añadir, recalcula `is_enabled` de los bloques
+ *   que la plantilla trae, por si el catálogo movió una sección de funcionalidad. Ver
+ *   `reapplyPlans`.
  * - **Respeta el plan.** `is_enabled` se calcula con la misma expresión que el alta de eventos
  *   (`DrizzleEventRepository.create`): un bloque cuya funcionalidad no entra en el plan vendido, o
  *   cuya variante exige uno superior, nace **apagado** en vez de omitirse — así, quien suba de
@@ -151,7 +154,76 @@ async function insertBlock(block: MissingBlock): Promise<void> {
   }
 }
 
+/** Un bloque de la plantilla cuyo `is_enabled` ya no coincide con lo que su plan permite. */
+interface StaleBlock {
+  readonly eventTitle: string;
+  readonly planKey: string;
+  readonly blockKey: string;
+  readonly allowed: boolean;
+}
+
+/**
+ * Vuelve a decidir, con la regla del alta, qué bloques **de la plantilla** van encendidos.
+ *
+ * Hace falta cuando cambia el catálogo y no el evento: al mover la confirmación de la llave `rsvp`
+ * (solo Premium) a `plantilla`, los eventos de Esencial y Plus ya creados la seguían teniendo
+ * apagada. Es la misma pasada que `reapplyPlan` del repositorio, y por lo mismo solo toca los
+ * bloques que su plantilla trae: los que dejó fuera un cambio de plantilla no se resucitan.
+ *
+ * El encendido de un bloque de la plantilla no lo decide nadie más que el plan —no hay pantalla
+ * que lo cambie—, así que recalcularlo no deshace el trabajo de ninguna persona.
+ */
+async function reapplyPlans(): Promise<readonly StaleBlock[]> {
+  const select = `
+    select eb.id,
+           e.title      as "eventTitle",
+           e.plan_key   as "planKey",
+           eb.block_key as "blockKey",
+           coalesce(pf.is_included, b.feature_key is null) and cv.min_plan_rank <= p.rank as allowed
+      from public.event_blocks eb
+      join public.events e on e.id = eb.event_id
+      join public.template_blocks tb
+        on tb.template_id = e.template_id and tb.block_key = eb.block_key
+      join public.blocks b on b.key = eb.block_key
+      join public.component_variants cv on cv.id = eb.variant_id
+      join public.plans p on p.key = e.plan_key
+      left join public.plan_features pf
+        on pf.plan_key = p.key and pf.feature_key = b.feature_key`;
+
+  const { rows } = await pool.query<StaleBlock & { id: string }>(
+    `select * from (${select}) s
+      where s.allowed is distinct from
+            (select is_enabled from public.event_blocks where id = s.id)
+      order by s."eventTitle", s."blockKey"`,
+  );
+
+  if (!dryRun && rows.length > 0) {
+    await pool.query(
+      `update public.event_blocks eb
+          set is_enabled = s.allowed, updated_at = now()
+         from (${select}) s
+        where eb.id = s.id and eb.is_enabled is distinct from s.allowed`,
+    );
+  }
+
+  return rows;
+}
+
 async function main(): Promise<void> {
+  const stale = await reapplyPlans();
+
+  if (stale.length > 0) {
+    console.log(`▸ ${stale.length} bloque(s) con el encendido desalineado de su plan\n`);
+
+    for (const block of stale) {
+      console.log(
+        `  ${block.eventTitle} · ${block.planKey} → ${block.blockKey} ${block.allowed ? 'se enciende' : 'se apaga'}`,
+      );
+    }
+
+    console.log('');
+  }
+
   const missing = await findMissing();
 
   if (missing.length === 0) {

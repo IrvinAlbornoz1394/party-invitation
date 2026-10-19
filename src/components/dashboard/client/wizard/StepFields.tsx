@@ -68,7 +68,10 @@ const FIELD_UI: Readonly<
   storyImageUrl: { label: 'Foto de la historia' },
   closingImageUrl: { label: 'Foto del cierre' },
   /* Neutra a propósito: según el plan, el campo va en la confirmación o en el pie. */
-  contactWhatsapp: { label: 'WhatsApp', help: 'Para que tus invitados te escriban o te confirmen.' },
+  contactWhatsapp: {
+    label: 'WhatsApp',
+    help: 'Para que tus invitados te escriban o te confirmen. 10 dígitos; la lada 52 la ponemos nosotros.',
+  },
   contactPhone: { label: 'Teléfono' },
   contactInstagram: { label: 'Instagram' },
   rsvpDeadline: { label: 'Fecha límite para confirmar', help: 'Opcional.', native: 'date' },

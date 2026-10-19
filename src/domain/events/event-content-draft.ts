@@ -73,6 +73,27 @@ const optionalText = (max: number) =>
     .nullable();
 
 /**
+ * El WhatsApp del organizador, guardado ya como lo exige `wa.me`: solo dígitos y con lada.
+ *
+ * Se limpia aquí y no se rechaza porque la gente lo escribe como lo ve en su teléfono —«+52 999
+ * 123 4567», «(999) 123-4567»—, y la confirmación solo acepta dígitos: guardado tal cual, el
+ * bloque no validaba y la sección desaparecía de la invitación sin que nadie lo notara. Con diez
+ * dígitos se da por número mexicano y se le antepone el 52, que es lo que casi siempre falta.
+ */
+const optionalWhatsapp = optionalText(40)
+  .transform((value) => {
+    if (value === null) return null;
+
+    const digits = value.replace(/\D/g, '');
+
+    return digits.length === 10 ? `52${digits}` : digits;
+  })
+  .refine(
+    (value) => value === null || /^\d{11,15}$/.test(value),
+    'Escribe el número con lada: 10 dígitos, o con la lada de tu país (52 999 123 4567).',
+  );
+
+/**
  * URL opcional de una imagen.
  *
  * Se valida como URL absoluta porque va directa a un `src`: una ruta relativa mal escrita se
@@ -117,7 +138,7 @@ export const eventContentDraftSchema = z.object({
   storyImageUrl: optionalImageUrl,
   closingImageUrl: optionalImageUrl,
   contactPhone: optionalText(40),
-  contactWhatsapp: optionalText(40),
+  contactWhatsapp: optionalWhatsapp,
   contactInstagram: optionalText(60),
   rsvpDeadline: z
     .union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Revisa la fecha límite.')])

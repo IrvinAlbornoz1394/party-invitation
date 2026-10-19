@@ -7,7 +7,7 @@ import { footerContentSchema } from './blocks/footer';
 import { galleryContentSchema } from './blocks/gallery';
 import { heroContentSchema } from './blocks/hero';
 import { locationContentSchema } from './blocks/location';
-import { rsvpContentSchema } from './blocks/rsvp';
+import { rsvpContentSchema, whatsappUrl } from './blocks/rsvp';
 import { scheduleContentSchema } from './blocks/schedule';
 import { paragraphsFromText, storyContentSchema } from './blocks/story';
 import { welcomeContentSchema } from './blocks/welcome';
@@ -190,7 +190,18 @@ function deadlineLabelOf(deadline: string | null): string | null {
  * Quien quiera otra cosa la escribe en `destination.message` del bloque, que gana sobre esto.
  */
 function rsvpMessageOf(source: EventContentSource): string {
-  return `¡Hola! Confirmo mi asistencia a la celebración de ${fullNameOf(source)}.`;
+  return `¡Hola! Con muchísimo gusto confirmo mi asistencia a la celebración de ${fullNameOf(source)}. ¡Gracias por la invitación, ahí nos vemos!`;
+}
+
+/**
+ * El mensaje de quien no puede ir, al mismo WhatsApp.
+ *
+ * Lo que tiene que lograr es que «no» no suene a desaire: agradece primero, lamenta después y
+ * cierra deseando que salga bien. Un «no podré asistir» a secas, leído en el teléfono del
+ * organizador la semana del evento, se lee como un rechazo aunque nadie lo haya querido así.
+ */
+function rsvpDeclineMessageOf(source: EventContentSource): string {
+  return `¡Hola! Muchas gracias por pensar en mí para la celebración de ${fullNameOf(source)}. Lamentablemente no podré acompañarlos ese día, pero les deseo de corazón que sea un día precioso. ¡Un abrazo!`;
 }
 
 /* ── La proyección ────────────────────────────────────────────────────────── */
@@ -289,6 +300,14 @@ function projectFromEvent(
         destination: source.contactWhatsapp
           ? { kind: 'whatsapp', phone: source.contactWhatsapp, message: rsvpMessageOf(source) }
           : undefined,
+        /* «No podré asistir» va al mismo chat. Sin esta salida, quien no puede ir no responde
+           nada y se queda contado como pendiente hasta el día del evento. */
+        declineAction: source.contactWhatsapp
+          ? {
+              label: 'No podré asistir',
+              href: whatsappUrl(source.contactWhatsapp, rsvpDeclineMessageOf(source)),
+            }
+          : null,
       };
 
     case 'closing':
