@@ -625,13 +625,13 @@ export class DrizzleEventRepository implements EventRepository {
                    contact_phone       = ${draft.contactPhone},
                    contact_whatsapp    = ${draft.contactWhatsapp},
                    contact_instagram   = ${draft.contactInstagram},
+                   /* La confirmación está en todos los planes —por WhatsApp en los que no tienen
+                      gestión—, así que su fecha límite se guarda siempre. */
+                   rsvp_deadline       = ${draft.rsvpDeadline}::date,
                    /* Lo que depende del plan solo se escribe si el plan del evento lo incluye: el
                       formulario no lo pide fuera de él, pero un campo puede llegar en cualquier
                       petición. Sin la funcionalidad, el valor guardado se queda como estaba. */
-                   rsvp_deadline       = case when ${planIncludes('rsvp')}
-                                              then ${draft.rsvpDeadline}::date
-                                              else rsvp_deadline end,
-                   music_url           = case when ${planIncludes('musica')}
+                   music_url          = case when ${planIncludes('musica')}
                                               then ${draft.musicUrl} else music_url end,
                    music_title         = case when ${planIncludes('musica')}
                                               then ${draft.musicTitle} else music_title end

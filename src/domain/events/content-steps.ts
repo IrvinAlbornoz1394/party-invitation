@@ -202,7 +202,7 @@ export function contentSteps(
 
   /*
    * Los contactos se piden en la confirmación —es a donde llegan las respuestas—, pero esa sección
-   * solo existe en Premium, y el pie los enseña en todos los planes. Sin confirmación van al pie;
+   * se puede apagar, y el pie los enseña en todos los planes. Sin confirmación van al pie;
    * si tampoco hay pie, a la última sección, para que ningún plan se quede sin poder escribirlos.
    */
   const hasRsvp = ordered.some((block) => block.blockKey === 'rsvp');
