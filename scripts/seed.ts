@@ -364,6 +364,12 @@ const VARIANTS: {
   { blockKey: 'welcome', variantKey: 'veil', name: 'Bienvenida de papelería', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'envelope', name: 'Bienvenida en sobre lacrado', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'spotlight', name: 'Bienvenida a pantalla completa', minPlanRank: 2 },
+  /* Las dos que se abren como un sobre en vez de levantarse como un telón. De Plus en adelante,
+     como toda bienvenida. */
+  { blockKey: 'welcome', variantKey: 'gatefold', name: 'Bienvenida en sobre que se abre en dos', minPlanRank: 2 },
+  { blockKey: 'welcome', variantKey: 'letter', name: 'Bienvenida en sobre con tarjeta que te lleva dentro', minPlanRank: 2 },
+  { blockKey: 'welcome', variantKey: 'dear', name: 'Bienvenida «Querido invitado» con sobre lacrado', minPlanRank: 2 },
+  { blockKey: 'welcome', variantKey: 'sidefold', name: 'Bienvenida en dos hojas que se abren a los lados', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'filigree', name: 'Bienvenida con filigrana grabada', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'monogram', name: 'Bienvenida con monograma', minPlanRank: 2 },
   { blockKey: 'welcome', variantKey: 'luminous', name: 'Bienvenida con rótulo luminoso', minPlanRank: 2 },
@@ -937,12 +943,12 @@ const TEMPLATES: {
       /* Sin `isRequired`: la bienvenida es de Plus en adelante, y un bloque obligatorio que el
          plan del cliente no incluye sería una plantilla que no se puede montar.
 
-         `botanical` y no `torn`: la guirnalda es el ornamento de esta plantilla —la misma familia
-         que la ramita de `hero.framed` y del pie— y, a diferencia del papel rasgado, **no está
-         atada a un tipo de evento**, así que la boda y los XV pueden compartir puerta. Que la
-         misma plantilla abriera de dos maneras distintas según se celebrara una cosa u otra era
-         justo lo contrario de lo que una plantilla promete: que solo cambie el tema. */
-      { blockKey: 'welcome', variantKey: 'botanical' },
+         `gatefold`: la pantalla entera es un sobre que se abre en dos. Como la guirnalda que
+         llevaba antes (`welcome.botanical`, que sigue en el catálogo), **no está atada a un tipo
+         de evento**, así que la boda y los XV comparten puerta. Que la misma plantilla abriera de
+         dos maneras distintas según se celebrara una cosa u otra sería justo lo contrario de lo
+         que una plantilla promete: que solo cambie el tema. */
+      { blockKey: 'welcome', variantKey: 'gatefold' },
       { blockKey: 'hero', variantKey: 'framed', isRequired: true },
       /* El registro de esta plantilla son los rótulos grabados de la papelería impresa —cortos,
          en un solo sustantivo—, no las frases de las otras cuatro. */
@@ -1015,7 +1021,10 @@ const TEMPLATES: {
          `countdown` es la única puerta que enseña el tiempo que falta, y es la sección que la
          referencia remata a pantalla completa: aquí abre en vez de cerrar, que es donde una
          cuenta atrás de verdad se mira. */
-      { blockKey: 'welcome', variantKey: 'countdown' },
+      /* «Querido invitado»: la foto fundida con el papel crema y un sobre lacrado en la mano. Es
+         la puerta de una plantilla hecha de piezas de papel. Sustituyó a `welcome.countdown`,
+         que sigue en el catálogo. */
+      { blockKey: 'welcome', variantKey: 'dear' },
       { blockKey: 'hero', variantKey: 'card', isRequired: true },
       { blockKey: 'story', variantKey: 'mounted' },
       /* La fecha antes del programa: primero qué día es y después cómo será ese día. Sin título
@@ -1142,10 +1151,10 @@ const TEMPLATES: {
      * vestimenta, los detalles y la confirmación.
      */
     blocks: [
-      /* La bienvenida con banda de color, sin `isRequired` como las otras cuatro que la llevan.
-         Es la más móvil del bloque —retrato arriba, franja abajo— y la única que ya usaba una
-         mancha de color plena, que es el material de esta plantilla. */
-      { blockKey: 'welcome', variantKey: 'band' },
+      /* Las dos hojas con ramas doradas dibujadas a línea: la ilustración a mano de esta
+         plantilla, en la puerta. Sin `isRequired`, como toda bienvenida. Sustituyó a
+         `welcome.band`, que sigue en el catálogo. */
+      { blockKey: 'welcome', variantKey: 'sidefold' },
       { blockKey: 'hero', variantKey: 'frame', isRequired: true },
       { blockKey: 'story', variantKey: 'bow', config: { eyebrow: null, title: 'Queridos invitados' } },
       { blockKey: 'calendar', variantKey: 'week', config: { eyebrow: null, title: null } },
@@ -1196,15 +1205,15 @@ const TEMPLATES: {
      * El segundo recurso es la **guirnalda**: la misma rama botánica que ya tenía la biblioteca,
      * recortada por los cantos de la portada y del cierre para que se lea impresa y no pegada.
      *
-     * Se reutilizan tres bloques enteros: `welcome.crown` —la puerta de XV, que estaba libre y
-     * lleva la misma corona que la portada—, `gallery.parallax` y el tipo de contenido de siempre.
+     * Se reutilizan bloques enteros: `welcome.letter` —el sobre con tarjeta, que antes era
+     * `welcome.crown`—, `gallery.parallax` y el tipo de contenido de siempre.
      * Y se **omite la historia**: la referencia no la tiene, porque en una participación de XV lo
      * que iría ahí —los padres, los padrinos, la frase de invitación— va en la portada.
      */
     blocks: [
-      /* La puerta de unos XV: corona en vez de alianzas. Es la hermana de `welcome.luminous` y
-         estaba libre porque ninguna estructura la había reclamado — es exactamente para esto. */
-      { blockKey: 'welcome', variantKey: 'crown' },
+      /* La noche de gala empieza con un sobre lacrado que se abre y una tarjeta en la que se
+         entra. Sustituyó a `welcome.crown`, que sigue en el catálogo para quien quiera cambiarla. */
+      { blockKey: 'welcome', variantKey: 'letter' },
       { blockKey: 'hero', variantKey: 'crown', isRequired: true },
       { blockKey: 'calendar', variantKey: 'band', config: { eyebrow: null, title: null } },
       { blockKey: 'location', variantKey: 'single-plaque', config: { eyebrow: null, title: 'Recepción' } },
@@ -1375,8 +1384,8 @@ const TEMPLATES: {
      * un álbum de recortes: papel kraft, polaroids un poco torcidas, cinta adhesiva y pegatinas
      * —cámara instantánea, pastel de corazón, beso de carmín, copa— de `wedding/scrapbook`.
      *
-     * Nueve variantes nuevas y tres que ya existían. `welcome.torn` no la usaba ninguna plantilla
-     * ni ninguna demo, y su papel rasgado que deja ver la foto es el kraft del álbum; `details.column` y `footer.band`
+     * Nueve variantes nuevas y otras que ya existían. La bienvenida es `welcome.letter`, el sobre
+     * lacrado con tarjeta —antes era `welcome.torn`—; `details.column` y `footer.band`
      * son de `gala` y `blush`, que solo se ofrecen para XV, así que en boda no compiten con nadie.
      * La franja del pie repite la cinta corrida de la portada y cierra la invitación con ella.
      *
@@ -1385,7 +1394,8 @@ const TEMPLATES: {
      * despedida, que no traía, donde los pone el resto del catálogo.
      */
     blocks: [
-      { blockKey: 'welcome', variantKey: 'torn' },
+      /* El sobre del álbum, lacrado: se rompe el sello, sube la tarjeta y se entra en ella. */
+      { blockKey: 'welcome', variantKey: 'letter' },
       /* Sin cuenta regresiva: la referencia escribe la fecha a mano y no lleva reloj. */
       { blockKey: 'hero', variantKey: 'scrapbook', isRequired: true, config: { showCountdown: false } },
       { blockKey: 'story', variantKey: 'taped', config: { eyebrow: null, title: '¡Queridos invitados!' } },

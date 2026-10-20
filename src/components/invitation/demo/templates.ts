@@ -226,9 +226,9 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
        * Cada demo abre con una variante distinta para que se vean sin ir a buscarlas.
        */
       /* La misma puerta que su hermana de XV, que es lo que una plantilla promete: que entre un
-         tipo de evento y otro solo cambie el tema. La guirnalda vale para las dos; el papel
-         rasgado que había aquí y la corona que había allí no — ver `WelcomeVeil` y el seed. */
-      { blockKey: 'welcome', registryId: 'welcome.botanical', removable: true },
+         tipo de evento y otro solo cambie el tema. El sobre que se abre en dos vale para las
+         dos — ver `WelcomeGatefold` y el seed. */
+      { blockKey: 'welcome', registryId: 'welcome.gatefold', removable: true },
       { blockKey: 'hero', registryId: 'hero.framed' },
       { blockKey: 'calendar', registryId: 'calendar.month' },
       /* El relato y la sesión, después de la fecha. La demo de boda es además la que trae pies de
@@ -335,9 +335,9 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
      * con el retal a todo el ancho de la ficha, que es su otra maqueta.
      */
     blocks: [
-      /* La puerta con la cuenta atrás: es la sección que la referencia remata a pantalla completa,
-         y aquí abre en vez de cerrar, que es donde una cuenta regresiva se mira de verdad. */
-      { blockKey: 'welcome', registryId: 'welcome.countdown', removable: true },
+      /* «Querido invitado»: la foto fundida con el papel crema y un sobre lacrado en la mano. Es
+         la puerta de una plantilla hecha de piezas de papel. */
+      { blockKey: 'welcome', registryId: 'welcome.dear', removable: true },
       { blockKey: 'hero', registryId: 'hero.card' },
       { blockKey: 'story', registryId: 'story.mounted' },
       /* La fecha como una pieza más de papel: la hoja de taco sobre su pila, con la cabecera de
@@ -418,7 +418,8 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
      * cambian de tinta con el resto de la invitación.
      */
     blocks: [
-      { blockKey: 'welcome', registryId: 'welcome.band', removable: true },
+      /* Dos hojas con ramas doradas dibujadas a línea que se abren a los lados. */
+      { blockKey: 'welcome', registryId: 'welcome.sidefold', removable: true },
       { blockKey: 'hero', registryId: 'hero.frame' },
       { blockKey: 'story', registryId: 'story.bow' },
       { blockKey: 'calendar', registryId: 'calendar.week' },
@@ -454,10 +455,10 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
     music: DEMO_MUSIC,
     sampleKey: 'quince',
     blocks: [
-      /* La misma puerta que su hermana de boda. Llevó corona, y la corona es de unos XV igual
-         que las alianzas de `welcome.luminous` son de una boda: puesta en la de boda prometería
-         otra celebración, así que no se podía compartir. La guirnalda sí. */
-      { blockKey: 'welcome', registryId: 'welcome.botanical', removable: true },
+      /* La misma puerta que su hermana de boda: el sobre que se abre en dos. Llevó corona, y la
+         corona es de unos XV igual que las alianzas de `welcome.luminous` son de una boda, así
+         que no se podía compartir. El sobre sí. */
+      { blockKey: 'welcome', registryId: 'welcome.gatefold', removable: true },
       { blockKey: 'hero', registryId: 'hero.framed' },
       { blockKey: 'calendar', registryId: 'calendar.month' },
       /* La misma composición que su hermana de boda: lo que cambia entre las dos es el tema y la
@@ -564,9 +565,8 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
      * grabada. Todo lo que separa y destaca es el filete dorado.
      */
     blocks: [
-      /* La puerta de unos XV: la corona en vez de las alianzas. La misma que lleva la portada, y
-         por eso las dos primeras pantallas riman. */
-      { blockKey: 'welcome', registryId: 'welcome.crown', removable: true },
+      /* El sobre lacrado con tarjeta: la noche de gala empieza abriendo la invitación. */
+      { blockKey: 'welcome', registryId: 'welcome.letter', removable: true },
       { blockKey: 'hero', registryId: 'hero.crown' },
       { blockKey: 'calendar', registryId: 'calendar.band' },
       { blockKey: 'location', registryId: 'location.single-plaque' },
@@ -766,7 +766,8 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
      * como en la referencia.
      */
     blocks: [
-      { blockKey: 'welcome', registryId: 'welcome.torn', removable: true },
+      /* El sobre del álbum, lacrado: se rompe el sello, sube la tarjeta y se entra en ella. */
+      { blockKey: 'welcome', registryId: 'welcome.letter', removable: true },
       { blockKey: 'hero', registryId: 'hero.scrapbook', config: { showCountdown: false } },
       {
         blockKey: 'story',

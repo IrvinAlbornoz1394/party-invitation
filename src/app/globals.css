@@ -665,6 +665,390 @@
   animation: inv-gate-content-out 0.42s cubic-bezier(0.4, 0, 0.7, 1) forwards;
 }
 
+/* ── Las bienvenidas en sobre: `welcome.gatefold`, `welcome.letter` y `welcome.dear` ──
+ *
+ * En `gatefold`, `letter` y `sidefold` el telón no sube: **se abre**. Por eso su cascarón no se mueve —se queda quieto y
+ * transparente el tiempo que dura la apertura (`inv-gate-hold`) y su `animationend` es lo que lo
+ * retira— y lo que se anima son las piezas del sobre. Cada variante sube además su red de
+ * seguridad (`leaveTimeoutMs`) por encima de lo que dura aquí su coreografía.
+ */
+
+/* No cambia nada a la vista: solo marca el tiempo que la puerta sigue montada. */
+@keyframes inv-gate-hold {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+
+.inv-gate[data-variant='gatefold'][data-state='leaving'],
+.inv-gate[data-variant='letter'][data-state='leaving'],
+.inv-gate[data-variant='sidefold'][data-state='leaving'] {
+  background-color: transparent;
+  box-shadow: none;
+}
+.inv-gate[data-variant='gatefold'][data-state='leaving'] {
+  animation: inv-gate-hold 1.75s linear forwards;
+}
+.inv-gate[data-variant='sidefold'][data-state='leaving'] {
+  animation: inv-gate-hold 1.75s linear forwards;
+}
+.inv-gate[data-variant='letter'][data-state='leaving'] {
+  animation: inv-gate-hold 2.25s linear forwards;
+}
+/* El contenido no se va en bloque: cada pieza del sobre tiene su propio movimiento. */
+.inv-gate[data-variant='gatefold'][data-state='leaving'] .inv-gate__content,
+.inv-gate[data-variant='letter'][data-state='leaving'] .inv-gate__content,
+.inv-gate[data-variant='sidefold'][data-state='leaving'] .inv-gate__content {
+  animation: none;
+}
+
+/*
+ * El lacre respira mientras espera: un anillo del color del acento que se expande y se apaga.
+ * Es lo que lo señala como lo que hay que tocar sin necesidad de una flecha, y es lento a
+ * propósito —dos segundos y medio—: más rápido, parece una alarma.
+ */
+@keyframes inv-seal-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--inv-color-accent) 45%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 22px color-mix(in srgb, var(--inv-color-accent) 0%, transparent);
+  }
+}
+.inv-seal-pulse {
+  animation: inv-seal-pulse 2.6s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+}
+.inv-gate[data-state='leaving'] .inv-seal-pulse {
+  animation: none;
+}
+
+/*
+ * `gatefold`: el lacre se hunde un instante bajo el dedo, se parte, la costura se ilumina y las
+ * dos mitades del sobre se separan. La curva es la de una puerta pesada —arranca lenta, corre,
+ * frena— y las mitades salen 0.4 s después del clic, que es lo que tarda en leerse el sello roto.
+ */
+@keyframes inv-gatefold-seal-top {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-10%, -70%, 0) rotate(-16deg) scale(1.05);
+    opacity: 0;
+  }
+}
+@keyframes inv-gatefold-seal-bottom {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(10%, 70%, 0) rotate(14deg) scale(1.05);
+    opacity: 0;
+  }
+}
+/* Solo `scaleX`: el centrado vertical lo pone `-translate-y-1/2`, que en Tailwind 4 es la
+   propiedad `translate` y se suma a esta. Repetirlo aquí desplazaría la línea el doble. */
+@keyframes inv-gatefold-seam {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  35% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+@keyframes inv-gatefold-up {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -104%, 0);
+  }
+}
+@keyframes inv-gatefold-down {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 104%, 0);
+  }
+}
+.inv-gate[data-state='leaving'] .inv-gatefold-seal-top {
+  animation: inv-gatefold-seal-top 0.62s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-state='leaving'] .inv-gatefold-seal-bottom {
+  animation: inv-gatefold-seal-bottom 0.62s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-state='leaving'] .inv-gatefold-seam {
+  animation: inv-gatefold-seam 0.9s ease-out 0.22s both;
+}
+.inv-gate[data-state='leaving'] .inv-gatefold-top {
+  animation: inv-gatefold-up 1.3s cubic-bezier(0.76, 0, 0.24, 1) 0.4s both;
+}
+.inv-gate[data-state='leaving'] .inv-gatefold-bottom {
+  animation: inv-gatefold-down 1.3s cubic-bezier(0.76, 0, 0.24, 1) 0.4s both;
+}
+
+/*
+ * `letter`: el lacre se rompe, la solapa gira sobre su bisagra y pasa por detrás de la tarjeta a
+ * mitad del giro, la tarjeta sube y la cámara entra en ella. El fondo se apaga mientras la
+ * tarjeta —del color de papel de la invitación— llena la pantalla, así que el paso del sobre a
+ * la invitación ocurre sobre el mismo color y no se ve ningún corte.
+ */
+@keyframes inv-letter-seal {
+  0% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(0.9) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.35) rotate(18deg);
+    opacity: 0;
+  }
+}
+@keyframes inv-letter-flap {
+  0% {
+    transform: rotateX(0deg);
+    z-index: 5;
+  }
+  49% {
+    z-index: 5;
+  }
+  50% {
+    z-index: 1;
+  }
+  100% {
+    transform: rotateX(-180deg);
+    z-index: 1;
+  }
+}
+@keyframes inv-letter-card {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -60%, 0);
+  }
+}
+@keyframes inv-letter-dive {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(7.5);
+    opacity: 0;
+  }
+}
+@keyframes inv-letter-fade {
+  to {
+    opacity: 0;
+  }
+}
+.inv-gate[data-state='leaving'] .inv-letter-seal {
+  animation: inv-letter-seal 0.5s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-state='leaving'] .inv-letter-caption {
+  animation: inv-letter-fade 0.35s ease-out forwards;
+}
+.inv-gate[data-state='leaving'] .inv-letter-flap {
+  animation:
+    inv-letter-flap 0.75s cubic-bezier(0.55, 0, 0.25, 1) 0.28s both,
+    inv-letter-fade 0.3s ease-in 1.3s forwards;
+}
+/* El sobre se aparta al empezar la entrada: lo que tiene que llenar la pantalla es la tarjeta, y
+   con el bolsillo delante se verían los nombres del frente enormes debajo de ella. */
+.inv-gate[data-state='leaving'] .inv-letter-front {
+  animation: inv-letter-fade 0.3s ease-in 1.3s forwards;
+}
+.inv-gate[data-state='leaving'] .inv-letter-card {
+  animation: inv-letter-card 0.6s cubic-bezier(0.3, 0, 0.2, 1) 0.85s both;
+}
+/* La cámara apunta al centro de la tarjeta ya levantada, que queda justo por encima del borde
+   del sobre —un poco por encima de su 0 %—: ahí está el origen, y no en el centro del sobre. */
+.inv-gate[data-state='leaving'] .inv-letter-envelope {
+  transform-origin: 50% -3%;
+  animation: inv-letter-dive 0.95s cubic-bezier(0.7, 0, 0.84, 0) 1.3s both;
+}
+/* El fondo se apaga cuando la cámara ya va entrando, no antes: si se apagara con la tarjeta
+   todavía en su tamaño, se vería una tarjeta flotando sola sobre la invitación. */
+.inv-gate[data-state='leaving'] .inv-letter-backdrop {
+  animation: inv-letter-fade 0.6s ease-in 1.62s both;
+}
+
+/*
+ * `sidefold`: el lacre se parte a los lados, la unión se ilumina y cada hoja gira sobre su canto
+ * de fuera hacia quien mira, como dos puertas. Pasados los 90° la hoja desaparece —no tiene
+ * dorso—, así que el giro termina limpio sobre la invitación.
+ */
+@keyframes inv-sidefold-left {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-100deg);
+  }
+}
+@keyframes inv-sidefold-right {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(100deg);
+  }
+}
+@keyframes inv-sidefold-seal-left {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-70%, 0, 0) rotate(-14deg) scale(1.05);
+    opacity: 0;
+  }
+}
+@keyframes inv-sidefold-seal-right {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(70%, 0, 0) rotate(14deg) scale(1.05);
+    opacity: 0;
+  }
+}
+/* Solo `scaleY`: el centrado lo pone `-translate-x-1/2` (ver la nota de `inv-gatefold-seam`). */
+@keyframes inv-sidefold-seam {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  35% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+.inv-gate[data-state='leaving'] .inv-sidefold-seal-left {
+  animation: inv-sidefold-seal-left 0.6s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-state='leaving'] .inv-sidefold-seal-right {
+  animation: inv-sidefold-seal-right 0.6s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-state='leaving'] .inv-sidefold-caption {
+  animation: inv-letter-fade 0.3s ease-out forwards;
+}
+.inv-gate[data-state='leaving'] .inv-sidefold-seam {
+  animation: inv-sidefold-seam 0.9s ease-out 0.2s both;
+}
+.inv-gate[data-state='leaving'] .inv-sidefold-left {
+  animation: inv-sidefold-left 1.25s cubic-bezier(0.65, 0, 0.25, 1) 0.38s both;
+}
+.inv-gate[data-state='leaving'] .inv-sidefold-right {
+  animation: inv-sidefold-right 1.25s cubic-bezier(0.65, 0, 0.25, 1) 0.38s both;
+}
+
+/*
+ * `dear`: el lacre se rompe, la solapa se levanta, sale la carta y la cámara entra en ella. A
+ * diferencia de `letter`, aquí la puerta **no** es transparente —su papel crema es el fondo de
+ * toda la composición—: la carta crece hasta taparla entera y solo entonces la puerta se
+ * desvanece. Como la carta es del papel de la invitación, lo que aparece es la misma hoja escrita.
+ */
+@keyframes inv-dear-card {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -42%, 0);
+  }
+}
+@keyframes inv-dear-dive {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(11);
+  }
+}
+/* La puerta se sostiene mientras la carta crece y se apaga cuando ya llena la pantalla. */
+@keyframes inv-dear-out {
+  0%,
+  84% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.inv-gate[data-variant='dear'][data-state='leaving'] {
+  animation: inv-dear-out 2.3s linear forwards;
+}
+.inv-gate[data-variant='dear'][data-state='leaving'] .inv-gate__content {
+  animation: none;
+}
+.inv-gate[data-state='leaving'] .inv-dear-seal {
+  animation: inv-letter-seal 0.45s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-state='leaving'] .inv-dear-caption {
+  animation: inv-letter-fade 0.35s ease-out forwards;
+}
+.inv-gate[data-state='leaving'] .inv-dear-flap {
+  animation:
+    inv-letter-flap 0.65s cubic-bezier(0.55, 0, 0.25, 1) 0.2s both,
+    inv-letter-fade 0.3s ease-in 1.05s forwards;
+}
+.inv-gate[data-state='leaving'] .inv-dear-card {
+  animation: inv-dear-card 0.45s cubic-bezier(0.3, 0, 0.2, 1) 0.6s both;
+}
+/* El sobre se aparta al empezar la entrada: lo que tiene que llenar la pantalla es la carta. */
+.inv-gate[data-state='leaving'] .inv-dear-front {
+  animation: inv-letter-fade 0.3s ease-in 1.05s forwards;
+}
+.inv-gate[data-state='leaving'] .inv-dear-card-mark {
+  animation: inv-letter-fade 0.35s ease-in 1.15s forwards;
+}
+.inv-gate[data-state='leaving'] .inv-dear-backdrop {
+  animation: inv-letter-fade 0.5s ease-in 1.05s forwards;
+}
+/* La cámara apunta al centro de la carta ya levantada, que queda en el 15 % del sobre. */
+.inv-gate[data-state='leaving'] .inv-dear-envelope {
+  transform-origin: 50% 15%;
+  animation: inv-dear-dive 0.85s cubic-bezier(0.7, 0, 0.84, 0) 1.05s both;
+}
+
 /*
  * El vaivén de la flecha de `welcome.spotlight`.
  *
@@ -750,6 +1134,46 @@
     animation: none;
   }
   .inv-bob {
+    animation: none;
+  }
+  /*
+   * Los sobres no se abren: se desvanecen enteros, igual que los otros telones. Va con la
+   * especificidad de sus reglas de arriba, que si no ganarían a esta.
+   */
+  .inv-gate[data-variant='gatefold'][data-state='leaving'],
+  .inv-gate[data-variant='letter'][data-state='leaving'],
+  .inv-gate[data-variant='dear'][data-state='leaving'],
+  .inv-gate[data-variant='sidefold'][data-state='leaving'] {
+    animation: inv-gate-fade-out 0.25s ease-out forwards;
+    background-color: var(--inv-color-background);
+  }
+  .inv-seal-pulse,
+  .inv-gate[data-state='leaving'] .inv-gatefold-seal-top,
+  .inv-gate[data-state='leaving'] .inv-gatefold-seal-bottom,
+  .inv-gate[data-state='leaving'] .inv-gatefold-seam,
+  .inv-gate[data-state='leaving'] .inv-gatefold-top,
+  .inv-gate[data-state='leaving'] .inv-gatefold-bottom,
+  .inv-gate[data-state='leaving'] .inv-letter-seal,
+  .inv-gate[data-state='leaving'] .inv-letter-caption,
+  .inv-gate[data-state='leaving'] .inv-letter-flap,
+  .inv-gate[data-state='leaving'] .inv-letter-front,
+  .inv-gate[data-state='leaving'] .inv-letter-card,
+  .inv-gate[data-state='leaving'] .inv-letter-envelope,
+  .inv-gate[data-state='leaving'] .inv-letter-backdrop,
+  .inv-gate[data-state='leaving'] .inv-dear-seal,
+  .inv-gate[data-state='leaving'] .inv-dear-flap,
+  .inv-gate[data-state='leaving'] .inv-dear-card,
+  .inv-gate[data-state='leaving'] .inv-dear-caption,
+  .inv-gate[data-state='leaving'] .inv-dear-front,
+  .inv-gate[data-state='leaving'] .inv-dear-card-mark,
+  .inv-gate[data-state='leaving'] .inv-dear-backdrop,
+  .inv-gate[data-state='leaving'] .inv-dear-envelope,
+  .inv-gate[data-state='leaving'] .inv-sidefold-seal-left,
+  .inv-gate[data-state='leaving'] .inv-sidefold-seal-right,
+  .inv-gate[data-state='leaving'] .inv-sidefold-caption,
+  .inv-gate[data-state='leaving'] .inv-sidefold-seam,
+  .inv-gate[data-state='leaving'] .inv-sidefold-left,
+  .inv-gate[data-state='leaving'] .inv-sidefold-right {
     animation: none;
   }
   /*

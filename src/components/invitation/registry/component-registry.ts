@@ -152,13 +152,17 @@ import type { StoryVariant } from '../blocks/story/story-variant';
 import { StoryTaped } from '../blocks/story/StoryTaped';
 import { WelcomeArbor } from '../blocks/welcome/WelcomeArbor';
 import { WelcomeRibbon } from '../blocks/welcome/WelcomeRibbon';
+import { WelcomeSidefold } from '../blocks/welcome/WelcomeSidefold';
 import { WelcomeKeepsake } from '../blocks/welcome/WelcomeKeepsake';
+import { WelcomeLetter } from '../blocks/welcome/WelcomeLetter';
 import { WelcomeBand } from '../blocks/welcome/WelcomeBand';
 import { WelcomeBotanical } from '../blocks/welcome/WelcomeBotanical';
 import { WelcomeCountdown } from '../blocks/welcome/WelcomeCountdown';
 import { WelcomeCrown } from '../blocks/welcome/WelcomeCrown';
+import { WelcomeDear } from '../blocks/welcome/WelcomeDear';
 import { WelcomeEnvelope } from '../blocks/welcome/WelcomeEnvelope';
 import { WelcomeFiligree } from '../blocks/welcome/WelcomeFiligree';
+import { WelcomeGatefold } from '../blocks/welcome/WelcomeGatefold';
 import { WelcomeGilded } from '../blocks/welcome/WelcomeGilded';
 import { WelcomeLuminous } from '../blocks/welcome/WelcomeLuminous';
 import { WelcomeMonogram } from '../blocks/welcome/WelcomeMonogram';
@@ -223,6 +227,16 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'welcome.veil': { blockKey: 'welcome', component: WelcomeVeil },
   'welcome.envelope': { blockKey: 'welcome', component: WelcomeEnvelope },
   'welcome.spotlight': { blockKey: 'welcome', component: WelcomeSpotlight },
+  /* Las dos que se ABREN, en vez de levantarse como un telón: `gatefold` es la pantalla entera
+     hecha sobre, que se parte en dos hacia arriba y hacia abajo; `letter`, un sobre al centro
+     cuya tarjeta sube y en la que se entra. Comparten el lacre (`envelope-parts.tsx`). */
+  'welcome.gatefold': { blockKey: 'welcome', component: WelcomeGatefold },
+  'welcome.letter': { blockKey: 'welcome', component: WelcomeLetter },
+  /* La tercera en sobre, y la más íntima: «Querido invitado», la foto fundiéndose con el papel y
+     un sobre pequeño en la mano. Se abre y la pantalla sube como un telón. */
+  'welcome.dear': { blockKey: 'welcome', component: WelcomeDear },
+  /* La hermana lateral de `gatefold`: dos hojas con ramas doradas que se abren como puertas. */
+  'welcome.sidefold': { blockKey: 'welcome', component: WelcomeSidefold },
   /* Las siete siguientes salen de referencias reales del mercado. No son variaciones de las tres
      de arriba: cada una es un lenguaje distinto —grabado, monograma, neón, botánica, papel
      rasgado, banda de color y cuenta atrás— y todas cumplen el mismo contrato. */
