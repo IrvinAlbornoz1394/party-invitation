@@ -69,6 +69,7 @@ export function WelcomeShell({
   backdrop,
   contentClassName,
   className,
+  leaveTimeoutMs = 1800,
   children,
 }: {
   /** La clave de la variante, para `data-variant`. */
@@ -79,6 +80,12 @@ export function WelcomeShell({
   readonly backdrop?: ReactNode;
   readonly contentClassName?: string;
   readonly className?: string;
+  /**
+   * Cuánto esperar el `animationend` antes de quitar la puerta de todos modos. Lo suben las
+   * variantes cuya salida dura más que el telón estándar —los sobres—, para que la red de
+   * seguridad no corte la animación a la mitad.
+   */
+  readonly leaveTimeoutMs?: number;
   readonly children: ReactNode;
 }) {
   const stage = useWelcomeStage();
@@ -131,10 +138,10 @@ export function WelcomeShell({
   useEffect(() => {
     if (state !== 'leaving') return;
 
-    const timer = window.setTimeout(() => setState('gone'), 1800);
+    const timer = window.setTimeout(() => setState('gone'), leaveTimeoutMs);
 
     return () => window.clearTimeout(timer);
-  }, [state]);
+  }, [state, leaveTimeoutMs]);
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape') {
