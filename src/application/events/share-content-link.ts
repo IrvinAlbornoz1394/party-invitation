@@ -2,6 +2,7 @@ import { canAdministerPlatform } from '@/domain/auth/actor';
 import type { PlatformCredentials } from '@/domain/auth/platform-credentials';
 import type { EventNotifier } from '@/domain/events/event-notifier';
 import type { EventRepository } from '@/domain/events/event-repository';
+import { DEFAULT_EVENT_TIME_ZONE } from '@/domain/events/event-time-zone';
 
 /**
  * Mandarle al cliente el enlace para que llene su información.
@@ -85,13 +86,19 @@ export function contentUrlFor(siteUrl: string, eventId: string): string {
   return `${siteUrl}/panel/eventos/${eventId}/contenido`;
 }
 
-/** La fecha en palabras, para un correo. No lleva hora: el correo no es la invitación. */
+/**
+ * La fecha en palabras, para un correo. No lleva hora: el correo no es la invitación.
+ *
+ * En la zona del evento y no en UTC: `startsAt` es un instante, y una boda del sábado a las 18:30
+ * en Mérida ya es domingo en UTC. La zona es la de la plataforma porque el resumen del evento
+ * todavía no trae la suya; hoy todos los eventos son de la misma (ver `event-time-zone.ts`).
+ */
 function dateLabel(startsAt: Date): string {
   return new Intl.DateTimeFormat('es-MX', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone: 'UTC',
+    timeZone: DEFAULT_EVENT_TIME_ZONE,
   }).format(startsAt);
 }

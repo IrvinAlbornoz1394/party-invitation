@@ -111,7 +111,11 @@ export class DrizzleGuestRepository implements GuestRepository {
   async loadGuestList(scope: TenantScope, eventId: string): Promise<GuestList | null> {
     return withTenant(scope, async (tx) => {
       const event = await tx.execute<Row>(
-        sql`select id, title, slug, status::text as status
+        sql`select id, title, slug, status::text as status,
+                   coalesce(
+                     nullif(celebrant_full_name, ''),
+                     concat_ws(' ', celebrant_name, nullif(celebrant_last_name, ''))
+                   ) as celebrant
               from public.events
              where id = ${eventId}::uuid`,
       );
@@ -132,6 +136,7 @@ export class DrizzleGuestRepository implements GuestRepository {
       return {
         eventId,
         eventTitle: row.title as string,
+        celebrant: row.celebrant as string,
         eventSlug: row.slug as string,
         eventStatus: row.status as string,
         groups: groups.rows.map(toGuestGroup),

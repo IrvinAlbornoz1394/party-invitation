@@ -302,6 +302,13 @@ export function ContentWizard({
 
       <div className="content-editor">
         <div className="content-editor__form">
+          {/* Fuera del `<form>` del asistente, y no es un detalle: el `banner` trae sus propios
+              formularios —mandar a revisión, enviar el enlace al cliente— y un `<form>` dentro de
+              otro no es HTML válido. El navegador descarta el interior y React se queja de un
+              envío que no esperaba, así que esos botones no hacían nada. En el último paso todos
+              los pasos están ocultos, de modo que aquí se ve en el mismo sitio que antes. */}
+          {onPreviewStep && banner}
+
           {/* Un `<form>` nativo y no el `<Form>` de antd: aquel llama a `preventDefault()` para
               validar por su cuenta y con eso React nunca ejecuta la acción de servidor. Está
               contado en detalle en `NewEventDialog`. */}
@@ -347,8 +354,6 @@ export function ContentWizard({
                 </div>
               ),
             )}
-
-            {onPreviewStep && banner}
 
             <div className="content-editor__actions">
               <Button

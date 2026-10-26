@@ -75,7 +75,10 @@ export interface GuestGroup {
 /** La lista de invitados de un evento, con lo necesario para componer sus enlaces. */
 export interface GuestList {
   readonly eventId: string;
+  /** El título interno del panel. Solo lo lee el organizador: nunca va en lo que recibe una familia. */
   readonly eventTitle: string;
+  /** A quién se celebra, como lo nombra la invitación: «María y José». Es lo que lee el invitado. */
+  readonly celebrant: string;
   readonly eventSlug: string;
   readonly eventStatus: string;
   readonly groups: readonly GuestGroup[];
@@ -131,7 +134,11 @@ export function summarizeGuestList(groups: readonly GuestGroup[]): RsvpSummary {
  *
  * Nombra a la familia y dice que el enlace es suyo: es lo que hace que respondan desde ese y no
  * desde el general que les reenvió alguien más.
+ *
+ * Nombra la celebración por quien se celebra y no por el título del evento: ese título es el
+ * rótulo interno del panel («Boda Pérez – salón 2») y no está escrito para que lo lea un invitado.
+ * La frase es la misma que usan los mensajes de confirmación de la invitación.
  */
-export function guestInviteMessage(groupName: string, eventTitle: string, url: string): string {
-  return `¡Hola, ${groupName}! Con mucho cariño les compartimos su invitación a ${eventTitle}. Este enlace es solo para ustedes; ahí mismo pueden confirmar su asistencia: ${url}`;
+export function guestInviteMessage(groupName: string, celebrant: string, url: string): string {
+  return `¡Hola, ${groupName}! Con mucho cariño les compartimos su invitación a la celebración de ${celebrant}. Este enlace es solo para ustedes; ahí mismo pueden confirmar su asistencia: ${url}`;
 }

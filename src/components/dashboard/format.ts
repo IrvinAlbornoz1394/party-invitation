@@ -1,3 +1,5 @@
+import { DEFAULT_EVENT_TIME_ZONE } from '@/domain/events/event-time-zone';
+
 /**
  * Formato de texto compartido por las pantallas del panel.
  *
@@ -26,19 +28,47 @@ export function initials(name: string): string {
 }
 
 /**
- * Fecha corta: "7 ago 2026". La de las tablas.
+ * La zona en la que el panel pinta las fechas.
  *
- * PENDIENTE: cuando el panel muestre horas y no solo fechas, esto tiene que usar
- * `events.time_zone` en vez de la zona del servidor. Hoy no se nota porque no se enseña la
- * hora, y ponerlo bien exige que la zona baje hasta aquí desde el evento.
+ * Fija y no la del navegador ni la del servidor, por dos motivos. El primero es que una fecha
+ * guardada es un instante: una boda del sábado 20 a las 18:30 en Mérida ya es domingo 21 en UTC,
+ * que es la zona del servidor en Vercel, así que sin zona el panel la corría un día. El segundo
+ * es que el servidor y el navegador tienen que escribir lo mismo, o React no puede hidratar la
+ * página.
+ *
+ * Es la del negocio porque hoy todos los eventos son de ahí (ver `event-time-zone.ts`). Quien
+ * tenga la zona del evento a mano puede pasarla.
  */
-export function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' }).format(new Date(value));
+const PANEL_TIME_ZONE = DEFAULT_EVENT_TIME_ZONE;
+
+/** Fecha corta: "7 ago 2026". La de las tablas. */
+export function formatDate(value: Date, timeZone: string = PANEL_TIME_ZONE): string {
+  return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium', timeZone }).format(
+    new Date(value),
+  );
 }
 
 /** Fecha larga: "viernes, 7 de agosto de 2026". Para encabezados y fichas. */
-export function formatLongDate(value: Date): string {
-  return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'full' }).format(new Date(value));
+export function formatLongDate(value: Date, timeZone: string = PANEL_TIME_ZONE): string {
+  return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'full', timeZone }).format(new Date(value));
+}
+
+/**
+ * El día de calendario de un instante en una zona, como milisegundos de su medianoche UTC.
+ *
+ * Sirve para restar días sin que el horario ni la zona del servidor se metan en la cuenta: dos
+ * fechas del mismo día en Mérida dan el mismo número aunque en UTC caigan en días distintos.
+ */
+function calendarDay(value: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(new Date(value));
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+
+  return Date.UTC(part('year'), part('month') - 1, part('day'));
 }
 
 /**
@@ -52,20 +82,23 @@ export function formatLongDate(value: Date): string {
  * un evento esta noche a las 23:00 debe decir "hoy", no "en 0 días", y uno mañana a las
  * 08:00 debe decir "mañana" aunque falten menos de 24 horas.
  */
-export function formatDaysUntil(value: Date, now: Date = new Date()): string {
-  const startOfDay = (date: Date) =>
-    new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-
-  const days = Math.round((startOfDay(new Date(value)) - startOfDay(now)) / 86_400_000);
+export function formatDaysUntil(
+  value: Date,
+  now: Date = new Date(),
+  timeZone: string = PANEL_TIME_ZONE,
+): string {
+  const days = Math.round((calendarDay(value, timeZone) - calendarDay(now, timeZone)) / 86_400_000);
 
   return new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' }).format(days, 'day');
 }
 
 /** Si una fecha todavía no ha pasado, contando el día en curso como futuro. */
-export function isUpcoming(value: Date, now: Date = new Date()): boolean {
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-  return new Date(value).getTime() >= endOfToday.getTime() - 86_399_999;
+export function isUpcoming(
+  value: Date,
+  now: Date = new Date(),
+  timeZone: string = PANEL_TIME_ZONE,
+): boolean {
+  return calendarDay(value, timeZone) >= calendarDay(now, timeZone);
 }
 
 /**

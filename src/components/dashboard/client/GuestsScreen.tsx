@@ -198,7 +198,7 @@ function GuestLinkActions({ list, group }: { readonly list: GuestList; readonly 
           <Button
             type="text"
             size="small"
-            href={whatsappUrl(group.phone, guestInviteMessage(group.name, list.eventTitle, url))}
+            href={whatsappUrl(group.phone, guestInviteMessage(group.name, list.celebrant, url))}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Mandar su enlace a ${group.name} por WhatsApp`}
