@@ -128,6 +128,11 @@
   gap: var(--dash-gap);
   min-width: 0;
 }
+/* El formulario es hijo de esa rejilla y por defecto no encoge por debajo de su contenido: un campo
+   con un enlace largo lo ensanchaba hasta meter la tarjeta debajo de la vista previa. */
+.content-editor__form > form {
+  min-width: 0;
+}
 
 /* Fecha y hora comparten fila: son un solo dato partido en dos controles, y separarlos en dos
    filas sugeriría que no tienen que ver entre sí. */
@@ -300,6 +305,13 @@
 
 /* El título de la fila se recorta en una línea: con una dirección larga, el encabezado crecería
    hasta empujar los botones de orden fuera de la vista. */
+/* Hija de un flex dentro de una fila de rejilla: sin `min-width: 0` en las dos, ninguna encoge por
+   debajo de su texto, la elipsis no actúa y un título largo sin espacios —un enlace pegado como
+   descripción— ensancha la fila hasta salirse de la tarjeta. */
+.collection__row,
+.collection__row-title {
+  min-width: 0;
+}
 .collection__row-title {
   overflow: hidden;
   font-size: 13px;
@@ -322,4 +334,42 @@
 
 .collection__row-body .ant-form-item:last-child {
   margin-bottom: var(--dash-gap-sm);
+}
+
+/* ── Fotos ──────────────────────────────────────────────────────────────────
+   La miniatura a la izquierda y los botones a su lado: se ve qué foto hay antes de cambiarla. */
+.image-upload {
+  display: flex;
+  align-items: center;
+  gap: var(--dash-gap-sm);
+  flex-wrap: wrap;
+}
+.image-upload__preview {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--dash-radius-sm);
+  border: 1px solid var(--dash-border);
+  background: var(--dash-canvas);
+}
+.image-upload__actions {
+  display: flex;
+  gap: var(--dash-gap-xs);
+  flex-wrap: wrap;
+}
+.image-upload__link {
+  margin-top: var(--dash-gap-xs);
+}
+/* El botón de subir varias va encima de la lista de la galería, con su ayuda al lado. */
+.image-upload__bulk {
+  display: flex;
+  align-items: center;
+  gap: var(--dash-gap-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--dash-gap-sm);
+}
+.image-upload__problems {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: 18px;
 }

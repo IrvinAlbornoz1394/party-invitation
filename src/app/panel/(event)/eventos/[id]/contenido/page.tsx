@@ -4,7 +4,7 @@ import { ContentSubmitPanel } from '@/components/dashboard/client/ContentSubmitP
 import { ContentWizard } from '@/components/dashboard/client/wizard/ContentWizard';
 import { editEventContent, submitEventContent } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
-import { saveEventContentAction, submitContentAction } from './actions';
+import { saveEventContentAction, submitContentAction, uploadEventImageAction } from './actions';
 import { INITIAL_CONTENT_STATE, INITIAL_SUBMIT_STATE } from './form-state';
 
 export const metadata: Metadata = {
@@ -72,6 +72,7 @@ export default async function EventContentPage({
       blockLists={sections.lists}
       timeZone={TIME_ZONE_LABEL}
       action={saveEventContentAction}
+      uploadAction={uploadEventImageAction}
       initialState={INITIAL_CONTENT_STATE}
       banner={
         progress && (

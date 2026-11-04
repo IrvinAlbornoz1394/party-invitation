@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IMAGE_URL_MESSAGE, imageUrlSchema } from '@/domain/media/image-url';
 import { WHATSAPP_NUMBER_HINT, normalizeWhatsappNumber } from './whatsapp-number';
 
 /**
@@ -86,16 +87,11 @@ const optionalWhatsapp = optionalText(40)
 /**
  * URL opcional de una imagen.
  *
- * Se valida como URL absoluta porque va directa a un `src`: una ruta relativa mal escrita se
- * vería como una imagen rota en la invitación de un cliente, y el sitio donde eso se descubre
- * no debería ser el teléfono de un invitado.
- *
- * Todavía no hay subida de archivos, así que esto recibe la URL de donde estén hoy alojadas las
- * fotos. Cuando exista el almacenamiento propio, este campo deja de escribirse a mano y el tipo
- * no cambia.
+ * Un enlace `http(s)` o una foto subida (`/media/...`), y nada más: una ruta relativa mal escrita
+ * se vería como una imagen rota en la invitación de un cliente. Ver `domain/media/image-url.ts`.
  */
 const optionalImageUrl = z
-  .union([z.literal(''), z.url({ protocol: /^https?$/ })])
+  .union([z.literal(''), imageUrlSchema(IMAGE_URL_MESSAGE)])
   .transform((value) => (value === '' ? null : value))
   .nullable();
 

@@ -14,6 +14,7 @@ import {
   publishEventAction,
   saveAdminContentAction,
   shareContentLinkAction,
+  uploadAdminEventImageAction,
 } from './actions';
 import { INITIAL_ADMIN_CONTENT_STATE, INITIAL_PUBLISH_STATE } from './form-state';
 
@@ -74,6 +75,7 @@ export default async function AdminEventContentPage({
       blockLists={sections.lists}
       timeZone={TIME_ZONE_LABEL}
       action={saveAdminContentAction}
+      uploadAction={uploadAdminEventImageAction}
       initialState={INITIAL_ADMIN_CONTENT_STATE}
       title={event.title}
       description={`Contenido de la invitación de ${event.clientName ?? 'este cliente'}. Se guarda igual que lo guardaría el cliente.`}

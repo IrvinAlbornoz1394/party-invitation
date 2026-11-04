@@ -14,6 +14,9 @@ dist-ssr
 /.claude/
 /CLAUDE.md
 
+# Fotos subidas en desarrollo (`MEDIA_STORAGE_DIR`). Son de los clientes, no del repo.
+/storage/
+
 # Next.js
 /.next/
 /out/

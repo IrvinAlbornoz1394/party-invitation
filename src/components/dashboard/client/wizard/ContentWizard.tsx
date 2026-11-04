@@ -21,8 +21,10 @@ import type { ContentStep } from '@/domain/events/content-steps';
 import type { EventCollections } from '@/domain/events/event-collections';
 import type { EditableBlockTexts } from '@/domain/events/event-block-texts';
 import type { EventContentDraft } from '@/domain/events/event-content-draft';
+import type { ImageUploadResult } from '@/domain/media/uploaded-image';
 import { PageHeader } from '../../primitives/PageHeader';
 import { SectionCard } from '../../primitives/SectionCard';
+import type { UploadImage } from './ImageUpload';
 import { StepFields } from './StepFields';
 import type { EditableCollections } from './fields';
 import '../content-editor.css';
@@ -110,6 +112,7 @@ export function ContentWizard({
   blockLists,
   timeZone,
   action,
+  uploadAction,
   initialState,
   title = 'Contenido',
   description = 'Lo que dice tu invitación, sección por sección. El diseño lo ponemos nosotros.',
@@ -127,6 +130,8 @@ export function ContentWizard({
   readonly blockLists: EditableBlockLists;
   readonly timeZone: string;
   readonly action: (state: ContentState, formData: FormData) => Promise<ContentState>;
+  /** Sube una foto: recibe `eventId` y `file`. Ver `ImageUpload`. */
+  readonly uploadAction: (formData: FormData) => Promise<ImageUploadResult>;
   readonly initialState: ContentState;
   readonly title?: string;
   readonly description?: string;
@@ -204,6 +209,17 @@ export function ContentWizard({
       [blockKey]: { ...currentTexts[blockKey], [field]: value },
     }));
     setEdits((count) => count + 1);
+  };
+
+  /* Una foto subida o quitada cambia un campo oculto, que no dispara `input`. */
+  const markEdited = () => setEdits((count) => count + 1);
+
+  const uploadImage: UploadImage = (file) => {
+    const formData = new FormData();
+    formData.set('eventId', eventId);
+    formData.set('file', file);
+
+    return uploadAction(formData);
   };
 
   useEffect(() => {
@@ -349,6 +365,8 @@ export function ContentWizard({
                       onTextChange={changeText}
                       lists={lists}
                       setLists={changeLists}
+                      uploadImage={uploadImage}
+                      onEdit={markEdited}
                     />
                   </SectionCard>
                 </div>

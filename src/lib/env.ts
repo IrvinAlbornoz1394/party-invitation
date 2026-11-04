@@ -78,6 +78,14 @@ const serverEnvSchema = z.object({
     .optional()
     .transform((value) => (value === '' ? undefined : value)),
 
+  /**
+   * La carpeta donde se guardan las fotos subidas, mientras el almacenamiento sea el disco local.
+   *
+   * Relativa al directorio desde el que arranca el servidor. En Vercel no sirve —el disco es
+   * efímero—: ver `infrastructure/media/local-image-storage.ts`.
+   */
+  MEDIA_STORAGE_DIR: z.string().min(1).default('storage/media'),
+
   /** URL pública canónica; sirve para las URLs absolutas de Open Graph y los enlaces de acceso. */
   NEXT_PUBLIC_SITE_URL: z.url().default('http://localhost:3001'),
 });

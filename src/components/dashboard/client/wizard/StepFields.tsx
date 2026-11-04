@@ -14,6 +14,7 @@ import type { EventContentDraft } from '@/domain/events/event-content-draft';
 import { BlockTextFields } from '../BlockTextFields';
 import { CollectionEditor } from '../CollectionEditor';
 import { Field, NativeField, RowField, type EditableCollections } from './fields';
+import { DraftImageField, GalleryUploadButton, ImageUpload, type UploadImage } from './ImageUpload';
 
 /**
  * Lo que se pregunta en un paso: los campos del evento, su lista y los textos de esa sección.
@@ -64,7 +65,7 @@ const FIELD_UI: Readonly<
   date: { label: 'Fecha', native: 'date', required: true },
   time: { label: 'Hora', native: 'time', required: true },
   city: { label: 'Ciudad' },
-  heroImageUrl: { label: 'Foto de la portada', help: 'Enlace directo a la imagen (https://…).' },
+  heroImageUrl: { label: 'Foto de la portada', help: 'JPG, PNG o WebP, hasta 10 MB.' },
   storyImageUrl: { label: 'Foto de la historia' },
   closingImageUrl: { label: 'Foto del cierre' },
   /* Neutra a propósito: según el plan, el campo va en la confirmación o en el pie. */
@@ -106,12 +107,15 @@ const ICON_OPTIONS: readonly { readonly value: BlockIcon; readonly label: string
   { value: 'phone', label: 'Teléfono' },
 ];
 
-/** El ejemplo de un campo, si lo hay. Los que no lo tienen —fechas, enlaces— no lo necesitan. */
+/** El ejemplo de un campo, si lo hay. Los que no lo tienen —fechas, fotos— no lo necesitan. */
 function exampleOf(field: EventFieldKey, examples: EventFieldExamples): string | undefined {
   if (field in examples) return examples[field as keyof EventFieldExamples];
 
-  return field.endsWith('ImageUrl') ? 'https://…' : PLACEHOLDERS[field];
+  return PLACEHOLDERS[field];
 }
+
+/** Cuántas fotos admite la galería. El mismo tope que `eventCollectionsSchema`. */
+const GALLERY_MAX = 60;
 
 /** Los ejemplos que no dependen del tipo de evento: formatos, no contenido. */
 const PLACEHOLDERS: Readonly<Partial<Record<EventFieldKey, string>>> = {
@@ -136,6 +140,8 @@ export function StepFields({
   onTextChange,
   lists,
   setLists,
+  uploadImage,
+  onEdit,
 }: {
   readonly step: ContentStep;
   readonly draft: EventContentDraft;
@@ -156,6 +162,10 @@ export function StepFields({
   readonly onTextChange: (blockKey: string, field: string, value: string) => void;
   readonly lists: EditableBlockLists;
   readonly setLists: Dispatch<SetStateAction<EditableBlockLists>>;
+  /** Sube una foto del evento. Ver `ImageUpload`. */
+  readonly uploadImage: UploadImage;
+  /** Avisa al guardado automático de un cambio que no viene de teclear. */
+  readonly onEdit: () => void;
 }) {
   const block = blockTexts.find((candidate) => candidate.blockKey === step.blockKey);
 
@@ -266,6 +276,22 @@ export function StepFields({
             defaultValue={draft[field] ?? ''}
           />
         </NativeField>
+      );
+    }
+
+    /* Las fotos sueltas se suben; ver `ImageUpload`. El enlace pegado sigue valiendo. */
+    if (field.endsWith('ImageUrl')) {
+      return (
+        <DraftImageField
+          key={field}
+          name={field}
+          label={labels[field] ?? ui.label}
+          help={ui.help}
+          initial={draft[field]}
+          error={errors[field]}
+          upload={uploadImage}
+          onEdit={onEdit}
+        />
       );
     }
 
@@ -543,11 +569,22 @@ export function StepFields({
 
     if (step.collection === 'gallery') {
       return (
+        <>
+        <GalleryUploadButton
+          upload={uploadImage}
+          remaining={GALLERY_MAX - collections.gallery.length}
+          onUploaded={(url) =>
+            setCollections((current) => ({
+              ...current,
+              gallery: [...current.gallery, { id: null, url, altText: null, caption: null }],
+            }))
+          }
+        />
         <CollectionEditor<GalleryRow>
           title="Galería"
           description="Las fotos que se ven en la sección de galería, en este orden."
           rows={collections.gallery}
-          max={60}
+          max={GALLERY_MAX}
           addLabel="Añadir una foto"
           emptyLabel="Todavía no hay fotos en la galería."
           rowTitle={(row, index) => row.caption || row.altText || `Foto ${index + 1}`}
@@ -555,12 +592,12 @@ export function StepFields({
           onChange={(gallery) => setCollections((current) => ({ ...current, gallery }))}
           renderRow={(row, index, update) => (
             <>
-              <RowField
-                label="Enlace de la imagen"
+              <ImageUpload
+                label="Foto"
                 error={errors[`gallery.${index}.url`]}
                 value={row.url}
-                onChange={(url) => update({ url: url ?? '' })}
-                placeholder="https://…"
+                upload={uploadImage}
+                onChange={(url) => update({ url })}
               />
               <div className="content-editor__row">
                 <RowField
@@ -580,6 +617,7 @@ export function StepFields({
             </>
           )}
         />
+        </>
       );
     }
 

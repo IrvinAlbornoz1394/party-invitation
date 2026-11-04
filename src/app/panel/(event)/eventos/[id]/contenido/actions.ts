@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { notFound } from 'next/navigation';
 import type { EventContentDraftInput } from '@/domain/events/event-content-draft';
-import { editEventContent, submitEventContent } from '@/infrastructure/container';
+import type { ImageUploadResult } from '@/domain/media/uploaded-image';
+import { editEventContent, submitEventContent, uploadEventImage } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
 import {
   INITIAL_CONTENT_STATE,
@@ -119,6 +120,26 @@ export async function saveEventContentAction(
         errors: {},
       };
   }
+}
+
+/**
+ * Subir una foto del contenido.
+ *
+ * La misma puerta que guardar: sin acceso de escritura al evento no se sube nada, y el visor se
+ * queda fuera por el mismo `scope === null`. La foto no se apunta en ninguna parte hasta que el
+ * contenido que la usa se guarda; ver `UploadEventImage`.
+ */
+export async function uploadEventImageAction(formData: FormData): Promise<ImageUploadResult> {
+  const eventId = readText(formData, 'eventId');
+  const { scope } = await requireEventAccess(eventId);
+
+  if (scope === null) notFound();
+
+  const file = formData.get('file');
+
+  if (!(file instanceof File)) return { status: 'error', message: 'Elige una foto.' };
+
+  return uploadEventImage.execute(eventId, file);
 }
 
 /** Lee las colecciones del campo oculto. Ante cualquier duda, tres listas vacías. */

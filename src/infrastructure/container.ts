@@ -68,6 +68,7 @@ import {
   SaveGuestGroup,
   SubmitRsvp,
 } from '@/application/guests/manage-guests';
+import { ReadEventImage, UploadEventImage } from '@/application/media/event-images';
 import type { InvitationNotifier } from '@/domain/auth/invitation-notifier';
 import type { EventNotifier } from '@/domain/events/event-notifier';
 import type { ProspectNotifier } from '@/domain/prospects/prospect-notifier';
@@ -90,6 +91,7 @@ import {
 import { ChannelOtpSenderRouter } from './notifications/otp-sender-router';
 import { ResendClient } from './notifications/resend-client';
 import { ResendEmailSender } from './notifications/resend-email-sender';
+import { LocalImageStorage } from './media/local-image-storage';
 import { DrizzleAuthRepository } from './repositories/drizzle-auth-repository';
 import { DrizzleCatalogRepository } from './repositories/drizzle-catalog-repository';
 import { DrizzleClientRepository } from './repositories/drizzle-client-repository';
@@ -393,3 +395,12 @@ export const listGuests = new ListGuests(guestRepository, eventRepository);
 export const saveGuestGroup = new SaveGuestGroup(guestRepository, eventRepository);
 export const deleteGuestGroup = new DeleteGuestGroup(guestRepository, eventRepository);
 export const submitRsvp = new SubmitRsvp(guestRepository);
+
+/*
+ * Las fotos subidas. Hoy, en una carpeta del disco; el día que haya bucket, aquí se cambia la
+ * implementación y nada más. Ver `domain/media/uploaded-image.ts`.
+ */
+const imageStorage = new LocalImageStorage(env.MEDIA_STORAGE_DIR);
+
+export const uploadEventImage = new UploadEventImage(imageStorage);
+export const readEventImage = new ReadEventImage(imageStorage);

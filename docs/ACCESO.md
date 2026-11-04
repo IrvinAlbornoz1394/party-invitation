@@ -36,9 +36,10 @@ Dos limitaciones conocidas, ninguna descuidada:
   confirmaciones, mesas, recordatorios— y la de diseño están declaradas en `SECTIONS` con
   `pending: true` y no se pintan, porque sus pantallas no existen. Activarlas es quitar esa
   palabra. Un menú con enlaces a 404 se lee como un panel roto, no como el límite de un plan.
-- **Las fotos se pegan como URL**, no se suben: no hay almacenamiento propio todavía. Por eso el
-  guardado de la galería actualiza por `id` en vez de borrar y reinsertar — así `storage_key`,
-  `width` y `height` sobrevivirán al día que la subida exista.
+- **Las fotos se suben** desde el editor (o se pega un enlace, como respaldo). Se guardan como
+  `/media/<clave>`, una ruta del sitio que sirve `app/media/[...key]`; hoy el archivo vive en el
+  disco local (`MEDIA_STORAGE_DIR`), y pasar a un bucket es cambiar la implementación de
+  `ImageStorage` sin tocar las URL guardadas. Ver `src/domain/media/uploaded-image.ts`.
 
 
 ## El diagnóstico

@@ -69,6 +69,14 @@ const nextConfig: NextConfig = {
       hostname,
     })),
   },
+  experimental: {
+    /*
+     * Las fotos se suben por una acción de servidor, y el límite de fábrica es 1 MB: una foto de
+     * teléfono no pasaría. El tope de verdad es `MAX_IMAGE_BYTES` (10 MB, en
+     * `domain/media/uploaded-image.ts`); esto deja margen para el resto del formulario.
+     */
+    serverActions: { bodySizeLimit: '11mb' },
+  },
   // El header Server delata la infraestructura sin dar ningún beneficio.
   poweredByHeader: false,
   async headers() {

@@ -3,11 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { notFound } from 'next/navigation';
 import type { EventContentDraftInput } from '@/domain/events/event-content-draft';
+import type { ImageUploadResult } from '@/domain/media/uploaded-image';
 import {
   editEventContent,
   findEventForPlatform,
   publishEvent,
   shareContentLink,
+  uploadEventImage,
 } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 import {
@@ -182,6 +184,20 @@ export async function shareContentLinkAction(
        cliente por WhatsApp, que es como se resuelve la mitad de estas conversaciones. */
     contentUrl: result.url,
   };
+}
+
+/** Subir una foto del contenido desde el admin. Ver `uploadEventImageAction` en el panel. */
+export async function uploadAdminEventImageAction(formData: FormData): Promise<ImageUploadResult> {
+  const credentials = await requirePlatformCredentials();
+  const event = await findEventForPlatform.execute(credentials, readText(formData, 'eventId'));
+
+  if (event === null) notFound();
+
+  const file = formData.get('file');
+
+  if (!(file instanceof File)) return { status: 'error', message: 'Elige una foto.' };
+
+  return uploadEventImage.execute(event.id, file);
 }
 
 /** Lo que llega del campo oculto con las colecciones, tolerando basura. */

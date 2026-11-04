@@ -853,9 +853,9 @@ demás se sirve tal cual, con `unoptimized`. La lista está en `src/lib/images.t
 `next.config.ts` —para declarar los `remotePatterns`— como los tres componentes que pintan fotos
 de un evento: `BlockImage`, la galería (`gallery-parts.tsx`) y el visor ampliado (`Lightbox`).
 
-El coste es que la foto de un cliente viaja con el peso que tenga. Es temporal: cuando exista la
-subida de archivos, esas fotos estarán en nuestro almacenamiento, ese host entrará en la lista y
-volverán a optimizarse todas.
+Las fotos **subidas** sí se optimizan: se guardan como `/media/<clave>`, una ruta del propio
+sitio, y esas el optimizador las acepta siempre. El coste de servir tal cual queda solo para los
+enlaces pegados de otros sitios.
 
 ## Pendientes conocidos
 
@@ -874,10 +874,11 @@ volverán a optimizarse todas.
   alcances, RLS con la dimensión del evento, el selector de `/panel`, el panel por evento y su
   menú por plan × rol (`docs/ACCESO.md`). Conceder un acceso hoy es llamar a
   `app.grant_membership()`; falta la pantalla que lo haga desde el panel del cliente.
-- **No hay subida de archivos.** Las fotos —portada, historia, cierre y galería— se capturan como
-  URL. Las columnas de la subida (`storage_key`, `width`, `height`, `byte_size`, `content_type`)
-  existen en `event_gallery_items` y el guardado las respeta: actualiza por `id` en vez de borrar
-  y reinsertar, justamente para que sobrevivan.
+- **Las fotos subidas viven en el disco local.** Sirve para desarrollo, no para Vercel (el disco
+  es efímero). Falta una implementación de `ImageStorage` sobre S3 o similar y conectarla en el
+  contenedor; las URL guardadas (`/media/...`) no cambian. Tampoco se limpian las fotos que se
+  suben y nunca se guardan, y `storage_key`, `width` y `height` de `event_gallery_items` siguen
+  sin llenarse.
 - **Guardar contenido son dos transacciones.** Los campos del evento y sus tres listas se
   escriben por separado. Si la segunda falla, la primera queda guardada y la pantalla informa del
   error; volver a guardar deja las dos al día, porque ninguna escritura depende del estado

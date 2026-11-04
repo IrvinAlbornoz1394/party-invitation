@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IMAGE_URL_MESSAGE, imageUrlSchema } from '@/domain/media/image-url';
 
 /**
  * Las tres listas ordenadas de un evento: sedes, cronograma y galería.
@@ -53,7 +54,13 @@ const optionalTime = z
 
 /** Enlace opcional. Se exige absoluto porque va directo a un `href` o a un `src`. */
 const optionalUrl = z
-  .union([z.literal(''), z.url({ protocol: /^https?$/ })])
+  .union([z.literal(''), z.url({ protocol: /^https?$/, error: 'Pega el enlace completo, con https://.' })])
+  .transform((value) => (value === '' ? null : value))
+  .nullable();
+
+/** Foto opcional: un enlace o una foto subida. Ver `domain/media/image-url.ts`. */
+const optionalImageUrl = z
+  .union([z.literal(''), imageUrlSchema(IMAGE_URL_MESSAGE)])
   .transform((value) => (value === '' ? null : value))
   .nullable();
 
@@ -79,7 +86,7 @@ export const venueRowSchema = z.object({
   detail: optionalText(300),
   mapUrl: optionalUrl,
   time: optionalTime,
-  imageUrl: optionalUrl,
+  imageUrl: optionalImageUrl,
   imageAlt: optionalText(200),
 });
 
@@ -106,7 +113,8 @@ export const scheduleRowSchema = z.object({
 
 export const galleryRowSchema = z.object({
   id: rowId,
-  url: z.url({ protocol: /^https?$/, error: 'Pega el enlace directo a la imagen.' }),
+  /** Un enlace o una foto subida (`/media/...`). Ver `domain/media/uploaded-image.ts`. */
+  url: imageUrlSchema(IMAGE_URL_MESSAGE),
   /**
    * El texto alternativo. Opcional en el formulario y no en la conciencia: sin él, quien use un
    * lector de pantalla no sabe qué hay en la foto. Se pide con una ayuda que lo explica en vez de
