@@ -9,6 +9,8 @@ import {
   resolveGalleryVariant,
   resolveHeroVariant,
   resolveLocationVariant,
+  resolveProtagonistsVariant,
+  resolveGiftsVariant,
   resolveRsvpVariant,
   resolveScheduleVariant,
   resolveStoryVariant,
@@ -74,6 +76,18 @@ export function InvitationBlock({
 
     case 'calendar': {
       const Variant = resolveCalendarVariant(registryId);
+
+      return Variant ? <Variant content={block.content} /> : null;
+    }
+
+    case 'protagonists': {
+      const Variant = resolveProtagonistsVariant(registryId);
+
+      return Variant ? <Variant content={block.content} /> : null;
+    }
+
+    case 'gifts': {
+      const Variant = resolveGiftsVariant(registryId);
 
       return Variant ? <Variant content={block.content} /> : null;
     }

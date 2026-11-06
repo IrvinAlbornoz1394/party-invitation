@@ -1,25 +1,64 @@
 import type { Metadata } from 'next';
-import { LandingAbout } from '@/components/marketing/LandingAbout';
-import { LandingHero } from '@/components/marketing/LandingHero';
-import { ManagementStory } from '@/components/marketing/ManagementStory';
-import { PlansSection } from '@/components/marketing/PlansSection';
-import { SiteFooter } from '@/components/marketing/SiteFooter';
-import { SiteHeader } from '@/components/marketing/SiteHeader';
-import { TemplateShowcase } from '@/components/marketing/TemplateShowcase';
+import { demoStructures } from '@/components/invitation/demo/templates';
+import { ClosingCta } from '@/components/landing/ClosingCta';
+import { type Faq, FaqIndex } from '@/components/landing/FaqIndex';
+import { stackHeadline, stackText } from '@/components/landing/fonts';
+import { HowItWorks } from '@/components/landing/HowItWorks';
+import { LandingFooter } from '@/components/landing/LandingFooter';
+import { LandingHero } from '@/components/landing/LandingHero';
+import { PanelPlate } from '@/components/landing/PanelPlate';
+import { PlansTable } from '@/components/landing/PlansTable';
+import { RevealController } from '@/components/landing/RevealController';
+import { TemplateRow } from '@/components/landing/TemplateRow';
+import '@/components/landing/landing.css';
 import { browseShowcase } from '@/infrastructure/container';
 
 export const metadata: Metadata = {
   title: 'MiEvento · Invitaciones digitales que además organizan tu fiesta',
   description:
-    'No solo hacemos invitaciones digitales: te damos la herramienta para administrar tu evento — confirmaciones, invitados, mesas y recordatorios automáticos.',
+    'Invitaciones digitales para bodas y XV años. Cada familia confirma desde su propio enlace y tú ves la cuenta en tu panel.',
   openGraph: {
     type: 'website',
     locale: 'es_MX',
     title: 'MiEvento · Invitaciones digitales',
-    description:
-      'La invitación es la parte fácil. Lo demás —confirmaciones, invitados, mesas y recordatorios— lo hacemos nosotros.',
+    description: 'Tu invitación sabe quién va: diseño de invitación y panel de confirmaciones.',
   },
 };
+
+/**
+ * Las preguntas. Cada respuesta dice solo lo que el producto hace hoy: la diferencia entre
+ * WhatsApp y confirmación en línea sale de cómo están armados los planes en el catálogo.
+ */
+const FAQS: readonly Faq[] = [
+  {
+    question: '¿Mis invitados tienen que descargar algo?',
+    answer: 'No. La invitación se abre en el navegador de su teléfono, desde el enlace que les mandas.',
+  },
+  {
+    question: '¿Cómo confirman su asistencia?',
+    answer:
+      'En Esencial y Plus, el botón de confirmar les abre WhatsApp con el mensaje ya escrito para ti. En Premium confirman en la misma invitación y la respuesta llega a tu panel.',
+  },
+  {
+    question: '¿Cómo sé cuántos lugares tiene cada familia?',
+    answer:
+      'En Premium, al dar de alta a cada familia le apartas sus lugares. Al confirmar eligen cuántos van, de uno hasta ese número.',
+  },
+  {
+    question: '¿Puedo ver las plantillas antes de contratar?',
+    answer:
+      'Sí. Cada una se abre completa y puedes cambiar en vivo el tipo de celebración, los colores y el diseño de cada sección.',
+  },
+  {
+    question: '¿Para qué celebraciones es?',
+    answer: 'Hoy hacemos invitaciones para bodas y para XV años.',
+  },
+  {
+    question: '¿Cuánto cuesta?',
+    answer:
+      'Depende del plan y de tu celebración. Cuéntanos de tu evento y te mandamos la cotización.',
+  },
+];
 
 interface PageProps {
   searchParams: Promise<{ acceso?: string }>;
@@ -30,18 +69,10 @@ interface PageProps {
  *
  * ## El orden es el argumento
  *
- * Portada → quiénes somos → plantillas → lo que pasa después → planes → cierre. No es el orden
- * habitual de una página de producto, que suele poner las funcionalidades antes que el diseño;
- * aquí va al revés a propósito.
- *
- * La sección del estudio es corta y va segunda por una razón concreta: responde en cinco líneas
- * a «¿esto qué es?» antes de pedirle a nadie que abra una plantilla. Lo que **no** hace es
- * retrasar el escaparate — de ahí que sean cinco líneas y tres cifras, y no una historia.
- *
- * Quien busca una invitación digital decide primero **por los ojos**. Si lo que ve no le gusta,
- * ninguna lista de funcionalidades lo va a convencer, así que las plantillas van segundas y se
- * pueden abrir de verdad. Solo después de eso alguien está dispuesto a leer por qué esto no es
- * otra página bonita — y ahí es donde vive el argumento real del producto, que es la gestión.
+ * Portada → plantillas → cómo funciona → el panel → planes → preguntas → cierre. Quien busca una
+ * invitación decide primero por los ojos, así que las plantillas van justo después de la portada.
+ * Solo después de eso alguien está dispuesto a ver por qué esto no es otra página bonita, y ahí
+ * el producto se demuestra funcionando: una confirmación que puedes hacer tú y un panel que cuenta.
  *
  * ## Qué se lee de la base de datos y qué no
  *
@@ -49,51 +80,65 @@ interface PageProps {
  * de que Postgres responda. Los planes sí vienen del catálogo, porque una página de precios que
  * promete lo que el producto ya no hace es peor que una que tarda un poco más en cargar.
  *
- * `showcase.eventTypes` se sigue leyendo y ya no se pinta. Es a propósito: el catálogo tiene
- * nueve tipos y hoy solo se venden bodas y XV, así que la página dejó de anunciarlos. El caso
- * de uso los sigue exponiendo porque el panel los necesita para dar de alta un evento.
- *
  * ## Es también el destino de los rebotes
  *
  * Un código de invitación incorrecto acaba aquí en silencio. Solo el exceso de intentos deja
- * rastro, y con un aviso discreto: que exista un límite no es secreto, pero distinguir «código
- * incorrecto» de «evento inexistente» convertiría esta página en un oráculo para averiguar qué
- * invitaciones existen.
+ * rastro, con un aviso discreto: distinguir «código incorrecto» de «evento inexistente» convertiría
+ * esta página en un oráculo para averiguar qué invitaciones existen.
  */
 export default async function LandingPage({ searchParams }: PageProps) {
   const { acceso } = await searchParams;
   const showcase = await browseShowcase.execute();
+  const structures = demoStructures();
+
+  const toImage = (cover: { url: string; alt?: string | null }) => ({
+    url: cover.url,
+    alt: cover.alt ?? '',
+  });
+
+  const rowTemplates = structures.map((structure) => ({
+    key: structure.structureKey,
+    name: structure.name,
+    tagline: structure.tagline,
+    eventTypes: structure.eventTypeNames,
+    href: `/plantillas/${structure.entryKey}`,
+    image: toImage(structure.cover),
+  }));
+
+  const weddingCovers = structures
+    .filter((structure) => structure.eventTypeNames.includes('Boda'))
+    .map((structure) => toImage(structure.cover));
 
   return (
-    <div className="marketing min-h-svh bg-ivory">
+    <div className={`landing min-h-svh ${stackHeadline.variable} ${stackText.variable}`}>
+      <RevealController />
+
       {acceso === 'limite' && (
-        <div role="status" className="bg-plum px-5 py-3 text-center text-sm text-white/90">
+        <div role="status" className="bg-(--l-accent) px-5 py-3 text-center text-[15px] text-white">
           Demasiados intentos desde tu conexión. Espera unos minutos y vuelve a abrir el enlace
           que te compartieron.
         </div>
       )}
 
-      {/* El ancla del enlace de salto es la portada y no este `main`: la cabecera ahora vive
-          dentro, así que saltar aquí dejaría al teclado justo antes de la navegación —o sea, sin
-          saltar nada—. Ver `LandingHero`. */}
       <main>
-        {/*
-          La cabecera vive dentro de la portada, no encima de ella: se apoya sobre la fotografía
-          en lugar de robarle una franja de papel. El contenedor es el que la ancla, y va aquí y
-          no dentro de `LandingHero` para que la portada siga siendo solo la portada.
-        */}
-        <div className="relative">
-          <SiteHeader tone="overlay" />
-          <LandingHero />
-        </div>
-
-        <LandingAbout themeCount={showcase.themes.length} />
-        <TemplateShowcase />
-        <ManagementStory />
-        <PlansSection plans={showcase.plans} />
+        <LandingHero
+          frames={rowTemplates.slice(0, 5).map((template) => ({
+            key: template.key,
+            name: template.name,
+            eventTypes: template.eventTypes.join(' · '),
+            href: template.href,
+            image: template.image,
+          }))}
+        />
+        <TemplateRow templates={rowTemplates} />
+        <HowItWorks covers={weddingCovers.slice(0, 4)} />
+        <PanelPlate photos={rowTemplates.slice(5, 8).map((template) => template.image)} />
+        <PlansTable plans={showcase.plans} />
+        <FaqIndex items={FAQS} />
+        <ClosingCta templates={structures.map(({ entryKey, name }) => ({ key: entryKey, name }))} />
       </main>
 
-      <SiteFooter />
+      <LandingFooter />
     </div>
   );
 }

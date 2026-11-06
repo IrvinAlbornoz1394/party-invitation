@@ -299,6 +299,9 @@ const RENAMED_THEMES: Readonly<Record<string, string>> = {
 const BLOCKS = [
   { key: 'welcome', name: 'Pantalla de bienvenida', featureKey: 'pantalla_bienvenida' },
   { key: 'hero', name: 'Portada', featureKey: 'plantilla' },
+  /* Quién celebra, uno a uno. Nació con `nocturne`; es contenido de la plantilla, así que va en
+     los tres planes como la portada. */
+  { key: 'protagonists', name: 'Protagonistas', featureKey: 'plantilla' },
   { key: 'story', name: 'Historia', featureKey: 'historia' },
   /*
    * El calendario cuelga de `plantilla` —o sea, lo tienen los tres planes— y no de
@@ -321,6 +324,9 @@ const BLOCKS = [
    * único camino es el WhatsApp. Que el bloque exista es de todos los planes; `rsvp` decide solo
    * si la confirmación se registra en la plataforma (`destination.kind === 'managed'`).
    */
+  /* La mesa de regalos nació con `terracota` y cuelga de su funcionalidad, que ya estaba en el
+     catálogo esperando un bloque. */
+  { key: 'gifts', name: 'Mesa de regalos', featureKey: 'mesa_regalos' },
   { key: 'rsvp', name: 'Confirmación de asistencia', featureKey: 'plantilla' },
   { key: 'closing', name: 'Mensaje final', featureKey: 'plantilla' },
   { key: 'footer', name: 'Pie de página', featureKey: 'plantilla' },
@@ -687,6 +693,40 @@ const VARIANTS: {
   { blockKey: 'dresscode', variantKey: 'taped', name: 'Vestimenta en muestras pegadas con cinta' },
   { blockKey: 'rsvp', variantKey: 'lined', name: 'Confirmación en hoja rayada' },
   { blockKey: 'closing', variantKey: 'signed', name: 'Cierre firmado a mano' },
+  /*
+   * `nocturne`: azul medianoche, frambuesa y oro viejo, con flores de acuarela de Redouté (dominio
+   * público, `wedding/watercolor`) que no se tiñen con el tema. Sin `minPlanRank` salvo la
+   * bienvenida, como todas: es composición base y una variante de Plus la haría imposible de
+   * montar para Esencial. La bienvenida sí lo lleva porque la sección entera es de Plus.
+   */
+  { blockKey: 'welcome', variantKey: 'vow', name: 'Bienvenida en la noche con ramos que giran', minPlanRank: 2 },
+  { blockKey: 'hero', variantKey: 'halfmoon', name: 'Portada en azul con la foto como media luna' },
+  { blockKey: 'protagonists', variantKey: 'hexagon', name: 'Retratos en hexágono dorado con ramos de acuarela' },
+  { blockKey: 'story', variantKey: 'ceremony', name: 'Historia con la dedicatoria en capitulares' },
+  { blockKey: 'calendar', variantKey: 'numerals', name: 'Cuenta atrás en numerales grandes' },
+  { blockKey: 'location', variantKey: 'crested', name: 'Sedes en tarjetas con remates barrocos' },
+  { blockKey: 'schedule', variantKey: 'medallion', name: 'Itinerario con la hora como titular' },
+  { blockKey: 'gallery', variantKey: 'inset', name: 'Galería en panel azul con entrada en zoom' },
+  { blockKey: 'details', variantKey: 'framed', name: 'Detalles en tarjetas con medallón encabalgado' },
+  { blockKey: 'dresscode', variantKey: 'hexagons', name: 'Vestimenta en hexágonos con filete dorado' },
+  { blockKey: 'rsvp', variantKey: 'celebration', name: 'Confirmación sobre foto con tarjeta encabalgada' },
+  { blockKey: 'closing', variantKey: 'watermark', name: 'Cierre con la firma como marca de agua' },
+  { blockKey: 'footer', variantKey: 'midnight', name: 'Pie en la noche con el monograma en un corazón' },
+  /* terracota: boda boho con manchas de barro, marcos abombados y rotulación a pincel. */
+  { blockKey: 'welcome', variantKey: 'bouquet', name: 'Bienvenida en crema con el ramo atado y los nombres en rótulo', minPlanRank: 2 },
+  { blockKey: 'hero', variantKey: 'blob', name: 'Portada con la foto en marco abombado sobre manchas de barro' },
+  { blockKey: 'protagonists', variantKey: 'balloons', name: 'Novios en marcos abombados con globos de corazón' },
+  { blockKey: 'calendar', variantKey: 'doodle', name: 'Mes en tarjeta abombada con el día rodeado por un corazón' },
+  { blockKey: 'story', variantKey: 'slides', name: 'Historia en tarjeta sobre foto, párrafo a párrafo' },
+  { blockKey: 'location', variantKey: 'arches', name: 'Sedes en tarjetas abombadas con laurel' },
+  { blockKey: 'schedule', variantKey: 'doodle', name: 'Itinerario en sendero de puntos con manchas de barro' },
+  { blockKey: 'gallery', variantKey: 'squircle', name: 'Galería en rejilla de marcos abombados' },
+  { blockKey: 'details', variantKey: 'blobs', name: 'Detalles en tarjetas abombadas con el icono en una mancha' },
+  { blockKey: 'dresscode', variantKey: 'blobs', name: 'Vestimenta en gotas de color' },
+  { blockKey: 'gifts', variantKey: 'card', name: 'Mesa de regalos en tarjeta sobre foto' },
+  { blockKey: 'rsvp', variantKey: 'balloons', name: 'Confirmación en tarjeta con globos de corazón' },
+  { blockKey: 'closing', variantKey: 'hashtag', name: 'Cierre con la etiqueta de la boda y la foto en marco orgánico' },
+  { blockKey: 'footer', variantKey: 'bouquet', name: 'Pie en crema con el ramo atado y los nombres en rótulo' },
 ];
 
 /**
@@ -702,10 +742,15 @@ const VARIANTS: {
  * existe—. Por eso el seed primero **reapunta** los bloques que las usaran a la variante de
  * reemplazo y solo después borra. En ese orden, la baja es segura aunque haya eventos vivos.
  */
-const RETIRED_VARIANTS = {
-  registryIds: ['rsvp.whatsapp', 'rsvp.form'],
-  replacedBy: 'rsvp.card',
-} as const;
+const RETIRED_VARIANTS: ReadonlyArray<{ registryIds: readonly string[]; replacedBy: string }> = [
+  { registryIds: ['rsvp.whatsapp', 'rsvp.form'], replacedBy: 'rsvp.card' },
+  /*
+   * `closing.phone` dibujaba un teléfono con la foto publicada como en Instagram. Se leía como
+   * captura de pantalla de una red social y no como invitación; `closing.hashtag` dice lo mismo
+   * —la etiqueta para las fotos— con la foto en el marco de la plantilla.
+   */
+  { registryIds: ['closing.phone'], replacedBy: 'closing.hashtag' },
+];
 
 /** Composición de la plantilla de presentación, en el orden en que se renderiza hoy. */
 /**
@@ -1408,6 +1453,126 @@ const TEMPLATES: {
       { blockKey: 'rsvp', variantKey: 'lined', isRequired: true, config: { eyebrow: null, title: 'Confirma tu asistencia' } },
       { blockKey: 'closing', variantKey: 'signed', config: { eyebrow: null, title: 'Con amor' } },
       { blockKey: 'footer', variantKey: 'band', isRequired: true },
+    ],
+  },
+  {
+    key: 'nocturne',
+    name: 'Nocturne',
+    description:
+      'Azul medianoche, frambuesa y oro viejo: retratos en hexágonos dorados con ramos de acuarela, tarjetas con remates barrocos y flores que nunca están quietas.',
+    /* Boda y XV: nada de la composición nombra la celebración. La portada parte el nombre en dos
+       solo si trae dos, y el dibujo de la confirmación es un corazón y no unas alianzas. */
+    eventTypes: ['wedding', 'quince'],
+    defaultThemeKey: 'nocturne',
+    isActive: true,
+    /*
+     * La decimocuarta estructura, y la primera que se define por **un marco con flores vivas**: el
+     * hexágono de filete dorado con dos ramos de acuarela desbordando esquinas opuestas, que
+     * enmarca los retratos y reaparece en pequeño en la vestimenta. Lo acompañan el azul
+     * medianoche —la portada, la galería y el pie—, el florón frambuesa bajo cada título, los
+     * remates barrocos que unen las tarjetas de las sedes y las capitulares romanas (Cinzel) con
+     * una inglesa amplia (Great Vibes) para los nombres.
+     *
+     * Las flores son láminas de Redouté (dominio público) recortadas para la biblioteca, y se
+     * mueven: una gira una vuelta cada cien segundos, otras respiran o suben y bajan. Ver
+     * `shared/nocturne-ornaments.tsx` y las animaciones `inv-spin-slow`, `inv-breathe` e
+     * `inv-sway` de `globals.css`.
+     *
+     * Doce variantes nuevas, en el orden de su referencia: la portada en la noche con la foto como
+     * media luna, «faltan», la ceremonia, las sedes, el itinerario, los recuerdos, los detalles,
+     * la vestimenta, la confirmación sobre foto y el cierre. De la referencia se dejaron fuera los
+     * socios, Instagram y el boletín, que no son de una invitación.
+     */
+    blocks: [
+      { blockKey: 'welcome', variantKey: 'vow' },
+      /* La cuenta regresiva va en su propia sección, como en la referencia. */
+      { blockKey: 'hero', variantKey: 'halfmoon', isRequired: true, config: { showCountdown: false } },
+      { blockKey: 'calendar', variantKey: 'numerals', config: { eyebrow: null, title: 'Faltan' } },
+      /* El bloque nuevo: la novia y el novio, o la quinceañera y los suyos. El título lo pone cada
+         evento; aquí va uno que sirve a los dos tipos hasta que lo cambien. */
+      { blockKey: 'protagonists', variantKey: 'hexagon', config: { eyebrow: null, title: 'Con mucho cariño' } },
+      { blockKey: 'story', variantKey: 'ceremony', config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' } },
+      { blockKey: 'location', variantKey: 'crested', config: { eyebrow: 'Dónde y cuándo', title: 'La celebración' } },
+      { blockKey: 'schedule', variantKey: 'medallion', config: { eyebrow: null, title: 'Itinerario' } },
+      { blockKey: 'gallery', variantKey: 'inset', config: { eyebrow: 'Galería', title: 'Recuerdos' } },
+      { blockKey: 'details', variantKey: 'framed', config: { eyebrow: null, title: 'Para tomar en cuenta' } },
+      { blockKey: 'dresscode', variantKey: 'hexagons', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'rsvp', variantKey: 'celebration', isRequired: true, config: { eyebrow: '¡Te esperamos!', title: '¿Nos acompañas?' } },
+      { blockKey: 'closing', variantKey: 'watermark', config: { eyebrow: 'Gracias', title: 'Gracias por ser parte de este día' } },
+      { blockKey: 'footer', variantKey: 'midnight', isRequired: true },
+    ],
+  },
+  {
+    key: 'terracotta',
+    name: 'Terracota',
+    description:
+      'Terracota, durazno y crema: fotos en marcos abombados sobre manchas de barro, globos de corazón con las iniciales y rotulación a pincel. Una boda boho, cálida y hecha a mano.',
+    /* Solo bodas: los globos llevan la inicial de cada novio, la portada es de pareja y la mesa de
+       regalos y el «comparte el amor» son de boda. */
+    eventTypes: ['wedding'],
+    defaultThemeKey: 'terracotta',
+    isActive: true,
+    /*
+     * La decimoquinta estructura, y la primera **boho**: manchas de barro de contorno libre en las
+     * esquinas, un marco de lados abombados —como una pantalla antigua— para cada foto y tarjeta,
+     * y una rotulación a pincel (Kaushan Script) que hace de titular entero. Los dibujos son
+     * originales y van a dos tintas: la flecha de Cupido bajo cada título, los dos corazones, el
+     * laurel, la pluma, el confeti, el ramo atado y los globos de corazón con la inicial de cada
+     * novio, que laten. Ver `shared/terracotta-ornaments.tsx`.
+     *
+     * Trae el bloque nuevo de mesa de regalos. De la referencia se dejó fuera el menú superior y el
+     * cortejo (damas y padrinos).
+     */
+    blocks: [
+      { blockKey: 'welcome', variantKey: 'bouquet' },
+      /* La frase a pincel de la portada sale de `intro`. */
+      { blockKey: 'hero', variantKey: 'blob', isRequired: true, config: { intro: 'Junto a sus familias', showCountdown: false } },
+      {
+        blockKey: 'protagonists',
+        variantKey: 'balloons',
+        config: { eyebrow: null, title: 'Los novios', subtitle: 'Un matrimonio feliz es la unión de dos buenos perdonadores.' },
+      },
+      { blockKey: 'calendar', variantKey: 'doodle', config: { eyebrow: null, title: 'Guarda la fecha' } },
+      { blockKey: 'story', variantKey: 'slides', config: { eyebrow: null, title: 'Nuestra historia' } },
+      {
+        blockKey: 'location',
+        variantKey: 'arches',
+        config: { eyebrow: null, title: 'La boda', subtitle: 'Si solo tienes una sonrisa, dásela a quien quieres.' },
+      },
+      { blockKey: 'schedule', variantKey: 'doodle', config: { eyebrow: null, title: 'Itinerario' } },
+      {
+        blockKey: 'gallery',
+        variantKey: 'squircle',
+        config: { eyebrow: null, title: 'Galería', subtitle: 'Cada momento a tu lado es un pequeño milagro.' },
+      },
+      { blockKey: 'details', variantKey: 'blobs', config: { eyebrow: null, title: 'Para tomar en cuenta' } },
+      { blockKey: 'dresscode', variantKey: 'blobs', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      {
+        blockKey: 'gifts',
+        variantKey: 'card',
+        config: {
+          eyebrow: null,
+          title: 'Su presencia es nuestro regalo',
+          message: 'Lo más importante es que nos acompañen. Si aun así quieren hacernos un regalo, aquí les dejamos nuestra mesa.',
+          registries: [],
+        },
+      },
+      {
+        blockKey: 'rsvp',
+        variantKey: 'balloons',
+        isRequired: true,
+        config: { eyebrow: null, title: 'Ven a celebrar con nosotros', subtitle: '¡Nos morimos de ganas de verte!' },
+      },
+      {
+        blockKey: 'closing',
+        variantKey: 'hashtag',
+        config: {
+          eyebrow: null,
+          title: 'Comparte el amor',
+          message: 'Usa nuestra etiqueta #NuestraBoda en tus fotos para que podamos verlas todas.',
+        },
+      },
+      { blockKey: 'footer', variantKey: 'bouquet', isRequired: true },
     ],
   },
 ];
@@ -2169,6 +2334,88 @@ const THEMES = [
       edge: { height: '0px' },
     },
   },
+  {
+    key: 'nocturne',
+    name: 'Nocturne',
+    description:
+      'Azul medianoche, frambuesa y oro viejo, con capitulares romanas y una inglesa amplia. Para bodas y XV de noche, con flores de acuarela.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* El papel es blanco y el azul medianoche hace de tinta: las secciones oscuras de la
+           plantilla pintan su fondo con `ink` y su texto con `bg`, así que no hace falta un
+           tema oscuro aparte. El celeste pálido de las franjas alternas es `surface`. */
+        background: '#ffffff',
+        surface: '#eaf4fa',
+        ink: '#171c30',
+        inkSoft: '#5d6274',
+        /* Frambuesa: botones, florones y el filete de las tarjetas. 6,8:1 con el texto blanco. */
+        primary: '#b11c41',
+        onPrimary: '#ffffff',
+        /* El oro viejo de los marcos y de los rótulos («EL NOVIO»). Más hondo que el de la
+           referencia para que se lea: 4,0:1 sobre blanco y 4,2:1 sobre el azul, y siempre en
+           cuerpo grande o en negrita. */
+        accent: '#a8742c',
+        line: '#d6e3ea',
+        overlay: 'rgba(13, 18, 34, 0.58)',
+      },
+      fonts: {
+        /* Cinzel: los títulos en capitulares grabadas. Ver `app/layout.tsx`. */
+        display: "var(--font-cinzel, 'Cinzel'), 'Trajan Pro', Georgia, serif",
+        body: "var(--font-manrope, 'Manrope'), 'Helvetica Neue', Arial, sans-serif",
+        /* Great Vibes: los nombres de los novios y del cortejo. */
+        script: "var(--font-greatvibes, 'Great Vibes'), cursive",
+      },
+      /* Píldoras en los botones, como «VER MAPA» y «CONFIRMAR» en la referencia; tarjetas rectas. */
+      radii: { sm: '2px', md: '999px', lg: '4px' },
+      shadows: { soft: '0 22px 44px -30px rgba(23, 28, 48, 0.45)' },
+      motion: { reveal: '0.9s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.5rem, 11vw, 7.5rem)' },
+      /* Luminosa y un punto cálida, como las fotos de jardín de la referencia. */
+      photo: { filter: 'saturate(1.02) contrast(0.98) brightness(1.02)' },
+      ornament: { line: '1.75rem', node: '5px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.6' },
+      /* Sin onda: los cantos los ponen los marcos y los remates. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'terracotta',
+    name: 'Terracota',
+    description:
+      'Terracota, durazno y crema, con rotulación a pincel y manchas de barro. Una boda boho, cálida y hecha a mano.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* Blanco y crema se alternan por sección; el crema es `surface`. */
+        background: '#ffffff',
+        surface: '#fbf6f2',
+        ink: '#2a2420',
+        inkSoft: '#6b605a',
+        /* Terracota: los botones, el filete del nombre y los doodles. 4,6:1 con el texto blanco. */
+        primary: '#a85f3f',
+        onPrimary: '#ffffff',
+        /* El durazno de las manchas y los rótulos del cortejo. Solo decorativo o en negrita. */
+        accent: '#e09a72',
+        line: '#efe2d8',
+        overlay: 'rgba(58, 34, 22, 0.42)',
+      },
+      fonts: {
+        /* Kaushan Script hace de titular y de nombre: ver `app/layout.tsx`. */
+        display: "var(--font-kaushan, 'Kaushan Script'), 'Brush Script MT', cursive",
+        body: "var(--font-poppins, 'Poppins'), 'Helvetica Neue', Arial, sans-serif",
+        script: "var(--font-kaushan, 'Kaushan Script'), 'Brush Script MT', cursive",
+      },
+      /* Botones de canto blando —ni píldora ni recto— y tarjetas muy redondeadas. */
+      radii: { sm: '10px', md: '18px', lg: '44px' },
+      shadows: { soft: '0 24px 48px -30px rgba(120, 66, 40, 0.35)' },
+      motion: { reveal: '0.8s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(4.5rem, 11vw, 7rem)' },
+      photo: { filter: 'saturate(1) contrast(1) brightness(1.02)' },
+      ornament: { line: '1.5rem', node: '6px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.7' },
+      /* Sin onda: los cantos los ponen las manchas. */
+      edge: { height: '0px' },
+    },
+  },
 ] as const;
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2377,30 +2624,32 @@ async function seedRegistry(): Promise<void> {
  * Es idempotente: en la segunda ejecución no encuentra nada que retirar y no hace nada.
  */
 async function retireVariants(variantByRegistryId: Map<string, string>): Promise<void> {
-  const retiredIds = RETIRED_VARIANTS.registryIds
-    .map((registryId) => variantByRegistryId.get(registryId))
-    .filter((id): id is string => Boolean(id));
+  for (const retired of RETIRED_VARIANTS) {
+    const retiredIds = retired.registryIds
+      .map((registryId) => variantByRegistryId.get(registryId))
+      .filter((id): id is string => Boolean(id));
 
-  if (retiredIds.length === 0) return;
+    if (retiredIds.length === 0) continue;
 
-  const replacementId = variantByRegistryId.get(RETIRED_VARIANTS.replacedBy);
+    const replacementId = variantByRegistryId.get(retired.replacedBy);
 
-  if (!replacementId) {
-    throw new Error(`La variante de reemplazo ${RETIRED_VARIANTS.replacedBy} no está registrada`);
+    if (!replacementId) {
+      throw new Error(`La variante de reemplazo ${retired.replacedBy} no está registrada`);
+    }
+
+    const repointed = await db
+      .update(s.eventBlocks)
+      .set({ variantId: replacementId })
+      .where(inArray(s.eventBlocks.variantId, retiredIds))
+      .returning({ id: s.eventBlocks.id });
+
+    await db.delete(s.componentVariants).where(inArray(s.componentVariants.id, retiredIds));
+
+    console.log(
+      `  ${retiredIds.length} variantes retiradas (${retired.registryIds.join(', ')})` +
+        (repointed.length > 0 ? `, ${repointed.length} bloques reapuntados` : ''),
+    );
   }
-
-  const repointed = await db
-    .update(s.eventBlocks)
-    .set({ variantId: replacementId })
-    .where(inArray(s.eventBlocks.variantId, retiredIds))
-    .returning({ id: s.eventBlocks.id });
-
-  await db.delete(s.componentVariants).where(inArray(s.componentVariants.id, retiredIds));
-
-  console.log(
-    `  ${retiredIds.length} variantes retiradas` +
-      (repointed.length > 0 ? `, ${repointed.length} bloques reapuntados` : ''),
-  );
 }
 
 /**

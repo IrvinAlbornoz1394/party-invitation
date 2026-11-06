@@ -5,6 +5,8 @@ import type { DresscodeContent } from './dresscode';
 import type { FooterContent } from './footer';
 import type { GalleryContent } from './gallery';
 import type { HeroContent } from './hero';
+import type { GiftsContent } from './gifts';
+import type { ProtagonistsContent } from './protagonists';
 import type { LocationContent } from './location';
 import type { RsvpContent } from './rsvp';
 import type { ScheduleContent } from './schedule';
@@ -26,6 +28,8 @@ import type { WelcomeContent } from './welcome';
 export type BlockContent =
   | { readonly blockKey: 'welcome'; readonly content: WelcomeContent }
   | { readonly blockKey: 'hero'; readonly content: HeroContent }
+  | { readonly blockKey: 'protagonists'; readonly content: ProtagonistsContent }
+  | { readonly blockKey: 'gifts'; readonly content: GiftsContent }
   | { readonly blockKey: 'story'; readonly content: StoryContent }
   | { readonly blockKey: 'calendar'; readonly content: CalendarContent }
   | { readonly blockKey: 'details'; readonly content: DetailsContent }

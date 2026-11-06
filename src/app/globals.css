@@ -592,6 +592,105 @@
     infinite;
 }
 
+/*
+ * Las flores vivas de «nocturne».
+ *
+ * Tres movimientos lentos y continuos, los de su referencia: el ramo de una esquina gira sobre sí
+ * mismo una vuelta cada cien segundos —no se percibe como giro, sino como algo que no está
+ * quieto—, otro respira con una escala de un 6 % en quince segundos y las hojas sueltas suben y
+ * bajan diez píxeles. Ninguno compite con el texto: son de ritmo de minuto, no de segundo.
+ *
+ * Van en un envoltorio y no en la imagen: `DesignAsset` ya usa `transform` para girar y reflejar
+ * la pieza, y una animación encima se lo pisaría.
+ */
+@keyframes inv-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.inv-spin-slow {
+  animation: inv-spin-slow var(--inv-spin-duration, 100s) linear infinite;
+}
+@keyframes inv-breathe {
+  from,
+  to {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(var(--inv-breathe-scale, 1.06));
+  }
+}
+.inv-breathe {
+  animation: inv-breathe var(--inv-breathe-duration, 15s) ease-in-out infinite;
+}
+@keyframes inv-sway {
+  from,
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, var(--inv-sway-y, -10px), 0);
+  }
+}
+.inv-sway {
+  animation: inv-sway var(--inv-sway-duration, 10s) ease-in-out var(--inv-sway-delay, 0s) infinite;
+}
+/*
+ * La foto que entra creciendo, como las de la galería de la referencia. Solo cuando la sección
+ * llega a la pantalla (`data-shown`, lo pone `ShowOnView`), para que no se gaste fuera de vista.
+ */
+@keyframes inv-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+[data-shown='true'] .inv-zoom-in {
+  animation: inv-zoom-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--inv-zoom-delay, 0s) both;
+}
+[data-shown='false'] .inv-zoom-in {
+  opacity: 0;
+}
+/*
+ * El marco de `terracota`: un rectángulo con los lados abombados, como una pantalla antigua. Es
+ * una máscara estirada (`100% 100%`) y no un `clip-path`, para que sirva igual a una foto alta, a
+ * una apaisada y a una tarjeta de texto. El negro del SVG es el canal de la máscara, no un color.
+ */
+.inv-squircle {
+  --inv-squircle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M50 0C80 0 92 1.6 96 7.5 100 14 100 30 100 50s0 36-4 42.5C92 98.4 80 100 50 100S8 98.4 4 92.5C0 86 0 70 0 50S0 14 4 7.5C8 1.6 20 0 50 0Z'/%3E%3C/svg%3E");
+  -webkit-mask: var(--inv-squircle) center / 100% 100% no-repeat;
+  mask: var(--inv-squircle) center / 100% 100% no-repeat;
+}
+/* El latido de los globos de corazón: corto y suave, como el de la referencia. */
+@keyframes inv-heartbeat {
+  from,
+  to {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+.inv-heartbeat {
+  animation: inv-heartbeat 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .inv-spin-slow,
+  .inv-breathe,
+  .inv-heartbeat,
+  .inv-sway {
+    animation: none;
+  }
+  [data-shown] .inv-zoom-in {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* ── La pantalla de bienvenida ────────────────────────────────────────────────
  *
  * El telón que tapa la invitación hasta que el invitado pulsa. Todo lo que hay aquí es la

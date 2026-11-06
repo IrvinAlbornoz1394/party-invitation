@@ -174,10 +174,12 @@ function namedGaps(source: EventContentSource, block: EventBlockRecord): readonl
 export const BLOCK_LABELS: Readonly<Record<string, string>> = {
   welcome: 'Pantalla de bienvenida',
   hero: 'Portada',
+  protagonists: 'Protagonistas',
   story: 'Historia',
   calendar: 'Fecha',
   details: 'Detalles',
   dresscode: 'Vestimenta',
+  gifts: 'Mesa de regalos',
   schedule: 'Programa',
   gallery: 'Galería',
   location: 'Ubicación',
@@ -207,6 +209,8 @@ const BLOCK_FIELD_LABELS: Readonly<Record<string, Readonly<Record<string, string
   schedule: { items: 'Los momentos del programa' },
   details: { items: 'La lista de detalles' },
   dresscode: { items: 'Los colores de la vestimenta' },
+  protagonists: { people: 'Las personas de la sección' },
+  gifts: { registries: 'Las mesas de regalos' },
 };
 
 const FIELD_LABELS: Readonly<Record<string, string>> = {

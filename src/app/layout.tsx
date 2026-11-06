@@ -2,8 +2,12 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import {
   Bebas_Neue,
+  Cinzel,
   Cormorant_Garamond,
   Fredoka,
+  Great_Vibes,
+  Kaushan_Script,
+  Poppins,
   Jost,
   Manrope,
   Ms_Madi,
@@ -178,6 +182,57 @@ const msMadi = Ms_Madi({
   preload: false,
 });
 
+/**
+ * Cinzel y Great Vibes: las dos de «nocturne».
+ *
+ * Cinzel es una romana de capitulares grabadas —solo mayúsculas y versalitas—, y es la que da a
+ * esa plantilla su registro de lápida clásica en los títulos («CEREMONIA», los nombres de cada
+ * sede). Great Vibes es su contrapunto: una inglesa de trazo amplio para los nombres de los
+ * novios y del cortejo. Ninguna de las que ya había sirve para lo mismo: Playfair es una didona y
+ * Pinyon una plumilla mucho más ceñida.
+ *
+ * Sin precarga, como el resto de las decorativas: solo las pide la invitación que las usa.
+ */
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-cinzel',
+  display: 'swap',
+  preload: false,
+});
+
+const greatVibes = Great_Vibes({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-greatvibes',
+  display: 'swap',
+  preload: false,
+});
+
+/**
+ * Kaushan Script y Poppins: las dos de «terracota».
+ *
+ * Kaushan es una rotulación a pincel seco, gruesa y con inclinación, que hace de titular entero
+ * —no solo de nombre— y le da a esa plantilla su tono boho hecho a mano. Ninguna de las inglesas
+ * que ya había aguanta un titular de seis palabras: todas son de trazo fino. Poppins es la
+ * geométrica redonda que la acompaña en el texto.
+ */
+const kaushan = Kaushan_Script({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-kaushan',
+  display: 'swap',
+  preload: false,
+});
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-poppins',
+  display: 'swap',
+  preload: false,
+});
+
 const bebas = Bebas_Neue({
   subsets: ['latin'],
   weight: '400',
@@ -196,6 +251,10 @@ const fontVariables = [
   bebas,
   manrope,
   playfair,
+  cinzel,
+  greatVibes,
+  kaushan,
+  poppins,
 ]
   .map((font) => font.variable)
   .join(' ');
@@ -220,19 +279,11 @@ export const metadata: Metadata = {
     address: false,
   },
   /*
-   * Los dos formatos son necesarios y el orden importa: el navegador se queda con el primero
-   * que sepa leer. El SVG va delante porque es el que escala sin pixelarse a las densidades
-   * altas y a los tamaños grandes (favoritos, pantalla de inicio); el `.ico` queda detrás como
-   * red para Safari antiguo, que no admite favicons vectoriales.
-   *
-   * Declararlos aquí no es opcional aunque los ficheros vivan en `public/`: sin esta entrada,
-   * el navegador solo pide `/favicon.ico` por convención y el SVG no lo mira nadie.
+   * Solo el `.ico`: si se declara también un SVG, el navegador se queda con el primero que
+   * sepa leer y el `.ico` nunca se usa.
    */
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
-    ],
+    icon: [{ url: '/favicon.ico', sizes: '256x256' }],
   },
 };
 

@@ -8,6 +8,8 @@ import { FOOTER_SAMPLES } from './footer-samples';
 import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
 import { LOCATION_SAMPLES } from './location-samples';
+import { GIFTS_SAMPLES } from './gifts-samples';
+import { PROTAGONISTS_SAMPLES } from './protagonists-samples';
 import { RsvpDemoGateway } from './RsvpDemoGateway';
 import { RSVP_SAMPLES } from './rsvp-samples';
 import { pickSample } from './samples';
@@ -84,6 +86,20 @@ export function BlockDemo({
     case 'details': {
       const Variant = entry.component;
       const sample = pickSample(DETAILS_SAMPLES, sampleKey);
+
+      return sample ? <Variant content={sample.content} /> : null;
+    }
+
+    case 'protagonists': {
+      const Variant = entry.component;
+      const sample = pickSample(PROTAGONISTS_SAMPLES, sampleKey);
+
+      return sample ? <Variant content={sample.content} /> : null;
+    }
+
+    case 'gifts': {
+      const Variant = entry.component;
+      const sample = pickSample(GIFTS_SAMPLES, sampleKey);
 
       return sample ? <Variant content={sample.content} /> : null;
     }

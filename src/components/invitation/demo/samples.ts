@@ -3,7 +3,9 @@ import { CALENDAR_SAMPLES } from './calendar-samples';
 import { CLOSING_SAMPLES } from './closing-samples';
 import { DETAILS_SAMPLES } from './details-samples';
 import { DRESSCODE_SAMPLES } from './dresscode-samples';
+import { PROTAGONISTS_SAMPLES } from './protagonists-samples';
 import { FOOTER_SAMPLES } from './footer-samples';
+import { GIFTS_SAMPLES } from './gifts-samples';
 import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
 import { LOCATION_SAMPLES } from './location-samples';
@@ -27,6 +29,8 @@ import { WELCOME_SAMPLES } from './welcome-samples';
 const SAMPLES: Readonly<Record<RegisteredBlockKey, readonly DemoSample<unknown>[]>> = {
   welcome: WELCOME_SAMPLES,
   hero: HERO_SAMPLES,
+  protagonists: PROTAGONISTS_SAMPLES,
+  gifts: GIFTS_SAMPLES,
   story: STORY_SAMPLES,
   calendar: CALENDAR_SAMPLES,
   details: DETAILS_SAMPLES,

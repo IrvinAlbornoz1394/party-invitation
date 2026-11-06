@@ -32,6 +32,9 @@ export const BLOCK_READING_ORDER: readonly string[] = [
   /* Justo detrás de la portada y antes de los datos: la fecha es lo primero que se busca al abrir
      una invitación, y el calendario es la fecha en grande. */
   'calendar',
+  /* Quiénes celebran, después de cuándo: la presentación de cada uno antes del relato y de los
+     datos prácticos, como en las invitaciones de mercado que traen «el novio / la novia». */
+  'protagonists',
   'details',
   'party',
   'schedule',
@@ -41,6 +44,9 @@ export const BLOCK_READING_ORDER: readonly string[] = [
   /* Después de la ubicación, que es el orden en que uno se pregunta las cosas: cuándo, dónde, y
      entonces de qué me visto. */
   'dresscode',
+  /* La mesa de regalos, justo antes de confirmar: es lo último práctico que se pregunta, y
+     nadie quiere leerla antes de saber dónde y cuándo. */
+  'gifts',
   'rsvp',
   'closing',
   'footer',

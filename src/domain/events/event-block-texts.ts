@@ -106,6 +106,27 @@ const TEXT_FIELDS: TextFieldTable = {
       help: 'Va encima de los nombres.',
     },
   ],
+  protagonists: [
+    { name: 'eyebrow', label: 'Pre-título', placeholder: 'Con mucho cariño' },
+    { name: 'title', label: 'Título', placeholder: 'Los novios' },
+    {
+      name: 'subtitle',
+      label: 'Subtítulo',
+      placeholder: 'Las dos personas detrás de esta invitación.',
+      multiline: true,
+    },
+  ],
+  gifts: [
+    { name: 'eyebrow', label: 'Pre-título', placeholder: 'Mesa de regalos' },
+    { name: 'title', label: 'Título', placeholder: 'Su presencia es nuestro regalo' },
+    {
+      name: 'message',
+      label: 'Mensaje',
+      placeholder: 'Lo más importante es que nos acompañen. Si aun así quieren hacernos un regalo, aquí les dejamos nuestra mesa.',
+      multiline: true,
+    },
+    { name: 'note', label: 'Nota al pie', placeholder: 'Habrá una caja para sobres en la recepción.' },
+  ],
   story: [
     { name: 'eyebrow', label: 'Pre-título', placeholder: 'Cómo empezó todo' },
     { name: 'title', label: 'Título', placeholder: 'Nuestra historia' },

@@ -9,6 +9,8 @@ import { BLOCK_LIST_MAX, type EditableBlockLists } from '@/domain/events/event-b
 import type { BlockIcon } from '@/domain/invitation/blocks/shared';
 import type { DetailItem } from '@/domain/invitation/blocks/details';
 import type { DresscodeSwatch } from '@/domain/invitation/blocks/dresscode';
+import type { GiftRegistry } from '@/domain/invitation/blocks/gifts';
+import type { Protagonist } from '@/domain/invitation/blocks/protagonists';
 import type { EditableBlockTexts } from '@/domain/events/event-block-texts';
 import type { EventContentDraft } from '@/domain/events/event-content-draft';
 import { BlockTextFields } from '../BlockTextFields';
@@ -413,6 +415,108 @@ export function StepFields({
                 }
               />
             </div>
+          )}
+        />
+      );
+    }
+
+    if (step.list === 'protagonists') {
+      return (
+        <CollectionEditor<Protagonist>
+          title="Las personas"
+          description="Quién celebra, en el orden en que quieres presentarlos: la novia y el novio, o la quinceañera y sus papás."
+          rows={lists.protagonists ?? []}
+          max={BLOCK_LIST_MAX.protagonists}
+          addLabel="Añadir una persona"
+          emptyLabel="Todavía no hay nadie. Añade al menos una persona."
+          rowTitle={(row, index) => row.name || row.role || `Persona ${index + 1}`}
+          makeEmpty={() => ({ role: null, name: '', bio: null, image: null })}
+          onChange={(protagonists) => setLists((current) => ({ ...current, protagonists }))}
+          renderRow={(row, index, update) => (
+            <>
+              <ImageUpload
+                label="Retrato"
+                help="Opcional. Sin foto, el marco se queda con el color del tema."
+                error={errors[`lists.protagonists.${index}.image`]}
+                value={row.image?.url ?? ''}
+                upload={uploadImage}
+                onChange={(url) =>
+                  update({
+                    image: url ? { url, alt: row.image?.alt ?? `Retrato de ${row.name || 'la persona'}` } : null,
+                  })
+                }
+              />
+              <div className="content-editor__row">
+                <RowField
+                  label="Papel"
+                  help="Lo que va encima del nombre."
+                  error={errors[`lists.protagonists.${index}.role`]}
+                  value={row.role ?? ''}
+                  onChange={(role) => update({ role })}
+                  placeholder="La novia"
+                />
+                <RowField
+                  label="Nombre"
+                  error={errors[`lists.protagonists.${index}.name`]}
+                  value={row.name}
+                  onChange={(name) => update({ name: name ?? '' })}
+                  placeholder="Ana Villanueva"
+                />
+              </div>
+              <RowField
+                label="Unas líneas"
+                help="Opcional. En primera persona se lee mejor."
+                error={errors[`lists.protagonists.${index}.bio`]}
+                value={row.bio ?? ''}
+                onChange={(bio) => update({ bio })}
+                placeholder="Nos conocimos en un concierto al que ninguno de los dos quería ir."
+              />
+            </>
+          )}
+        />
+      );
+    }
+
+    if (step.list === 'gifts') {
+      return (
+        <CollectionEditor<GiftRegistry>
+          title="Las mesas"
+          description="Dónde pueden regalarles: una tienda con su número de evento, la lluvia de sobres o una transferencia. Puedes dejarla vacía y quedarse solo con el mensaje."
+          rows={lists.gifts ?? []}
+          max={BLOCK_LIST_MAX.gifts}
+          addLabel="Añadir una mesa"
+          emptyLabel="Sin mesas: la sección muestra solo el mensaje."
+          rowTitle={(row, index) => row.label || `Mesa ${index + 1}`}
+          makeEmpty={() => ({ label: '', detail: null, action: null })}
+          onChange={(gifts) => setLists((current) => ({ ...current, gifts }))}
+          renderRow={(row, index, update) => (
+            <>
+              <div className="content-editor__row">
+                <RowField
+                  label="Dónde"
+                  error={errors[`lists.gifts.${index}.label`]}
+                  value={row.label}
+                  onChange={(label) => update({ label: label ?? '' })}
+                  placeholder="Liverpool"
+                />
+                <RowField
+                  label="Dato"
+                  help="El número de evento, la cuenta o cuándo se entregan."
+                  error={errors[`lists.gifts.${index}.detail`]}
+                  value={row.detail ?? ''}
+                  onChange={(detail) => update({ detail })}
+                  placeholder="Evento 51234567"
+                />
+              </div>
+              <RowField
+                label="Enlace a la mesa"
+                help="Opcional. La dirección de la página de la tienda."
+                error={errors[`lists.gifts.${index}.action.href`]}
+                value={row.action?.href ?? ''}
+                onChange={(href) => update({ action: href ? { label: 'Ver mesa', href } : null })}
+                placeholder="https://mesaderegalos.liverpool.com.mx/…"
+              />
+            </>
           )}
         />
       );

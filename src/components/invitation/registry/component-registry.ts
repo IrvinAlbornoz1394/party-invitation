@@ -170,6 +170,35 @@ import { WelcomeTorn } from '../blocks/welcome/WelcomeTorn';
 import { WelcomeSpotlight } from '../blocks/welcome/WelcomeSpotlight';
 import { WelcomeVeil } from '../blocks/welcome/WelcomeVeil';
 import type { WelcomeVariant } from '../blocks/welcome/welcome-parts';
+import { WelcomeVow } from '../blocks/welcome/WelcomeVow';
+import { HeroHalfmoon } from '../blocks/hero/HeroHalfmoon';
+import { StoryCeremony } from '../blocks/story/StoryCeremony';
+import { CalendarNumerals } from '../blocks/calendar/CalendarNumerals';
+import { DetailsFramed } from '../blocks/details/DetailsFramed';
+import { DresscodeHexagons } from '../blocks/dresscode/DresscodeHexagons';
+import { ScheduleMedallion } from '../blocks/schedule/ScheduleMedallion';
+import { GalleryInset } from '../blocks/gallery/GalleryInset';
+import { LocationCrested } from '../blocks/location/LocationCrested';
+import { RsvpCelebration } from '../blocks/rsvp/RsvpCelebration';
+import { ClosingWatermark } from '../blocks/closing/ClosingWatermark';
+import { FooterMidnight } from '../blocks/footer/FooterMidnight';
+import { ProtagonistsHexagon } from '../blocks/protagonists/ProtagonistsHexagon';
+import { ProtagonistsBalloons } from '../blocks/protagonists/ProtagonistsBalloons';
+import { WelcomeBouquet } from '../blocks/welcome/WelcomeBouquet';
+import { HeroBlob } from '../blocks/hero/HeroBlob';
+import { CalendarDoodle } from '../blocks/calendar/CalendarDoodle';
+import { StorySlides } from '../blocks/story/StorySlides';
+import { LocationArches } from '../blocks/location/LocationArches';
+import { ScheduleDoodle } from '../blocks/schedule/ScheduleDoodle';
+import { GallerySquircle } from '../blocks/gallery/GallerySquircle';
+import { DetailsBlobs } from '../blocks/details/DetailsBlobs';
+import { DresscodeBlobs } from '../blocks/dresscode/DresscodeBlobs';
+import { GiftsCard } from '../blocks/gifts/GiftsCard';
+import type { GiftsVariant } from '../blocks/gifts/gifts-variant';
+import { RsvpBalloons } from '../blocks/rsvp/RsvpBalloons';
+import { ClosingHashtag } from '../blocks/closing/ClosingHashtag';
+import { FooterBouquet } from '../blocks/footer/FooterBouquet';
+import type { ProtagonistsVariant } from '../blocks/protagonists/protagonists-variant';
 
 /**
  * El Component Registry: el único sitio del código que sabe qué componente es cada
@@ -204,6 +233,8 @@ import type { WelcomeVariant } from '../blocks/welcome/welcome-parts';
 export type RegisteredComponent =
   | { readonly blockKey: 'welcome'; readonly component: WelcomeVariant }
   | { readonly blockKey: 'hero'; readonly component: HeroVariant }
+  | { readonly blockKey: 'protagonists'; readonly component: ProtagonistsVariant }
+  | { readonly blockKey: 'gifts'; readonly component: GiftsVariant }
   | { readonly blockKey: 'story'; readonly component: StoryVariant }
   | { readonly blockKey: 'calendar'; readonly component: CalendarVariant }
   | { readonly blockKey: 'details'; readonly component: DetailsVariant }
@@ -260,6 +291,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'welcome.ribbon': { blockKey: 'welcome', component: WelcomeRibbon },
   /* La de `coquette`: la tarjeta de dos filetes atada con un moño de línea. */
   'welcome.keepsake': { blockKey: 'welcome', component: WelcomeKeepsake },
+  /* nocturne */
+  'welcome.vow': { blockKey: 'welcome', component: WelcomeVow },
 
   'hero.classic': { blockKey: 'hero', component: HeroClassic },
   'hero.centered': { blockKey: 'hero', component: HeroCentered },
@@ -290,6 +323,12 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   /* La portada de `coquette`: el rótulo en arco sobre un «15» pálido, el nombre a pincel y la
      tiara al pie, todo en una tarjeta de doble filete. */
   'hero.tiara': { blockKey: 'hero', component: HeroTiara },
+  /* protagonistas: el bloque nació con `nocturne` */
+  'protagonists.hexagon': { blockKey: 'protagonists', component: ProtagonistsHexagon },
+  /* terracota: la segunda de protagonistas, con los globos de corazón */
+  'protagonists.balloons': { blockKey: 'protagonists', component: ProtagonistsBalloons },
+  /* nocturne */
+  'hero.halfmoon': { blockKey: 'hero', component: HeroHalfmoon },
   'hero.scrapbook': { blockKey: 'hero', component: HeroScrapbook },
 
   /*
@@ -317,6 +356,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'story.quote': { blockKey: 'story', component: StoryQuote },
   /* La foto con la tarjeta del moño prendida encima. La de `coquette`. */
   'story.keepsake': { blockKey: 'story', component: StoryKeepsake },
+  /* nocturne */
+  'story.ceremony': { blockKey: 'story', component: StoryCeremony },
   'story.taped': { blockKey: 'story', component: StoryTaped },
 
   /*
@@ -356,6 +397,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'calendar.strip': { blockKey: 'calendar', component: CalendarStrip },
   /* «Faltan» y el reloj como titular, con la fecha de remate. La de `coquette`. */
   'calendar.clock': { blockKey: 'calendar', component: CalendarClock },
+  /* nocturne */
+  'calendar.numerals': { blockKey: 'calendar', component: CalendarNumerals },
   'calendar.torn': { blockKey: 'calendar', component: CalendarTorn },
 
   'details.cards': { blockKey: 'details', component: DetailsCards },
@@ -382,6 +425,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'details.row': { blockKey: 'details', component: DetailsRow },
   /* Cada detalle en su tarjeta pequeña del moño, de dos en dos. La de `coquette`. */
   'details.ribbons': { blockKey: 'details', component: DetailsRibbons },
+  /* nocturne */
+  'details.framed': { blockKey: 'details', component: DetailsFramed },
 
   /*
    * Seis formas de enseñar una paleta, una por plantilla. No son variaciones de la misma fila de
@@ -412,6 +457,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'dresscode.petals': { blockKey: 'dresscode', component: DresscodePetals },
   /* El vestido dibujado y la palabra a pincel en una tarjeta. La de `coquette`. */
   'dresscode.atelier': { blockKey: 'dresscode', component: DresscodeAtelier },
+  /* nocturne */
+  'dresscode.hexagons': { blockKey: 'dresscode', component: DresscodeHexagons },
   'dresscode.taped': { blockKey: 'dresscode', component: DresscodeTaped },
 
   'schedule.vertical': { blockKey: 'schedule', component: ScheduleTimeline },
@@ -439,6 +486,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'schedule.bubbles': { blockKey: 'schedule', component: ScheduleBubbles },
   /* Sin eje: cada hora en un corazón y un moño entre momentos. La de `coquette`. */
   'schedule.hearts': { blockKey: 'schedule', component: ScheduleHearts },
+  /* nocturne */
+  'schedule.medallion': { blockKey: 'schedule', component: ScheduleMedallion },
   'schedule.thread': { blockKey: 'schedule', component: ScheduleThread },
 
   'gallery.parallax': { blockKey: 'gallery', component: GalleryParallax },
@@ -462,6 +511,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'gallery.stack': { blockKey: 'gallery', component: GalleryStack },
   /* La tira de fotomatón de tres, con el título en vertical. La de `coquette`. */
   'gallery.filmstrip': { blockKey: 'gallery', component: GalleryFilmstrip },
+  /* nocturne */
+  'gallery.inset': { blockKey: 'gallery', component: GalleryInset },
   'gallery.taped': { blockKey: 'gallery', component: GalleryTaped },
 
   /*
@@ -488,6 +539,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'location.polaroid': { blockKey: 'location', component: LocationPolaroid },
   /* Cada sede como una viñeta en su tarjeta del moño. La de `coquette`. */
   'location.vignette': { blockKey: 'location', component: LocationVignette },
+  /* nocturne */
+  'location.crested': { blockKey: 'location', component: LocationCrested },
   'location.snapshot': { blockKey: 'location', component: LocationSnapshot },
 
   /*
@@ -516,6 +569,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'rsvp.bow': { blockKey: 'rsvp', component: RsvpBow },
   /* El sobre atado junto a la invitación a responder. La de `coquette`. */
   'rsvp.envelope': { blockKey: 'rsvp', component: RsvpEnvelope },
+  /* nocturne */
+  'rsvp.celebration': { blockKey: 'rsvp', component: RsvpCelebration },
   'rsvp.lined': { blockKey: 'rsvp', component: RsvpLined },
 
   'closing.split': { blockKey: 'closing', component: ClosingSplit },
@@ -540,6 +595,8 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'closing.bloom': { blockKey: 'closing', component: ClosingBloom },
   /* La tiara posada sobre un retrato en óvalo. La de `coquette`. */
   'closing.tiara': { blockKey: 'closing', component: ClosingTiara },
+  /* nocturne */
+  'closing.watermark': { blockKey: 'closing', component: ClosingWatermark },
   'closing.signed': { blockKey: 'closing', component: ClosingSigned },
 
   'footer.centered': { blockKey: 'footer', component: FooterCentered },
@@ -567,6 +624,24 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'footer.band': { blockKey: 'footer', component: FooterBand },
   /* El nombre a pincel sobre un «15» pálido. La de `coquette`. */
   'footer.numeral': { blockKey: 'footer', component: FooterNumeral },
+  /* nocturne */
+  'footer.midnight': { blockKey: 'footer', component: FooterMidnight },
+  /* terracota: boda boho en terracota y durazno, con manchas de barro y rotulación a pincel. Ver
+     `shared/terracotta-ornaments.tsx`. */
+  'welcome.bouquet': { blockKey: 'welcome', component: WelcomeBouquet },
+  'hero.blob': { blockKey: 'hero', component: HeroBlob },
+  'calendar.doodle': { blockKey: 'calendar', component: CalendarDoodle },
+  'story.slides': { blockKey: 'story', component: StorySlides },
+  'location.arches': { blockKey: 'location', component: LocationArches },
+  'schedule.doodle': { blockKey: 'schedule', component: ScheduleDoodle },
+  'gallery.squircle': { blockKey: 'gallery', component: GallerySquircle },
+  'details.blobs': { blockKey: 'details', component: DetailsBlobs },
+  'dresscode.blobs': { blockKey: 'dresscode', component: DresscodeBlobs },
+  /* La mesa de regalos: el bloque nació con terracota. */
+  'gifts.card': { blockKey: 'gifts', component: GiftsCard },
+  'rsvp.balloons': { blockKey: 'rsvp', component: RsvpBalloons },
+  'closing.hashtag': { blockKey: 'closing', component: ClosingHashtag },
+  'footer.bouquet': { blockKey: 'footer', component: FooterBouquet },
 };
 
 /**
@@ -608,6 +683,20 @@ export function resolveCalendarVariant(registryId: string): CalendarVariant | nu
   const entry = resolveComponent(registryId);
 
   return entry?.blockKey === 'calendar' ? entry.component : null;
+}
+
+/** El componente de unos protagonistas, o `null` si el identificador no es uno de ellos. */
+export function resolveProtagonistsVariant(registryId: string): ProtagonistsVariant | null {
+  const entry = resolveComponent(registryId);
+
+  return entry?.blockKey === 'protagonists' ? entry.component : null;
+}
+
+/** El componente de una mesa de regalos, o `null` si el identificador no es una de ellas. */
+export function resolveGiftsVariant(registryId: string): GiftsVariant | null {
+  const entry = resolveComponent(registryId);
+
+  return entry?.blockKey === 'gifts' ? entry.component : null;
 }
 
 /** El componente de un código de vestimenta, o `null` si el identificador no lo es. */

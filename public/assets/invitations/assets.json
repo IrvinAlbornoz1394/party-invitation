@@ -1461,6 +1461,303 @@
         "brindis",
         "cereza"
       ]
+    },
+    {
+      "id": "watercolor-bouquet-rose-anemone-001",
+      "name": "Ramo de rosa, anémona y clemátide",
+      "category": "wedding",
+      "subcategory": "watercolor",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "webp",
+      "colorMode": "multi",
+      "file": "/assets/invitations/wedding/watercolor/watercolor-bouquet-rose-anemone-001.webp",
+      "width": 622,
+      "height": 820,
+      "style": [
+        "color",
+        "watercolor",
+        "botanical",
+        "romantic"
+      ],
+      "license": "CC0 1.0 (dominio público)",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": false,
+      "source": "https://www.rawpixel.com/image/263725/free-illustration-image-anemone-pierre-joseph-redoute-roses",
+      "author": "Pierre-Joseph Redouté (1759–1840), vía rawpixel",
+      "tags": [
+        "rosa",
+        "anémona",
+        "ramo",
+        "malva",
+        "acuarela"
+      ]
+    },
+    {
+      "id": "watercolor-anemone-stellata-001",
+      "name": "Anémonas estrelladas rosas",
+      "category": "wedding",
+      "subcategory": "watercolor",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "webp",
+      "colorMode": "multi",
+      "file": "/assets/invitations/wedding/watercolor/watercolor-anemone-stellata-001.webp",
+      "width": 570,
+      "height": 820,
+      "style": [
+        "color",
+        "watercolor",
+        "botanical",
+        "romantic"
+      ],
+      "license": "CC0 1.0 (dominio público)",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": false,
+      "source": "https://www.rawpixel.com/image/263785/free-illustration-image-anemone-redoute-pierre-joseph",
+      "author": "Pierre-Joseph Redouté (1759–1840), vía rawpixel",
+      "tags": [
+        "anémona",
+        "rosa",
+        "tallos",
+        "acuarela"
+      ]
+    },
+    {
+      "id": "watercolor-hydrangea-001",
+      "name": "Hortensia rosa malva con hoja",
+      "category": "wedding",
+      "subcategory": "watercolor",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "webp",
+      "colorMode": "multi",
+      "file": "/assets/invitations/wedding/watercolor/watercolor-hydrangea-001.webp",
+      "width": 604,
+      "height": 820,
+      "style": [
+        "color",
+        "watercolor",
+        "botanical",
+        "romantic"
+      ],
+      "license": "CC0 1.0 (dominio público)",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": false,
+      "source": "https://www.rawpixel.com/image/2868470/free-illustration-image-flower-hydrangea-leaf",
+      "author": "Pierre-Joseph Redouté (1759–1840), vía rawpixel",
+      "tags": [
+        "hortensia",
+        "malva",
+        "rosa",
+        "hoja",
+        "acuarela"
+      ]
+    },
+    {
+      "id": "watercolor-lilac-001",
+      "name": "Rama de lila",
+      "category": "wedding",
+      "subcategory": "watercolor",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "webp",
+      "colorMode": "multi",
+      "file": "/assets/invitations/wedding/watercolor/watercolor-lilac-001.webp",
+      "width": 591,
+      "height": 820,
+      "style": [
+        "color",
+        "watercolor",
+        "botanical",
+        "romantic"
+      ],
+      "license": "CC0 1.0 (dominio público)",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": false,
+      "source": "https://www.rawpixel.com/image/2870676/free-illustration-image-flower-botanical-lilac",
+      "author": "Pierre-Joseph Redouté (1759–1840), vía rawpixel",
+      "tags": [
+        "lila",
+        "morado",
+        "lavanda",
+        "acuarela"
+      ]
+    },
+    {
+      "id": "watercolor-peony-001",
+      "name": "Peonía rosa con botón",
+      "category": "wedding",
+      "subcategory": "watercolor",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "webp",
+      "colorMode": "multi",
+      "file": "/assets/invitations/wedding/watercolor/watercolor-peony-001.webp",
+      "width": 607,
+      "height": 820,
+      "style": [
+        "color",
+        "watercolor",
+        "botanical",
+        "romantic"
+      ],
+      "license": "CC0 1.0 (dominio público)",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": false,
+      "source": "https://www.rawpixel.com/image/2870008/free-illustration-image-peony-redoute-flower",
+      "author": "Pierre-Joseph Redouté (1759–1840), vía rawpixel",
+      "tags": [
+        "peonía",
+        "rosa",
+        "botón",
+        "acuarela"
+      ]
+    },
+    {
+      "id": "watercolor-jasmine-001",
+      "name": "Rama de jazmín blanco",
+      "category": "wedding",
+      "subcategory": "watercolor",
+      "type": "flower",
+      "orientation": "vertical",
+      "format": "webp",
+      "colorMode": "multi",
+      "file": "/assets/invitations/wedding/watercolor/watercolor-jasmine-001.webp",
+      "width": 516,
+      "height": 820,
+      "style": [
+        "color",
+        "watercolor",
+        "botanical",
+        "romantic"
+      ],
+      "license": "CC0 1.0 (dominio público)",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": false,
+      "source": "https://www.rawpixel.com/image/263765/free-illustration-image-jasmine-pierre-joseph-redoute-flowers",
+      "author": "Pierre-Joseph Redouté (1759–1840), vía rawpixel",
+      "tags": [
+        "jazmín",
+        "blanco",
+        "rama",
+        "hojas",
+        "acuarela"
+      ]
+    },
+    {
+      "id": "divider-scroll-001",
+      "name": "Florón con volutas",
+      "category": "wedding",
+      "subcategory": "flourish",
+      "type": "divider",
+      "orientation": "horizontal",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/wedding/flourish/divider-scroll-001.svg",
+      "width": 400,
+      "height": 56,
+      "style": [
+        "line",
+        "baroque",
+        "classic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "separador",
+        "florón",
+        "voluta",
+        "clásico"
+      ]
+    },
+    {
+      "id": "crest-scroll-001",
+      "name": "Remate barroco",
+      "category": "wedding",
+      "subcategory": "flourish",
+      "type": "divider",
+      "orientation": "horizontal",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/wedding/flourish/crest-scroll-001.svg",
+      "width": 480,
+      "height": 110,
+      "style": [
+        "line",
+        "baroque",
+        "classic"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "remate",
+        "voluta",
+        "barroco",
+        "marco",
+        "clásico"
+      ]
+    },
+    {
+      "id": "symbol-heart-doodle-001",
+      "name": "Corazón dibujado con destellos",
+      "category": "wedding",
+      "subcategory": "flourish",
+      "type": "symbol",
+      "orientation": "square",
+      "format": "svg",
+      "colorMode": "mono",
+      "file": "/assets/invitations/wedding/flourish/symbol-heart-doodle-001.svg",
+      "width": 200,
+      "height": 180,
+      "style": [
+        "line",
+        "hand-drawn"
+      ],
+      "license": "Original",
+      "licenseVerified": true,
+      "commercialUse": true,
+      "modification": true,
+      "attributionRequired": false,
+      "redistributionRestricted": true,
+      "source": "original",
+      "author": "MiEvento",
+      "tags": [
+        "corazón",
+        "amor",
+        "destellos",
+        "dibujado"
+      ]
     }
   ]
 }

@@ -5,6 +5,7 @@ import {
   CalendarHeart,
   CircleCheck,
   Component,
+  Gift,
   DoorOpen,
   Heart,
   Images,
@@ -15,6 +16,7 @@ import {
   PanelTop,
   PartyPopper,
   Shirt,
+  UsersRound,
 } from 'lucide-react';
 
 /**
@@ -39,6 +41,9 @@ const ICONS: Readonly<Record<string, IconComponent>> = {
      que es justo la confusión que este bloque puede provocar en el catálogo. */
   welcome: DoorOpen,
   hero: PanelTop,
+  /* Dos personas: es la sección que presenta a quien celebra, uno a uno. */
+  protagonists: UsersRound,
+  gifts: Gift,
   story: BookOpen,
   /* Un calendario con corazón, no el mismo reloj del cronograma: los dos bloques hablan de tiempo
      y son lo más fácil de confundir en la lista de pestañas. */

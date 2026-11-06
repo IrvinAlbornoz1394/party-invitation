@@ -10,6 +10,8 @@ import { FOOTER_SAMPLES } from './footer-samples';
 import { GALLERY_SAMPLES } from './gallery-samples';
 import { HERO_SAMPLES } from './hero-samples';
 import { LOCATION_SAMPLES } from './location-samples';
+import { GIFTS_SAMPLES } from './gifts-samples';
+import { PROTAGONISTS_SAMPLES } from './protagonists-samples';
 import { RSVP_SAMPLES } from './rsvp-samples';
 import { demoImage, QUINCE_PHOTOS, WEDDING_PHOTOS } from './photos';
 import { pickSample } from './samples';
@@ -805,6 +807,169 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'footer', registryId: 'footer.band' },
     ],
   },
+  /*
+   * `nocturne`: la decimocuarta estructura, para boda y para XV. Ver `scripts/seed.ts`. Las dos
+   * entradas comparten composición y tema: lo que cambia es el contenido de muestra, y la portada
+   * se recompone sola con un nombre o con dos.
+   */
+  {
+    key: 'nocturne',
+    name: 'Nocturne',
+    structureKey: 'nocturne',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Azul medianoche, frambuesa y oro: retratos en hexágonos dorados con ramos de acuarela y flores que nunca están quietas.',
+    themeKey: 'nocturne',
+    cover: demoImage(WEDDING_PHOTOS.venue, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.vow', removable: true },
+      { blockKey: 'hero', registryId: 'hero.halfmoon', config: { showCountdown: false } },
+      { blockKey: 'calendar', registryId: 'calendar.numerals', config: { eyebrow: null, title: 'Faltan' } },
+      { blockKey: 'protagonists', registryId: 'protagonists.hexagon' },
+      {
+        blockKey: 'story',
+        registryId: 'story.ceremony',
+        config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' },
+      },
+      {
+        blockKey: 'location',
+        registryId: 'location.crested',
+        config: { eyebrow: 'Dónde y cuándo', title: 'La celebración' },
+      },
+      { blockKey: 'schedule', registryId: 'schedule.medallion', config: { eyebrow: null, title: 'Itinerario' } },
+      { blockKey: 'gallery', registryId: 'gallery.inset', config: { eyebrow: 'Galería', title: 'Recuerdos' } },
+      {
+        blockKey: 'details',
+        registryId: 'details.framed',
+        config: { eyebrow: null, title: 'Para tomar en cuenta' },
+      },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.hexagons',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.celebration',
+        config: { eyebrow: '¡Te esperamos!', title: '¿Nos acompañas?' },
+      },
+      {
+        blockKey: 'closing',
+        registryId: 'closing.watermark',
+        config: { eyebrow: 'Gracias', title: 'Gracias por ser parte de este día' },
+      },
+      { blockKey: 'footer', registryId: 'footer.midnight' },
+    ],
+  },
+  {
+    key: 'nocturne-xv',
+    name: 'Nocturne',
+    structureKey: 'nocturne',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'La misma noche para unos XV: el nombre en inglesa sobre el corazón dorado y la foto como una luna.',
+    themeKey: 'nocturne',
+    cover: demoImage(QUINCE_PHOTOS.night, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.vow', removable: true },
+      { blockKey: 'hero', registryId: 'hero.halfmoon', config: { showCountdown: false } },
+      { blockKey: 'calendar', registryId: 'calendar.numerals', config: { eyebrow: null, title: 'Faltan' } },
+      { blockKey: 'protagonists', registryId: 'protagonists.hexagon' },
+      {
+        blockKey: 'story',
+        registryId: 'story.ceremony',
+        config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' },
+      },
+      {
+        blockKey: 'location',
+        registryId: 'location.crested',
+        config: { eyebrow: 'Dónde y cuándo', title: 'La celebración' },
+      },
+      { blockKey: 'schedule', registryId: 'schedule.medallion', config: { eyebrow: null, title: 'Itinerario' } },
+      { blockKey: 'gallery', registryId: 'gallery.inset', config: { eyebrow: 'Galería', title: 'Recuerdos' } },
+      {
+        blockKey: 'details',
+        registryId: 'details.framed',
+        config: { eyebrow: null, title: 'Para tomar en cuenta' },
+      },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.hexagons',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.celebration',
+        config: { eyebrow: '¡Te esperamos!', title: '¿Nos acompañas?' },
+      },
+      {
+        blockKey: 'closing',
+        registryId: 'closing.watermark',
+        config: { eyebrow: 'Gracias', title: 'Gracias por ser parte de este día' },
+      },
+      { blockKey: 'footer', registryId: 'footer.midnight' },
+    ],
+  },
+  {
+    key: 'terracotta',
+    name: 'Terracota',
+    structureKey: 'terracotta',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Terracota, durazno y crema: fotos en marcos abombados, manchas de barro, globos de corazón y rotulación a pincel.',
+    themeKey: 'terracotta',
+    cover: demoImage(WEDDING_PHOTOS.couple, 900, 1200),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    blocks: [
+      { blockKey: 'welcome', registryId: 'welcome.bouquet', removable: true },
+      { blockKey: 'hero', registryId: 'hero.blob', config: { intro: 'Junto a sus familias', showCountdown: false } },
+      {
+        blockKey: 'protagonists',
+        registryId: 'protagonists.balloons',
+        config: { eyebrow: null, title: 'Los novios', subtitle: 'Un matrimonio feliz es la unión de dos buenos perdonadores.' },
+      },
+      { blockKey: 'calendar', registryId: 'calendar.doodle', config: { eyebrow: null, title: 'Guarda la fecha' } },
+      { blockKey: 'story', registryId: 'story.slides', config: { eyebrow: null, title: 'Nuestra historia' } },
+      {
+        blockKey: 'location',
+        registryId: 'location.arches',
+        config: { eyebrow: null, title: 'La boda', subtitle: 'Si solo tienes una sonrisa, dásela a quien quieres.' },
+      },
+      { blockKey: 'schedule', registryId: 'schedule.doodle', config: { eyebrow: null, title: 'Itinerario' } },
+      {
+        blockKey: 'gallery',
+        registryId: 'gallery.squircle',
+        config: { eyebrow: null, title: 'Galería', subtitle: 'Cada momento a tu lado es un pequeño milagro.' },
+      },
+      { blockKey: 'details', registryId: 'details.blobs', config: { eyebrow: null, title: 'Para tomar en cuenta' } },
+      { blockKey: 'dresscode', registryId: 'dresscode.blobs', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'gifts', registryId: 'gifts.card' },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.balloons',
+        config: { eyebrow: null, title: 'Ven a celebrar con nosotros', subtitle: '¡Nos morimos de ganas de verte!' },
+      },
+      {
+        blockKey: 'closing',
+        registryId: 'closing.hashtag',
+        config: {
+          eyebrow: null,
+          title: 'Comparte el amor',
+          message: 'Usa #AnaYDiego en tus fotos de la boda para que podamos verlas todas.',
+          signature: 'Ana & Diego',
+        },
+      },
+      { blockKey: 'footer', registryId: 'footer.bouquet' },
+    ],
+  },
 ];
 
 /**
@@ -879,6 +1044,16 @@ function contentFor(blockKey: RegisteredBlockKey, sampleKey: string): TemplateBl
     }
     case 'calendar': {
       const sample = pickSample(CALENDAR_SAMPLES, sampleKey);
+
+      return sample ? { blockKey, content: sample.content } : null;
+    }
+    case 'protagonists': {
+      const sample = pickSample(PROTAGONISTS_SAMPLES, sampleKey);
+
+      return sample ? { blockKey, content: sample.content } : null;
+    }
+    case 'gifts': {
+      const sample = pickSample(GIFTS_SAMPLES, sampleKey);
 
       return sample ? { blockKey, content: sample.content } : null;
     }

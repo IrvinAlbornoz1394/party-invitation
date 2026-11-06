@@ -7,6 +7,8 @@ import { footerContentSchema } from './blocks/footer';
 import { galleryContentSchema } from './blocks/gallery';
 import { heroContentSchema } from './blocks/hero';
 import { locationContentSchema } from './blocks/location';
+import { giftsContentSchema } from './blocks/gifts';
+import { protagonistsContentSchema } from './blocks/protagonists';
 import { rsvpContentSchema, whatsappUrl } from './blocks/rsvp';
 import { scheduleContentSchema } from './blocks/schedule';
 import { paragraphsFromText, storyContentSchema } from './blocks/story';
@@ -347,6 +349,11 @@ function projectFromEvent(
        colores no existen en ninguna columna del evento, y derivarlas sería inventárselas. */
     case 'details':
     case 'dresscode':
+    /* Las personas del bloque de protagonistas tampoco: el evento solo sabe cómo se llama la
+       celebración, no quién es cada uno ni qué quiere contar de sí mismo. */
+    case 'protagonists':
+    /* Ni la mesa de regalos: el evento no sabe dónde está. */
+    case 'gifts':
       return {};
 
     default: {
@@ -374,6 +381,8 @@ function projectFromEvent(
 export const BLOCK_CONTENT_SCHEMAS = {
   welcome: welcomeContentSchema,
   hero: heroContentSchema,
+  protagonists: protagonistsContentSchema,
+  gifts: giftsContentSchema,
   story: storyContentSchema,
   calendar: calendarContentSchema,
   details: detailsContentSchema,

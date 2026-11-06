@@ -1,12 +1,14 @@
 import { z } from 'zod';
 import { detailItemSchema, type DetailItem } from '@/domain/invitation/blocks/details';
 import { dresscodeSwatchSchema, type DresscodeSwatch } from '@/domain/invitation/blocks/dresscode';
+import { giftRegistrySchema, type GiftRegistry } from '@/domain/invitation/blocks/gifts';
+import { protagonistSchema, type Protagonist } from '@/domain/invitation/blocks/protagonists';
 import type { EventBlockRecord } from '@/domain/invitation/event-content';
 import type { BlockConfigPatch } from './event-block-texts';
 
 /**
- * Las dos listas que una sección guarda en su propio `config`: los detalles y los colores de la
- * vestimenta.
+ * Las listas que una sección guarda en su propio `config`: los detalles, los colores de la
+ * vestimenta y las personas del bloque de protagonistas.
  *
  * ## Por qué existe
  *
@@ -26,10 +28,12 @@ import type { BlockConfigPatch } from './event-block-texts';
  * si el plan incluye la sección.
  */
 
-/** Qué lista edita cada sección. Las dos únicas que viven en el `config` del bloque. */
+/** Qué lista edita cada sección. Las únicas que viven en el `config` del bloque. */
 export const BLOCK_LIST_KEYS = {
   details: 'items',
   dresscode: 'palette',
+  protagonists: 'people',
+  gifts: 'registries',
 } as const;
 
 export type BlockListBlockKey = keyof typeof BLOCK_LIST_KEYS;
@@ -38,11 +42,23 @@ export type BlockListBlockKey = keyof typeof BLOCK_LIST_KEYS;
 export const BLOCK_LIST_MAX: Readonly<Record<BlockListBlockKey, number>> = {
   details: 8,
   dresscode: 6,
+  protagonists: 6,
+  gifts: 4,
 };
+
+/** El esquema de una fila de cada lista. */
+const ROW_SCHEMAS = {
+  details: detailItemSchema,
+  dresscode: dresscodeSwatchSchema,
+  protagonists: protagonistSchema,
+  gifts: giftRegistrySchema,
+} as const;
 
 export interface EditableBlockLists {
   readonly details?: readonly DetailItem[];
   readonly dresscode?: readonly DresscodeSwatch[];
+  readonly protagonists?: readonly Protagonist[];
+  readonly gifts?: readonly GiftRegistry[];
 }
 
 /** Si una sección tiene una lista que se edita en su `config`. */
@@ -58,13 +74,22 @@ export function isBlockListBlock(blockKey: string): blockKey is BlockListBlockKe
  * de romper el editor; el siguiente guardado deja la lista limpia.
  */
 export function editableBlockLists(blocks: readonly EventBlockRecord[]): EditableBlockLists {
-  const lists: { details?: DetailItem[]; dresscode?: DresscodeSwatch[] } = {};
+  const lists: {
+    details?: DetailItem[];
+    dresscode?: DresscodeSwatch[];
+    protagonists?: Protagonist[];
+    gifts?: GiftRegistry[];
+  } = {};
 
   for (const block of blocks) {
     if (block.blockKey === 'details') {
       lists.details = validRows(block.config.items, detailItemSchema);
     } else if (block.blockKey === 'dresscode') {
       lists.dresscode = validRows(block.config.palette, dresscodeSwatchSchema);
+    } else if (block.blockKey === 'protagonists') {
+      lists.protagonists = validRows(block.config.people, protagonistSchema);
+    } else if (block.blockKey === 'gifts') {
+      lists.gifts = validRows(block.config.registries, giftRegistrySchema);
     }
   }
 
@@ -109,7 +134,7 @@ export function parseBlockLists(
 
     if (!present.has(blockKey) || !Array.isArray(rows)) continue;
 
-    const schema = blockKey === 'details' ? detailItemSchema : dresscodeSwatchSchema;
+    const schema: z.ZodType<unknown> = ROW_SCHEMAS[blockKey];
     const parsed = z.array(schema).max(BLOCK_LIST_MAX[blockKey]).safeParse(rows);
 
     if (!parsed.success) {
