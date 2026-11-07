@@ -970,6 +970,108 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
       { blockKey: 'footer', registryId: 'footer.bouquet' },
     ],
   },
+
+  /* ── Mirador: la misma estructura para boda y para XV ─────────────────── */
+  {
+    key: 'mirador',
+    name: 'Mirador',
+    structureKey: 'mirador',
+    eventTypeKey: 'wedding',
+    eventTypeName: 'Boda',
+    tagline:
+      'Todos los fondos en parallax: las fotos se quedan atrás como ventanas y los nombres suben por delante en tres planos.',
+    themeKey: 'mirador',
+    cover: demoImage(WEDDING_PHOTOS.exit, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'boda',
+    blocks: [
+      { blockKey: 'hero', registryId: 'hero.depth', config: { showCountdown: false } },
+      {
+        blockKey: 'story',
+        registryId: 'story.depth',
+        config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' },
+      },
+      { blockKey: 'protagonists', registryId: 'protagonists.depth', config: { eyebrow: null } },
+      { blockKey: 'calendar', registryId: 'calendar.depth', config: { eyebrow: 'Guarda la fecha', title: 'Faltan' } },
+      { blockKey: 'location', registryId: 'location.depth', config: { eyebrow: 'Dónde', title: 'La celebración' } },
+      { blockKey: 'schedule', registryId: 'schedule.depth', config: { eyebrow: 'El día', title: 'Itinerario' } },
+      { blockKey: 'gallery', registryId: 'gallery.depth', config: { eyebrow: 'Galería', title: 'Momentos' } },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.depth',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'details',
+        registryId: 'details.depth',
+        /* Las muestras no traen foto en detalles ni en la confirmación, y en `mirador` el fondo es
+           la mitad del bloque: sin ella se vería el respaldo de color en vez del parallax. */
+        config: { eyebrow: null, title: 'Para tomar en cuenta', image: demoImage(WEDDING_PHOTOS.venue, 1200, 1600) },
+      },
+      { blockKey: 'gifts', registryId: 'gifts.depth', config: { eyebrow: 'Regalos', title: 'Su presencia es nuestro regalo' } },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.depth',
+        config: { eyebrow: 'R. S. V. P.', title: '¿Nos acompañas?', image: demoImage(WEDDING_PHOTOS.rings, 1200, 1600) },
+      },
+      {
+        blockKey: 'closing',
+        registryId: 'closing.depth',
+        config: { eyebrow: 'Gracias', title: 'Gracias por ser parte de este día' },
+      },
+      { blockKey: 'footer', registryId: 'footer.depth' },
+    ],
+  },
+  {
+    key: 'mirador-xv',
+    name: 'Mirador',
+    structureKey: 'mirador',
+    eventTypeKey: 'quince',
+    eventTypeName: 'XV Años',
+    tagline:
+      'El mismo movimiento para unos XV: la foto a pantalla completa y el nombre flotando sobre ella mientras bajas.',
+    themeKey: 'mirador',
+    cover: demoImage(QUINCE_PHOTOS.night, 1200, 900),
+    music: DEMO_MUSIC,
+    sampleKey: 'quince',
+    blocks: [
+      { blockKey: 'hero', registryId: 'hero.depth', config: { showCountdown: false } },
+      {
+        blockKey: 'story',
+        registryId: 'story.depth',
+        config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' },
+      },
+      { blockKey: 'protagonists', registryId: 'protagonists.depth', config: { eyebrow: null } },
+      { blockKey: 'calendar', registryId: 'calendar.depth', config: { eyebrow: 'Guarda la fecha', title: 'Faltan' } },
+      { blockKey: 'location', registryId: 'location.depth', config: { eyebrow: 'Dónde', title: 'La celebración' } },
+      { blockKey: 'schedule', registryId: 'schedule.depth', config: { eyebrow: 'El día', title: 'Itinerario' } },
+      { blockKey: 'gallery', registryId: 'gallery.depth', config: { eyebrow: 'Galería', title: 'Momentos' } },
+      {
+        blockKey: 'dresscode',
+        registryId: 'dresscode.depth',
+        config: { eyebrow: null, title: 'Código de vestimenta' },
+      },
+      {
+        blockKey: 'details',
+        registryId: 'details.depth',
+        /* Las muestras no traen foto en detalles ni en la confirmación, y en `mirador` el fondo es
+           la mitad del bloque: sin ella se vería el respaldo de color en vez del parallax. */
+        config: { eyebrow: null, title: 'Para tomar en cuenta', image: demoImage(QUINCE_PHOTOS.venue, 1200, 1600) },
+      },
+      { blockKey: 'gifts', registryId: 'gifts.depth', config: { eyebrow: 'Regalos', title: 'Su presencia es nuestro regalo' } },
+      {
+        blockKey: 'rsvp',
+        registryId: 'rsvp.depth',
+        config: { eyebrow: 'R. S. V. P.', title: '¿Nos acompañas?', image: demoImage(QUINCE_PHOTOS.dress, 1200, 1600) },
+      },
+      {
+        blockKey: 'closing',
+        registryId: 'closing.depth',
+        config: { eyebrow: 'Gracias', title: 'Gracias por ser parte de este día' },
+      },
+      { blockKey: 'footer', registryId: 'footer.depth' },
+    ],
+  },
 ];
 
 /**

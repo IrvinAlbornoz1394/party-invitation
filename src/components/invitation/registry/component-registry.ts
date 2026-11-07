@@ -199,6 +199,19 @@ import { RsvpBalloons } from '../blocks/rsvp/RsvpBalloons';
 import { ClosingHashtag } from '../blocks/closing/ClosingHashtag';
 import { FooterBouquet } from '../blocks/footer/FooterBouquet';
 import type { ProtagonistsVariant } from '../blocks/protagonists/protagonists-variant';
+import { HeroDepth } from '../blocks/hero/HeroDepth';
+import { StoryDepth } from '../blocks/story/StoryDepth';
+import { ProtagonistsDepth } from '../blocks/protagonists/ProtagonistsDepth';
+import { CalendarDepth } from '../blocks/calendar/CalendarDepth';
+import { LocationDepth } from '../blocks/location/LocationDepth';
+import { ScheduleDepth } from '../blocks/schedule/ScheduleDepth';
+import { GalleryDepth } from '../blocks/gallery/GalleryDepth';
+import { DresscodeDepth } from '../blocks/dresscode/DresscodeDepth';
+import { DetailsDepth } from '../blocks/details/DetailsDepth';
+import { GiftsDepth } from '../blocks/gifts/GiftsDepth';
+import { RsvpDepth } from '../blocks/rsvp/RsvpDepth';
+import { ClosingDepth } from '../blocks/closing/ClosingDepth';
+import { FooterDepth } from '../blocks/footer/FooterDepth';
 
 /**
  * El Component Registry: el único sitio del código que sabe qué componente es cada
@@ -642,6 +655,20 @@ const REGISTRY: Readonly<Record<string, RegisteredComponent>> = {
   'rsvp.balloons': { blockKey: 'rsvp', component: RsvpBalloons },
   'closing.hashtag': { blockKey: 'closing', component: ClosingHashtag },
   'footer.bouquet': { blockKey: 'footer', component: FooterBouquet },
+  /* mirador: todos los fondos en parallax. Ver `shared/Parallax.tsx` y `shared/mirador-parts.tsx`. */
+  'hero.depth': { blockKey: 'hero', component: HeroDepth },
+  'story.depth': { blockKey: 'story', component: StoryDepth },
+  'protagonists.depth': { blockKey: 'protagonists', component: ProtagonistsDepth },
+  'calendar.depth': { blockKey: 'calendar', component: CalendarDepth },
+  'location.depth': { blockKey: 'location', component: LocationDepth },
+  'schedule.depth': { blockKey: 'schedule', component: ScheduleDepth },
+  'gallery.depth': { blockKey: 'gallery', component: GalleryDepth },
+  'dresscode.depth': { blockKey: 'dresscode', component: DresscodeDepth },
+  'details.depth': { blockKey: 'details', component: DetailsDepth },
+  'gifts.depth': { blockKey: 'gifts', component: GiftsDepth },
+  'rsvp.depth': { blockKey: 'rsvp', component: RsvpDepth },
+  'closing.depth': { blockKey: 'closing', component: ClosingDepth },
+  'footer.depth': { blockKey: 'footer', component: FooterDepth },
 };
 
 /**

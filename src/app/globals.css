@@ -678,7 +678,30 @@
 .inv-heartbeat {
   animation: inv-heartbeat 1.2s ease-in-out infinite;
 }
+/* El filete que se descuelga al pie de la portada de `mirador`: invita a bajar sin flecha. */
+@keyframes inv-drop {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+.inv-drop {
+  animation: inv-drop 2.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
 @media (prefers-reduced-motion: reduce) {
+  .inv-drop,
   .inv-spin-slow,
   .inv-breathe,
   .inv-heartbeat,

@@ -727,6 +727,24 @@ const VARIANTS: {
   { blockKey: 'rsvp', variantKey: 'balloons', name: 'Confirmación en tarjeta con globos de corazón' },
   { blockKey: 'closing', variantKey: 'hashtag', name: 'Cierre con la etiqueta de la boda y la foto en marco orgánico' },
   { blockKey: 'footer', variantKey: 'bouquet', name: 'Pie en crema con el ramo atado y los nombres en rótulo' },
+  /*
+   * `mirador`: todos los fondos en parallax. Las fotos se quedan atrás como ventanas y el papel
+   * lleva un campo de color y una palabra gigante que se desplazan a otra velocidad. Ver
+   * `shared/Parallax.tsx` y `shared/mirador-parts.tsx`. Sin `minPlanRank`: es composición base.
+   */
+  { blockKey: 'hero', variantKey: 'depth', name: 'Portada a pantalla completa con la foto en parallax y los nombres en tres planos' },
+  { blockKey: 'story', variantKey: 'depth', name: 'Historia sobre papel con la palabra gigante a la deriva' },
+  { blockKey: 'protagonists', variantKey: 'depth', name: 'Protagonistas a pantalla completa, una foto en parallax por persona' },
+  { blockKey: 'calendar', variantKey: 'depth', name: 'Fecha con el día gigante en parallax y cuenta regresiva' },
+  { blockKey: 'location', variantKey: 'depth', name: 'Sedes como ventanas en parallax con tarjeta flotante' },
+  { blockKey: 'schedule', variantKey: 'depth', name: 'Itinerario en filete vertical sobre papel en parallax' },
+  { blockKey: 'gallery', variantKey: 'depth', name: 'Galería de ventanas, cada foto con su propio parallax' },
+  { blockKey: 'details', variantKey: 'depth', name: 'Detalles sobre foto en parallax' },
+  { blockKey: 'dresscode', variantKey: 'depth', name: 'Vestimenta en discos de color que flotan a distinta velocidad' },
+  { blockKey: 'gifts', variantKey: 'depth', name: 'Mesa de regalos sobre papel en parallax' },
+  { blockKey: 'rsvp', variantKey: 'depth', name: 'Confirmación en tarjeta sobre foto en parallax' },
+  { blockKey: 'closing', variantKey: 'depth', name: 'Cierre a pantalla completa con la foto en parallax' },
+  { blockKey: 'footer', variantKey: 'depth', name: 'Pie oscuro con los nombres a la deriva' },
 ];
 
 /**
@@ -1575,6 +1593,39 @@ const TEMPLATES: {
       { blockKey: 'footer', variantKey: 'bouquet', isRequired: true },
     ],
   },
+  {
+    key: 'mirador',
+    name: 'Mirador',
+    description:
+      'Todos los fondos en parallax: las fotos se quedan atrás como ventanas y el texto sube por delante. Cinematográfica y luminosa, para boda y para XV.',
+    eventTypes: ['wedding', 'quince'],
+    defaultThemeKey: 'mirador',
+    isActive: true,
+    /*
+     * La decimosexta estructura, y la primera que se define por **el movimiento** y no por un
+     * motivo: cada sección tiene un fondo que avanza más despacio que su contenido. Se alternan
+     * ventanas —una foto a sangre con velo— y papel —marfil con un campo de color y una palabra
+     * gigante en filete que se cruza a otra velocidad—. Ver `shared/Parallax.tsx`.
+     *
+     * Trece variantes nuevas, todas `depth`, así que no compite con ninguna plantilla de ningún
+     * tipo de evento. Sin bienvenida: la portada a pantalla completa ya es la entrada.
+     */
+    blocks: [
+      { blockKey: 'hero', variantKey: 'depth', isRequired: true, config: { showCountdown: false } },
+      { blockKey: 'story', variantKey: 'depth', config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' } },
+      { blockKey: 'protagonists', variantKey: 'depth', config: { eyebrow: null } },
+      { blockKey: 'calendar', variantKey: 'depth', config: { eyebrow: 'Guarda la fecha', title: 'Faltan' } },
+      { blockKey: 'location', variantKey: 'depth', config: { eyebrow: 'Dónde', title: 'La celebración' } },
+      { blockKey: 'schedule', variantKey: 'depth', config: { eyebrow: 'El día', title: 'Itinerario' } },
+      { blockKey: 'gallery', variantKey: 'depth', config: { eyebrow: 'Galería', title: 'Momentos' } },
+      { blockKey: 'dresscode', variantKey: 'depth', config: { eyebrow: null, title: 'Código de vestimenta' } },
+      { blockKey: 'details', variantKey: 'depth', config: { eyebrow: null, title: 'Para tomar en cuenta' } },
+      { blockKey: 'gifts', variantKey: 'depth', config: { eyebrow: 'Regalos', title: 'Su presencia es nuestro regalo', registries: [] } },
+      { blockKey: 'rsvp', variantKey: 'depth', isRequired: true, config: { eyebrow: 'R. S. V. P.', title: '¿Nos acompañas?' } },
+      { blockKey: 'closing', variantKey: 'depth', config: { eyebrow: 'Gracias', title: 'Gracias por ser parte de este día' } },
+      { blockKey: 'footer', variantKey: 'depth', isRequired: true },
+    ],
+  },
 ];
 
 /**
@@ -2413,6 +2464,49 @@ const THEMES = [
       photo: { filter: 'saturate(1) contrast(1) brightness(1.02)' },
       ornament: { line: '1.5rem', node: '6px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.7' },
       /* Sin onda: los cantos los ponen las manchas. */
+      edge: { height: '0px' },
+    },
+  },
+  {
+    key: 'mirador',
+    name: 'Mirador',
+    description:
+      'Marfil, carbón y oro champán, con azul petróleo para los botones. Pensado para fotos a sangre con velo oscuro y una didona en cursiva grande.',
+    isActive: true,
+    tokens: {
+      colors: {
+        /* El papel de las secciones sin foto. Marfil y no blanco: entre dos fotos veladas, un
+           blanco puro deslumbra. */
+        background: '#f6f2ec',
+        surface: '#ebe4da',
+        ink: '#1c1f22',
+        inkSoft: '#5b5f63',
+        /* Azul petróleo: botones y tarjetas. 9,6:1 con el texto blanco. */
+        primary: '#2f4a52',
+        onPrimary: '#ffffff',
+        /* Oro champán: rótulos, filetes y el «&» de la portada. 3,6:1 sobre el marfil —solo en
+           rótulos espaciados o grandes— y de sobra sobre el velo. */
+        accent: '#9a7440',
+        line: '#ddd3c6',
+        /* El velo de las ventanas: frío y hondo, para que la letra clara se lea sobre cualquier foto. */
+        overlay: 'rgba(16, 20, 24, 0.55)',
+      },
+      fonts: {
+        /* Playfair en cursiva hace de titular y de nombre: la didona de contraste alto es la que
+           aguanta encima de una foto a ese tamaño. */
+        display: "var(--font-playfair, 'Playfair Display'), Georgia, serif",
+        body: "var(--font-jost, 'Jost'), 'Helvetica Neue', Arial, sans-serif",
+        /* Ms Madi: solo el «&» gigante y los rótulos de XV. */
+        script: "var(--font-msmadi, 'Ms Madi'), cursive",
+      },
+      /* Botones rectos y tarjetas casi rectas: el movimiento ya es el adorno. */
+      radii: { sm: '2px', md: '2px', lg: '4px' },
+      shadows: { soft: '0 30px 60px -36px rgba(10, 14, 18, 0.55)' },
+      motion: { reveal: '1s cubic-bezier(0.22, 1, 0.36, 1)' },
+      space: { block: 'clamp(5rem, 13vw, 9rem)' },
+      /* Un punto más de contraste: bajo el velo, las fotos planas se apagan. */
+      photo: { filter: 'saturate(0.95) contrast(1.05)' },
+      ornament: { line: '2rem', node: '4px', nodeRadius: '50%', nodeRotate: '0deg', opacity: '0.6' },
       edge: { height: '0px' },
     },
   },

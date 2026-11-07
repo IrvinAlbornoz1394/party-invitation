@@ -485,6 +485,35 @@ referencia no traía ninguna sección que el catálogo no tenga; la galería, lo
 confirmación, el cierre y el pie se escribieron con sus mismas piezas. La semana del calendario
 empieza en lunes (`weekStartsOn: 'monday'`), como en la referencia.
 
+`mirador` es la primera que se define por **el movimiento** y no por un motivo: **todos los fondos
+son parallax**. Sirve para boda y para XV con la misma composición (`mirador` y `mirador-xv` en el
+escaparate) y trae trece variantes nuevas, todas `depth`, así que no compite con ninguna otra
+plantilla. Se alternan dos clases de sección:
+
+- **Ventanas**: una foto a sangre con velo oscuro que se queda atrás mientras el texto sube
+  (`DepthPhoto`). Portada, protagonistas (una ventana por persona), sedes, detalles, confirmación
+  y cierre.
+- **Papel**: el marfil del tema con un campo de color difuso que se aleja (`DepthWash`) y una
+  palabra gigante en filete que se cruza a otra velocidad (`DepthWord`). Historia, fecha,
+  itinerario, vestimenta y regalos. Las fotos que caen en papel (historia, regalos) van en una
+  ventana enmarcada que es **su propia escena**: medido contra toda la sección, el recorrido
+  estiraba la foto y salía borrosa.
+
+En la portada el texto va en tres planos —los nombres suben un poco más rápido que la página y se
+desvanecen al salir, y el «&» dorado nace entre los dos y se separa al bajar—; en XV ese plano lo
+ocupa el rótulo del evento («Mis XV años»). En la galería cada foto tiene su propio parallax dentro
+del marco. Sin bienvenida: la portada a pantalla completa ya es la entrada.
+
+El motor es `shared/Parallax.tsx`: `ParallaxScene` mide la sección contra **el contenedor que de
+verdad se desplaza** —la ventana o el marco del teléfono de la vista previa— y deja el avance en
+`--inv-px`; cada `ParallaxLayer` lo convierte en un `translate3d` con su propia `depth` (positiva se
+queda atrás, negativa se adelanta). No usa `background-attachment: fixed`, que Safari de iPhone
+ignora, ni `useScroll` de framer-motion, que en la vista previa del panel deja el fondo quieto (le
+pasa a `gallery.parallax`). Con `prefers-reduced-motion` no escucha el desplazamiento y la
+composición se lee quieta. Las piezas visuales comunes están en `shared/mirador-parts.tsx`, y el
+tema `mirador` (marfil, carbón, oro champán y azul petróleo, con Playfair en cursiva) en
+`scripts/seed.ts`.
+
 ## Rehacer una variante o escribir otra
 
 La pregunta llega en cuanto una plantilla ya montada tiene que cambiar de aspecto en un bloque, y
