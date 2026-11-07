@@ -1,0 +1,183 @@
+/* ============================================================================
+   La portada en vivo: el sobre con lacre y la invitación que sale de él
+   ============================================================================
+   Toda la geometría sale de un solo número, `--w`, el ancho del sobre. La tarjeta mide el 90 %
+   de ese ancho y 1.28 veces su propio ancho de alto; el sobre, el 62 % de `--w`. El escenario
+   deja arriba el 55 % de la tarjeta, que es lo que asoma cuando ya salió:
+
+     alto del escenario = 0.55 × (0.9 × 1.28 × w) + 0.62 × w ≈ 1.254 × w
+
+   Así el mismo sobre sirve en el teléfono y en el escritorio cambiando solo `--w`.
+   ========================================================================== */
+
+@layer components {
+.hl-stage {
+  --w: min(300px, 78vw);
+  position: relative;
+  width: var(--w);
+  height: calc(var(--w) * 1.254);
+  perspective: 1400px;
+}
+@media (min-width: 768px) {
+  .hl-stage {
+    --w: 380px;
+  }
+}
+@media (min-width: 1100px) {
+  .hl-stage {
+    --w: 430px;
+  }
+}
+
+/* El sobre ocupa el fondo del escenario. */
+.hl-envelope {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: calc(var(--w) * 0.62);
+}
+
+/* El interior, que se ve por encima del bolsillo cuando la solapa se abre. */
+.hl-back {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #cdb79b, #e2d2bd 70%);
+}
+
+/* La tarjeta va en una capa que solo recorta por abajo: mientras está guardada, lo que sobra
+   del sobre no se ve; cuando sale, puede subir sin que nada la corte. */
+.hl-card-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  clip-path: inset(-60% -20% 0 -20%);
+}
+
+.hl-card {
+  position: absolute;
+  top: 0;
+  left: 5%;
+  width: 90%;
+  height: calc(var(--w) * 0.9 * 1.28);
+  border-radius: 6px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #fffdf9, #fbf5ec 70%),
+    #fbf5ec;
+  color: var(--h-ink);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.6) inset,
+    0 18px 40px -18px rgb(43 26 32 / 0.55);
+}
+/* El doble filete de oro, como el grabado de una invitación impresa. */
+.hl-card::before,
+.hl-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--h-gold) 70%, transparent);
+  border-radius: 3px;
+}
+.hl-card::before {
+  inset: 9px;
+}
+.hl-card::after {
+  inset: 13px;
+  border-color: color-mix(in srgb, var(--h-gold) 35%, transparent);
+}
+
+.hl-card-names {
+  font-size: calc(var(--w) * 0.14);
+  line-height: 1.02;
+}
+.hl-card-names[data-long='true'] {
+  font-size: calc(var(--w) * 0.1);
+}
+.hl-card-small {
+  font-size: max(10px, calc(var(--w) * 0.034));
+}
+.hl-card-date {
+  font-size: max(12px, calc(var(--w) * 0.044));
+}
+.hl-card-count {
+  font-size: calc(var(--w) * 0.07);
+}
+
+/* El bolsillo del frente: una V que baja de las dos esquinas de arriba hasta el centro. */
+.hl-pocket {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: 0 0 6px 6px;
+  background:
+    linear-gradient(160deg, transparent 49.6%, rgb(43 26 32 / 0.08) 50%, transparent 50.6%),
+    linear-gradient(200deg, transparent 49.6%, rgb(43 26 32 / 0.08) 50%, transparent 50.6%),
+    linear-gradient(180deg, #f3e8d9, #ead9c3);
+  clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%);
+}
+
+/* La solapa gira sobre el borde de arriba del sobre. Cerrada tapa la tarjeta; abierta queda
+   detrás de todo. Lleva dos caras: el papel por fuera y el forro por dentro. */
+.hl-flap {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 4;
+  height: 64%;
+  transform-origin: 50% 0%;
+  transform-style: preserve-3d;
+}
+.hl-flap-face {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  backface-visibility: hidden;
+}
+.hl-flap-face--out {
+  background: linear-gradient(180deg, #e7d6c0, #efe2d0);
+}
+.hl-flap-face--in {
+  transform: rotateX(180deg);
+  background:
+    repeating-linear-gradient(135deg, rgb(195 154 95 / 0.18) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #4a1a2c, #5c2539);
+}
+
+/* El lacre: cera vino con el isologo grabado, en la punta de la solapa. */
+.hl-seal {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: calc(var(--w) * 0.2);
+  aspect-ratio: 1;
+  translate: -50% 45%;
+  border-radius: 46% 54% 50% 50% / 52% 48% 52% 48%;
+  background: radial-gradient(circle at 35% 30%, #7a3049, #4a1a2c 60%, #3a1222);
+  box-shadow:
+    0 0 0 3px #5c2539,
+    0 0 0 5px rgb(74 26 44 / 0.35),
+    0 6px 14px -4px rgb(43 26 32 / 0.6),
+    inset 0 2px 4px rgb(255 255 255 / 0.18),
+    inset 0 -3px 6px rgb(0 0 0 / 0.35);
+  backface-visibility: hidden;
+  display: grid;
+  place-items: center;
+}
+
+/* La sombra en el «suelo», que se mueve al revés del giro. */
+.hl-shadow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -26px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(20 6 12 / 0.55), transparent);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* El selector de fecha del navegador, en claro aunque el teléfono esté en modo oscuro. */
+.hl-input {
+  color-scheme: light;
+}
+}

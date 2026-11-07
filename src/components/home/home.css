@@ -1,0 +1,163 @@
+/* ============================================================================
+   La página de inicio
+   ============================================================================
+   Todo vive dentro de `.home`: el panel y las invitaciones tienen su propia paleta.
+
+   La paleta sale del logotipo: el vino de «Evento» y de los aros, el oro de «mi» y de la tiara,
+   y el rosa del diamante, sobre un papel crema. El vino hace de color de sección —el CTA final,
+   el pie, el panel— y el oro, de acento.
+
+   Contrastes medidos: tinta 14.6:1 sobre el papel; gris 5.4:1; crema sobre vino 11.8:1; oro
+   oscuro 4.6:1 sobre el papel (solo en rótulos y cifras grandes).
+   ========================================================================== */
+
+.home {
+  --h-paper: #f8f3ee;
+  --h-paper-2: #f1e9e1;
+  --h-white: #fffdfb;
+  --h-ink: #2b1a20;
+  --h-muted: #6e5c62;
+  --h-wine: #4a1a2c;
+  --h-wine-2: #5c2539;
+  --h-wine-ink: #f8eee6;
+  --h-gold: #c39a5f;
+  --h-gold-deep: #94703b;
+  --h-rose: #d8a0a0;
+  --h-line: #e4d8cc;
+  --h-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  background: var(--h-paper);
+  color: var(--h-ink);
+  font-family: var(--font-jost), 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.home ::selection {
+  background: var(--h-wine);
+  color: var(--h-wine-ink);
+}
+
+.home :focus-visible {
+  outline: 2px solid var(--h-gold-deep);
+  outline-offset: 3px;
+}
+
+@layer base {
+/* Los botones nacen sin el gris ni el borde del navegador. Con `:where` la regla no pesa nada y
+   cualquier clase de un componente la gana. */
+:where(.home) :where(button) {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+}
+
+@layer components {
+/* Titulares: la didona en versales, con aire entre letras como en un rótulo grabado. */
+.h-display {
+  font-family: var(--font-home-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+.h-heading {
+  font-family: var(--font-home-display), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4.6vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.h-script {
+  font-family: var(--font-greatvibes), cursive;
+  font-weight: 400;
+}
+
+/* El rótulo en píldora que encabeza cada sección, con el corazón del diamante. */
+.h-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: var(--h-white);
+  color: var(--h-wine);
+  box-shadow: 0 0 0 1px var(--h-line);
+}
+.h-eyebrow::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--h-rose);
+  transform: rotate(45deg);
+}
+.h-eyebrow--dark {
+  background: color-mix(in srgb, var(--h-wine-ink) 12%, transparent);
+  color: var(--h-wine-ink);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--h-wine-ink) 30%, transparent);
+}
+
+.h-button {
+  display: inline-flex;
+  min-height: 2.9rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0 1.5rem;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background-color 0.25s var(--h-ease),
+    color 0.25s var(--h-ease),
+    transform 0.25s var(--h-ease);
+}
+.h-button:active {
+  transform: scale(0.98);
+}
+.h-button--wine {
+  background: var(--h-wine);
+  color: var(--h-wine-ink);
+}
+.h-button--wine:hover {
+  background: var(--h-wine-2);
+}
+.h-button--gold {
+  background: var(--h-gold);
+  color: var(--h-wine);
+}
+.h-button--gold:hover {
+  background: #d1ab74;
+}
+.h-button--ghost {
+  background: transparent;
+  color: currentColor;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent);
+}
+.h-button--ghost:hover {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+/* El isologo en línea clara: los aros del logotipo, en blanco, sobre una foto o sobre el vino. */
+.h-mark-light {
+  filter: brightness(0) invert(1);
+}
+.h-mark-cream {
+  filter: brightness(0) invert(94%) sepia(10%) saturate(300%) hue-rotate(330deg);
+}
+}

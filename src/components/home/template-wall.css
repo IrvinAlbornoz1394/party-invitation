@@ -1,0 +1,23 @@
+/*
+ * El muro de plantillas: las columnas suben y bajan despacio, cada una a su ritmo y en sentido
+ * contrario a su vecina. Con el ratón encima del muro se detienen, para poder atinarle a una
+ * portada; con movimiento reducido no se mueven nunca.
+ */
+@keyframes h-wall-drift {
+  from {
+    transform: translateY(var(--wall-from, 0));
+  }
+  to {
+    transform: translateY(var(--wall-to, 0));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .h-wall-col {
+    animation: h-wall-drift var(--wall-duration, 22s) ease-in-out infinite alternate;
+  }
+  .h-wall:hover .h-wall-col,
+  .h-wall:focus-within .h-wall-col {
+    animation-play-state: paused;
+  }
+}

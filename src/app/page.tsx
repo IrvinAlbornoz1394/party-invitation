@@ -1,16 +1,22 @@
 import type { Metadata } from 'next';
+import { demoImage, QUINCE_PHOTOS, WEDDING_PHOTOS } from '@/components/invitation/demo/photos';
 import { demoStructures } from '@/components/invitation/demo/templates';
-import { ClosingCta } from '@/components/landing/ClosingCta';
-import { type Faq, FaqIndex } from '@/components/landing/FaqIndex';
-import { stackHeadline, stackText } from '@/components/landing/fonts';
-import { HowItWorks } from '@/components/landing/HowItWorks';
-import { LandingFooter } from '@/components/landing/LandingFooter';
-import { LandingHero } from '@/components/landing/LandingHero';
-import { PanelPlate } from '@/components/landing/PanelPlate';
-import { PlansTable } from '@/components/landing/PlansTable';
-import { RevealController } from '@/components/landing/RevealController';
-import { TemplateRow } from '@/components/landing/TemplateRow';
-import '@/components/landing/landing.css';
+import { homeDisplay } from '@/components/home/fonts';
+import { HeroLive } from '@/components/home/HeroLive';
+import { HomeCoupleProvider } from '@/components/home/HomeCouple';
+import { HomeCta } from '@/components/home/HomeCta';
+import { HomeFaq, type Faq } from '@/components/home/HomeFaq';
+import { HomeFooter } from '@/components/home/HomeFooter';
+import { HomeHeader } from '@/components/home/HomeHeader';
+import { HomeMotion } from '@/components/home/HomeMotion';
+import { HomePhone } from '@/components/home/HomePhone';
+import { HomePlans } from '@/components/home/HomePlans';
+import { LiveRsvp } from '@/components/home/LiveRsvp';
+import { MobileDock } from '@/components/home/MobileDock';
+import { StepsStack } from '@/components/home/StepsStack';
+import { TemplatesShowcase } from '@/components/home/TemplatesShowcase';
+import type { ShowcaseTemplate } from '@/components/home/types';
+import '@/components/home/home.css';
 import { browseShowcase } from '@/infrastructure/container';
 
 export const metadata: Metadata = {
@@ -67,12 +73,15 @@ interface PageProps {
 /**
  * La portada del producto.
  *
- * ## El orden es el argumento
+ * ## El orden
  *
- * Portada → plantillas → cómo funciona → el panel → planes → preguntas → cierre. Quien busca una
- * invitación decide primero por los ojos, así que las plantillas van justo después de la portada.
- * Solo después de eso alguien está dispuesto a ver por qué esto no es otra página bonita, y ahí
- * el producto se demuestra funcionando: una confirmación que puedes hacer tú y un panel que cuenta.
+ * Portada en vivo (la visitante escribe sus nombres y ve su invitación) → plantillas (mazo en el
+ * teléfono, muro 3D en escritorio) → el teléfono 3D del invitado → confirmaciones llegando →
+ * así funciona → planes → preguntas → cierre. Los nombres que escribe viajan por toda la página
+ * (`HomeCouple`). En el teléfono, una barra fija lleva al cierre. Ver `components/home`.
+ *
+ * Todo lo que se afirma es del producto de hoy: las cifras salen de las plantillas y los planes
+ * reales, y no hay testimonios ni artículos que no existan.
  *
  * ## Qué se lee de la base de datos y qué no
  *
@@ -91,12 +100,9 @@ export default async function LandingPage({ searchParams }: PageProps) {
   const showcase = await browseShowcase.execute();
   const structures = demoStructures();
 
-  const toImage = (cover: { url: string; alt?: string | null }) => ({
-    url: cover.url,
-    alt: cover.alt ?? '',
-  });
+  const toImage = (cover: { url: string; alt?: string | null }) => ({ url: cover.url, alt: cover.alt ?? '' });
 
-  const rowTemplates = structures.map((structure) => ({
+  const templates: ShowcaseTemplate[] = structures.map((structure) => ({
     key: structure.structureKey,
     name: structure.name,
     tagline: structure.tagline,
@@ -105,40 +111,44 @@ export default async function LandingPage({ searchParams }: PageProps) {
     image: toImage(structure.cover),
   }));
 
-  const weddingCovers = structures
-    .filter((structure) => structure.eventTypeNames.includes('Boda'))
-    .map((structure) => toImage(structure.cover));
-
   return (
-    <div className={`landing min-h-svh ${stackHeadline.variable} ${stackText.variable}`}>
-      <RevealController />
+    <HomeCoupleProvider>
+      <div className={`home min-h-svh ${homeDisplay.variable}`}>
+        <HomeMotion />
+        <HomeHeader />
 
-      {acceso === 'limite' && (
-        <div role="status" className="bg-(--l-accent) px-5 py-3 text-center text-[15px] text-white">
-          Demasiados intentos desde tu conexión. Espera unos minutos y vuelve a abrir el enlace
-          que te compartieron.
-        </div>
-      )}
+        {acceso === 'limite' && (
+          <div role="status" className="relative z-40 bg-(--h-wine) px-5 pt-24 pb-3 text-center text-[15px] text-white">
+            Demasiados intentos desde tu conexión. Espera unos minutos y vuelve a abrir el enlace
+            que te compartieron.
+          </div>
+        )}
 
-      <main>
-        <LandingHero
-          frames={rowTemplates.slice(0, 5).map((template) => ({
-            key: template.key,
-            name: template.name,
-            eventTypes: template.eventTypes.join(' · '),
-            href: template.href,
-            image: template.image,
-          }))}
-        />
-        <TemplateRow templates={rowTemplates} />
-        <HowItWorks covers={weddingCovers.slice(0, 4)} />
-        <PanelPlate photos={rowTemplates.slice(5, 8).map((template) => template.image)} />
-        <PlansTable plans={showcase.plans} />
-        <FaqIndex items={FAQS} />
-        <ClosingCta templates={structures.map(({ entryKey, name }) => ({ key: entryKey, name }))} />
-      </main>
+        <main>
+          <HeroLive
+            photos={{
+              boda: toImage(demoImage(WEDDING_PHOTOS.exit, 2200, 1400)),
+              xv: toImage(demoImage(QUINCE_PHOTOS.night, 2200, 1400)),
+            }}
+          />
+          <TemplatesShowcase templates={templates} />
+          <HomePhone />
+          <LiveRsvp />
+          <StepsStack
+            photos={[
+              toImage(demoImage(WEDDING_PHOTOS.rings, 1200, 900)),
+              toImage(demoImage(QUINCE_PHOTOS.dress, 1200, 900)),
+              toImage(demoImage(WEDDING_PHOTOS.guests, 1200, 900)),
+            ]}
+          />
+          <HomePlans plans={showcase.plans} images={templates.slice(2, 5).map((template) => template.image)} />
+          <HomeFaq items={FAQS} />
+          <HomeCta />
+        </main>
 
-      <LandingFooter />
-    </div>
+        <HomeFooter templates={templates.slice(0, 6).map(({ name, href }) => ({ name, href }))} />
+        <MobileDock />
+      </div>
+    </HomeCoupleProvider>
   );
 }

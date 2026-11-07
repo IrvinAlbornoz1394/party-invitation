@@ -89,6 +89,7 @@ export function TemplateStudio({
   eventTypes,
   blocks,
   themes,
+  bare = false,
 }: {
   readonly template: DemoTemplate;
   readonly templates: readonly StudioTemplateOption[];
@@ -96,6 +97,8 @@ export function TemplateStudio({
   readonly eventTypes: readonly StudioEventType[];
   readonly blocks: readonly StudioBlock[];
   readonly themes: readonly StudioTheme[];
+  /** Sin mandos ni música: la invitación sola, para el teléfono de la página de inicio. */
+  readonly bare?: boolean;
 }) {
   const router = useRouter();
   const reduced = useReducedMotion();
@@ -195,9 +198,12 @@ export function TemplateStudio({
             No se remonta al cambiar de variante por la misma razón. Sí al cambiar de plantilla —el
             `key` está arriba, en el propio estudio—, que es correcto: es otra demo y otra pista.
           */}
-          <InvitationChrome musicUrl={template.music.url} musicTitle={template.music.title} />
+          {!bare && <InvitationChrome musicUrl={template.music.url} musicTitle={template.music.title} />}
         </ThemeScope>
       </RsvpDemoGateway>
+
+      {!bare && (
+        <>
 
       {/*
         La pestaña del canto. Se esconde mientras el panel está abierto para no quedar debajo de
@@ -373,6 +379,8 @@ export function TemplateStudio({
           </motion.aside>
         )}
       </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }
