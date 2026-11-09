@@ -73,14 +73,14 @@ export function TemplateWall({ templates, header }: { readonly templates: readon
                     onFocus={() => setActive(template.href)}
                     onBlur={() => setActive(null)}
                     className={clsx(
-                      'group relative block aspect-[4/3] overflow-hidden rounded-[10px] bg-(--h-paper-2) transition-[transform,opacity,box-shadow] duration-500 ease-(--h-ease)',
+                      'group relative block aspect-[9/16] overflow-hidden rounded-[10px] bg-(--h-paper-2) transition-[transform,opacity,box-shadow] duration-500 ease-(--h-ease)',
                       lit
                         ? '-translate-y-4 shadow-[0_40px_60px_-24px_rgba(74,26,44,0.55)] ring-2 ring-(--h-gold)'
                         : 'shadow-[0_18px_36px_-24px_rgba(74,26,44,0.45)]',
                       active && !lit && 'opacity-45',
                     )}
                   >
-                    <Image src={template.image.url} alt="" fill sizes="300px" className="object-cover" />
+                    <Image src={template.image.url} alt="" fill sizes="300px" className="object-cover object-top" />
                     <span
                       className={clsx(
                         'absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2b1a20]/85 to-transparent px-4 pt-10 pb-3 text-white transition-opacity duration-300',

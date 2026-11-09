@@ -11,6 +11,13 @@ import type { DemoTemplate } from '@/components/invitation/demo/templates';
 import { TemplateBlock } from '@/components/invitation/TemplateBlock';
 import { ThemeScope } from '@/components/invitation/theme/ThemeScope';
 import { parseInvitationTheme } from '@/domain/invitation/theme';
+import {
+  PERSONA_STORAGE_KEY,
+  personaFits,
+  personalizeTemplate,
+  readPersona,
+  type DemoPersona,
+} from './personalize';
 
 /**
  * El escaparate: una invitación completa que se puede desarmar y volver a armar en vivo.
@@ -171,6 +178,30 @@ export function TemplateStudio({
 
   const theme = parsedThemes.get(themeKey) ?? parseInvitationTheme({});
 
+  /*
+   * Los nombres y la fecha que la visitante escribió en la portada, para que la demo sea la suya
+   * (ver `personalize.ts`). Se leen al montar —en el servidor no existen— y se escucha `storage`:
+   * el teléfono de la portada mete esta demo en un iframe, y así cambia en vivo mientras ella
+   * escribe en la página de fuera.
+   */
+  const [persona, setPersona] = useState<DemoPersona | null>(null);
+  const [showSample, setShowSample] = useState(false);
+
+  useEffect(() => {
+    setPersona(readPersona());
+    const onStorage = (storageEvent: StorageEvent) => {
+      if (storageEvent.key === PERSONA_STORAGE_KEY) setPersona(readPersona());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const personalized = persona !== null && !showSample && personaFits(template, persona);
+  const shown = useMemo(
+    () => (personalized && persona ? personalizeTemplate(template, persona) : template),
+    [personalized, persona, template],
+  );
+
   return (
     <div className="relative min-h-svh">
       {/*
@@ -179,7 +210,7 @@ export function TemplateStudio({
       */}
       <RsvpDemoGateway>
         <ThemeScope theme={theme}>
-          {template.blocks.map((block) => (
+          {shown.blocks.map((block) => (
             <TemplateBlock key={block.blockKey} block={block} registryId={choices[block.blockKey]} />
           ))}
 
@@ -204,6 +235,25 @@ export function TemplateStudio({
 
       {!bare && (
         <>
+
+      {/*
+        El aviso de que la demo lleva sus datos, con la salida a la de muestra. Sin él, quien
+        escribió sus nombres hace una semana no entendería por qué la demo los sabe.
+      */}
+      {persona !== null && personaFits(template, persona) && (
+        <div className="fixed bottom-4 left-4 z-40 mb-[env(safe-area-inset-bottom)] flex max-w-[calc(100vw-6rem)] items-center gap-3 rounded-full border border-white/15 bg-neutral-900/80 py-1.5 pr-1.5 pl-4 text-[12.5px] text-white shadow-xl backdrop-blur-md">
+          <span className="truncate">
+            {showSample ? 'Viendo el ejemplo' : <>Con tus datos · <strong className="font-medium">{persona.names}</strong></>}
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowSample((current) => !current)}
+            className="shrink-0 rounded-full bg-white/12 px-3 py-1.5 text-[11.5px] transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+          >
+            {showSample ? 'Ver con mis datos' : 'Ver ejemplo'}
+          </button>
+        </div>
+      )}
 
       {/*
         La pestaña del canto. Se esconde mientras el panel está abierto para no quedar debajo de

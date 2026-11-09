@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Metadata } from 'next';
 import { demoImage, QUINCE_PHOTOS, WEDDING_PHOTOS } from '@/components/invitation/demo/photos';
 import { demoStructures } from '@/components/invitation/demo/templates';
@@ -102,14 +104,26 @@ export default async function LandingPage({ searchParams }: PageProps) {
 
   const toImage = (cover: { url: string; alt?: string | null }) => ({ url: cover.url, alt: cover.alt ?? '' });
 
+  /*
+   * Cada plantilla se enseña con una captura de su portada en un teléfono
+   * (`public/plantillas/capturas`, generadas con `scripts/capture-templates.mjs`): la foto de
+   * portada sola no dice cómo se ve la invitación, la captura sí. Si una plantilla nueva aún no
+   * tiene captura, sale con su foto.
+   */
+  const capture = (entryKey: string, name: string) =>
+    existsSync(join(process.cwd(), 'public', 'plantillas', 'capturas', `${entryKey}.webp`))
+      ? { url: `/plantillas/capturas/${entryKey}.webp`, alt: `La portada de la plantilla ${name} en un teléfono` }
+      : null;
+
   const templates: ShowcaseTemplate[] = structures.map((structure) => ({
     key: structure.structureKey,
     name: structure.name,
     tagline: structure.tagline,
     eventTypes: structure.eventTypeNames,
     href: `/plantillas/${structure.entryKey}`,
-    image: toImage(structure.cover),
+    image: capture(structure.entryKey, structure.name) ?? toImage(structure.cover),
   }));
+  const covers = structures.map((structure) => toImage(structure.cover));
 
   return (
     <HomeCoupleProvider>
@@ -141,7 +155,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
               toImage(demoImage(WEDDING_PHOTOS.guests, 1200, 900)),
             ]}
           />
-          <HomePlans plans={showcase.plans} images={templates.slice(2, 5).map((template) => template.image)} />
+          <HomePlans plans={showcase.plans} images={covers.slice(2, 5)} />
           <HomeFaq items={FAQS} />
           <HomeCta />
         </main>

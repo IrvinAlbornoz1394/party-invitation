@@ -29,7 +29,7 @@ export async function submitQuoteAction(
       guestRange: read(formData, 'guestRange'),
       templateKey: read(formData, 'templateKey'),
       planKey: read(formData, 'planKey'),
-      message: read(formData, 'message'),
+      message: withCelebrants(read(formData, 'celebrantNames'), read(formData, 'message')),
       website: read(formData, 'website'),
     },
     clientIpFromHeaders(await headers()),
@@ -60,6 +60,22 @@ export async function submitQuoteAction(
         message: 'Revisa tu nombre y tu teléfono: son los dos datos que necesitamos.',
       };
   }
+}
+
+/**
+ * Los nombres de los festejados, delante del mensaje.
+ *
+ * Llegan casi siempre rellenos desde la invitación de prueba de la portada, y son lo primero que
+ * quien atiende quiere saber. La tabla no tiene columna para ellos: en lugar de una migración para
+ * un dato que solo se lee, viajan como primera línea del mensaje —«Festejados: Ana & Luis»—, que
+ * es justo donde la bandeja y el correo de aviso ya lo enseñan. El total se corta en 1000, el
+ * límite del mensaje en el dominio, para que los nombres no hagan rechazar una solicitud válida.
+ */
+function withCelebrants(names: string, message: string): string {
+  const celebrants = names.slice(0, 80).trim();
+  if (!celebrants) return message;
+
+  return `Festejados: ${celebrants}${message ? `\n\n${message}` : ''}`.slice(0, 1000);
 }
 
 function read(formData: FormData, key: string): string {

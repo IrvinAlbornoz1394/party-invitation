@@ -1,9 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { gsap } from 'gsap';
+import { DESKTOP_QUERY, useMedia } from './useMedia';
 
 const FACTS = [
   { title: 'No descargan nada', detail: 'Se abre en el navegador de su teléfono.' },
@@ -28,6 +30,8 @@ const DEMOS = [
   { key: 'mirador', label: 'Boda' },
   { key: 'mirador-xv', label: 'XV años' },
 ] as const;
+
+type DemoKey = (typeof DEMOS)[number]['key'];
 
 /** La pantalla de un iPhone grande en CSS: la invitación se pinta a este tamaño y se escala. */
 const SCREEN = { width: 390, height: 844 };
@@ -64,15 +68,123 @@ const DEPTH = 16;
  * enlace a la demo completa.
  *
  * Con movimiento reducido no sigue al cursor, no flota y no se recorre sola.
+ *
+ * ## En el teléfono, una imagen
+ *
+ * Un `<iframe>` con otra página entera, girando en 3D dentro de un teléfono de verdad, es demasiado
+ * para un celular: se trababa. Ahí se enseña una captura de la misma demo
+ * (`public/plantillas/capturas`, ver `scripts/capture-templates.mjs`) en un teléfono plano, y la
+ * escena 3D con el `<iframe>` ni se monta.
  */
 export function HomePhone() {
+  const [demo, setDemo] = useState<DemoKey>('mirador');
+  const desktop = useMedia(DESKTOP_QUERY);
+
+  return (
+    <section
+      id="en-su-telefono"
+      aria-labelledby="telefono-titulo"
+      className="relative overflow-hidden bg-(--h-paper-2) px-5 pt-20 pb-24 sm:px-8 sm:pt-28 sm:pb-32"
+    >
+      <div className="mx-auto max-w-3xl text-center">
+        <span data-reveal className="h-eyebrow">
+          En su teléfono
+        </span>
+        <h2 id="telefono-titulo" className="h-heading mt-5 mb-0 text-(--h-ink)">
+          Así la reciben tus invitados
+        </h2>
+        <p data-reveal className="mx-auto mt-5 mb-0 max-w-xl text-(--h-muted)">
+          <span className="md:hidden">Es una invitación de verdad. Ábrela completa y recórrela.</span>
+          <span className="hidden md:inline">Es una invitación de verdad, funcionando. Gíralo con el mouse.</span>
+        </p>
+      </div>
+
+      <PhoneStill demo={demo} />
+      {/* La escena 3D solo se monta en tableta y escritorio; el hueco se reserva desde el HTML. */}
+      <div className="hidden md:block">{desktop && <Phone3D demo={demo} />}</div>
+
+      {/* Las funciones en el teléfono: debajo, en rejilla. */}
+      <ul className="mx-auto mt-14 grid max-w-md list-none grid-cols-2 gap-3 p-0 md:hidden">
+        {FACTS.map((fact) => (
+          <li key={fact.title} data-reveal className="rounded-[10px] bg-(--h-white) p-4 shadow-[0_16px_32px_-24px_rgba(43,15,26,0.45)]">
+            <p className="h-display m-0 text-[1rem] text-(--h-wine)">{fact.title}</p>
+            <p className="mt-1 mb-0 text-[13px] leading-snug text-(--h-muted)">{fact.detail}</p>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-12 flex flex-wrap items-center justify-center gap-3 md:mt-20">
+        <div role="group" aria-label="Qué invitación ver" className="flex gap-2">
+          {DEMOS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              aria-pressed={demo === option.key}
+              onClick={() => setDemo(option.key)}
+              className={clsx(
+                'rounded-full px-4 py-2 text-[12px] tracking-[0.18em] uppercase transition-colors',
+                demo === option.key
+                  ? 'bg-(--h-wine) text-(--h-wine-ink)'
+                  : 'bg-(--h-white) text-(--h-wine) shadow-[inset_0_0_0_1px_var(--h-line)] hover:bg-white',
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <Link href={`/plantillas/${demo}`} className="h-button h-button--ghost text-(--h-wine)">
+          Abrir la demo completa
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+/** El teléfono del celular: plano, con la captura de la demo, y todo él lleva a la demo completa. */
+function PhoneStill({ demo }: { readonly demo: DemoKey }) {
+  return (
+    <Link
+      href={`/plantillas/${demo}`}
+      aria-label="Abrir la invitación de muestra completa"
+      className="relative mx-auto mt-12 block w-[min(68vw,16rem)] md:hidden"
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-8 left-1/2 h-8 w-[85%] -translate-x-1/2 rounded-[50%] bg-[#2b0f1a] opacity-35 blur-xl"
+      />
+      <span
+        className="relative block rotate-[-3deg] rounded-[2.6rem] bg-[#170a0f] p-[3.5%] shadow-[0_40px_70px_-30px_rgba(30,8,16,0.75),inset_0_0_0_2px_#3a1a25]"
+        style={{ aspectRatio: `${SCREEN.width + 30} / ${SCREEN.height + 30}` }}
+      >
+        <span className="relative block h-full w-full overflow-hidden rounded-[2.1rem] bg-(--h-wine)">
+          <Image
+            key={demo}
+            src={`/plantillas/capturas/${demo}.webp`}
+            alt="Captura de la invitación de muestra en un teléfono"
+            fill
+            sizes="68vw"
+            className="object-cover object-top"
+          />
+          <span aria-hidden="true" className="absolute top-[1.6%] left-1/2 h-[3.2%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{ background: 'linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%)' }}
+          />
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+/** La escena 3D del escritorio, con la demo viva en un `<iframe>`. */
+function Phone3D({ demo }: { readonly demo: DemoKey }) {
   const stage = useRef<HTMLDivElement>(null);
   const phone = useRef<HTMLDivElement>(null);
   const shadow = useRef<HTMLDivElement>(null);
   const glare = useRef<HTMLDivElement>(null);
   const screen = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
-  const [demo, setDemo] = useState<(typeof DEMOS)[number]['key']>('mirador');
   const [scale, setScale] = useState(0.7);
   const tour = useRef<gsap.core.Tween | null>(null);
 
@@ -202,25 +314,8 @@ export function HomePhone() {
     });
   };
 
+  /* El escenario: aquí se escucha el puntero. */
   return (
-    <section
-      id="en-su-telefono"
-      aria-labelledby="telefono-titulo"
-      className="relative overflow-hidden bg-(--h-paper-2) px-5 pt-20 pb-24 sm:px-8 sm:pt-28 sm:pb-32"
-    >
-      <div className="mx-auto max-w-3xl text-center">
-        <span data-reveal className="h-eyebrow">
-          En su teléfono
-        </span>
-        <h2 id="telefono-titulo" className="h-heading mt-5 mb-0 text-(--h-ink)">
-          Así la reciben tus invitados
-        </h2>
-        <p data-reveal className="mx-auto mt-5 mb-0 max-w-xl text-(--h-muted)">
-          Es una invitación de verdad, funcionando. Gíralo con el mouse o con el dedo.
-        </p>
-      </div>
-
-      {/* El escenario: aquí se escucha el puntero. */}
       <div
         ref={stage}
         className="relative mx-auto mt-14 flex max-w-5xl cursor-grab touch-pan-y justify-center select-none active:cursor-grabbing sm:mt-20"
@@ -302,40 +397,5 @@ export function HomePhone() {
           })}
         </div>
       </div>
-
-      {/* Las funciones en el teléfono: debajo, en rejilla. */}
-      <ul className="mx-auto mt-20 grid max-w-md list-none grid-cols-2 gap-3 p-0 md:hidden">
-        {FACTS.map((fact) => (
-          <li key={fact.title} data-reveal className="rounded-[10px] bg-(--h-white) p-4 shadow-[0_16px_32px_-24px_rgba(43,15,26,0.45)]">
-            <p className="h-display m-0 text-[1rem] text-(--h-wine)">{fact.title}</p>
-            <p className="mt-1 mb-0 text-[13px] leading-snug text-(--h-muted)">{fact.detail}</p>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-16 flex flex-wrap items-center justify-center gap-3 md:mt-20">
-        <div role="group" aria-label="Qué invitación ver" className="flex gap-2">
-          {DEMOS.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              aria-pressed={demo === option.key}
-              onClick={() => setDemo(option.key)}
-              className={clsx(
-                'rounded-full px-4 py-2 text-[12px] tracking-[0.18em] uppercase transition-colors',
-                demo === option.key
-                  ? 'bg-(--h-wine) text-(--h-wine-ink)'
-                  : 'bg-(--h-white) text-(--h-wine) shadow-[inset_0_0_0_1px_var(--h-line)] hover:bg-white',
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-        <Link href={`/plantillas/${demo}`} className="h-button h-button--ghost text-(--h-wine)">
-          Abrir la demo completa
-        </Link>
-      </div>
-    </section>
   );
 }

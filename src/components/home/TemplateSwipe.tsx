@@ -249,7 +249,7 @@ function DeckCard({ template, depth, position, total, entryX, reduced, onDecide 
         fill
         draggable={false}
         sizes="360px"
-        className="pointer-events-none object-cover"
+        className="pointer-events-none object-cover object-top"
         priority={depth === 0 && position === 1}
       />
       {/* Las de atrás, más oscuras: así se lee que están debajo. */}

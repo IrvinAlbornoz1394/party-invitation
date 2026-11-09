@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import Image from 'next/image';
+import { useActionState, useEffect, useState } from 'react';
 
 /**
  * El formulario público de contacto.
@@ -20,6 +21,12 @@ import { useActionState } from 'react';
  * mirando. Es lo que convierte una solicitud en una propuesta: llega diciendo «quiere `botanical`
  * en Plus para 120 invitados en marzo» y la primera respuesta ya no es un cuestionario. Sin eso,
  * este formulario no ahorraría ni una conversación.
+ *
+ * Y desde la portada llega lo que la persona escribió en la invitación de prueba —qué celebra,
+ * quiénes y cuándo—, guardado en su navegador (`mievento.home.couple`, ver
+ * `components/home/HomeCouple.tsx`). Se lee al montar y rellena esos tres campos: ya lo dijo una
+ * vez, pedírselo de nuevo es justo el tipo de fricción que cuesta solicitudes. Sigue siendo
+ * editable, y si el navegador no guarda nada el formulario sale vacío como siempre.
  *
  * ## El campo trampa
  *
@@ -46,22 +53,29 @@ export function QuoteForm({
   readonly initialState: QuoteState;
 }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const fromHome = useHomeCouple(eventTypes);
 
   if (state.status === 'sent') {
     return (
-      <div className="border border-plum/15 bg-blush px-8 py-12 text-center">
-        <p className="m-0 font-display text-[clamp(1.5rem,4vw,2rem)] leading-tight text-plum">
-          Gracias
-        </p>
-        <p className="mx-auto mt-4 mb-0 max-w-md text-[15px] leading-relaxed text-ink/75">
+      <div className="rounded-[18px] bg-(--h-white) px-6 py-12 text-center shadow-[0_0_0_1px_var(--h-line),0_30px_60px_-40px_rgba(74,26,44,0.45)] sm:px-10">
+        <Image src="/brand/isologo.png" alt="" aria-hidden="true" width={851} height={693} sizes="64px" className="mx-auto h-auto w-16" />
+        <p className="h-script mt-4 mb-0 text-[2.6rem] leading-none text-(--h-wine)">Gracias</p>
+        <p className="mx-auto mt-4 mb-0 max-w-md text-[15.5px] leading-relaxed text-(--h-muted)">
           {state.message}
         </p>
+        <a href="/#plantillas" className="h-button h-button--ghost mt-8 text-(--h-wine)">
+          Seguir viendo plantillas
+        </a>
       </div>
     );
   }
 
+  const kind = fromHome?.kind ?? null;
+
   return (
-    <form action={formAction} className="grid gap-5">
+    /* `key` remonta los campos cuando llegan los datos de la portada: así pueden seguir sin
+       controlar (`defaultValue`) y el HTML del servidor —vacío— coincide con el primer render. */
+    <form key={fromHome ? 'portada' : 'vacio'} action={formAction} className="grid gap-5">
       {/* Lo que la persona estaba mirando cuando pulsó. Ver el comentario del componente. */}
       {planKey && <input type="hidden" name="planKey" value={planKey} />}
       {templateKey && <input type="hidden" name="templateKey" value={templateKey} />}
@@ -71,8 +85,21 @@ export function QuoteForm({
         <input type="text" name="website" tabIndex={-1} autoComplete="off" />
       </label>
 
+      {fromHome?.names && (
+        <p className="m-0 flex items-center gap-3 rounded-[14px] bg-(--h-paper-2) px-4 py-3 text-[14px] leading-snug text-(--h-muted)">
+          <span aria-hidden="true" className="size-2 shrink-0 rotate-45 bg-(--h-rose)" />
+          <span>
+            Tomamos los datos que escribiste en la portada:{' '}
+            <span className="h-script text-[1.35rem] text-(--h-wine)">{fromHome.names}</span>
+          </span>
+        </p>
+      )}
+
       {state.status === 'error' && (
-        <p role="alert" className="m-0 border border-plum/25 bg-blush px-4 py-3 text-[14px] text-plum">
+        <p
+          role="alert"
+          className="m-0 rounded-[14px] bg-(--h-wine)/8 px-4 py-3 text-[14px] text-(--h-wine) shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--h-wine)_25%,transparent)]"
+        >
           {state.message}
         </p>
       )}
@@ -92,15 +119,9 @@ export function QuoteForm({
       <Field name="contactEmail" label="Correo" type="email" autoComplete="email" optional />
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <label className="grid gap-2">
-          <span className="text-[12px] tracking-[0.14em] text-ink/70 uppercase">
-            Qué celebras
-          </span>
-          <select
-            name="eventTypeKey"
-            className="min-h-12 border border-plum/20 bg-white px-4 text-[15px] text-ink focus-visible:border-plum focus-visible:outline-none"
-            defaultValue=""
-          >
+        <label className="grid content-start gap-2">
+          <span className={LABEL}>Qué celebras</span>
+          <select name="eventTypeKey" className={CONTROL} defaultValue={fromHome?.eventTypeKey ?? ''}>
             <option value="">Aún no lo sé</option>
             {eventTypes.map((type) => (
               <option key={type.key} value={type.key}>
@@ -115,24 +136,31 @@ export function QuoteForm({
           label="Fecha"
           type="date"
           optional
+          defaultValue={fromHome?.date}
           hint="Si aún no la tienes, déjala vacía."
         />
       </div>
 
-      <label className="grid gap-2">
-        <span className="text-[12px] tracking-[0.14em] text-ink/70 uppercase">
-          Cuántos invitados, más o menos
-        </span>
+      {/*
+        No hay columna para esto en la tabla: la acción lo antepone al mensaje como
+        «Festejados: …». Ver `app/cotizar/actions.ts`.
+      */}
+      <Field
+        name="celebrantNames"
+        label={kind === 'xv' ? 'Nombre de la quinceañera' : kind === 'boda' ? 'Nombres de los novios' : 'Nombres de los festejados'}
+        optional
+        maxLength={80}
+        defaultValue={fromHome?.names}
+      />
+
+      <label className="grid content-start gap-2">
+        <span className={LABEL}>Cuántos invitados, más o menos</span>
         {/*
           Rangos y no un número: nadie sabe cuántos invitados va a tener con precisión seis meses
           antes, y pedir una cifra exacta hace que la gente se lo piense o se lo invente. El rango
           es además lo que de verdad decide el plan.
         */}
-        <select
-          name="guestRange"
-          className="min-h-12 border border-plum/20 bg-white px-4 text-[15px] text-ink focus-visible:border-plum focus-visible:outline-none"
-          defaultValue=""
-        >
+        <select name="guestRange" className={CONTROL} defaultValue="">
           <option value="">Todavía no lo sé</option>
           <option value="hasta-50">Hasta 50</option>
           <option value="50-100">Entre 50 y 100</option>
@@ -141,26 +169,18 @@ export function QuoteForm({
         </select>
       </label>
 
-      <label className="grid gap-2">
-        <span className="text-[12px] tracking-[0.14em] text-ink/70 uppercase">
-          Cuéntanos <span className="normal-case opacity-70">(opcional)</span>
+      <label className="grid content-start gap-2">
+        <span className={LABEL}>
+          Cuéntanos <span className="tracking-normal normal-case opacity-70">(opcional)</span>
         </span>
-        <textarea
-          name="message"
-          rows={4}
-          className="border border-plum/20 bg-white px-4 py-3 text-[15px] leading-relaxed text-ink focus-visible:border-plum focus-visible:outline-none"
-        />
+        <textarea name="message" rows={4} className={`${CONTROL} min-h-28 py-3 leading-relaxed`} />
       </label>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-2 inline-flex min-h-12 items-center justify-center bg-plum px-9 text-[12px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-plum-dark focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
-      >
+      <button type="submit" disabled={isPending} className="h-button h-button--wine mt-2 w-full disabled:opacity-60 sm:w-auto sm:justify-self-start sm:px-10">
         {isPending ? 'Enviando…' : 'Enviar solicitud'}
       </button>
 
-      <p className="m-0 text-[13px] leading-relaxed text-ink/60">
+      <p className="m-0 text-[13px] leading-relaxed text-(--h-muted)">
         Te escribimos por WhatsApp en menos de 24 horas. No compartimos tus datos con nadie.
       </p>
     </form>
@@ -171,6 +191,56 @@ export function QuoteForm({
 interface QuoteState {
   readonly status: 'idle' | 'sent' | 'error';
   readonly message: string;
+}
+
+/* 16px en el teléfono: con menos, Safari de iOS acerca la página al enfocar el campo. */
+const CONTROL =
+  'min-h-12 w-full rounded-[12px] border border-(--h-line) bg-(--h-white) px-4 text-[16px] text-(--h-ink) transition-[border-color,box-shadow] duration-200 focus-visible:border-(--h-wine) focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--h-wine)_14%,transparent)] focus-visible:outline-none';
+const LABEL = 'text-[11.5px] tracking-[0.16em] text-(--h-muted) uppercase';
+
+interface HomeCouple {
+  readonly kind: 'boda' | 'xv';
+  readonly names: string;
+  readonly date: string;
+  readonly eventTypeKey: string | null;
+}
+
+/** De la portada al catálogo: la portada habla de «boda» y «xv», el catálogo de sus claves. */
+const KIND_TO_EVENT_TYPE = { boda: 'wedding', xv: 'quince' } as const;
+
+/**
+ * Lo que la persona escribió en la portada, si lo hay. `null` en el servidor y en el primer
+ * render, para que los dos coincidan; llega en un efecto.
+ */
+function useHomeCouple(eventTypes: readonly { readonly key: string }[]): HomeCouple | null {
+  const [value, setValue] = useState<HomeCouple | null>(null);
+
+  useEffect(() => {
+    let saved: Partial<{ kind: unknown; names: unknown; date: unknown }>;
+    try {
+      saved = JSON.parse(window.localStorage.getItem('mievento.home.couple') ?? 'null') ?? {};
+    } catch {
+      return;
+    }
+    if (saved.kind !== 'boda' && saved.kind !== 'xv') return;
+
+    const names = typeof saved.names === 'string' ? saved.names.trim().slice(0, 80) : '';
+    /* La fecha de la portada existe siempre —si no escribió la suya, es una de ejemplo—, así que
+       solo se toma cuando escribió también sus nombres: es la señal de que esos datos son suyos. */
+    const date = names && typeof saved.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(saved.date) ? saved.date : '';
+    const key = KIND_TO_EVENT_TYPE[saved.kind];
+
+    setValue({
+      kind: saved.kind,
+      names,
+      date,
+      /* Solo si el catálogo de hoy tiene esa clave: un `<select>` con un valor que no está en sus
+         opciones se queda en blanco sin avisar. */
+      eventTypeKey: eventTypes.some((type) => type.key === key) ? key : null,
+    });
+  }, [eventTypes]);
+
+  return value;
 }
 
 /**
@@ -192,6 +262,8 @@ function Field({
   optional = false,
   hint,
   autoComplete,
+  defaultValue,
+  maxLength,
 }: {
   readonly name: string;
   readonly label: string;
@@ -200,21 +272,25 @@ function Field({
   readonly optional?: boolean;
   readonly hint?: string;
   readonly autoComplete?: string;
+  readonly defaultValue?: string;
+  readonly maxLength?: number;
 }) {
   return (
-    <label className="grid gap-2">
-      <span className="text-[12px] tracking-[0.14em] text-ink/70 uppercase">
+    <label className="grid content-start gap-2">
+      <span className={LABEL}>
         {label}
-        {optional && <span className="normal-case opacity-70"> (opcional)</span>}
+        {optional && <span className="tracking-normal normal-case opacity-70"> (opcional)</span>}
       </span>
       <input
         type={type}
         name={name}
         required={required}
         autoComplete={autoComplete}
-        className="min-h-12 border border-plum/20 bg-white px-4 text-[15px] text-ink focus-visible:border-plum focus-visible:outline-none"
+        defaultValue={defaultValue}
+        maxLength={maxLength}
+        className={CONTROL}
       />
-      {hint && <span className="text-[12.5px] text-ink/60">{hint}</span>}
+      {hint && <span className="text-[12.5px] text-(--h-muted)">{hint}</span>}
     </label>
   );
 }

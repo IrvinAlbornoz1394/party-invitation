@@ -1,5 +1,8 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { CalendarClock, MailQuestion } from 'lucide-react';
+import { homeDisplay } from '@/components/home/fonts';
+import '@/components/home/home.css';
 
 /**
  * Lo que ve quien tiene un código correcto pero la invitación todavía no está a la vista.
@@ -20,45 +23,59 @@ import { CalendarClock, MailQuestion } from 'lucide-react';
  * Porque hay un tercero que también llega hasta aquí: quien recibió el enlace de una invitación
  * que le gustó y quiere una para su fiesta. No es el visitante mayoritario, pero es el único que
  * puede convertirse en cliente, y dejarle una salida cuesta un enlace.
+ *
+ * Viste la ropa de la portada (`.home`: papel, vino, oro y la didona) porque es la cara de la
+ * marca que ve un invitado: si el enlace lo trae aquí, que al menos reconozca dónde está.
  */
 export function InvitationUnavailable({ reason }: { readonly reason: 'unpublished' | 'expired' }) {
   const copy = COPY[reason];
   const Icon = copy.icon;
 
   return (
-    <main className="flex min-h-svh w-full items-center justify-center bg-ivory px-6 py-20">
-      <div className="w-full max-w-md text-center">
-        <span
-          aria-hidden="true"
-          className="mx-auto grid size-16 place-items-center rounded-full bg-plum/8 text-plum"
-        >
-          <Icon size={26} strokeWidth={1.5} />
-        </span>
+    <div className={`home ${homeDisplay.variable}`}>
+      <main className="flex min-h-svh w-full items-center justify-center px-5 py-20">
+        <div className="w-full max-w-md rounded-[24px] bg-(--h-white) px-6 py-12 text-center shadow-[0_0_0_1px_var(--h-line),0_40px_80px_-50px_rgba(74,26,44,0.45)] sm:px-10">
+          <Image
+            src="/brand/logo.png"
+            alt="MiEvento"
+            width={2022}
+            height={487}
+            sizes="160px"
+            className="mx-auto h-8 w-auto"
+          />
 
-        <h1 className="mt-8 mb-0 font-display text-[clamp(1.9rem,5vw,2.6rem)] leading-tight font-medium text-ink">
-          {copy.title}
-        </h1>
-
-        <p className="mt-5 mb-0 text-[15.5px] leading-relaxed text-ink/75">{copy.body}</p>
-
-        {/*
-          Un filete y un enlace, no un botón: quien llega aquí venía a ver una invitación, y
-          ofrecerle contratar con el mismo peso que la noticia sería vender encima de un chasco.
-        */}
-        <span aria-hidden="true" className="mx-auto mt-10 block h-px w-14 bg-ink/15" />
-
-        <p className="mt-8 mb-0 text-[14px] leading-relaxed text-ink/60">
-          ¿Estás organizando la tuya?{' '}
-          <Link
-            href="/"
-            className="font-medium text-plum underline decoration-plum/30 underline-offset-4 transition-opacity hover:opacity-70"
+          <span
+            aria-hidden="true"
+            className="mx-auto mt-10 grid size-16 place-items-center rounded-full bg-(--h-paper-2) text-(--h-wine)"
           >
-            Mira cómo hacemos las invitaciones
-          </Link>
-          .
-        </p>
-      </div>
-    </main>
+            <Icon size={26} strokeWidth={1.5} />
+          </span>
+
+          <h1 className="h-display mt-7 mb-0 text-[clamp(1.8rem,6vw,2.4rem)] text-balance text-(--h-ink)">
+            {copy.title}
+          </h1>
+
+          <p className="mt-5 mb-0 text-[15.5px] leading-relaxed text-(--h-muted)">{copy.body}</p>
+
+          {/*
+            Un filete y un enlace, no un botón: quien llega aquí venía a ver una invitación, y
+            ofrecerle contratar con el mismo peso que la noticia sería vender encima de un chasco.
+          */}
+          <span aria-hidden="true" className="mx-auto mt-10 block h-px w-14 bg-(--h-line)" />
+
+          <p className="mt-8 mb-0 text-[14px] leading-relaxed text-(--h-muted)">
+            ¿Estás organizando la tuya?{' '}
+            <Link
+              href="/"
+              className="font-medium text-(--h-wine) underline decoration-(--h-wine)/30 underline-offset-4 transition-opacity hover:opacity-70"
+            >
+              Mira cómo hacemos las invitaciones
+            </Link>
+            .
+          </p>
+        </div>
+      </main>
+    </div>
   );
 }
 

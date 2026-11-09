@@ -5,26 +5,32 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 
+/* Con la ruta delante (`/#…`) para que sirvan también desde `/cotizar`; en la portada el
+   navegador lo trata como un salto dentro de la misma página. */
 const LINKS_LEFT = [
-  ['#plantillas', 'Plantillas'],
-  ['#como-funciona', 'Así funciona'],
-  ['#planes', 'Planes'],
+  ['/#plantillas', 'Plantillas'],
+  ['/#como-funciona', 'Así funciona'],
+  ['/#planes', 'Planes'],
 ] as const;
 
 /**
  * La cabecera fija. Sobre la portada es transparente, con el logotipo en blanco; en cuanto la
  * portada se va, se vuelve papel con el logotipo a color. Así el logo nunca queda vino sobre
  * una foto oscura ni blanco sobre el papel.
+ *
+ * En las páginas sin portada de foto (`/cotizar`) va `alwaysSolid`: papel desde el principio.
  */
-export function HomeHeader() {
-  const [solid, setSolid] = useState(false);
+export function HomeHeader({ alwaysSolid = false }: { readonly alwaysSolid?: boolean } = {}) {
+  const [scrolled, setScrolled] = useState(false);
+  const solid = alwaysSolid || scrolled;
 
   useEffect(() => {
-    const update = () => setSolid(window.scrollY > window.innerHeight * 0.75);
+    if (alwaysSolid) return;
+    const update = () => setScrolled(window.scrollY > window.innerHeight * 0.75);
     update();
     window.addEventListener('scroll', update, { passive: true });
     return () => window.removeEventListener('scroll', update);
-  }, []);
+  }, [alwaysSolid]);
 
   return (
     <header

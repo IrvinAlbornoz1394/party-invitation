@@ -2,11 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const EXPLORE = [
-  ['#plantillas', 'Plantillas'],
-  ['#como-funciona', 'Así funciona'],
-  ['#panel', 'El panel'],
-  ['#planes', 'Planes'],
-  ['#preguntas', 'Preguntas'],
+  ['/#plantillas', 'Plantillas'],
+  ['/#como-funciona', 'Así funciona'],
+  ['/#confirmaciones', 'Confirmaciones'],
+  ['/#planes', 'Planes'],
+  ['/#preguntas', 'Preguntas'],
   ['/panel', 'Entrar al panel'],
 ] as const;
 
