@@ -8,7 +8,7 @@ import { InvitationUnavailable } from '@/components/marketing/InvitationUnavaila
 import type { InvitationAccessResult } from '@/domain/events/invitation';
 import { asManagedRsvp } from '@/domain/invitation/blocks/rsvp';
 import { assembleInvitation } from '@/domain/invitation/event-content';
-import { parseInvitationTheme } from '@/domain/invitation/theme';
+import { resolveInvitationTheme } from '@/domain/invitation/palettes';
 import { resolveInvitation } from '@/infrastructure/container';
 import { clientIpFromHeaders } from '@/lib/request-ip';
 
@@ -127,7 +127,7 @@ export default async function InvitationPage({ params }: PageProps) {
   return (
     <InvitationVisitor slug={slug} code={code} guest={guest?.canReply ? guest : null}>
       <InvitationRenderer
-        theme={parseInvitationTheme(content.themeTokens)}
+        theme={resolveInvitationTheme(content.themeTokens, content.paletteKey)}
         blocks={blocks}
         musicUrl={content.musicUrl}
         musicTitle={content.musicTitle}

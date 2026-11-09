@@ -104,7 +104,7 @@ export class DrizzleEventRepository implements EventRepository {
            */
           const inserted = await tx.execute<{ id: string; [column: string]: unknown }>(
             sql`insert into public.events
-                  (client_id, event_type_key, plan_key, template_id, theme_id,
+                  (client_id, event_type_key, plan_key, template_id, theme_id, palette_key,
                    slug, access_code, title, celebrant_name,
                    starts_at, time_zone, client_fills_content, created_by)
                 values (
@@ -113,6 +113,7 @@ export class DrizzleEventRepository implements EventRepository {
                   ${input.planKey},
                   ${input.templateId}::uuid,
                   ${input.themeId}::uuid,
+                  ${input.paletteKey},
                   ${input.slug},
                   ${input.accessCode},
                   ${input.title},
@@ -966,13 +967,14 @@ export class DrizzleEventRepository implements EventRepository {
         plan_key: string;
         template_id: string;
         theme_id: string;
+        palette_key: string | null;
         date: string;
         time: string;
         time_zone: string;
         [column: string]: unknown;
       }>(
         sql`select id, client_id, status::text as status, title, event_type_key, plan_key,
-                   template_id, theme_id, time_zone,
+                   template_id, theme_id, palette_key, time_zone,
                    to_char(starts_at at time zone time_zone, 'YYYY-MM-DD') as date,
                    to_char(starts_at at time zone time_zone, 'HH24:MI') as time
               from public.events
@@ -992,6 +994,7 @@ export class DrizzleEventRepository implements EventRepository {
         planKey: row.plan_key,
         templateId: row.template_id,
         themeId: row.theme_id,
+        paletteKey: row.palette_key,
         date: row.date,
         time: row.time,
         timeZone: row.time_zone,
@@ -1071,7 +1074,8 @@ export class DrizzleEventRepository implements EventRepository {
             sql`update public.events e
                    set status = case
                          when e.status = 'published'
-                          and (e.title, e.starts_at, e.time_zone, e.plan_key, e.template_id, e.theme_id)
+                          and (e.title, e.starts_at, e.time_zone, e.plan_key, e.template_id, e.theme_id,
+                               e.palette_key)
                               is distinct from (
                                 ${details.title}::text,
                                 (${`${details.date} ${details.time}`}::timestamp
@@ -1079,7 +1083,8 @@ export class DrizzleEventRepository implements EventRepository {
                                 ${details.timeZone}::text,
                                 ${details.planKey}::text,
                                 ${details.templateId}::uuid,
-                                ${details.themeId}::uuid
+                                ${details.themeId}::uuid,
+                                ${details.paletteKey}::text
                               )
                            then 'draft'::event_status
                          else e.status
@@ -1091,6 +1096,7 @@ export class DrizzleEventRepository implements EventRepository {
                        plan_key = ${details.planKey},
                        template_id = ${details.templateId}::uuid,
                        theme_id = ${details.themeId}::uuid,
+                       palette_key = ${details.paletteKey},
                        expires_at = case
                          when ${planChanged} and e.published_at is not null
                            then e.published_at + make_interval(
@@ -1140,6 +1146,7 @@ export class DrizzleEventRepository implements EventRepository {
                     templateId: details.templateId,
                     previousTemplateId: before.template_id,
                     themeId: details.themeId,
+                    paletteKey: details.paletteKey,
                     unpublished,
                   })}::jsonb,
                   ${credentials.clientIp}::inet

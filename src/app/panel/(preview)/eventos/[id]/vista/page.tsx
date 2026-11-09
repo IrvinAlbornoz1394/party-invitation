@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { tenantScopeOf } from '@/domain/auth/actor';
 import { InvitationPreview } from '@/components/invitation/InvitationPreview';
-import { parseInvitationTheme } from '@/domain/invitation/theme';
+import { resolveInvitationTheme } from '@/domain/invitation/palettes';
 import { editEventContent } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
 
@@ -66,7 +66,7 @@ export default async function EventPreviewPage({
 
   return (
     <InvitationPreview
-      theme={parseInvitationTheme(loaded.content.themeTokens)}
+      theme={resolveInvitationTheme(loaded.content.themeTokens, loaded.content.paletteKey)}
       source={loaded.content.source}
       blocks={loaded.content.blocks}
       blockKey={bloque}

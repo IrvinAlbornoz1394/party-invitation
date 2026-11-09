@@ -41,6 +41,11 @@ export interface Invitation {
  */
 export interface InvitationContent {
   readonly themeTokens: unknown;
+  /**
+   * La paleta elegida para este evento, o `null` para los colores del tema. Quien pinta la junta
+   * con `themeTokens` usando `resolveInvitationTheme`, que le da prioridad a la paleta.
+   */
+  readonly paletteKey: string | null;
   /** El evento como fuente única del contenido. Ver `domain/invitation/event-content.ts`. */
   readonly source: EventContentSource;
   /** Los bloques configurados: qué variante, en qué orden y qué guarda cada uno. */

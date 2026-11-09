@@ -193,6 +193,7 @@ CREATE TABLE "events" (
 	"plan_key" text NOT NULL,
 	"template_id" uuid NOT NULL,
 	"theme_id" uuid NOT NULL,
+	"palette_key" text,
 	"slug" text NOT NULL,
 	"access_code" text NOT NULL,
 	"title" text NOT NULL,

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { paletteKeySchema } from '@/domain/invitation/palettes';
 import { isSupportedTimeZone } from './event-time-zone';
 
 /**
@@ -40,6 +41,8 @@ export interface EditableEventDetails {
   readonly planKey: string;
   readonly templateId: string;
   readonly themeId: string;
+  /** La paleta del banco que gana sobre los colores del tema; `null` = los del tema. */
+  readonly paletteKey: string | null;
   /** `YYYY-MM-DD` en la zona del evento. Ver `new-event.ts` sobre por qué viaja partida. */
   readonly date: string;
   /** `HH:MM` en la zona del evento. */
@@ -57,6 +60,7 @@ export const eventDetailsSchema = z.object({
   planKey: z.string().trim().min(1, 'Elige el plan contratado.'),
   templateId: z.uuid('Elige la plantilla con la que se arma la invitación.'),
   themeId: z.uuid('Elige el tema con el que se ve la invitación.'),
+  paletteKey: paletteKeySchema,
 });
 
 export type EventDetails = z.output<typeof eventDetailsSchema>;

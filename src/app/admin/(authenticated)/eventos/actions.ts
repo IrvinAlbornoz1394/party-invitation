@@ -45,6 +45,7 @@ export async function createEventAction(
     planKey: readText(formData, 'planKey'),
     templateId: readText(formData, 'templateId'),
     themeId: readText(formData, 'themeId'),
+    paletteKey: readText(formData, 'paletteKey'),
     title: readText(formData, 'title'),
     celebrantName: readText(formData, 'celebrantName'),
     date: readText(formData, 'date'),
@@ -154,6 +155,7 @@ export async function updateEventDetailsAction(
     planKey: readText(formData, 'planKey'),
     templateId: readText(formData, 'templateId'),
     themeId: readText(formData, 'themeId'),
+    paletteKey: readText(formData, 'paletteKey'),
   });
 
   switch (result.outcome) {

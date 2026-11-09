@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isReservedSlug, normalizeEventSlug, slugifyEventName } from './event-slug';
+import { paletteKeySchema } from '@/domain/invitation/palettes';
 import { isSupportedTimeZone } from './event-time-zone';
 
 /**
@@ -43,6 +44,8 @@ export const newEventSchema = z
     planKey: z.string().trim().min(1, 'Elige el plan contratado.'),
     templateId: z.uuid('Elige la plantilla con la que se arma la invitación.'),
     themeId: z.uuid('Elige el tema con el que se ve la invitación.'),
+    /** Opcional: vacío deja los colores del tema. Si viene, sus colores ganan sobre los del tema. */
+    paletteKey: paletteKeySchema,
     /*
      * El título es interno: es el nombre con el que el evento aparece en las dos tablas del
      * panel. No es lo que lee el invitado —eso lo compone la portada con el nombre de quien

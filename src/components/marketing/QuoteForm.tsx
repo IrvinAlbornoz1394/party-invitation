@@ -43,9 +43,12 @@ export function QuoteForm({
   eventTypes,
   planKey,
   templateKey,
+  paletteKey = null,
   action,
   initialState,
 }: {
+  /** La paleta con la que estaba viendo la plantilla, si cambió la original. */
+  readonly paletteKey?: string | null;
   readonly eventTypes: readonly { readonly key: string; readonly name: string }[];
   readonly planKey: string | null;
   readonly templateKey: string | null;
@@ -79,6 +82,7 @@ export function QuoteForm({
       {/* Lo que la persona estaba mirando cuando pulsó. Ver el comentario del componente. */}
       {planKey && <input type="hidden" name="planKey" value={planKey} />}
       {templateKey && <input type="hidden" name="templateKey" value={templateKey} />}
+      {paletteKey && <input type="hidden" name="paletteKey" value={paletteKey} />}
 
       <label className="absolute left-[-9999px] h-px w-px overflow-hidden" aria-hidden="true">
         No llenes esto

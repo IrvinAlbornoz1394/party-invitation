@@ -6,6 +6,7 @@ import { HomeFooter } from '@/components/home/HomeFooter';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import '@/components/home/home.css';
 import { QuoteForm } from '@/components/marketing/QuoteForm';
+import { findPalette } from '@/domain/invitation/palettes';
 import { browseShowcase } from '@/infrastructure/container';
 import { INITIAL_QUOTE_STATE } from './form-state';
 import { submitQuoteAction } from './actions';
@@ -58,13 +59,17 @@ const NEXT_STEPS = [
 export default async function QuotePage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ plan?: string; plantilla?: string }>;
+  readonly searchParams: Promise<{ plan?: string; plantilla?: string; paleta?: string }>;
 }) {
-  const [{ plan, plantilla }, showcase] = await Promise.all([searchParams, browseShowcase.execute()]);
+  const [{ plan, plantilla, paleta }, showcase] = await Promise.all([searchParams, browseShowcase.execute()]);
 
   const chosenTemplate = plantilla ? findDemoTemplate(plantilla)?.name : undefined;
   const chosenPlan = plan ? showcase.plans.find((option) => option.key === plan)?.name : undefined;
-  const chosen = [chosenTemplate, chosenPlan].filter(Boolean).join(' · ');
+  /* Solo una paleta del banco: el parámetro llega de la URL y no se enseña ni se guarda texto libre. */
+  const chosenPalette = findPalette(paleta);
+  const chosen = [chosenTemplate && chosenPalette ? `${chosenTemplate} en ${chosenPalette.name.toLowerCase()}` : chosenTemplate, chosenPlan]
+    .filter(Boolean)
+    .join(' · ');
 
   const footerTemplates = demoStructures()
     .slice(0, 6)
@@ -131,6 +136,7 @@ export default async function QuotePage({
               eventTypes={showcase.eventTypes.map((type) => ({ key: type.key, name: type.name }))}
               planKey={plan ?? null}
               templateKey={plantilla ?? null}
+              paletteKey={chosenPalette?.key ?? null}
               action={submitQuoteAction}
               initialState={INITIAL_QUOTE_STATE}
             />

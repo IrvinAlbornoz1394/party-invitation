@@ -59,6 +59,16 @@ export const events = pgTable(
     themeId: uuid('theme_id')
       .notNull()
       .references(() => themes.id, { onDelete: 'restrict' }),
+    /**
+     * La paleta con la que se pinta la invitación, encima del tema. `null` = los colores del tema.
+     *
+     * Cuando hay una, sus colores **ganan** sobre los del tema y todo lo demás del tema
+     * (tipografías, radios, ornamento, fotos) se queda. Es la clave de una paleta del banco
+     * (`domain/invitation/palettes.ts`), que vive en el código y no en una tabla: por eso no hay
+     * clave foránea. La valida el dominio al guardar, y si algún día se retira una paleta, la
+     * invitación cae a los colores del tema en lugar de romperse (`resolveInvitationTheme`).
+     */
+    paletteKey: text('palette_key'),
 
     /** Segmento público de la URL. Único globalmente porque la invitación se sirve en /<slug>/<code>. */
     slug: text('slug').notNull().unique(),

@@ -12,6 +12,7 @@ import type { ClientSummary } from '@/domain/clients/client-repository';
 import { slugifyEventName } from '@/domain/events/event-slug';
 import { DEFAULT_EVENT_TIME_ZONE, EVENT_TIME_ZONES } from '@/domain/events/event-time-zone';
 import { InvitationCell } from '../primitives/InvitationCell';
+import { PaletteSelect } from './PaletteSelect';
 import { matchesTemplate as matches, templateOf } from './event-template-options';
 
 /**
@@ -70,6 +71,7 @@ export function NewEventDialog({
   const [planKey, setPlanKey] = useState('');
   const [templateId, setTemplateId] = useState('');
   const [themeId, setThemeId] = useState('');
+  const [paletteKey, setPaletteKey] = useState('');
   const [celebrantName, setCelebrantName] = useState('');
   /*
    * La fecha y la hora también son estado, aunque el control nativo sepa guardárselo solo. Si no
@@ -119,6 +121,7 @@ export function NewEventDialog({
     setPlanKey('');
     setTemplateId('');
     setThemeId('');
+    setPaletteKey('');
     setCelebrantName('');
     setDate('');
     setTime('');
@@ -397,6 +400,19 @@ export function NewEventDialog({
         </FieldItem>
 
         <FieldItem
+          id="event-palette"
+          label={
+            <>
+              Paleta de color <span className="dash-form__hint">(opcional)</span>
+            </>
+          }
+          help="Opcional. Si eliges una, sus colores ganan sobre los del tema. Tipografía y adornos siguen siendo del tema."
+          error={state.errors.paletteKey}
+        >
+          <PaletteSelect value={paletteKey} onChange={setPaletteKey} eventTypeKey={eventTypeKey} />
+        </FieldItem>
+
+        <FieldItem
           id="event-slug"
           label={
             <>
@@ -454,6 +470,7 @@ export function NewEventDialog({
         <input type="hidden" name="planKey" value={planKey} />
         <input type="hidden" name="templateId" value={templateId} />
         <input type="hidden" name="themeId" value={themeId} />
+        <input type="hidden" name="paletteKey" value={paletteKey} />
         <input type="hidden" name="timeZone" value={timeZone} />
 
         <Button

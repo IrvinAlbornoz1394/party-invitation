@@ -106,6 +106,7 @@ const [row] = await tx
     musicUrl: events.musicUrl,
     musicTitle: events.musicTitle,
     themeTokens: themes.tokens,
+    paletteKey: events.paletteKey,
   })
   .from(events)
   .innerJoin(themes, eq(themes.id, events.themeId))
@@ -192,6 +193,7 @@ const gallery = await tx
 
 const content: InvitationContent = {
   themeTokens: row.themeTokens,
+  paletteKey: row.paletteKey,
   musicUrl: row.musicUrl,
   musicTitle: row.musicTitle,
   blocks,

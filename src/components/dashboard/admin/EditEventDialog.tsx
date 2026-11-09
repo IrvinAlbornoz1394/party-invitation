@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { Alert, Button, Input, Modal, Select, Skeleton } from 'antd';
+import { PaletteSelect } from './PaletteSelect';
 import {
   loadEventDetailsAction,
   updateEventDetailsAction,
@@ -98,6 +99,7 @@ function EditEventForm({
   const [planKey, setPlanKey] = useState(details.planKey);
   const [templateId, setTemplateId] = useState(details.templateId);
   const [themeId, setThemeId] = useState(details.themeId);
+  const [paletteKey, setPaletteKey] = useState(details.paletteKey ?? '');
 
   const [state, formAction, isPending] = useActionState(
     async (previous: EditEventState, formData: FormData) => {
@@ -144,6 +146,7 @@ function EditEventForm({
     planChanged ||
     templateId !== details.templateId ||
     themeId !== details.themeId ||
+    paletteKey !== (details.paletteKey ?? '') ||
     title.trim() !== details.title ||
     date !== details.date ||
     time !== details.time ||
@@ -254,6 +257,19 @@ function EditEventForm({
         />
       </FieldItem>
 
+      <FieldItem
+        id="edit-event-palette"
+        label={
+          <>
+            Paleta de color <span className="dash-form__hint">(opcional)</span>
+          </>
+        }
+        help="Si eliges una, sus colores ganan sobre los del tema. Tipografía y adornos siguen siendo del tema."
+        error={state.errors.paletteKey}
+      >
+        <PaletteSelect value={paletteKey} onChange={setPaletteKey} eventTypeKey={details.eventTypeKey} />
+      </FieldItem>
+
       {/*
         Lo que cambia por debajo se dice antes de guardar, y solo cuando aplica. En un evento
         publicado, cualquier cambio lo regresa a borrador: eso va primero, porque es lo que ven los
@@ -300,6 +316,7 @@ function EditEventForm({
       <input type="hidden" name="planKey" value={planKey} />
       <input type="hidden" name="templateId" value={templateId} />
       <input type="hidden" name="themeId" value={themeId} />
+      <input type="hidden" name="paletteKey" value={paletteKey} />
 
       <Button
         htmlType="submit"

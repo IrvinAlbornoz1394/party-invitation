@@ -1,5 +1,5 @@
 {
-  "id": "354b50ee-a005-4a16-a023-91dd169fde07",
+  "id": "93ab4154-ed9e-4472-8d86-adc7d3717e00",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1627,6 +1627,12 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "palette_key": {
+          "name": "palette_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "slug": {
           "name": "slug",

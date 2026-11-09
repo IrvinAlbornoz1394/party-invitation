@@ -1,6 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
+import { findPalette } from '@/domain/invitation/palettes';
 import { submitProspect } from '@/infrastructure/container';
 import { clientIpFromHeaders } from '@/lib/request-ip';
 import { INITIAL_QUOTE_STATE, type QuoteFormState } from './form-state';
@@ -29,7 +30,10 @@ export async function submitQuoteAction(
       guestRange: read(formData, 'guestRange'),
       templateKey: read(formData, 'templateKey'),
       planKey: read(formData, 'planKey'),
-      message: withCelebrants(read(formData, 'celebrantNames'), read(formData, 'message')),
+      message: withPaletteLine(
+        read(formData, 'paletteKey'),
+        withCelebrants(read(formData, 'celebrantNames'), read(formData, 'message')),
+      ),
       website: read(formData, 'website'),
     },
     clientIpFromHeaders(await headers()),
@@ -76,6 +80,20 @@ function withCelebrants(names: string, message: string): string {
   if (!celebrants) return message;
 
   return `Festejados: ${celebrants}${message ? `\n\n${message}` : ''}`.slice(0, 1000);
+}
+
+/**
+ * La paleta con la que miraba la plantilla, como primera línea del mensaje — «Paleta: Talavera».
+ *
+ * Mismo razonamiento que los festejados: es un dato que solo se lee y no merece columna. Solo se
+ * escribe si la clave existe en el banco (`domain/invitation/palettes.ts`), así que por aquí no
+ * entra texto libre aunque alguien edite el campo oculto.
+ */
+function withPaletteLine(paletteKey: string, message: string): string {
+  const palette = findPalette(paletteKey);
+  if (!palette) return message;
+
+  return `Paleta: ${palette.name}${message ? `\n${message}` : ''}`.slice(0, 1000);
 }
 
 function read(formData: FormData, key: string): string {
