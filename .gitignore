@@ -40,3 +40,7 @@ tsconfig.tsbuildinfo
 *.njsproj
 *.sln
 *.sw?
+
+# Archivos de herramientas de agente (no son del producto)
+/.taste-skill/
+/skills-lock.json
