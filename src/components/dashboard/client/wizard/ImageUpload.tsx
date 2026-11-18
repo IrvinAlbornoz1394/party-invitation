@@ -9,6 +9,7 @@ import {
   isMediaUrl,
   type ImageUploadResult,
 } from '@/domain/media/uploaded-image';
+import { shrinkImage } from './shrink-image';
 
 /**
  * Subir una foto del contenido, o pegar su enlace.
@@ -25,7 +26,13 @@ import {
 /** Sube un archivo y contesta su URL. El asistente la arma con el id del evento ya puesto. */
 export type UploadImage = (file: File) => Promise<ImageUploadResult>;
 
-const TOO_BIG = 'La foto pesa más de 10 MB. Prueba con una más ligera.';
+const TOO_BIG = 'La foto pesa demasiado. Prueba con una más ligera.';
+
+/**
+ * Lo que de verdad cabe en una subida: Vercel corta las peticiones de más de 4.5 MB, y el
+ * formulario añade algo encima del archivo. Se mide **después** de achicar la foto.
+ */
+const MAX_UPLOAD_BYTES = Math.min(MAX_IMAGE_BYTES, 4 * 1024 * 1024);
 const FAILED = 'No se pudo subir la foto. Inténtalo de nuevo.';
 
 export function ImageUpload({
@@ -49,17 +56,18 @@ export function ImageUpload({
 
   const note = problem ?? error ?? help;
 
-  async function send(file: File) {
+  async function send(original: File) {
     setProblem(null);
-
-    if (file.size > MAX_IMAGE_BYTES) {
-      setProblem(TOO_BIG);
-      return;
-    }
-
     setUploading(true);
 
     try {
+      const file = await shrinkImage(original);
+
+      if (file.size > MAX_UPLOAD_BYTES) {
+        setProblem(TOO_BIG);
+        return;
+      }
+
       const result = await upload(file);
 
       if (result.status === 'success') onChange(result.url);

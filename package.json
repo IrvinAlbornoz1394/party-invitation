@@ -18,6 +18,7 @@
     "db:platform-admin": "tsx scripts/platform-admin.ts",
     "db:check": "tsx scripts/check-rls.ts",
     "check:email": "tsx --conditions=react-server scripts/check-email.ts",
+    "check:media": "tsx --conditions=react-server scripts/check-media.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

@@ -96,6 +96,16 @@ const serverEnvSchema = z.object({
    */
   MEDIA_STORAGE_DIR: z.string().min(1).default('storage/media'),
 
+  /**
+   * Supabase Storage para las fotos. Con las dos primeras puestas se usa en lugar del disco local,
+   * que en Vercel no sirve. `SUPABASE_URL` es la del proyecto (`https://<ref>.supabase.co`) y la
+   * clave es la `service_role` (o la nueva `sb_secret_…`): **solo servidor**, nunca `NEXT_PUBLIC_`.
+   * Ver `infrastructure/media/supabase-image-storage.ts`.
+   */
+  SUPABASE_URL: z.union([z.literal(''), z.url()]).optional().transform((value) => value || undefined),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional().transform((value) => value || undefined),
+  MEDIA_BUCKET: z.string().min(1).default('media'),
+
   /** URL pública canónica; sirve para las URLs absolutas de Open Graph y los enlaces de acceso. */
   NEXT_PUBLIC_SITE_URL: z.url().default('http://localhost:3001'),
 });

@@ -22,7 +22,9 @@ export async function GET(
   return new Response(Buffer.from(image.bytes), {
     headers: {
       'Content-Type': image.contentType,
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      /* `s-maxage` para que la CDN de Vercel la guarde: con Supabase cada lectura es una petición
+         a Storage, y una foto no cambia nunca (su clave lleva un uuid). */
+      'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
     },
   });
 }

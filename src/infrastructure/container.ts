@@ -95,7 +95,9 @@ import type { EmailClient } from './notifications/email-client';
 import { GmailSmtpClient } from './notifications/gmail-smtp-client';
 import { ResendClient } from './notifications/resend-client';
 import { ResendEmailSender } from './notifications/resend-email-sender';
+import type { ImageStorage } from '@/domain/media/image-storage';
 import { LocalImageStorage } from './media/local-image-storage';
+import { SupabaseImageStorage } from './media/supabase-image-storage';
 import { DrizzleAuthRepository } from './repositories/drizzle-auth-repository';
 import { DrizzleCatalogRepository } from './repositories/drizzle-catalog-repository';
 import { DrizzleClientRepository } from './repositories/drizzle-client-repository';
@@ -417,10 +419,14 @@ export const deleteGuestGroup = new DeleteGuestGroup(guestRepository, eventRepos
 export const submitRsvp = new SubmitRsvp(guestRepository);
 
 /*
- * Las fotos subidas. Hoy, en una carpeta del disco; el día que haya bucket, aquí se cambia la
- * implementación y nada más. Ver `domain/media/uploaded-image.ts`.
+ * Las fotos subidas. Con Supabase configurado van a su Storage; si no, a una carpeta del disco, que
+ * vale para desarrollo pero no en Vercel (disco de solo lectura y efímero). Cambiar de una a otra
+ * no toca ninguna URL guardada: las dos se sirven por `/media/<clave>`.
  */
-const imageStorage = new LocalImageStorage(env.MEDIA_STORAGE_DIR);
+const imageStorage: ImageStorage =
+  env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY
+    ? new SupabaseImageStorage(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, env.MEDIA_BUCKET)
+    : new LocalImageStorage(env.MEDIA_STORAGE_DIR);
 
 export const uploadEventImage = new UploadEventImage(imageStorage);
 export const readEventImage = new ReadEventImage(imageStorage);
