@@ -57,6 +57,16 @@ const serverEnvSchema = z.object({
   AUTH_EMAIL_FROM: z.string().optional(),
 
   /**
+   * Cuenta de Gmail y su contraseña de aplicación, para mandar correo sin dominio propio.
+   *
+   * Si están las dos, se usan en lugar de Resend. Es el puente mientras no haya dominio
+   * verificado: Resend sin dominio solo le escribe al dueño de la cuenta. La contraseña se
+   * genera en https://myaccount.google.com/apppasswords (requiere verificación en dos pasos).
+   */
+  GMAIL_USER: z.string().optional(),
+  GMAIL_APP_PASSWORD: z.string().optional(),
+
+  /**
    * A dónde llega el aviso de una solicitud nueva del formulario público.
    *
    * Opcional, y su ausencia **no** rompe nada: sin ella el aviso se escribe en la consola y la

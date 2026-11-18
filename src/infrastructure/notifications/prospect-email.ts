@@ -5,7 +5,7 @@ import type {
   ProspectNotifier,
 } from '@/domain/prospects/prospect-notifier';
 import { env } from '@/lib/env';
-import type { ResendClient } from './resend-client';
+import type { EmailClient } from './email-client';
 
 const PRODUCT_NAME = 'MiEvento';
 
@@ -33,7 +33,7 @@ const PRODUCT_NAME = 'MiEvento';
  */
 export class ResendProspectNotifier implements ProspectNotifier {
   constructor(
-    private readonly client: ResendClient,
+    private readonly client: EmailClient,
     /** A dónde llega el aviso interno. Ver `PROSPECT_NOTICE_EMAIL` en `lib/env.ts`. */
     private readonly noticeTo: string,
   ) {}

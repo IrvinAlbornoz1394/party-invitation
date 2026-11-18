@@ -89,6 +89,8 @@ import {
   ResendProspectNotifier,
 } from './notifications/prospect-email';
 import { ChannelOtpSenderRouter } from './notifications/otp-sender-router';
+import type { EmailClient } from './notifications/email-client';
+import { GmailSmtpClient } from './notifications/gmail-smtp-client';
 import { ResendClient } from './notifications/resend-client';
 import { ResendEmailSender } from './notifications/resend-email-sender';
 import { LocalImageStorage } from './media/local-image-storage';
@@ -119,7 +121,15 @@ export const resolveInvitation = new ResolveInvitation(invitationRepository);
  * diagnosticar que un despliegue que no levanta: el primero se descubre por un cliente que
  * llama diciendo "no me llega el código".
  */
-function resendClient(): ResendClient | null {
+function emailClient(): EmailClient | null {
+  /*
+   * Gmail va primero: si alguien lo configuró es porque todavía no hay dominio verificado en
+   * Resend, y sin dominio Resend solo le escribe al dueño de la cuenta.
+   */
+  if (env.GMAIL_USER && env.GMAIL_APP_PASSWORD) {
+    return new GmailSmtpClient(env.GMAIL_USER, env.GMAIL_APP_PASSWORD);
+  }
+
   if (env.RESEND_API_KEY && env.AUTH_EMAIL_FROM) {
     return new ResendClient(env.RESEND_API_KEY, env.AUTH_EMAIL_FROM);
   }
@@ -130,13 +140,14 @@ function resendClient(): ResendClient | null {
 function buildSenders(): readonly OtpSender[] {
   const senders: OtpSender[] = [];
   const isProduction = env.NODE_ENV === 'production';
-  const client = resendClient();
+  const client = emailClient();
 
   if (client) {
     senders.push(new ResendEmailSender(client));
   } else if (isProduction) {
     throw new Error(
-      'Falta la configuración de correo: RESEND_API_KEY y AUTH_EMAIL_FROM son obligatorias ' +
+      'Falta la configuración de correo: GMAIL_USER y GMAIL_APP_PASSWORD, o RESEND_API_KEY y ' +
+        'AUTH_EMAIL_FROM, son obligatorias ' +
         'en producción. Sin ellas nadie puede recibir su código de acceso.',
     );
   } else {
@@ -208,7 +219,7 @@ let invitationNotifierInstance: InvitationNotifier | null = null;
 
 function invitationNotifier(): InvitationNotifier {
   if (invitationNotifierInstance === null) {
-    const client = resendClient();
+    const client = emailClient();
     invitationNotifierInstance = client
       ? new ResendInvitationNotifier(client)
       : new ConsoleInvitationNotifier();
@@ -241,7 +252,7 @@ let eventNotifierInstance: EventNotifier | null = null;
 
 function eventNotifier(): EventNotifier {
   if (eventNotifierInstance === null) {
-    const client = resendClient();
+    const client = emailClient();
 
     eventNotifierInstance = client ? new ResendEventNotifier(client) : new ConsoleEventNotifier();
   }
@@ -258,7 +269,7 @@ let prospectNotifierInstance: ProspectNotifier | null = null;
 
 function prospectNotifier(): ProspectNotifier {
   if (prospectNotifierInstance === null) {
-    const client = resendClient();
+    const client = emailClient();
 
     prospectNotifierInstance =
       client && env.PROSPECT_NOTICE_EMAIL

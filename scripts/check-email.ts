@@ -35,20 +35,27 @@ async function main(): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.AUTH_EMAIL_FROM;
   const noticeTo = process.env.PROSPECT_NOTICE_EMAIL;
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+  // Mismo orden que el contenedor: Gmail, si está, gana sobre Resend.
+  const useGmail = Boolean(gmailUser && gmailPassword);
 
   console.log('\n▸ Configuración de correo\n');
+  console.log(`  GMAIL_USER             ${describe(gmailUser)}`);
+  console.log(`  GMAIL_APP_PASSWORD     ${describe(gmailPassword, true)}`);
   console.log(`  RESEND_API_KEY         ${describe(apiKey, true)}`);
   console.log(`  AUTH_EMAIL_FROM        ${describe(from)}`);
   console.log(`  PROSPECT_NOTICE_EMAIL  ${describe(noticeTo)}`);
   console.log('');
+  console.log(`  Proveedor en uso: ${useGmail ? 'Gmail (SMTP)' : 'Resend'}\n`);
 
   /*
    * Las dos primeras son las que deciden si se manda algo. La tercera solo decide a dónde va el
    * aviso de prospectos, así que su ausencia se avisa y no detiene la prueba.
    */
-  if (!apiKey || !from) {
+  if (!useGmail && (!apiKey || !from)) {
     console.error(
-      '✗ Faltan RESEND_API_KEY o AUTH_EMAIL_FROM.\n\n' +
+      '✗ Faltan GMAIL_USER y GMAIL_APP_PASSWORD, o RESEND_API_KEY y AUTH_EMAIL_FROM.\n\n' +
         '  Sin las dos, la aplicación no manda ningún correo: los códigos de acceso se\n' +
         '  imprimen en la consola del servidor y los avisos de prospectos también.\n\n' +
         '  1. Crea una clave en https://resend.com/api-keys\n' +
@@ -83,11 +90,18 @@ async function main(): Promise<void> {
   // El import va aquí y no arriba a propósito: carga `lib/env.ts`, que valida el entorno entero al
   // importarse. Arriba, una variable ajena mal puesta abortaría antes de imprimir el diagnóstico
   // de las de correo, que es justo lo que este script viene a enseñar.
-  const { ResendClient } = await import('../src/infrastructure/notifications/resend-client.js');
+  const client = useGmail
+    ? new (await import('../src/infrastructure/notifications/gmail-smtp-client.js')).GmailSmtpClient(
+        gmailUser!,
+        gmailPassword!,
+      )
+    : new (await import('../src/infrastructure/notifications/resend-client.js')).ResendClient(
+        apiKey!,
+        from!,
+      );
 
   console.log(`▸ Enviando una prueba a ${to}…\n`);
 
-  const client = new ResendClient(apiKey, from);
   const result = await client.sendEmail({
     to,
     subject: 'Prueba de configuración · MiEvento',
@@ -96,13 +110,23 @@ async function main(): Promise<void> {
   });
 
   if (result.outcome === 'sent') {
-    console.log(`✓ Enviado. Resend lo aceptó${result.providerId ? ` (id ${result.providerId})` : ''}.\n`);
-    console.log('  Que Resend lo acepte no garantiza que llegue a la bandeja de entrada:');
-    console.log('  revisa el correo y, si no está, mira el registro en https://resend.com/emails\n');
+    console.log(`✓ Enviado. ${useGmail ? 'Gmail' : 'Resend'} lo aceptó${result.providerId ? ` (id ${result.providerId})` : ''}.\n`);
+    console.log('  Que lo acepte no garantiza que llegue a la bandeja de entrada: revisa el correo');
+    console.log(
+      useGmail
+        ? '  (también la carpeta de spam) y, si no está, mira "Enviados" en tu Gmail.\n'
+        : '  y, si no está, mira el registro en https://resend.com/emails\n',
+    );
     return;
   }
 
   console.error(`✗ No se envió: ${result.reason}\n`);
+  if (useGmail) {
+    console.error('  Con Gmail, casi siempre es la contraseña: tiene que ser una contraseña de');
+    console.error('  aplicación (https://myaccount.google.com/apppasswords), no la de la cuenta,');
+    console.error('  y la cuenta necesita la verificación en dos pasos activada.\n');
+    process.exit(1);
+  }
   console.error('  Las tres causas habituales, en orden de frecuencia:\n');
   console.error('  · El dominio de AUTH_EMAIL_FROM no está verificado en Resend. La API acepta');
   console.error('    la petición y el correo no llega a ninguna parte.');

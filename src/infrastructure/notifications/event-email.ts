@@ -5,7 +5,7 @@ import type {
   EventCreatedNotice,
   EventNotifier,
 } from '@/domain/events/event-notifier';
-import type { ResendClient } from './resend-client';
+import type { EmailClient } from './email-client';
 
 /**
  * Los dos avisos del ciclo de vida de un evento, por correo.
@@ -22,7 +22,7 @@ import type { ResendClient } from './resend-client';
 const PRODUCT_NAME = 'MiEvento';
 
 export class ResendEventNotifier implements EventNotifier {
-  constructor(private readonly client: ResendClient) {}
+  constructor(private readonly client: EmailClient) {}
 
   async notifyEventCreated(notice: EventCreatedNotice): Promise<boolean> {
     /* Solo el correo: el canal de WhatsApp todavía no existe. Cuando exista, este mismo aviso se

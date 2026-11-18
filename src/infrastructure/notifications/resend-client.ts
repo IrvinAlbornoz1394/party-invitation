@@ -23,6 +23,10 @@ import 'server-only';
  * los fallos debe ser uno solo. Duplicarlo garantizaría que las dos copias divergieran.
  */
 
+import type { EmailClient, EmailMessage, SendEmailResult } from './email-client';
+
+export type { SendEmailResult } from './email-client';
+
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 
 /**
@@ -34,29 +38,20 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails';
  */
 const TIMEOUT_MS = 8_000;
 
-export type SendEmailResult =
-  | { readonly outcome: 'sent'; readonly providerId: string | null }
-  | { readonly outcome: 'failed'; readonly reason: string };
-
 interface ResendResponse {
   id?: string;
   message?: string;
   name?: string;
 }
 
-export class ResendClient {
+export class ResendClient implements EmailClient {
   constructor(
     private readonly apiKey: string,
     /** Remitente verificado en Resend, con formato `Nombre <buzon@dominio>`. */
     readonly from: string,
   ) {}
 
-  async sendEmail(message: {
-    readonly to: string;
-    readonly subject: string;
-    readonly html: string;
-    readonly text: string;
-  }): Promise<SendEmailResult> {
+  async sendEmail(message: EmailMessage): Promise<SendEmailResult> {
     try {
       const response = await fetch(RESEND_ENDPOINT, {
         method: 'POST',

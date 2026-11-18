@@ -7,7 +7,7 @@ import type {
   TeamInvitation,
 } from '@/domain/auth/invitation-notifier';
 import { env } from '@/lib/env';
-import type { ResendClient } from './resend-client';
+import type { EmailClient } from './email-client';
 
 /**
  * Correo de alta en el panel.
@@ -28,7 +28,7 @@ function loginUrl(): string {
 }
 
 export class ResendInvitationNotifier implements InvitationNotifier {
-  constructor(private readonly client: ResendClient) {}
+  constructor(private readonly client: EmailClient) {}
 
   async send(invitation: TeamInvitation): Promise<InvitationDeliveryResult> {
     const result = await this.client.sendEmail({

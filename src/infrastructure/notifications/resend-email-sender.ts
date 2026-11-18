@@ -3,7 +3,7 @@ import 'server-only';
 import type { OtpChannel } from '@/domain/auth/otp-channel';
 import type { OtpDeliveryResult, OtpMessage, OtpSender } from '@/domain/auth/otp-sender';
 import { otpEmailSubject, otpHtmlBody, otpPlainTextBody } from './otp-message';
-import type { ResendClient } from './resend-client';
+import type { EmailClient } from './email-client';
 
 /**
  * Entrega del código de acceso por correo.
@@ -15,7 +15,7 @@ import type { ResendClient } from './resend-client';
 export class ResendEmailSender implements OtpSender {
   readonly channel: OtpChannel = 'email';
 
-  constructor(private readonly client: ResendClient) {}
+  constructor(private readonly client: EmailClient) {}
 
   async send(message: OtpMessage): Promise<OtpDeliveryResult> {
     const result = await this.client.sendEmail({
