@@ -1608,9 +1608,16 @@ const TEMPLATES: {
      * gigante en filete que se cruza a otra velocidad—. Ver `shared/Parallax.tsx`.
      *
      * Trece variantes nuevas, todas `depth`, así que no compite con ninguna plantilla de ningún
-     * tipo de evento. Sin bienvenida: la portada a pantalla completa ya es la entrada.
+     * tipo de evento.
+     *
+     * Nació sin bienvenida —la portada a pantalla completa hacía de entrada— y la ganó el
+     * 2026-11-18: sin una pantalla que tocar, la música esperaba al primer toque —deslizar no
+     * siempre cuenta como gesto para el navegador— y se podía recorrer la invitación entera en
+     * silencio; además se sentía distinta de las demás. `welcome.spotlight` es la que no
+     * rompe el registro: la foto a sangre y el nombre, sin papelería, como el resto de `mirador`.
      */
     blocks: [
+      { blockKey: 'welcome', variantKey: 'spotlight' },
       { blockKey: 'hero', variantKey: 'depth', isRequired: true, config: { showCountdown: false } },
       { blockKey: 'story', variantKey: 'depth', config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' } },
       { blockKey: 'protagonists', variantKey: 'depth', config: { eyebrow: null } },
