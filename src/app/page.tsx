@@ -115,6 +115,12 @@ export default async function LandingPage({ searchParams }: PageProps) {
       ? { url: `/plantillas/capturas/${entryKey}.webp`, alt: `La portada de la plantilla ${name} en un teléfono` }
       : null;
 
+  /* El recorrido de la tarjeta del mazo: la portada y dos pantallas más, pegadas en una tira. */
+  const tour = (entryKey: string) =>
+    existsSync(join(process.cwd(), 'public', 'plantillas', 'capturas', 'recorrido', `${entryKey}.webp`))
+      ? `/plantillas/capturas/recorrido/${entryKey}.webp`
+      : undefined;
+
   const templates: ShowcaseTemplate[] = structures.map((structure) => ({
     key: structure.structureKey,
     name: structure.name,
@@ -122,6 +128,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
     eventTypes: structure.eventTypeNames,
     href: `/plantillas/${structure.entryKey}`,
     image: capture(structure.entryKey, structure.name) ?? toImage(structure.cover),
+    tour: tour(structure.entryKey),
   }));
   const covers = structures.map((structure) => toImage(structure.cover));
 

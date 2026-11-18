@@ -14,4 +14,9 @@ export interface ShowcaseTemplate {
   /** La demo completa: `/plantillas/<clave>`. */
   readonly href: string;
   readonly image: HomeImage;
+  /**
+   * La portada y las pantallas que siguen, una debajo de otra (`capturas/recorrido`), para que la
+   * tarjeta del mazo las recorra sola. Sin ella la tarjeta se queda con la portada fija.
+   */
+  readonly tour?: string;
 }

@@ -203,7 +203,11 @@ function DeckCard({ template, depth, position, total, entryX, reduced, onDecide 
     return () => controls.stop();
   }, [x, entryX]);
 
+  /* Mientras se arrastra el recorrido se detiene: la tarjeta tiene que estarse quieta en la mano. */
+  const [dragging, setDragging] = useState(false);
+
   const onDragEnd = (_event: unknown, info: PanInfo) => {
+    setDragging(false);
     const far = Math.abs(info.offset.x) >= THRESHOLD;
     const fast = Math.abs(info.velocity.x) >= FLICK && Math.abs(info.offset.x) >= THRESHOLD * 0.35;
     if (!far && !fast) return;
@@ -234,6 +238,7 @@ function DeckCard({ template, depth, position, total, entryX, reduced, onDecide 
       dragConstraints={{ left: 0, right: 0 }}
       dragTransition={{ bounceStiffness: 260, bounceDamping: 26 }}
       whileDrag={reduced ? undefined : { scale: 1.02 }}
+      onDragStart={() => setDragging(true)}
       onDragEnd={onDragEnd}
       style={{ x, rotate, zIndex: 10 - depth, transformOrigin: '50% 90%', touchAction: 'pan-y' }}
       className={clsx(
@@ -252,6 +257,8 @@ function DeckCard({ template, depth, position, total, entryX, reduced, onDecide 
         className="pointer-events-none object-cover object-top"
         priority={depth === 0 && position === 1}
       />
+      {/* Solo la de arriba se recorre: las de atrás apenas asoman y gastarían batería. */}
+      {active && template.tour && !reduced && <CardTour src={template.tour} paused={dragging} />}
       {/* Las de atrás, más oscuras: así se lee que están debajo. */}
       <div aria-hidden="true" className={clsx('absolute inset-0 transition-colors duration-300', active ? 'bg-transparent' : 'bg-(--h-wine)/30')} />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[#2b1a20]/90 via-[#2b1a20]/45 to-transparent" />
@@ -292,6 +299,106 @@ function DeckCard({ template, depth, position, total, entryX, reduced, onDecide 
         </Link>
       </div>
     </motion.div>
+  );
+}
+
+/** Velocidad del paseo (px/s) y las pausas, en segundos: arriba para leer el nombre, abajo para ver. */
+const TOUR_SPEED = 220;
+const TOUR_HOLD_TOP = 1.6;
+const TOUR_HOLD_BOTTOM = 1.4;
+const TOUR_BACK = 0.9;
+
+/**
+ * El paseo por la plantilla: la portada y las dos pantallas que siguen, recorridas solas, de arriba
+ * abajo y de vuelta.
+ *
+ * ## Por qué solo y no con el dedo
+ *
+ * La tarjeta ya tiene dos gestos: de lado decide y hacia arriba baja la página (`pan-y`). Un tercer
+ * gesto vertical dentro de la tarjeta pelearía con el de la página, y en el teléfono quien baja
+ * la página se quedaría atrapado dentro de la tarjeta. El paseo automático enseña lo mismo sin
+ * pedirle nada: en unos segundos se ve cómo sigue la invitación debajo de la portada.
+ *
+ * La tira empieza con la misma captura que la portada fija de debajo, así que al aparecer no salta.
+ * Solo se mueve con la tarjeta a la vista y se detiene mientras se arrastra. Con movimiento
+ * reducido no se monta y queda la portada.
+ */
+function CardTour({ src, paused }: { readonly src: string; readonly paused: boolean }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const y = useMotionValue(0);
+  const [distance, setDistance] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const progress = useTransform(y, [0, -Math.max(distance, 1)], [0, 1]);
+
+  const measure = useCallback(() => {
+    const frame = frameRef.current;
+    const image = imageRef.current;
+    if (!frame || !image || !image.complete || image.naturalWidth === 0) return;
+    setDistance(Math.max(0, image.offsetHeight - frame.offsetHeight));
+  }, []);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    measure();
+    const resize = new ResizeObserver(measure);
+    resize.observe(frame);
+    /* Arranca cuando la tarjeta está casi entera en pantalla: si empezara antes, al llegar ya iría
+       a medio camino. */
+    const seen = new IntersectionObserver(([entry]) => setVisible(entry?.isIntersecting ?? false), { threshold: 0.6 });
+    seen.observe(frame);
+    return () => {
+      resize.disconnect();
+      seen.disconnect();
+    };
+  }, [measure]);
+
+  useEffect(() => {
+    if (!visible || paused || distance === 0) return;
+    const down = distance / TOUR_SPEED;
+    const total = TOUR_HOLD_TOP + down + TOUR_HOLD_BOTTOM + TOUR_BACK;
+    const at = (seconds: number) => seconds / total;
+    /* Si se pausó a medio camino (al arrastrar), primero sube con calma y luego empieza el ciclo. */
+    let loop: ReturnType<typeof animate> | null = null;
+    let cancelled = false;
+    const back = animate(y, 0, { duration: y.get() === 0 ? 0 : TOUR_BACK, ease: 'easeInOut' });
+    back.then(() => {
+      if (cancelled) return;
+      loop = animate(y, [0, 0, -distance, -distance, 0], {
+        duration: total,
+        times: [0, at(TOUR_HOLD_TOP), at(TOUR_HOLD_TOP + down), at(TOUR_HOLD_TOP + down + TOUR_HOLD_BOTTOM), 1],
+        ease: ['linear', 'easeInOut', 'linear', 'easeInOut'],
+        repeat: Infinity,
+      });
+    });
+    return () => {
+      cancelled = true;
+      back.stop();
+      loop?.stop();
+    };
+  }, [visible, paused, distance, y]);
+
+  return (
+    <div ref={frameRef} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* `img` y no `next/image`: es un WebP alto hecho a medida y se mide su altura real. */}
+      <motion.img
+        ref={imageRef}
+        src={src}
+        alt=""
+        draggable={false}
+        decoding="async"
+        onLoad={measure}
+        style={{ y }}
+        className="absolute inset-x-0 top-0 h-auto w-full"
+      />
+      {/* Por dónde va el paseo: dice que debajo de la portada hay más invitación. */}
+      {distance > 0 && (
+        <span className="absolute top-14 right-2 bottom-24 w-[3px] overflow-hidden rounded-full bg-white/25">
+          <motion.span style={{ scaleY: progress }} className="block size-full origin-top rounded-full bg-white/85" />
+        </span>
+      )}
+    </div>
   );
 }
 
