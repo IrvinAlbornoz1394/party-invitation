@@ -7,7 +7,7 @@ const EXPLORE = [
   ['/#confirmaciones', 'Confirmaciones'],
   ['/#planes', 'Planes'],
   ['/#preguntas', 'Preguntas'],
-  ['/panel', 'Entrar al panel'],
+  ['/acceso', 'Entrar al panel'],
 ] as const;
 
 /**

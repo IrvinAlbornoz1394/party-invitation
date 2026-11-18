@@ -19,6 +19,12 @@ const BUTTERFLY = requireDesignAsset('symbol-butterfly-line-001');
  * rodea: aquel lleva un moño de satín a color y una cinta de lado a lado; este, un moño
  * **dibujado** que toma el color del tema y rosas de un solo trazo, como un grabado.
  *
+ * ## La salida
+ *
+ * La tarjeta se va hacia arriba, como si alguien la levantara para leerla, y lo demás —el papel,
+ * las rosas, el botón— no se mueve: se desenfoca y se desvanece, y la invitación aparece detrás
+ * pasando de borrosa a nítida. Las reglas están en `globals.css` (`inv-card-lift-*`), las mismas que `welcome.ribbon`.
+ *
  * Sin foto, a propósito, como `ribbon`: la primera fotografía de `coquette` es la tira de la
  * historia, y la portada que se abre detrás es una tarjeta, no un retrato.
  */
@@ -33,19 +39,19 @@ export function WelcomeKeepsake({ content }: WelcomeVariantProps) {
       <DesignAsset
         asset={ROSES}
         rotate={180}
-        className="pointer-events-none absolute -top-2 -right-2 w-48 text-inv-primary opacity-60 sm:w-64"
+        className="inv-card-lift-deco pointer-events-none absolute -top-2 -right-2 w-48 text-inv-primary opacity-60 sm:w-64"
       />
       <DesignAsset
         asset={ROSES}
-        className="pointer-events-none absolute -bottom-2 -left-2 w-48 text-inv-primary opacity-60 sm:w-64"
+        className="inv-card-lift-deco pointer-events-none absolute -bottom-2 -left-2 w-48 text-inv-primary opacity-60 sm:w-64"
       />
       <DesignAsset
         asset={BUTTERFLY}
         rotate={-14}
-        className="pointer-events-none absolute top-[16%] left-[8%] w-12 text-inv-primary opacity-55"
+        className="inv-card-lift-deco pointer-events-none absolute top-[16%] left-[8%] w-12 text-inv-primary opacity-55"
       />
 
-      <BowCard className="relative w-[min(84vw,20rem)]" innerClassName="pt-14 pb-10">
+      <BowCard className="inv-card-lift relative w-[min(84vw,20rem)]" innerClassName="pt-14 pb-10">
         {hasText(content.eventTypeLabel) && (
           <p className="m-0 font-inv-display text-[11px] tracking-[0.34em] text-inv-ink-soft uppercase">
             {content.eventTypeLabel}
@@ -78,7 +84,7 @@ export function WelcomeKeepsake({ content }: WelcomeVariantProps) {
         )}
       </BowCard>
 
-      <WelcomeOpenButton label={content.openLabel} tone="onSurface" className="relative mt-10" />
+      <WelcomeOpenButton label={content.openLabel} tone="onSurface" className="inv-card-lift-deco relative mt-10" />
     </WelcomeShell>
   );
 }

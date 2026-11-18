@@ -16,6 +16,11 @@ import { hasText } from '../../shared/has-text';
  * Debajo, el nombre en el color de acento y las alianzas: la jerarquía de la referencia, donde lo
  * que se lee primero es «Nuestra boda» y solo después quiénes se casan.
  *
+ * ## La salida: se entra por el rótulo
+ *
+ * Como `welcome.monogram`: lo pequeño se apaga, el rótulo encendido crece hasta atravesarlo y la
+ * foto se acerca detrás (`inv-zoom-*` en `globals.css`).
+ *
  * ## El coste de un halo
  *
  * `drop-shadow` obliga al navegador a rasterizar el texto en una capa aparte. Sobre un rótulo de
@@ -34,9 +39,9 @@ export function WelcomeLuminous({ content }: WelcomeVariantProps) {
           {content.image ? (
             /* La fotografía se oscurece y se desenfoca un punto: es el fondo del rótulo, no el
                tema de la pantalla. Sin el desenfoque, los pétalos compiten con la caligrafía. */
-            <BlockImage image={content.image} priority className="-z-20 scale-105 blur-[2px]" />
+            <BlockImage image={content.image} priority className="inv-zoom-photo -z-20 scale-105 blur-[2px]" />
           ) : (
-            <div aria-hidden="true" className="absolute inset-0 -z-20 bg-inv-primary" />
+            <div aria-hidden="true" className="inv-zoom-photo absolute inset-0 -z-20 bg-inv-primary" />
           )}
           <div aria-hidden="true" className="absolute inset-0 -z-10 inv-scrim" data-from="all" />
         </>
@@ -44,14 +49,15 @@ export function WelcomeLuminous({ content }: WelcomeVariantProps) {
     >
       <div className="relative flex max-w-sm flex-col items-center">
         {hasText(content.eventTypeLabel) && (
-          <p className="m-0 font-inv-script text-[clamp(2.75rem,15vw,4.75rem)] leading-[0.9] drop-shadow-[0_0_16px_currentColor]">
+          <p className="inv-zoom-mark m-0 font-inv-script text-[clamp(2.75rem,15vw,4.75rem)] leading-[0.9] drop-shadow-[0_0_16px_currentColor]">
             {content.eventTypeLabel}
           </p>
         )}
 
         <h2
           className={clsx(
-            hasText(content.eventTypeLabel) ? 'mt-8' : 'mt-0',
+            /* Sin rótulo, el que se atraviesa al entrar es el nombre. */
+            hasText(content.eventTypeLabel) ? 'mt-8' : 'inv-zoom-mark mt-0',
             'mb-0 font-inv-display text-[clamp(1.6rem,7vw,2.4rem)] leading-tight font-normal text-inv-accent',
           )}
         >

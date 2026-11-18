@@ -18,6 +18,9 @@ const CORNER = requireDesignAsset('corner-floral-blush-001');
  * ramilletes de acuarela. Abrirla es desatar el moño, y la portada que aparece detrás repite la
  * flor y el moño de la referencia.
  *
+ * Al abrirla, la tarjeta se levanta y sale por arriba y el resto se desenfoca y se desvanece: la
+ * misma salida que `welcome.keepsake` (`inv-card-lift-*` en `globals.css`).
+ *
  * La cinta es un filete del color principal, no un dibujo: a ese grosor, la pieza dibujada se
  * reduciría a una raya, y así cruza la tarjeta entera a cualquier ancho.
  *
@@ -34,15 +37,15 @@ export function WelcomeRibbon({ content }: WelcomeVariantProps) {
     >
       <DesignAsset
         asset={CORNER}
-        className="pointer-events-none absolute top-0 left-0 w-44 opacity-95 sm:w-60"
+        className="inv-card-lift-deco pointer-events-none absolute top-0 left-0 w-44 opacity-95 sm:w-60"
       />
       <DesignAsset
         asset={CORNER}
         rotate={180}
-        className="pointer-events-none absolute right-0 bottom-0 w-40 opacity-90 sm:w-56"
+        className="inv-card-lift-deco pointer-events-none absolute right-0 bottom-0 w-40 opacity-90 sm:w-56"
       />
 
-      <div className="relative w-[min(84vw,21rem)]">
+      <div className="inv-card-lift relative w-[min(84vw,21rem)]">
         <div className="relative bg-inv-surface px-7 pt-20 pb-12 text-center shadow-[0_24px_50px_-30px_rgba(90,48,58,0.5)]">
           {/* La cinta: cruza la tarjeta de lado a lado por debajo del moño. */}
           <span
@@ -101,7 +104,7 @@ export function WelcomeRibbon({ content }: WelcomeVariantProps) {
         </div>
       </div>
 
-      <WelcomeOpenButton label={content.openLabel} tone="onSurface" className="relative mt-10" />
+      <WelcomeOpenButton label={content.openLabel} tone="onSurface" className="inv-card-lift-deco relative mt-10" />
     </WelcomeShell>
   );
 }

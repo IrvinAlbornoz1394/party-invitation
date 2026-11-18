@@ -825,6 +825,267 @@
   animation: none;
 }
 
+/* ── `welcome.monogram` y `welcome.luminous`: se entra por la letra ──
+ *
+ * En lugar de subir, la cámara avanza. El rótulo, el nombre, la fecha y el botón se apagan en el
+ * primer tercio —son lo que «se queda atrás»—; el monograma crece hasta que sus letras salen de la
+ * pantalla, que es la sensación de pasar a través de él; y la foto se acerca más despacio, porque
+ * está más lejos. El telón solo se funde al final, cuando ya no queda nada que leer en él.
+ */
+@keyframes inv-zoom-gate {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes inv-zoom-mark {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(9);
+    opacity: 0;
+  }
+}
+/* Sin `from`: parte de la escala que ya tenga la foto (la de `luminous` está a 1.05). */
+@keyframes inv-zoom-photo {
+  to {
+    transform: scale(1.45);
+  }
+}
+@keyframes inv-zoom-text-out {
+  to {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+.inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] {
+  animation: inv-zoom-gate 1.3s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+  box-shadow: none;
+}
+/* El contenido no se mueve en bloque: cada pieza tiene su distancia. */
+.inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-gate__content {
+  animation: none;
+  overflow: hidden;
+}
+.inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-gate__content > div > :not(.inv-zoom-mark) {
+  animation: inv-zoom-text-out 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+.inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-zoom-mark {
+  animation: inv-zoom-mark 1.3s cubic-bezier(0.7, 0, 0.25, 1) forwards;
+  will-change: transform, opacity;
+}
+.inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-zoom-photo {
+  animation: inv-zoom-photo 1.3s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sin cámara: el mismo fundido corto que los otros telones. */
+  .inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] {
+    animation: inv-gate-fade-out 0.22s ease-out forwards;
+  }
+  .inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-gate__content > div > :not(.inv-zoom-mark),
+  .inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-zoom-mark,
+  .inv-gate:is([data-variant='monogram'], [data-variant='luminous'])[data-state='leaving'] .inv-zoom-photo {
+    animation: none;
+  }
+}
+
+/* ── `welcome.keepsake` y `welcome.ribbon`: la tarjeta se levanta y el resto se disuelve ──
+ *
+ * Solo la tarjeta se mueve: toma impulso hacia abajo y sale por arriba. El papel de fondo no sube
+ * como un telón; se vuelve transparente mientras un desenfoque sobre la invitación de detrás se
+ * va aclarando, así que la página aparece «enfocándose» en lugar de destaparse.
+ */
+@keyframes inv-card-lift-gate {
+  from {
+    background-color: var(--inv-color-background);
+    backdrop-filter: blur(18px);
+  }
+  30% {
+    background-color: var(--inv-color-background);
+    backdrop-filter: blur(18px);
+  }
+  to {
+    background-color: transparent;
+    backdrop-filter: blur(0);
+  }
+}
+@keyframes inv-card-lift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+  18% {
+    transform: translate3d(0, 0.9rem, 0) rotate(0.6deg);
+  }
+  to {
+    transform: translate3d(0, -120svh, 0) rotate(-5deg);
+  }
+}
+@keyframes inv-card-lift-deco-out {
+  to {
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+
+.inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] {
+  animation: inv-card-lift-gate 1.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  box-shadow: none;
+}
+.inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] .inv-gate__content {
+  animation: none;
+}
+.inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] .inv-card-lift {
+  animation: inv-card-lift 1.05s cubic-bezier(0.55, 0, 0.25, 1) forwards;
+  will-change: transform;
+}
+.inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] .inv-card-lift-deco {
+  animation: inv-card-lift-deco-out 0.6s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] {
+    animation: inv-gate-fade-out 0.22s ease-out forwards;
+  }
+  .inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] .inv-card-lift,
+  .inv-gate:is([data-variant='keepsake'], [data-variant='ribbon'])[data-state='leaving'] .inv-card-lift-deco {
+    animation: none;
+  }
+}
+
+/* ── `welcome.torn`: el papel sube y se entra en la foto ──
+ *
+ * El papel no se traslada: se le quita altura por arriba con un margen negativo, y como la foto es
+ * el `flex-1` de al lado, crece sola hasta ocupar la pantalla entera. Moverlo con `transform`
+ * dejaría la foto en su franja de abajo y el hueco de arriba vacío. A la vez la imagen se acerca,
+ * y el telón entero solo se funde al final, cuando la foto ya lo llena todo.
+ */
+@keyframes inv-torn-gate {
+  0%,
+  62% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes inv-torn-paper {
+  to {
+    margin-top: calc(var(--inv-viewport, 100svh) * -0.64);
+  }
+}
+@keyframes inv-torn-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.4);
+  }
+}
+@keyframes inv-torn-caption {
+  to {
+    opacity: 0;
+    transform: translate3d(0, 1rem, 0);
+  }
+}
+
+.inv-gate[data-variant='torn'][data-state='leaving'] {
+  animation: inv-torn-gate 1.45s linear forwards;
+  box-shadow: none;
+}
+.inv-gate[data-variant='torn'][data-state='leaving'] .inv-gate__content {
+  animation: none;
+  overflow: hidden;
+}
+.inv-gate[data-variant='torn'][data-state='leaving'] .inv-torn-paper {
+  animation: inv-torn-paper 0.9s cubic-bezier(0.7, 0, 0.25, 1) forwards;
+}
+.inv-gate[data-variant='torn'][data-state='leaving'] .inv-torn-zoom {
+  animation: inv-torn-zoom 1.45s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+.inv-gate[data-variant='torn'][data-state='leaving'] .inv-torn-caption {
+  animation: inv-torn-caption 0.35s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-gate[data-variant='torn'][data-state='leaving'] {
+    animation: inv-gate-fade-out 0.22s ease-out forwards;
+  }
+  .inv-gate[data-variant='torn'][data-state='leaving'] .inv-torn-paper,
+  .inv-gate[data-variant='torn'][data-state='leaving'] .inv-torn-zoom,
+  .inv-gate[data-variant='torn'][data-state='leaving'] .inv-torn-caption {
+    animation: none;
+  }
+}
+
+/* ── `welcome.vow`: los ramos se apartan y se entra por el centro ──
+ *
+ * Cada ramo sale por su esquina creciendo, como si la cámara pasara entre ellos; los nombres se
+ * acercan hasta desvanecerse y la noche se funde al final con la portada.
+ */
+@keyframes inv-vow-gate {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes inv-vow-spray-start {
+  to {
+    transform: translate3d(-55%, -45%, 0) scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes inv-vow-spray-end {
+  to {
+    transform: translate3d(55%, 45%, 0) scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes inv-vow-content {
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.inv-gate[data-variant='vow'][data-state='leaving'] {
+  animation: inv-vow-gate 1.3s linear forwards;
+  box-shadow: none;
+}
+.inv-gate[data-variant='vow'][data-state='leaving'] .inv-gate__content {
+  animation: inv-vow-content 1.2s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+  overflow: hidden;
+}
+.inv-gate[data-variant='vow'][data-state='leaving'] .inv-vow-spray-start {
+  animation: inv-vow-spray-start 0.95s cubic-bezier(0.55, 0, 0.3, 1) forwards;
+}
+.inv-gate[data-variant='vow'][data-state='leaving'] .inv-vow-spray-end {
+  animation: inv-vow-spray-end 0.95s cubic-bezier(0.55, 0, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-gate[data-variant='vow'][data-state='leaving'] {
+    animation: inv-gate-fade-out 0.22s ease-out forwards;
+  }
+  .inv-gate[data-variant='vow'][data-state='leaving'] .inv-gate__content,
+  .inv-gate[data-variant='vow'][data-state='leaving'] .inv-vow-spray-start,
+  .inv-gate[data-variant='vow'][data-state='leaving'] .inv-vow-spray-end {
+    animation: none;
+  }
+}
+
 /*
  * El lacre respira mientras espera: un anillo del color del acento que se expande y se apaga.
  * Es lo que lo señala como lo que hay que tocar sin necesidad de una flecha, y es lento a

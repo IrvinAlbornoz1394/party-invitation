@@ -8,6 +8,9 @@ import { WelcomeOpenButton, WelcomeShell, type WelcomeVariantProps } from './wel
  * opuestas —uno gira sobre sí mismo, el otro respira— y en el centro los nombres en inglesa con el
  * corazón dorado, la fecha bajo un florón y el botón.
  *
+ * Al abrirla, los ramos salen de la vista por sus esquinas y el centro se acerca hasta
+ * atravesarlo (`inv-vow-*` en `globals.css`).
+ *
  * No lleva fotografía, a propósito: la foto es la luna de la portada que viene detrás, y abrir con
  * ella sería enseñarla dos veces seguidas. La puerta es el cielo antes de que salga.
  */
@@ -20,16 +23,22 @@ export function WelcomeVow({ content }: WelcomeVariantProps) {
       backdrop={
         <>
           <div aria-hidden="true" className="absolute inset-0 -z-20 bg-inv-ink" />
-          <FloralSpray
-            asset={WATERCOLOR.bouquet}
-            motion="spin"
-            className="-top-24 -left-24 -z-10 w-72 opacity-95 sm:w-80"
-          />
-          <FloralSpray
-            asset={WATERCOLOR.peony}
-            rotate={160}
-            className="-right-20 -bottom-16 -z-10 w-64 opacity-95 sm:w-72"
-          />
+          {/* Cada ramo en su capa: el ramo ya tiene su propia animación (girar, respirar), y la
+              salida va en la capa para no pisarla. */}
+          <div aria-hidden="true" className="inv-vow-spray-start pointer-events-none absolute inset-0 -z-10">
+            <FloralSpray
+              asset={WATERCOLOR.bouquet}
+              motion="spin"
+              className="-top-24 -left-24 w-72 opacity-95 sm:w-80"
+            />
+          </div>
+          <div aria-hidden="true" className="inv-vow-spray-end pointer-events-none absolute inset-0 -z-10">
+            <FloralSpray
+              asset={WATERCOLOR.peony}
+              rotate={160}
+              className="-right-20 -bottom-16 w-64 opacity-95 sm:w-72"
+            />
+          </div>
         </>
       }
     >

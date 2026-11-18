@@ -20,6 +20,12 @@ import { hasText } from '../../shared/has-text';
  * pregunta sobre el tipo de evento, que es lo que el catálogo prohíbe — la forma del nombre es la
  * que decide.
  *
+ * ## La salida: se entra por el monograma
+ *
+ * No sube como los otros telones. El texto pequeño se apaga, el monograma crece hacia quien mira
+ * hasta atravesarlo y la foto se acerca detrás: se **entra** a la invitación en lugar de apartar
+ * una cortina. Las reglas están en `globals.css` (`inv-zoom-*`), las mismas que `welcome.luminous`.
+ *
  * ## La cápsula del rótulo
  *
  * El rótulo va dentro de una pastilla oscura y no suelto sobre la foto. Es la única forma de que
@@ -38,9 +44,9 @@ export function WelcomeMonogram({ content }: WelcomeVariantProps) {
       backdrop={
         <>
           {content.image ? (
-            <BlockImage image={content.image} priority className="-z-20" />
+            <BlockImage image={content.image} priority className="inv-zoom-photo -z-20" />
           ) : (
-            <div aria-hidden="true" className="absolute inset-0 -z-20 bg-inv-primary" />
+            <div aria-hidden="true" className="inv-zoom-photo absolute inset-0 -z-20 bg-inv-primary" />
           )}
           <div
             aria-hidden="true"
@@ -72,7 +78,7 @@ export function WelcomeMonogram({ content }: WelcomeVariantProps) {
         */}
         <p
           aria-hidden="true"
-          className="mt-1 mb-0 flex items-center justify-center font-inv-display text-[clamp(5rem,34vw,10rem)] leading-[0.78] font-light"
+          className="inv-zoom-mark mt-1 mb-0 flex items-center justify-center font-inv-display text-[clamp(5rem,34vw,10rem)] leading-[0.78] font-light"
         >
           {pair ? (
             <>

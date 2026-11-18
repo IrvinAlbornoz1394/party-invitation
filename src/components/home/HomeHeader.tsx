@@ -67,7 +67,9 @@ export function HomeHeader({ alwaysSolid = false }: { readonly alwaysSolid?: boo
         </Link>
 
         <div className="col-start-3 flex items-center justify-self-end gap-5 text-[12px] tracking-[0.18em] uppercase">
-          <Link href="/panel" className="hidden underline-offset-[6px] hover:underline sm:inline">
+          {/* `/acceso` y no `/panel`: decide a dónde va cada sesión (`/panel` o `/admin`). Una
+              cuenta de plataforma que entra a `/panel` recibe un 404 a propósito. */}
+          <Link href="/acceso" className="hidden underline-offset-[6px] hover:underline sm:inline">
             Entrar
           </Link>
           <Link

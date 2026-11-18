@@ -13,6 +13,12 @@ import { hasText } from '../../shared/has-text';
  * imita una lámina arrancada— y funciona especialmente bien en vertical, que es como se ve una
  * invitación en un teléfono.
  *
+ * ## La salida: se entra en la foto
+ *
+ * El papel sube y se lleva el canto roto; la foto ocupa el hueco que deja hasta llenar la pantalla
+ * y a la vez se acerca, así que se entra en ella en lugar de ver caer un telón. Las reglas están en
+ * `globals.css` (`inv-torn-*`).
+ *
  * ## El canto se pinta del color del papel, no recorta la foto
  *
  * La rasgadura es una figura del color de fondo puesta **encima** de la fotografía. Recortar la
@@ -37,7 +43,7 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
       contentClassName="justify-start"
     >
       {/* La hoja de papel. `relative` porque el canto roto se cuelga de su borde inferior. */}
-      <div className="relative h-[58%] w-full shrink-0 bg-inv-bg">
+      <div className="inv-torn-paper relative h-[58%] w-full shrink-0 bg-inv-bg">
         <div className="flex h-full flex-col items-center justify-center px-8 pt-8 pb-6 text-center text-inv-ink">
           {hasText(content.eventTypeLabel) && (
             <p className="m-0 text-[11.5px] tracking-[0.3em] text-inv-ink-soft uppercase">
@@ -111,9 +117,9 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
       */}
       <div className="relative min-h-0 w-full flex-1 overflow-hidden">
         {content.image ? (
-          <BlockImage image={content.image} priority className="object-center" />
+          <BlockImage image={content.image} priority className="inv-torn-zoom object-center" />
         ) : (
-          <div aria-hidden="true" className="absolute inset-0 bg-inv-primary" />
+          <div aria-hidden="true" className="inv-torn-zoom absolute inset-0 bg-inv-primary" />
         )}
 
         <div
@@ -121,7 +127,7 @@ export function WelcomeTorn({ content }: WelcomeVariantProps) {
           className="absolute inset-0 inv-scrim" data-from="bottom"
         />
 
-        <div className="relative flex h-full flex-col items-center justify-end px-8 pb-10 text-inv-on-primary inv-on-photo">
+        <div className="inv-torn-caption relative flex h-full flex-col items-center justify-end px-8 pb-10 text-inv-on-primary inv-on-photo">
           {hasText(content.note) && (
             <p className="mb-5 max-w-xs text-center text-[13px] leading-snug">{content.note}</p>
           )}
