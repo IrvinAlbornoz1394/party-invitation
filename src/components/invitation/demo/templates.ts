@@ -985,9 +985,9 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
     music: DEMO_MUSIC,
     sampleKey: 'boda',
     blocks: [
-      /* La puerta a sangre, sin papelería: la única que no rompe el registro cinematográfico de
-         `mirador`. Ver el seed. */
-      { blockKey: 'welcome', registryId: 'welcome.spotlight', removable: true },
+      /* El papel arriba y la foto abajo, y al abrir se entra en la foto: lo mismo que alternan
+         las secciones de `mirador`. Ver el seed. */
+      { blockKey: 'welcome', registryId: 'welcome.torn', removable: true },
       { blockKey: 'hero', registryId: 'hero.depth', config: { showCountdown: false } },
       {
         blockKey: 'story',
@@ -1038,9 +1038,9 @@ const DEFINITIONS: readonly TemplateDefinition[] = [
     music: DEMO_MUSIC,
     sampleKey: 'quince',
     blocks: [
-      /* La puerta a sangre, sin papelería: la única que no rompe el registro cinematográfico de
-         `mirador`. Ver el seed. */
-      { blockKey: 'welcome', registryId: 'welcome.spotlight', removable: true },
+      /* El papel arriba y la foto abajo, y al abrir se entra en la foto: lo mismo que alternan
+         las secciones de `mirador`. Ver el seed. */
+      { blockKey: 'welcome', registryId: 'welcome.torn', removable: true },
       { blockKey: 'hero', registryId: 'hero.depth', config: { showCountdown: false } },
       {
         blockKey: 'story',

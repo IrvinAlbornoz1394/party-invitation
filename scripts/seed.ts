@@ -1613,11 +1613,13 @@ const TEMPLATES: {
      * Nació sin bienvenida —la portada a pantalla completa hacía de entrada— y la ganó el
      * 2026-11-18: sin una pantalla que tocar, la música esperaba al primer toque —deslizar no
      * siempre cuenta como gesto para el navegador— y se podía recorrer la invitación entera en
-     * silencio; además se sentía distinta de las demás. `welcome.spotlight` es la que no
-     * rompe el registro: la foto a sangre y el nombre, sin papelería, como el resto de `mirador`.
+     * silencio; además se sentía distinta de las demás. `welcome.torn` repite su idea: arriba el
+     * papel marfil con los nombres y abajo la foto, y al abrir el papel sube y se entra en la foto
+     * —las mismas ventanas y el mismo papel que alternan sus secciones—. `spotlight` encajaba
+     * igual, pero es de `cinematic` y una variante no se repite dentro de un tipo de evento.
      */
     blocks: [
-      { blockKey: 'welcome', variantKey: 'spotlight' },
+      { blockKey: 'welcome', variantKey: 'torn' },
       { blockKey: 'hero', variantKey: 'depth', isRequired: true, config: { showCountdown: false } },
       { blockKey: 'story', variantKey: 'depth', config: { eyebrow: 'Bienvenidos', title: 'Un día para recordar' } },
       { blockKey: 'protagonists', variantKey: 'depth', config: { eyebrow: null } },
