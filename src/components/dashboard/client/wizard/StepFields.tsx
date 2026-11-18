@@ -705,11 +705,11 @@ export function StepFields({
         />
         <CollectionEditor<GalleryRow>
           title="Galería"
-          description="Las fotos que se ven en la sección de galería, en este orden."
+          description="Opcional. Las fotos que se ven en la sección de galería, en este orden. Sin fotos, la sección no aparece en la invitación."
           rows={collections.gallery}
           max={GALLERY_MAX}
           addLabel="Añadir una foto"
-          emptyLabel="Todavía no hay fotos en la galería."
+          emptyLabel="Sin fotos: la galería no aparecerá en la invitación."
           rowTitle={(row, index) => row.caption || row.altText || `Foto ${index + 1}`}
           makeEmpty={() => ({ id: null, url: '', altText: null, caption: null })}
           onChange={(gallery) => setCollections((current) => ({ ...current, gallery }))}

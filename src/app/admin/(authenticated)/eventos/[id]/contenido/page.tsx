@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { EventPublishPanel } from '@/components/dashboard/admin/EventPublishPanel';
 import { ContentWizard } from '@/components/dashboard/client/wizard/ContentWizard';
 import { siteUrl } from '@/components/dashboard/site-url';
+import { baseTextsFor, prefillBlockTexts, prefillEventTexts } from '@/domain/events/base-texts';
 import { invitationUrl } from '@/domain/events/invitation-url';
 import {
   editEventContent,
@@ -63,14 +64,17 @@ export default async function AdminEventContentPage({
 
   if (!form || !collections) notFound();
 
+  /* Ningún texto en blanco si hay uno base que poner, igual que en el formulario del cliente. */
+  const base = baseTextsFor(form.eventTypeKey, { celebrantName: form.draft.celebrantName, date: form.draft.date });
+
   return (
     <ContentWizard
       eventId={id}
-      draft={form.draft}
+      draft={prefillEventTexts(form.draft, base)}
       eventTypeKey={form.eventTypeKey}
       steps={sections.steps}
       collections={collections}
-      blockTexts={sections.texts}
+      blockTexts={prefillBlockTexts(sections.texts, base)}
       blockLists={sections.lists}
       timeZone={TIME_ZONE_LABEL}
       action={saveAdminContentAction}

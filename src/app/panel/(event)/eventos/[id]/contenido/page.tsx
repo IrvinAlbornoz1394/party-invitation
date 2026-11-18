@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ContentLockedScreen } from '@/components/dashboard/client/ContentLockedScreen';
 import { ClientContentForm } from '@/components/dashboard/client/wizard/ClientContentForm';
-import { baseTextsFor } from '@/domain/events/base-texts';
+import { baseTextsFor, prefillBlockTexts, prefillEventTexts } from '@/domain/events/base-texts';
 import { editEventContent, submitEventContent } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
 import {
@@ -82,16 +82,19 @@ export default async function EventContentPage({
     );
   }
 
+  /* Ningún texto en blanco si hay uno base que poner (ver `prefillBlockTexts`). */
+  const base = baseTextsFor(form.eventTypeKey, { celebrantName: form.draft.celebrantName, date: form.draft.date });
+
   return (
     <ClientContentForm
       eventId={id}
-      draft={form.draft}
+      draft={prefillEventTexts(form.draft, base)}
       eventTypeKey={form.eventTypeKey}
       steps={sections.steps}
       collections={collections}
-      blockTexts={sections.texts}
+      blockTexts={prefillBlockTexts(sections.texts, base)}
       blockLists={sections.lists}
-      baseTexts={baseTextsFor(form.eventTypeKey)}
+      baseTexts={base}
       basicsSaved={progress?.clientProgress.savedAt != null}
       timeZone={TIME_ZONE_LABEL}
       action={saveEventContentAction}

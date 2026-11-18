@@ -107,6 +107,14 @@ export function checkContentCompleteness(
  * para publicar no pueden decir cosas distintas.
  */
 export function missingOf(source: EventContentSource, block: EventBlockRecord): readonly string[] {
+  /*
+   * La galería sin fotos es opcional (decisión del 2026-11-18): no frena la publicación y la
+   * invitación sencillamente no la pinta —un bloque que no valida se omite al ensamblar—. Lo que
+   * sigue contando como pendiente es una galería **a medias**: con fotos pero menos de las que su
+   * diseño necesita, se vería rota.
+   */
+  if (block.blockKey === 'gallery' && source.gallery.length === 0) return [];
+
   const assembled = assembleBlockContent(source, block);
 
   if (assembled === null) {

@@ -181,7 +181,7 @@ export class DrizzleEventRepository implements EventRepository {
            * escritos, y el cliente solo los cambia si quiere. `||` mezcla y no reemplaza, así que
            * lo que la plantilla trae por su maqueta y el banco no nombra se conserva.
            */
-          const base = baseTextsFor(input.eventTypeKey);
+          const base = baseTextsFor(input.eventTypeKey, { celebrantName: input.celebrantName, date: input.date });
 
           if (base) {
             await tx.execute(

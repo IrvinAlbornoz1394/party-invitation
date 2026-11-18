@@ -146,7 +146,7 @@ export function ClientContentForm({
   readonly collections: EventCollections;
   readonly blockTexts: readonly EditableBlockTexts[];
   readonly blockLists: EditableBlockLists;
-  /** Para llenar los textos que nunca se guardaron. `null` si la celebración no tiene banco. */
+  /** Para devolver a su texto base un título obligatorio que se vació. `null` sin banco. */
   readonly baseTexts: BaseTexts | null;
   /** Si el cliente ya guardó alguna vez: entonces las etapas 2 y 3 están abiertas desde el inicio. */
   readonly basicsSaved: boolean;
@@ -230,18 +230,9 @@ export function ClientContentForm({
 
   const [collections, setCollections] = useState<EditableCollections>(initialCollections);
   const [lists, setLists] = useState<EditableBlockLists>(blockLists);
+  /* Los textos ya llegan llenos con su texto base desde la página (`prefillBlockTexts`). */
   const [texts, setTexts] = useState<Record<string, Record<string, string>>>(() =>
-    Object.fromEntries(
-      blockTexts.map((block) => {
-        const base = baseTexts?.blocks[block.blockKey] ?? {};
-        const values = { ...block.values };
-
-        /* Solo lo que nunca se guardó: un texto vaciado a propósito se respeta. */
-        for (const name of block.unset) if (base[name] && !values[name]) values[name] = base[name];
-
-        return [block.blockKey, values];
-      }),
-    ),
+    Object.fromEntries(blockTexts.map((block) => [block.blockKey, { ...block.values }])),
   );
 
   /* Lo que viaja al servidor: un título obligatorio vaciado vuelve a su texto base. */
