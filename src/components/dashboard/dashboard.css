@@ -1771,3 +1771,24 @@
   line-height: 1.6;
   white-space: pre-line;
 }
+
+/* ── Enlace para el cliente (`ContentLinkDialog`) ─────────────────────────── */
+
+.content-link {
+  display: grid;
+  gap: var(--dash-gap-sm);
+}
+
+.content-link__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dash-gap-xs);
+}
+
+.content-link__facts {
+  margin: var(--dash-gap-xs) 0 0;
+  padding-left: 18px;
+  color: var(--dash-ink-soft);
+  font-size: 13px;
+  line-height: 1.6;
+}

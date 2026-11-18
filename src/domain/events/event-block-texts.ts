@@ -313,6 +313,12 @@ export interface EditableBlockTexts {
   readonly fields: readonly BlockTextField[];
   /** Lo que hay guardado hoy, campo a campo. Cadena vacía cuando no hay nada. */
   readonly values: Readonly<Record<string, string>>;
+  /**
+   * Los campos que **nunca** se guardaron —la clave no existe en el `config`—, a diferencia de los
+   * que alguien vació a propósito. Solo estos se llenan con el texto base al abrir el formulario
+   * (`domain/events/base-texts.ts`): rellenar uno vaciado sería deshacer lo que el cliente decidió.
+   */
+  readonly unset: readonly string[];
 }
 
 /**
@@ -338,14 +344,16 @@ export function editableBlockTexts(
     if (fields.length === 0) continue;
 
     const values: Record<string, string> = {};
+    const unset: string[] = [];
 
     for (const field of fields) {
       const stored = block.config[field.name];
 
       values[field.name] = typeof stored === 'string' ? stored : '';
+      if (!(field.name in block.config)) unset.push(field.name);
     }
 
-    editable.push({ blockKey: block.blockKey, fields, values });
+    editable.push({ blockKey: block.blockKey, fields, values, unset });
   }
 
   return editable;

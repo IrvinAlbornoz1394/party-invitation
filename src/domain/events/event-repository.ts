@@ -1,3 +1,4 @@
+import type { ClientProgress } from './client-progress';
 import type { TenantScope } from '@/domain/auth/actor';
 import type { BlockConfigPatch } from './event-block-texts';
 import type { EventCollections } from './event-collections';
@@ -48,6 +49,8 @@ export interface EventSummary {
    * a la plataforma. Ver la columna en el esquema para cuándo se apaga sola.
    */
   readonly clientFillsContent: boolean;
+  /** Cuándo entró, guardó y envió el cliente, y si pidió cambios. Ver `client-progress.ts`. */
+  readonly clientProgress: ClientProgress;
 }
 
 /**
@@ -316,6 +319,22 @@ export interface EventRepository {
 
   /** El cliente da por terminado su contenido. Solo desde borrador. */
   sendToReview(scope: TenantScope, eventId: string): Promise<boolean>;
+
+  /** Sella que el cliente guardó algo: con eso el admin ve «Llenando» y no «Sin abrir». */
+  markClientSaved(scope: TenantScope, eventId: string): Promise<void>;
+
+  /**
+   * El cliente, con su información ya enviada, pide poder cambiar algo. Solo desde `review` o
+   * `published`: en borrador puede cambiarlo él mismo.
+   */
+  requestChanges(scope: TenantScope, eventId: string, note: string | null): Promise<boolean>;
+
+  /**
+   * La plataforma le devuelve la edición al cliente: el evento vuelve a borrador, se borra la
+   * petición de cambios y el envío, y el cliente puede volver a guardar. Si estaba publicado deja
+   * de estarlo mientras tanto, igual que al corregir el contenido desde el admin.
+   */
+  reopenForClient(credentials: PlatformCredentials, clientId: string, eventId: string): Promise<boolean>;
 
   /**
    * Regresa a borrador un evento publicado porque su contenido cambió. Devuelve si lo hizo: con el

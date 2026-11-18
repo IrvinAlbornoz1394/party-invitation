@@ -40,7 +40,12 @@ export type SaveContentResult =
   /** Campos con su motivo, listos para pintar junto a cada control. */
   | { readonly outcome: 'invalid'; readonly errors: Readonly<Record<string, string>> }
   /** El evento no está en el alcance de quien pide. Indistinguible de que no exista. */
-  | { readonly outcome: 'not-found' };
+  | { readonly outcome: 'not-found' }
+  /**
+   * El cliente ya envió su información (o la invitación está publicada): no puede guardar hasta
+   * que la plataforma le devuelva la edición. Solo lo recibe el cliente; el admin guarda siempre.
+   */
+  | { readonly outcome: 'locked' };
 
 /**
  * Leer y guardar el contenido de un evento desde el panel del cliente.
@@ -131,6 +136,17 @@ export class EditEventContent {
     /* Las listas que guarda cada sección —detalles y colores—, también de un campo oculto. */
     blockLists: unknown,
   ): Promise<SaveContentResult> {
+    /*
+     * Enviado es enviado. Antes el cliente podía seguir guardando en revisión —y al guardar sobre
+     * una publicada la devolvía a borrador—; desde el 2026-11-18 el envío cierra la edición y para
+     * volver a cambiar algo la pide (`RequestContentChanges`). Se comprueba aquí y no solo en la
+     * pantalla: una Server Action se puede llamar sin pasar por ella.
+     */
+    const current = await this.events.findForClient(actor, eventId);
+
+    if (current === null) return { outcome: 'not-found' };
+    if (current.status !== 'draft') return { outcome: 'locked' };
+
     const parsed = eventContentDraftSchema.safeParse(input);
     const parsedCollections = eventCollectionsSchema.safeParse(collections);
 
@@ -207,6 +223,8 @@ export class EditEventContent {
     });
 
     if (!savedTexts) return { outcome: 'not-found' };
+
+    await this.events.markClientSaved(actor, eventId);
 
     /* Si la invitación cambió y estaba publicada, vuelve a borrador. Ver `contentFingerprint`. */
     const after = await this.invitations.findForPreview(actor, eventId);

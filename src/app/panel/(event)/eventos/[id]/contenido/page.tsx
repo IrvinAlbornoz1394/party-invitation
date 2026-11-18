@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ContentSubmitPanel } from '@/components/dashboard/client/ContentSubmitPanel';
-import { ContentWizard } from '@/components/dashboard/client/wizard/ContentWizard';
+import { ContentLockedScreen } from '@/components/dashboard/client/ContentLockedScreen';
+import { ClientContentForm } from '@/components/dashboard/client/wizard/ClientContentForm';
+import { baseTextsFor } from '@/domain/events/base-texts';
 import { editEventContent, submitEventContent } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
-import { saveEventContentAction, submitContentAction, uploadEventImageAction } from './actions';
-import { INITIAL_CONTENT_STATE, INITIAL_SUBMIT_STATE } from './form-state';
+import {
+  requestChangesAction,
+  saveEventContentAction,
+  submitContentAction,
+  uploadEventImageAction,
+} from './actions';
+import { INITIAL_CONTENT_STATE } from './form-state';
 
 export const metadata: Metadata = {
   title: 'Contenido · Panel',
@@ -61,8 +67,23 @@ export default async function EventContentPage({
   // Null significa que el evento no está en el alcance: mismo 404 que si no existiera.
   if (!form) notFound();
 
+  /*
+   * Enviado es enviado: el formulario se cierra y queda la pantalla de «ya lo tenemos» con la
+   * opción de pedir cambios. Ver `ContentLockedScreen`.
+   */
+  if (progress && progress.status !== 'draft') {
+    return (
+      <ContentLockedScreen
+        eventId={id}
+        status={progress.status}
+        changeRequestedAt={progress.clientProgress.changeRequestedAt}
+        action={requestChangesAction}
+      />
+    );
+  }
+
   return (
-    <ContentWizard
+    <ClientContentForm
       eventId={id}
       draft={form.draft}
       eventTypeKey={form.eventTypeKey}
@@ -70,21 +91,13 @@ export default async function EventContentPage({
       collections={collections}
       blockTexts={sections.texts}
       blockLists={sections.lists}
+      baseTexts={baseTextsFor(form.eventTypeKey)}
+      basicsSaved={progress?.clientProgress.savedAt != null}
       timeZone={TIME_ZONE_LABEL}
       action={saveEventContentAction}
       uploadAction={uploadEventImageAction}
+      submitAction={submitContentAction}
       initialState={INITIAL_CONTENT_STATE}
-      banner={
-        progress && (
-          <ContentSubmitPanel
-            eventId={id}
-            status={progress.status}
-            missing={progress.completeness?.blocks ?? []}
-            action={submitContentAction}
-            initialState={INITIAL_SUBMIT_STATE}
-          />
-        )
-      }
     />
   );
 }

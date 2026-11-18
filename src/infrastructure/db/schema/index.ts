@@ -12,6 +12,7 @@ export * from './reminders';
 export * from './seating';
 export * from './security';
 export * from './clients';
+export * from './content-links';
 
 /**
  * Tablas con `client_id` que deben quedar sujetas a Row-Level Security.
@@ -46,6 +47,7 @@ export const TENANT_TABLES = [
   'reminder_schedules',
   'reminder_deliveries',
   'guestbook_entries',
+  'content_links',
 ] as const;
 
 /**
@@ -90,6 +92,9 @@ export const AUTH_PLANE_TABLES = [
   'invitation_access_attempts',
   'prospects',
   'prospect_touches',
+  /* El enlace del cliente guarda el hash de su token: va sellado como las sesiones, aunque
+     también esté en TENANT_TABLES por su RLS. */
+  'content_links',
 ] as const;
 
 /**

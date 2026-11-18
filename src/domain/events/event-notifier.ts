@@ -58,7 +58,18 @@ export interface ContentSubmittedNotice {
   readonly reviewUrl: string;
 }
 
+/** El cliente, con su información ya enviada, pide poder cambiar algo. */
+export interface ChangesRequestedNotice {
+  readonly to: readonly string[];
+  readonly clientName: string;
+  readonly eventTitle: string;
+  /** Lo que escribió, si escribió algo. */
+  readonly note: string | null;
+  readonly reviewUrl: string;
+}
+
 export interface EventNotifier {
   notifyEventCreated(notice: EventCreatedNotice): Promise<boolean>;
   notifyContentSubmitted(notice: ContentSubmittedNotice): Promise<boolean>;
+  notifyChangesRequested(notice: ChangesRequestedNotice): Promise<boolean>;
 }

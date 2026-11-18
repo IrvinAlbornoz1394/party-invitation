@@ -251,6 +251,15 @@ export const sessions = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     createdIp: inet('created_ip'),
     createdUserAgent: text('created_user_agent'),
+    /**
+     * El único evento que alcanza una sesión abierta con el enlace del cliente; NULL en una
+     * sesión normal. Ver `app.resolve_session`.
+     *
+     * La clave ajena a `events` existe en la base (`sql/increments/2026-11-18_enlace_del_cliente.sql`)
+     * pero no se declara aquí: `events.ts` ya importa este archivo, y la referencia cruzada
+     * crearía un ciclo de módulos para ganar nada en los tipos.
+     */
+    scopeEventId: uuid('scope_event_id'),
     ...timestamps,
   },
   (t) => [

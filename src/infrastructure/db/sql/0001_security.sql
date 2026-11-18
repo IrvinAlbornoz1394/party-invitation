@@ -151,7 +151,10 @@ declare
     'table_assignments',
     'reminder_schedules',
     'reminder_deliveries',
-    'guestbook_entries'
+    'guestbook_entries',
+    -- El enlace del cliente (`increments/2026-11-18_enlace_del_cliente.sql`). Lo crea el admin en
+    -- el contexto autorizado del cliente; se canjea por `app.redeem_content_link`, sin contexto.
+    'content_links'
   ];
   t text;
 begin
@@ -314,6 +317,13 @@ grant select, insert, update, delete on
   public.reminder_deliveries,
   public.guestbook_entries
 to mievento_app;
+
+-- Los enlaces del cliente guardan el hash de una credencial, así que van sellados como las
+-- sesiones: la aplicación no tiene NINGÚN permiso sobre la tabla y la usa por
+-- app.active_content_link, app.issue_content_link y app.redeem_content_link. Conserva RLS y su
+-- política de tenant como segunda defensa. El revoke hace esto idempotente sobre una base que
+-- tuvo una versión anterior de este archivo con permisos.
+revoke all on public.content_links from mievento_app;
 
 -- El cliente se lee y se ajusta, pero no se crea ni se borra desde la app.
 grant select, update on public.clients to mievento_app;
@@ -717,8 +727,11 @@ begin
       insert into public.auth_attempts (kind, identifier_hash, client_ip, succeeded)
       values ('verify', p_identifier_hash, p_ip, false);
 
-      return query select 'rate_limited'::text, null::uuid, null::uuid,
-                          null::text, null::text, null::text, null::text, null::timestamptz;
+      -- Seis columnas, como el resto de ramas. Llevaba ocho —restos de cuando la sesión devolvía
+      -- el cliente activo— y Postgres respondía «structure of query does not match function
+      -- result type»: quien llegaba al tope veía un error genérico en vez del aviso.
+      return query select 'rate_limited'::text, null::uuid,
+                          null::text, null::text, null::text, null::timestamptz;
       return;
     end if;
   end if;
@@ -882,15 +895,61 @@ set search_path = pg_catalog, public
 as $$
 declare
   v_user_id uuid;
+  v_scope_event_id uuid;
 begin
   update public.sessions s
      set last_used_at = now()
    where s.token_hash = p_session_hash
      and s.revoked_at is null
      and s.expires_at > now()
-  returning s.user_id into v_user_id;
+  returning s.user_id, s.scope_event_id into v_user_id, v_scope_event_id;
 
   if v_user_id is null then
+    return;
+  end if;
+
+  -- ── Sesión de un solo evento: la del enlace del cliente ──
+  --
+  -- Quien entró con el enlace alcanza ESE evento, aunque la cuenta sea la dueña de un cliente
+  -- con más. La membresía que alcanza el evento (la de alcance cliente o la del propio evento)
+  -- se devuelve recortada a él, y con `owner`/`admin` rebajado a `staff`: la forma de «asistente
+  -- de un solo evento», que puede llenar el contenido y no gestionar personas. Como el alcance
+  -- de cada petición sale de esta lista, RLS fija `app.current_event_id()` y la base de datos
+  -- devuelve una sola fila de `events`: los demás eventos no existen para esta sesión.
+  if v_scope_event_id is not null then
+    return query
+      select u.id, u.platform_role::text, u.email, u.name,
+             coalesce(
+               (select jsonb_agg(jsonb_build_object(
+                         'membership_id', m.id,
+                         'client_id',     m.client_id,
+                         'client_name',   c.name,
+                         'event_id',      e.id,
+                         'event_title',   e.title,
+                         'event_slug',    e.slug,
+                         'event_status',  e.status,
+                         'plan_key',      e.plan_key,
+                         'role',          case when m.role in ('owner', 'admin') then 'staff' else m.role::text end,
+                         'label',         m.label
+                       ))
+                  from (
+                    select m1.*
+                      from public.memberships m1
+                      join public.events e1 on e1.id = v_scope_event_id and e1.client_id = m1.client_id
+                     where m1.user_id = u.id
+                       and m1.status <> 'disabled'
+                       and (m1.event_id is null or m1.event_id = v_scope_event_id)
+                     -- La del evento gana a la del cliente: es la más estrecha.
+                     order by m1.event_id nulls last
+                     limit 1
+                  ) m
+                  join public.clients c on c.id = m.client_id and c.status = 'active'
+                  join public.events e on e.id = v_scope_event_id),
+               '[]'::jsonb
+             )
+      from public.users u
+      where u.id = v_user_id
+        and u.status <> 'disabled';
     return;
   end if;
 
@@ -935,6 +994,207 @@ begin
     from public.users u
     where u.id = v_user_id
       and u.status <> 'disabled';
+end;
+$$;
+
+-- ── Canjear el enlace del cliente por una sesión ──────────────────────────────
+--
+-- El enlace que el admin copia y pega en el WhatsApp del cliente. Abrirlo no hace nada: la
+-- página pide pulsar «Entrar», porque WhatsApp y compañía abren los enlaces por su cuenta para
+-- armar la vista previa, y un canje en el GET abriría sesiones en sus servidores. Este canje lo
+-- dispara esa pulsación.
+--
+-- Abre la sesión de la cuenta DUEÑA del cliente, recortada al evento (`scope_event_id`; ver
+-- `resolve_session`). Es la cuenta a la que pertenece el contenido, y la que ya tiene permiso de
+-- escribirlo: el enlace no concede nada que la cuenta no tuviera, solo le ahorra el código.
+--
+-- Resultados:
+--   ok         → sesión creada; devuelve el evento y cuándo vence la sesión
+--   invalid    → no existe, o se reemplazó por uno más nuevo
+--   expired    → pasaron sus cinco días
+--   closed     → el cliente ya envió su información (o el evento ya no está en borrador)
+--   no-account → el cliente no tiene cuenta dueña activa con la que entrar
+create or replace function app.redeem_content_link(
+  p_token_hash   text,
+  p_session_hash text,
+  p_session_ttl  interval,
+  p_ip           inet,
+  p_user_agent   text
+)
+returns table (outcome text, event_id uuid, session_expires_at timestamptz)
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_link       public.content_links%rowtype;
+  v_status     event_status;
+  v_user_id    uuid;
+  v_membership uuid;
+  v_expires    timestamptz;
+begin
+  select * into v_link
+    from public.content_links l
+   where l.token_hash = p_token_hash
+     and l.revoked_at is null;
+
+  if not found then
+    return query select 'invalid'::text, null::uuid, null::timestamptz;
+    return;
+  end if;
+
+  if v_link.expires_at <= now() then
+    return query select 'expired'::text, v_link.event_id, null::timestamptz;
+    return;
+  end if;
+
+  select e.status into v_status from public.events e where e.id = v_link.event_id;
+
+  if v_status is distinct from 'draft' then
+    return query select 'closed'::text, v_link.event_id, null::timestamptz;
+    return;
+  end if;
+
+  select m.user_id, m.id into v_user_id, v_membership
+    from public.memberships m
+    join public.users u on u.id = m.user_id
+   where m.client_id = v_link.client_id
+     and m.event_id is null
+     and m.role = 'owner'
+     and m.status <> 'disabled'
+     and u.status <> 'disabled'
+     and u.platform_role is null
+   order by m.created_at
+   limit 1;
+
+  if v_user_id is null then
+    return query select 'no-account'::text, v_link.event_id, null::timestamptz;
+    return;
+  end if;
+
+  v_expires := now() + p_session_ttl;
+
+  insert into public.sessions
+    (user_id, token_hash, expires_at, created_ip, created_user_agent, scope_event_id)
+  values
+    (v_user_id, p_session_hash, v_expires, p_ip, p_user_agent, v_link.event_id);
+
+  -- Como en verify_otp: entrar confirma la invitación de la cuenta y su membresía.
+  update public.users u
+     set last_login_at = now(),
+         status = case when u.status = 'invited' then 'active'::user_status else u.status end
+   where u.id = v_user_id;
+
+  update public.memberships m
+     set status = 'active'
+   where m.id = v_membership
+     and m.status = 'invited';
+
+  update public.content_links l
+     set opened_at = coalesce(l.opened_at, now())
+   where l.id = v_link.id;
+
+  update public.events e
+     set client_opened_at = coalesce(e.client_opened_at, now())
+   where e.id = v_link.event_id;
+
+  insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip, user_agent)
+  values (
+    v_link.client_id, v_user_id, 'auth.session.opened', 'event', v_link.event_id,
+    jsonb_build_object('via', 'content_link', 'link_id', v_link.id),
+    p_ip, p_user_agent
+  );
+
+  return query select 'ok'::text, v_link.event_id, v_expires;
+end;
+$$;
+
+-- ── El enlace del cliente, del lado del admin ─────────────────────────────────
+--
+-- Leer el vigente y emitir uno nuevo. Las dos exigen una sesión de plataforma
+-- (`app.platform_actor`) y un cliente activo, como `authorize_client_context`. El token llega ya
+-- hasheado y el id lo elige la aplicación, porque el token se deriva de él con AUTH_SECRET, que
+-- no vive en la base.
+create or replace function app.active_content_link(
+  p_session_hash text,
+  p_client_id    uuid,
+  p_event_id     uuid
+)
+returns table (id uuid, expires_at timestamptz, opened_at timestamptz)
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+begin
+  if app.platform_actor(p_session_hash) is null then
+    return;
+  end if;
+
+  return query
+    select l.id, l.expires_at, l.opened_at
+      from public.content_links l
+     where l.client_id = p_client_id
+       and l.event_id = p_event_id
+       and l.revoked_at is null
+       and l.expires_at > now()
+     order by l.created_at desc
+     limit 1;
+end;
+$$;
+
+create or replace function app.issue_content_link(
+  p_session_hash text,
+  p_client_id    uuid,
+  p_event_id     uuid,
+  p_link_id      uuid,
+  p_token_hash   text,
+  p_ttl          interval,
+  p_ip           inet
+)
+returns table (id uuid, expires_at timestamptz, opened_at timestamptz)
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_actor_id uuid := app.platform_actor(p_session_hash);
+  v_expires  timestamptz := now() + p_ttl;
+begin
+  if v_actor_id is null then
+    return;
+  end if;
+
+  -- El evento tiene que ser de ese cliente, y el cliente estar activo.
+  if not exists (
+    select 1
+      from public.events e
+      join public.clients c on c.id = e.client_id
+     where e.id = p_event_id
+       and e.client_id = p_client_id
+       and c.status = 'active'
+  ) then
+    return;
+  end if;
+
+  -- Solo vale el último: el anterior deja de abrir sesiones en la misma transacción.
+  update public.content_links l
+     set revoked_at = now()
+   where l.event_id = p_event_id
+     and l.revoked_at is null;
+
+  insert into public.content_links (id, client_id, event_id, token_hash, expires_at, created_by)
+  values (p_link_id, p_client_id, p_event_id, p_token_hash, v_expires, v_actor_id);
+
+  -- Desde ahora el evento espera al cliente.
+  update public.events e
+     set client_fills_content = true, updated_at = now()
+   where e.id = p_event_id;
+
+  insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip)
+  values (p_client_id, v_actor_id, 'event.content_link.issued', 'event', p_event_id,
+          jsonb_build_object('link_id', p_link_id), p_ip);
+
+  return query select p_link_id, v_expires, null::timestamptz;
 end;
 $$;
 
@@ -2154,6 +2414,9 @@ grant execute on function app.list_prospect_touches(text, uuid) to mievento_app;
 grant execute on function app.count_pending_prospects(text) to mievento_app;
 grant execute on function app.grant_membership(uuid, uuid, uuid, text, text, text, text, text) to mievento_app;
 grant execute on function app.list_platform_notice_emails() to mievento_app;
+grant execute on function app.redeem_content_link(text, text, interval, inet, text) to mievento_app;
+grant execute on function app.active_content_link(text, uuid, uuid) to mievento_app;
+grant execute on function app.issue_content_link(text, uuid, uuid, uuid, text, interval, inet) to mievento_app;
 
 
 -- app.platform_actor NO se concede a la aplicación. Es el detalle interno con el que las

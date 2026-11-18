@@ -8,7 +8,6 @@ import {
   editEventContent,
   findEventForPlatform,
   publishEvent,
-  shareContentLink,
   uploadEventImage,
 } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
@@ -91,6 +90,13 @@ export async function saveAdminContentAction(
         message: 'Revisa los campos marcados.',
         errors: result.errors,
       };
+    case 'locked':
+      return {
+        status: 'error',
+        message: 'El evento está cerrado a la edición.',
+        errors: {},
+      };
+
     case 'not-found':
       return {
         ...INITIAL_ADMIN_CONTENT_STATE,
@@ -151,40 +157,6 @@ export async function publishEventAction(
   }
 }
 
-export async function shareContentLinkAction(
-  _previous: PublishState,
-  formData: FormData,
-): Promise<PublishState> {
-  const credentials = await requirePlatformCredentials();
-  const eventId = readText(formData, 'eventId');
-  const event = await findEventForPlatform.execute(credentials, eventId);
-
-  if (event === null) notFound();
-
-  const result = await shareContentLink.execute(credentials, event.clientId, eventId);
-
-  if (result.outcome !== 'shared') {
-    return {
-      ...INITIAL_PUBLISH_STATE,
-      status: 'error',
-      message: 'No se pudo preparar el enlace para el cliente.',
-    };
-  }
-
-  revalidatePath('/admin/eventos');
-  revalidatePath(`/admin/eventos/${eventId}/contenido`);
-
-  return {
-    ...INITIAL_PUBLISH_STATE,
-    status: 'success',
-    message: result.emailed
-      ? 'Enlace enviado por correo. También puedes copiarlo aquí.'
-      : 'El evento ya espera al cliente. Cópiale el enlace: no pudimos enviarle el correo.',
-    /* El enlace vuelve siempre, se haya mandado el correo o no. Es lo que permite pegárselo al
-       cliente por WhatsApp, que es como se resuelve la mitad de estas conversaciones. */
-    contentUrl: result.url,
-  };
-}
 
 /** Subir una foto del contenido desde el admin. Ver `uploadEventImageAction` en el panel. */
 export async function uploadAdminEventImageAction(formData: FormData): Promise<ImageUploadResult> {

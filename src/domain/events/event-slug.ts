@@ -18,6 +18,7 @@
  */
 const RESERVED_SLUGS = new Set([
   'panel',
+  'llenar',
   'api',
   'admin',
   'auth',

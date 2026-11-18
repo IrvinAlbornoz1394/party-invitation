@@ -48,13 +48,13 @@ export class SubmitEventContent {
 
     if (!loaded) return { outcome: 'not-found' };
 
-    const completeness = checkContentCompleteness(
-      loaded.content.source,
-      loaded.content.blocks,
-    );
-
-    if (!completeness.complete) return { outcome: 'incomplete', completeness };
-
+    /*
+     * Ya no se exige que esté completo. Decisión del 2026-11-18: el cliente puede enviar con
+     * huecos —la ubicación que no sabe llenar, las fotos que no tiene— y la plataforma los completa
+     * en el admin. La regla de «todo completo» sigue existiendo, pero en la publicación
+     * (`PublishEvent`), que es donde de verdad importa. Lo único imprescindible para enviar son el
+     * nombre, la fecha y la hora, y esos no se pueden guardar vacíos (`eventContentDraftSchema`).
+     */
     const moved = await this.events.sendToReview(actor, eventId);
 
     /* El `update` exige que siga en borrador. Si no movió ninguna fila es que ya no lo estaba
@@ -86,6 +86,7 @@ export class SubmitEventContent {
     return {
       status: event.status,
       clientFillsContent: event.clientFillsContent,
+      clientProgress: event.clientProgress,
       completeness: await this.check(actor, eventId),
     };
   }

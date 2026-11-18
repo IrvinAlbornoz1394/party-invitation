@@ -76,3 +76,20 @@ export function hashSessionToken(token: string): string {
 export function hashIdentifier(identifier: string): string {
   return hmac(`identifier:v1:${identifier}`);
 }
+
+/**
+ * El token del enlace del cliente, DERIVADO del id del enlace.
+ *
+ * No se guarda en ninguna parte: se recalcula cada vez que el admin abre el modal para copiarlo.
+ * Así el mismo enlace se puede copiar las veces que haga falta mientras esté vigente, y un volcado
+ * de la base no sirve para entrar —con el id y sin AUTH_SECRET no hay token—. Al generar uno nuevo
+ * cambia el id, y con él el token.
+ */
+export function contentLinkToken(linkId: string): string {
+  return createHmac('sha256', env.AUTH_SECRET).update(`content-link:v1:${linkId}`, 'utf8').digest('base64url');
+}
+
+/** Lo que se guarda y se compara del token del enlace, como con las sesiones. */
+export function hashContentLinkToken(token: string): string {
+  return hmac(`content-link-hash:v1:${token}`);
+}

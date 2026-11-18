@@ -157,15 +157,17 @@ async function checkCode(previous: LoginState, formData: FormData): Promise<Logi
         ...previous,
         notice: null,
         error:
-          'Demasiados intentos con este correo. Espera 15 minutos antes de volver a ' +
-          'intentarlo.',
+          'Demasiados intentos con este correo. Espera 15 minutos sin intentarlo y vuelve a ' +
+          'probar: cada intento mientras tanto vuelve a empezar la espera.',
       };
 
     case 'rate-limited':
       return {
         ...previous,
         notice: null,
-        error: 'Demasiados intentos desde tu conexión. Espera un rato y vuelve a intentarlo.',
+        error:
+          'Demasiados intentos desde tu conexión. Espera una hora sin intentarlo y vuelve a ' +
+          'probar: cada intento mientras tanto vuelve a empezar la espera.',
       };
 
     case 'account-disabled':

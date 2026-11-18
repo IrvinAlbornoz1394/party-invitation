@@ -142,6 +142,17 @@ export const events = pgTable(
     contactWhatsapp: text('contact_whatsapp'),
     contactInstagram: text('contact_instagram'),
 
+    /*
+     * El seguimiento del cliente que llena su información con el enlace
+     * (`sql/increments/2026-11-18_enlace_del_cliente.sql`). De aquí sale lo que el admin ve en la
+     * lista: «Sin abrir», «Llenando», «Enviado», y si hay una petición de cambios.
+     */
+    clientOpenedAt: timestamp('client_opened_at', { withTimezone: true }),
+    clientSavedAt: timestamp('client_saved_at', { withTimezone: true }),
+    contentSubmittedAt: timestamp('content_submitted_at', { withTimezone: true }),
+    changeRequestedAt: timestamp('change_requested_at', { withTimezone: true }),
+    changeRequestNote: text('change_request_note'),
+
     createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
     ...timestamps,
   },

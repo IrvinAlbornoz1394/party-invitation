@@ -30,7 +30,13 @@ export function LocationDualVenue({ content }: LocationVariantProps) {
           align="center"
         />
 
-        <div className="mx-auto mt-12 grid max-w-4xl gap-6 sm:grid-cols-2 sm:gap-8">
+        {/* Con un solo lugar —una boda civil, una fiesta sin misa— la tarjeta va sola y centrada:
+            en dos columnas se quedaba cargada a la izquierda con un hueco al lado. */}
+        <div
+          className={`mx-auto mt-12 grid gap-6 sm:gap-8 ${
+            content.venues.length > 1 ? 'max-w-4xl sm:grid-cols-2' : 'max-w-md'
+          }`}
+        >
           {content.venues.map((venue, index) => (
             // El índice como clave es correcto aquí: las sedes no se reordenan ni se insertan en
             // caliente, se renderizan una vez desde contenido guardado.

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import type {
+  ChangesRequestedNotice,
   ContentSubmittedNotice,
   EventCreatedNotice,
   EventNotifier,
@@ -56,6 +57,19 @@ export class ResendEventNotifier implements EventNotifier {
 
     return result.outcome === 'sent';
   }
+
+  async notifyChangesRequested(notice: ChangesRequestedNotice): Promise<boolean> {
+    if (notice.to.length === 0) return false;
+
+    const result = await this.client.sendEmail({
+      to: notice.to.join(', '),
+      subject: `Solicitud de cambios: ${notice.eventTitle} · ${notice.clientName}`,
+      html: changesHtml(notice),
+      text: changesText(notice),
+    });
+
+    return result.outcome === 'sent';
+  }
 }
 
 /**
@@ -83,6 +97,19 @@ export class ConsoleEventNotifier implements EventNotifier {
       box('CONTENIDO PARA REVISAR (correo sin configurar)', [
         `Para:  ${notice.to.join(', ') || '(sin admins con correo)'}`,
         `Event: ${notice.eventTitle} · ${notice.clientName}`,
+        `Ficha: ${notice.reviewUrl}`,
+      ]),
+    );
+
+    return false;
+  }
+
+  async notifyChangesRequested(notice: ChangesRequestedNotice): Promise<boolean> {
+    console.info(
+      box('SOLICITUD DE CAMBIOS (correo sin configurar)', [
+        `Para:  ${notice.to.join(', ') || '(sin admins con correo)'}`,
+        `Event: ${notice.eventTitle} · ${notice.clientName}`,
+        `Nota:  ${notice.note ?? '(sin nota)'}`,
         `Ficha: ${notice.reviewUrl}`,
       ]),
     );
@@ -216,4 +243,37 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function changesText(notice: ChangesRequestedNotice): string {
+  return [
+    `${notice.clientName} pide cambiar algo de «${notice.eventTitle}».`,
+    '',
+    notice.note ? `Lo que escribió: ${notice.note}` : 'No dejó nota.',
+    '',
+    'Para que pueda editar de nuevo, entra al evento y pulsa «Permitir editar de nuevo».',
+    '',
+    notice.reviewUrl,
+  ].join('\n');
+}
+
+function changesHtml(notice: ChangesRequestedNotice): string {
+  return shell(`
+                <p style="margin:0 0 16px 0;font-size:16px;">
+                  <strong>${escapeHtml(notice.clientName)}</strong> pide cambiar algo de su invitación.
+                </p>
+                <p style="margin:0 0 16px 0;font-size:15px;color:#5c5457;">
+                  ${escapeHtml(notice.eventTitle)}
+                </p>
+                ${
+                  notice.note
+                    ? `<p style="margin:0 0 24px 0;padding:12px 16px;background:#f7f2ec;font-size:15px;">${escapeHtml(notice.note)}</p>`
+                    : ''
+                }
+                <p style="margin:0;">
+                  <a href="${escapeHtml(notice.reviewUrl)}"
+                     style="display:inline-block;padding:12px 24px;background:#7e4650;color:#ffffff;font-size:14px;letter-spacing:0.04em;text-decoration:none;">
+                    Ver el evento
+                  </a>
+                </p>`);
 }

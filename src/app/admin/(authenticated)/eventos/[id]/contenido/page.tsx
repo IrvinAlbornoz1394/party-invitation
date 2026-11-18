@@ -13,7 +13,6 @@ import { requirePlatformCredentials } from '@/lib/auth/current-session';
 import {
   publishEventAction,
   saveAdminContentAction,
-  shareContentLinkAction,
   uploadAdminEventImageAction,
 } from './actions';
 import { INITIAL_ADMIN_CONTENT_STATE, INITIAL_PUBLISH_STATE } from './form-state';
@@ -82,14 +81,16 @@ export default async function AdminEventContentPage({
       previewUrl={`/admin/eventos/${id}/vista`}
       /* Un evento que ya llegó a revisión no se entra a capturar, se entra a mirar y publicar:
          la pantalla abre en la vista previa y los pasos quedan para corregir algo. */
-      openAtPreview={event.status === 'review'}
+      openAtPreview={event.status === 'review' || event.clientProgress.changeRequestedAt !== null}
       banner={
         <EventPublishPanel
           eventId={id}
           status={event.status}
           clientFillsContent={event.clientFillsContent}
           publishAction={publishEventAction}
-          shareAction={shareContentLinkAction}
+          eventTitle={event.title}
+          clientPhone={null}
+          clientProgress={event.clientProgress}
           initialState={INITIAL_PUBLISH_STATE}
           invitationUrl={invitationUrl(siteUrl(), event.slug, event.accessCode)}
           overview={overview}

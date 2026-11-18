@@ -144,6 +144,8 @@ export function StepFields({
   setLists,
   uploadImage,
   onEdit,
+  textFields = 'all',
+  textOverrides,
 }: {
   readonly step: ContentStep;
   readonly draft: EventContentDraft;
@@ -168,8 +170,25 @@ export function StepFields({
   readonly uploadImage: UploadImage;
   /** Avisa al guardado automático de un cambio que no viene de teclear. */
   readonly onEdit: () => void;
+  /**
+   * Qué textos de la sección se pintan. `'all'` en el editor del admin; el formulario del cliente
+   * deja los textos para su etapa «Personalizar textos» y aquí solo enseña los que son contenido
+   * suyo (el título y la descripción de la vestimenta).
+   */
+  readonly textFields?: 'all' | readonly string[];
+  /** Rótulos y ejemplos distintos para algunos textos, por nombre de campo. */
+  readonly textOverrides?: Readonly<
+    Record<string, { readonly label?: string; readonly placeholder?: string; readonly help?: string }>
+  >;
 }) {
-  const block = blockTexts.find((candidate) => candidate.blockKey === step.blockKey);
+  const found = blockTexts.find((candidate) => candidate.blockKey === step.blockKey);
+  const shown = (name: string) => textFields === 'all' || textFields.includes(name);
+  const block: EditableBlockTexts | undefined = found && {
+    ...found,
+    fields: found.fields
+      .filter((field) => shown(field.name))
+      .map((field) => ({ ...field, ...textOverrides?.[field.name] })),
+  };
 
   /*
    * La fecha y la hora se piden juntas, en dos controles y como texto. La conversión al instante

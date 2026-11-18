@@ -10,6 +10,8 @@ import {
   type VenueKind,
   type VenueRow,
 } from '@/domain/events/event-collections';
+import { baseTextsFor } from '@/domain/events/base-texts';
+import { NO_CLIENT_PROGRESS, type ClientProgress } from '@/domain/events/client-progress';
 import type { BlockConfigPatch } from '@/domain/events/event-block-texts';
 import type { EventContentDraft } from '@/domain/events/event-content-draft';
 import type {
@@ -172,6 +174,30 @@ export class DrizzleEventRepository implements EventRepository {
                     on pf.plan_key = p.key and pf.feature_key = b.feature_key
                  where tb.template_id = ${input.templateId}::uuid`,
           );
+
+          /*
+           * Los textos base de la celebración (`domain/events/base-texts.ts`), encima de los de
+           * la plantilla: el evento nace con «Confirma tu asistencia» y «Nuestra historia» ya
+           * escritos, y el cliente solo los cambia si quiere. `||` mezcla y no reemplaza, así que
+           * lo que la plantilla trae por su maqueta y el banco no nombra se conserva.
+           */
+          const base = baseTextsFor(input.eventTypeKey);
+
+          if (base) {
+            await tx.execute(
+              sql`update public.event_blocks eb
+                     set config = eb.config || (${JSON.stringify(base.blocks)}::jsonb -> eb.block_key)
+                   where eb.event_id = ${eventId}::uuid
+                     and ${JSON.stringify(base.blocks)}::jsonb ? eb.block_key`,
+            );
+
+            await tx.execute(
+              sql`update public.events
+                     set event_type_label = coalesce(event_type_label, ${base.event.eventTypeLabel}),
+                         tagline = coalesce(tagline, ${base.event.tagline})
+                   where id = ${eventId}::uuid`,
+            );
+          }
 
           /*
            * La bitácora, en la misma transacción y dentro del cliente. Quien audite después ese
@@ -681,11 +707,12 @@ export class DrizzleEventRepository implements EventRepository {
           planKey: events.planKey,
           accessCode: events.accessCode,
           clientFillsContent: events.clientFillsContent,
+          ...PROGRESS_COLUMNS,
         })
         .from(events)
         .orderBy(asc(events.startsAt));
 
-      return rows.map((row) => ({ ...row, clientName: null }));
+      return rows.map((row) => withProgress({ ...row, clientName: null }));
     });
   }
 
@@ -714,11 +741,12 @@ export class DrizzleEventRepository implements EventRepository {
             planKey: events.planKey,
             accessCode: events.accessCode,
             clientFillsContent: events.clientFillsContent,
+          ...PROGRESS_COLUMNS,
           })
           .from(events)
           .orderBy(asc(events.startsAt));
 
-        return rows.map((row) => ({ ...row, clientName: null }));
+        return rows.map((row) => withProgress({ ...row, clientName: null }));
       },
     );
   }
@@ -743,6 +771,9 @@ export class DrizzleEventRepository implements EventRepository {
       planKey: row.plan_key,
       accessCode: row.access_code,
       clientFillsContent: row.client_fills_content,
+      /* La lista de todos los eventos no los trae: sale de una función SQL de plataforma y el
+         indicador del cliente vive en la ficha de cada cliente. */
+      clientProgress: NO_CLIENT_PROGRESS,
     }));
   }
 
@@ -874,13 +905,76 @@ export class DrizzleEventRepository implements EventRepository {
          revisión mandaría un segundo aviso a la plataforma por nada. */
       const result = await tx.execute(
         sql`update public.events
-               set status = 'review', updated_at = now()
+               set status = 'review',
+                   content_submitted_at = now(),
+                   change_requested_at = null,
+                   change_request_note = null,
+                   updated_at = now()
              where id = ${eventId}::uuid
                and status = 'draft'`,
       );
 
       return (result.rowCount ?? 0) > 0;
     });
+  }
+
+  async markClientSaved(scope: TenantScope, eventId: string): Promise<void> {
+    await withTenant(scope, (tx) =>
+      tx.execute(
+        sql`update public.events set client_saved_at = now() where id = ${eventId}::uuid`,
+      ),
+    );
+  }
+
+  async requestChanges(scope: TenantScope, eventId: string, note: string | null): Promise<boolean> {
+    return withTenant(scope, async (tx) => {
+      const result = await tx.execute(
+        sql`update public.events
+               set change_requested_at = now(),
+                   change_request_note = ${note},
+                   updated_at = now()
+             where id = ${eventId}::uuid
+               and status in ('review', 'published')`,
+      );
+
+      return (result.rowCount ?? 0) > 0;
+    });
+  }
+
+  async reopenForClient(
+    credentials: PlatformCredentials,
+    clientId: string,
+    eventId: string,
+  ): Promise<boolean> {
+    const reopened = await withAuthorizedClientContext(
+      hashSessionToken(credentials.sessionToken),
+      clientId,
+      async (tx) => {
+        const result = await tx.execute(
+          sql`update public.events
+                 set status = 'draft',
+                     client_fills_content = true,
+                     content_submitted_at = null,
+                     change_requested_at = null,
+                     change_request_note = null,
+                     updated_at = now()
+               where id = ${eventId}::uuid
+                 and status in ('draft', 'review', 'published')`,
+        );
+
+        if ((result.rowCount ?? 0) === 0) return false;
+
+        await tx.execute(
+          sql`insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, ip)
+              values (${clientId}::uuid, ${credentials.actor.userId}::uuid,
+                      'event.reopened_for_client', 'event', ${eventId}::uuid, ${credentials.clientIp}::inet)`,
+        );
+
+        return true;
+      },
+    );
+
+    return reopened ?? false;
   }
 
   async includedFeatures(scope: TenantScope, eventId: string): Promise<readonly string[]> {
@@ -1497,6 +1591,7 @@ export async function findEventInClient(
         planKey: events.planKey,
         accessCode: events.accessCode,
         clientFillsContent: events.clientFillsContent,
+          ...PROGRESS_COLUMNS,
       })
       .from(events)
       .where(eq(events.id, eventId))
@@ -1504,6 +1599,40 @@ export async function findEventInClient(
 
     const found = row.at(0);
 
-    return found ? { ...found, clientName: null } : null;
+    return found ? withProgress({ ...found, clientName: null }) : null;
   });
+}
+
+
+/** Las fechas del seguimiento del cliente, para los `select` del resumen. */
+const PROGRESS_COLUMNS = {
+  clientOpenedAt: events.clientOpenedAt,
+  clientSavedAt: events.clientSavedAt,
+  contentSubmittedAt: events.contentSubmittedAt,
+  changeRequestedAt: events.changeRequestedAt,
+  changeRequestNote: events.changeRequestNote,
+};
+
+/** Agrupa esas columnas en `clientProgress`, que es como las lee el dominio. */
+function withProgress<
+  T extends {
+    clientOpenedAt: Date | null;
+    clientSavedAt: Date | null;
+    contentSubmittedAt: Date | null;
+    changeRequestedAt: Date | null;
+    changeRequestNote: string | null;
+  },
+>(row: T): Omit<T, keyof typeof PROGRESS_COLUMNS> & { clientProgress: ClientProgress } {
+  const { clientOpenedAt, clientSavedAt, contentSubmittedAt, changeRequestedAt, changeRequestNote, ...rest } = row;
+
+  return {
+    ...rest,
+    clientProgress: {
+      openedAt: clientOpenedAt,
+      savedAt: clientSavedAt,
+      submittedAt: contentSubmittedAt,
+      changeRequestedAt,
+      changeRequestNote,
+    },
+  };
 }

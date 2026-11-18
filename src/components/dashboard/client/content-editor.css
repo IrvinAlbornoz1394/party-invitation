@@ -373,3 +373,69 @@
   margin: 0;
   padding-left: 18px;
 }
+
+/* ── Formulario del cliente por etapas (`ClientContentForm`) ──────────────── */
+
+/* «Enviar mis datos» a la mano desde que se guarda la etapa 1, sin esperar al final. */
+.client-send-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dash-gap-sm);
+  margin-bottom: var(--dash-gap);
+  padding: 12px 16px;
+  border: 1px solid var(--dash-border);
+  border-radius: 12px;
+  background: var(--dash-surface);
+  color: var(--dash-ink-soft);
+  font-size: 14px;
+}
+
+.client-saved__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dash-gap-sm);
+  margin-top: var(--dash-gap);
+}
+
+.client-sections {
+  margin-bottom: var(--dash-gap);
+}
+
+.client-texts__block + .client-texts__block {
+  margin-top: var(--dash-gap-lg);
+  padding-top: var(--dash-gap);
+  border-top: 1px solid var(--dash-border);
+}
+
+.client-texts__title {
+  margin: 0 0 var(--dash-gap-sm);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.client-locked {
+  display: flex;
+  gap: var(--dash-gap);
+  align-items: flex-start;
+  margin-bottom: var(--dash-gap);
+}
+
+.client-locked__icon {
+  flex-shrink: 0;
+  color: var(--dash-accent);
+}
+
+.client-locked__form {
+  display: grid;
+  gap: var(--dash-gap-sm);
+}
+
+/* En el teléfono, los botones de cada etapa ocupan el ancho: se tocan con el pulgar. */
+@media (max-width: 640px) {
+  .client-saved__actions > *,
+  .client-send-bar > .ant-btn {
+    flex: 1 1 100%;
+  }
+}

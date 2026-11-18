@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Alert, Button } from 'antd';
+import { Alert, Button, Tooltip } from 'antd';
 import type { TableProps } from 'antd';
 import Link from 'next/link';
 import { ArrowLeft, CalendarDays, CircleCheck, Clock, Pencil, Plus } from 'lucide-react';
@@ -24,10 +24,13 @@ import { PageHeader } from '../primitives/PageHeader';
 import { SectionCard } from '../primitives/SectionCard';
 import { StatCard } from '../primitives/StatCard';
 import { StatusPill } from '../primitives/StatusPill';
-import { clientStatus, eventStatus } from '../primitives/status-display';
+import { clientFillAppearance, clientStatus, eventStatus } from '../primitives/status-display';
+import { clientFillStage } from '@/domain/events/client-progress';
 import { EditClientDialog } from './EditClientDialog';
 import { EditEventDialog } from './EditEventDialog';
 import { editEventColumn } from './edit-event-column';
+import { ContentLinkDialog } from './ContentLinkDialog';
+import { contentLinkColumn } from './content-link-column';
 import { NewEventDialog, NewEventNotice } from './NewEventDialog';
 
 /**
@@ -68,9 +71,13 @@ export function ClientDetailScreen({
   const [isEventEditOpen, setEventEditOpen] = useState(false);
   const [eventFeedback, setEventFeedback] = useState<EditEventState>(INITIAL_EDIT_EVENT_STATE);
 
+  /* El evento cuyo enlace para el cliente está abierto en el modal. */
+  const [linkEvent, setLinkEvent] = useState<EventSummary | null>(null);
+
   const tableColumns = useMemo(
     () => [
       ...columns,
+      contentLinkColumn(setLinkEvent),
       editEventColumn((event) => {
         setEditingEventId(event.id);
         setEventEditOpen(true);
@@ -185,7 +192,7 @@ export function ClientDetailScreen({
             /* Igual que en `/admin/eventos`: la fila lleva a editar la invitación —su contenido— y
                el lápiz del final, a editar el evento —plan, plantilla, fecha—. */
             rowHref={(event) => `/admin/eventos/${event.id}/contenido`}
-            minWidth={684}
+            minWidth={890}
             columns={tableColumns}
             empty={{
               title: 'Este cliente todavía no tiene eventos',
@@ -233,6 +240,12 @@ export function ClientDetailScreen({
           options={options}
         />
       )}
+
+      <ContentLinkDialog
+        event={linkEvent}
+        clientPhone={client.contactPhone}
+        onClose={() => setLinkEvent(null)}
+      />
 
       <NewEventDialog
         open={isDialogOpen}
@@ -287,5 +300,23 @@ const columns: NonNullable<TableProps<EventSummary>['columns']> = [
     key: 'status',
     width: 122,
     render: (status: string) => <StatusPill appearance={eventStatus(status)} />,
+  },
+  {
+    /* En qué va el cliente con su información, y si pidió cambios después de enviarla. */
+    title: 'Cliente',
+    key: 'client-progress',
+    width: 150,
+    render: (_value, event) => (
+      <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 4 }}>
+        <StatusPill appearance={clientFillAppearance(clientFillStage(event))} />
+        {event.clientProgress.changeRequestedAt && (
+          <Tooltip title={event.clientProgress.changeRequestNote ?? 'Sin nota'}>
+            <span>
+              <StatusPill appearance={{ label: 'Pidió cambios', tone: 'danger' }} />
+            </span>
+          </Tooltip>
+        )}
+      </span>
+    ),
   },
 ];

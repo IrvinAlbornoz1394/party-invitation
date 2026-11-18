@@ -187,6 +187,29 @@ justo lo que ya se evita con los códigos de invitación y con los límites de O
 verificar el código la persona ya demostró que el correo es suyo, y ahí el selector se lo dice
 todo sin filtrar nada a quien no entró.
 
+### Excepción: el enlace del cliente (2026-11-18)
+
+Lo de arriba sigue valiendo para todo lo demás, con **una** excepción decidida a propósito: el
+enlace que el admin copia en la lista de eventos y pega en el WhatsApp del cliente
+(`/llenar/<token>`) sí es una credencial. Al pulsar «Entrar» abre una sesión sin pedir código.
+Existe porque el cliente llega desde una conversación de WhatsApp, a menudo desde el teléfono, y
+pedirle un código por correo era donde se perdía.
+
+Los costes de arriba se contestan con cuatro límites:
+
+- **Cinco días** de vigencia, y uno solo vigente por evento: generar otro revoca el anterior.
+- **Un solo evento.** La sesión lleva `sessions.scope_event_id` y `app.resolve_session` la reduce
+  a una membresía `staff` de ese evento. Aunque la cuenta sea la dueña de un organizador con
+  veinte bodas, quien tenga el enlace ve una. Lo impone RLS, no la pantalla.
+- **Se cierra al enviar.** Con el evento fuera de borrador el enlace deja de abrir sesiones
+  (`closed`), y guardar se rechaza (`EditEventContent.save` → `locked`).
+- **No se canjea en el GET.** La página enseña un botón; las vistas previas de WhatsApp abren
+  los enlaces solas y canjearlo al abrir abriría sesiones en sus servidores.
+
+El token no se guarda: se deriva del id del enlace con `AUTH_SECRET`, así que el admin puede
+volver a copiarlo mientras esté vigente y un volcado de la base no sirve para entrar. Esquema en
+`sql/increments/2026-11-18_enlace_del_cliente.sql`; canje en `app.redeem_content_link`.
+
 ### El contexto activo va en la URL
 
 `/panel` es el selector. Todo lo demás vive bajo `/panel/eventos/<id>/…`, y cada página autoriza

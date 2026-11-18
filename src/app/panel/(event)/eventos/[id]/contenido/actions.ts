@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { notFound } from 'next/navigation';
 import type { EventContentDraftInput } from '@/domain/events/event-content-draft';
 import type { ImageUploadResult } from '@/domain/media/uploaded-image';
-import { editEventContent, submitEventContent, uploadEventImage } from '@/infrastructure/container';
+import { editEventContent, submitEventContent, requestContentChanges, uploadEventImage } from '@/infrastructure/container';
 import { requireEventAccess } from '@/lib/auth/current-session';
 import {
   INITIAL_CONTENT_STATE,
@@ -106,6 +106,13 @@ export async function saveEventContentAction(
         status: 'error',
         message: 'Revisa los campos marcados.',
         errors: result.errors,
+      };
+
+    case 'locked':
+      return {
+        status: 'error',
+        message: 'Ya enviaste tu información, así que no se puede editar. Si necesitas cambiar algo, solicita cambios y te habilitamos la edición.',
+        errors: {},
       };
 
     case 'not-found':
@@ -227,6 +234,8 @@ export async function submitContentAction(
           : 'Listo, ya lo tenemos. Lo revisamos en breve.',
       };
     case 'incomplete':
+      /* Ya no ocurre —el envío no exige que esté completo—, pero el caso de uso lo conserva en su
+         contrato y se contesta igual de claro si algún día vuelve. */
       return {
         ...INITIAL_SUBMIT_STATE,
         status: 'error',
@@ -244,5 +253,35 @@ export async function submitContentAction(
         status: 'error',
         message: 'Este evento ya no está disponible para tu cuenta.',
       };
+  }
+}
+
+/**
+ * Con la información ya enviada, el cliente pide poder cambiar algo. Queda anotado en el evento
+ * y avisa a la plataforma por correo; quien le devuelve la edición es el admin.
+ */
+export async function requestChangesAction(
+  _previous: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  const eventId = readText(formData, 'eventId');
+  const { scope } = await requireEventAccess(eventId);
+
+  if (scope === null) notFound();
+
+  const result = await requestContentChanges.execute(scope, eventId, readText(formData, 'note') || null);
+
+  switch (result.outcome) {
+    case 'requested':
+      revalidatePath(`/panel/eventos/${eventId}/contenido`);
+
+      return {
+        status: 'success',
+        message: 'Listo, avisamos al equipo. En cuanto te habiliten la edición podrás volver a entrar aquí.',
+      };
+    case 'not-needed':
+      return { status: 'error', message: 'Tu información todavía se puede editar: no hace falta pedir cambios.' };
+    case 'not-found':
+      return { status: 'error', message: 'Este evento ya no está disponible para tu cuenta.' };
   }
 }

@@ -42,7 +42,9 @@ import {
 import { CreateEvent, LoadNewEventOptions } from '@/application/events/create-event';
 import { EditEventDetails } from '@/application/events/edit-event-details';
 import { PublishEvent } from '@/application/events/publish-event';
-import { ShareContentLink } from '@/application/events/share-content-link';
+import { ManageContentLink, RedeemContentLink } from '@/application/events/manage-content-link';
+import { DrizzleContentLinkRepository } from './repositories/drizzle-content-link-repository';
+import { ReopenContentForClient, RequestContentChanges } from '@/application/events/request-content-changes';
 import { SubmitEventContent } from '@/application/events/submit-event-content';
 import {
   FindEventForPlatform,
@@ -263,6 +265,7 @@ function eventNotifier(): EventNotifier {
 const lazyEventNotifier: EventNotifier = {
   notifyEventCreated: (notice) => eventNotifier().notifyEventCreated(notice),
   notifyContentSubmitted: (notice) => eventNotifier().notifyContentSubmitted(notice),
+  notifyChangesRequested: (notice) => eventNotifier().notifyChangesRequested(notice),
 };
 
 let prospectNotifierInstance: ProspectNotifier | null = null;
@@ -368,11 +371,17 @@ export const submitEventContent = new SubmitEventContent(
   lazyEventNotifier,
   env.NEXT_PUBLIC_SITE_URL,
 );
-export const shareContentLink = new ShareContentLink(
+const contentLinkRepository = new DrizzleContentLinkRepository();
+/** El enlace del cliente: el admin lo copia, el cliente lo canjea por una sesión de su evento. */
+export const manageContentLink = new ManageContentLink(contentLinkRepository, env.NEXT_PUBLIC_SITE_URL);
+export const redeemContentLink = new RedeemContentLink(contentLinkRepository);
+/** Después de enviar: el cliente pide cambios y la plataforma le devuelve la edición. */
+export const requestContentChanges = new RequestContentChanges(
   eventRepository,
   lazyEventNotifier,
   env.NEXT_PUBLIC_SITE_URL,
 );
+export const reopenContentForClient = new ReopenContentForClient(eventRepository);
 
 /**
  * El catálogo de la plataforma. Solo lectura: lo administra el rol dueño de Postgres, no la

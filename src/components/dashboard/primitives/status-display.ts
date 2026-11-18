@@ -102,3 +102,19 @@ export const rsvpStatus = (
 
   return { label: `Confirmó ${reply.attendees}`, tone: 'positive' };
 };
+
+/**
+ * En qué va el cliente con su información (`domain/events/client-progress.ts`). «Enviado» va en
+ * ámbar por lo mismo que «En revisión»: espera a que la plataforma haga algo hoy.
+ */
+const CLIENT_FILL: Record<string, StatusAppearance> = {
+  platform: { label: 'Lo llenamos nosotros', tone: 'neutral' },
+  unopened: { label: 'Sin abrir', tone: 'pending' },
+  filling: { label: 'Llenando', tone: 'pending' },
+  submitted: { label: 'Enviado', tone: 'attention' },
+  published: { label: 'Publicado', tone: 'positive' },
+};
+
+export function clientFillAppearance(stage: string): StatusAppearance {
+  return CLIENT_FILL[stage] ?? { label: stage, tone: 'neutral' };
+}

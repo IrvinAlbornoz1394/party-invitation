@@ -1,8 +1,11 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 import { Alert, Button, Modal, Tag } from 'antd';
-import { Copy, Link2, Rocket } from 'lucide-react';
+import { Copy, Link2, LockOpen, Rocket } from 'lucide-react';
+import { reopenForClientAction } from '@/app/admin/(authenticated)/eventos/enlace/actions';
+import type { ClientProgress } from '@/domain/events/client-progress';
+import { ContentLinkDialog } from './ContentLinkDialog';
 import type { IncompleteBlock } from '@/domain/events/content-completeness';
 import { EVENT_STATUS_LABELS, isEventStatus } from '@/domain/events/event-status';
 import type { EventOverview } from '@/domain/events/event-repository';
@@ -48,12 +51,18 @@ export function EventPublishPanel({
   status,
   clientFillsContent,
   publishAction,
-  shareAction,
   initialState,
   invitationUrl,
   overview,
+  eventTitle,
+  clientPhone,
+  clientProgress,
 }: {
   readonly eventId: string;
+  readonly eventTitle: string;
+  readonly clientPhone: string | null;
+  /** Cuándo envió el cliente y si pidió cambios. */
+  readonly clientProgress: ClientProgress;
   /** La dirección completa de la invitación, `/<slug>/<código>`, con el dominio delante. */
   readonly invitationUrl: string;
   /** Plan, vigencia y diseño. `null` si no se pudo leer; entonces solo se enseña el enlace. */
@@ -61,12 +70,20 @@ export function EventPublishPanel({
   readonly status: string;
   readonly clientFillsContent: boolean;
   readonly publishAction: (state: PublishState, formData: FormData) => Promise<PublishState>;
-  readonly shareAction: (state: PublishState, formData: FormData) => Promise<PublishState>;
   readonly initialState: PublishState;
 }) {
   const [publishState, publish, publishing] = useActionState(publishAction, initialState);
-  const [shareState, share, sharing] = useActionState(shareAction, initialState);
   const [confirming, setConfirming] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [reopening, startReopen] = useTransition();
+  const [reopenResult, setReopenResult] = useState<{ ok: boolean; message: string } | null>(null);
+  /* Devolverle la edición tiene sentido cuando ya la envió o pidió cambios; en borrador ya la tiene. */
+  const canReopen = status === 'review' || status === 'published';
+
+  const reopen = () =>
+    startReopen(async () => {
+      setReopenResult(await reopenForClientAction(eventId));
+    });
 
   const label = isEventStatus(status) ? EVENT_STATUS_LABELS[status] : status;
   const publishable = status === 'draft' || status === 'review';
@@ -77,7 +94,7 @@ export function EventPublishPanel({
   /* El aviso de la última acción que se ejecutó. Los dos estados son independientes —cada uno con
      su `useActionState`— y enseñar los dos a la vez apilaría mensajes que hablan de cosas
      distintas. Gana el que tiene algo que decir; si los dos lo tienen, el de publicar. */
-  const notice = publishState.status !== 'idle' ? publishState : shareState;
+  const notice = publishState;
 
   return (
     <section className="dash-card dash-publish">
@@ -93,16 +110,19 @@ export function EventPublishPanel({
         </div>
 
         <div className="dash-publish__actions">
-          <form action={share}>
-            <input type="hidden" name="eventId" value={eventId} />
+          <Button icon={<Link2 size={15} strokeWidth={1.9} aria-hidden="true" />} onClick={() => setLinkOpen(true)}>
+            Enlace para el cliente
+          </Button>
+
+          {canReopen && (
             <Button
-              htmlType="submit"
-              loading={sharing}
-              icon={<Link2 size={15} strokeWidth={1.9} aria-hidden="true" />}
+              loading={reopening}
+              icon={<LockOpen size={15} strokeWidth={1.9} aria-hidden="true" />}
+              onClick={reopen}
             >
-              {clientFillsContent ? 'Reenviar enlace al cliente' : 'Enviar enlace al cliente'}
+              Permitir editar de nuevo
             </Button>
-          </form>
+          )}
 
           <Button
             type="primary"
@@ -115,6 +135,31 @@ export function EventPublishPanel({
           </Button>
         </div>
       </div>
+
+      {clientProgress.changeRequestedAt && (
+        <Alert
+          className="dash-publish__alert"
+          type="warning"
+          showIcon
+          title={`El cliente pidió cambios el ${formatDate(clientProgress.changeRequestedAt)}`}
+          description={
+            <>
+              {clientProgress.changeRequestNote ? `«${clientProgress.changeRequestNote}»` : 'No dejó nota.'}{' '}
+              Puedes hacer el cambio tú mismo aquí, o pulsar «Permitir editar de nuevo» para que lo haga él
+              {status === 'published' ? ' (la invitación deja de estar publicada mientras edita)' : ''}.
+            </>
+          }
+        />
+      )}
+
+      {reopenResult && (
+        <Alert
+          className="dash-publish__alert"
+          type={reopenResult.ok ? 'success' : 'warning'}
+          showIcon
+          title={reopenResult.message}
+        />
+      )}
 
       {notice.status !== 'idle' && notice.message && (
         <Alert
@@ -137,6 +182,12 @@ export function EventPublishPanel({
           <InvitationLink url={invitationUrl} label="Enlace de la invitación publicada" />
         </div>
       )}
+
+      <ContentLinkDialog
+        event={linkOpen ? { id: eventId, title: eventTitle } : null}
+        clientPhone={clientPhone}
+        onClose={() => setLinkOpen(false)}
+      />
 
       {/*
         El formulario de publicar vive dentro del diálogo: así el botón que confirma **es** el

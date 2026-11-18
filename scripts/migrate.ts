@@ -7,7 +7,7 @@
  * El paso 2 va después y siempre, porque cada migración nueva puede crear tablas
  * que necesitan políticas y permisos. Es idempotente.
  */
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as loadDotenv } from 'dotenv';
@@ -56,6 +56,18 @@ async function main(): Promise<void> {
   const db = drizzle(pool);
   await migrate(db, { migrationsFolder: resolve(projectRoot, 'src/infrastructure/db/migrations') });
   console.log('  migraciones al día');
+
+  /*
+   * Los incrementos: cambios de esquema que se AÑADEN a una base con datos, sin `db:fresh`.
+   * Idempotentes y en orden de nombre (la fecha va delante), y antes del SQL de seguridad
+   * porque sus políticas y funciones nombran lo que crean. Ver el primero de la carpeta.
+   */
+  const incrementsDir = resolve(projectRoot, 'src/infrastructure/db/sql/increments');
+  const increments = (await readdir(incrementsDir)).filter((name) => name.endsWith('.sql')).sort();
+  for (const name of increments) {
+    console.log(`▸ Incremento ${name}…`);
+    await pool.query(await readFile(resolve(incrementsDir, name), 'utf8'));
+  }
 
   console.log('▸ Aplicando SQL de seguridad…');
   const securitySql = await readFile(
