@@ -14,7 +14,6 @@ import { HomeMotion } from '@/components/home/HomeMotion';
 import { HomePhone } from '@/components/home/HomePhone';
 import { HomePlans } from '@/components/home/HomePlans';
 import { LiveRsvp } from '@/components/home/LiveRsvp';
-import { MobileDock } from '@/components/home/MobileDock';
 import { StepsStack } from '@/components/home/StepsStack';
 import { TemplatesShowcase } from '@/components/home/TemplatesShowcase';
 import type { ShowcaseTemplate } from '@/components/home/types';
@@ -168,7 +167,6 @@ export default async function LandingPage({ searchParams }: PageProps) {
         </main>
 
         <HomeFooter templates={templates.slice(0, 6).map(({ name, href }) => ({ name, href }))} />
-        <MobileDock />
       </div>
     </HomeCoupleProvider>
   );
