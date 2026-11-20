@@ -281,7 +281,7 @@ function EditEventForm({
           type="warning"
           showIcon
           message="Al guardar, la invitación volverá a borrador."
-          description="Dejará de verse en su enlace hasta que la publiques de nuevo. La vigencia del plan se conserva."
+          description="Dejará de verse en su enlace hasta que la publiques de nuevo. La vigencia se cuenta desde la fecha del evento."
         />
       )}
 
@@ -302,7 +302,7 @@ function EditEventForm({
               {planChanged && (
                 <li>
                   Se encienden o apagan las secciones según lo que incluye el plan.
-                  {published && ' La vigencia se recalcula desde el día en que se publicó.'}
+                  {published && ' La vigencia se recalcula con los meses del plan nuevo, desde la fecha del evento.'}
                 </li>
               )}
             </ul>

@@ -223,10 +223,9 @@ export function EventPublishPanel({
 /**
  * La ficha del evento publicado, en cuatro datos.
  *
- * La vigencia dice la fecha y cuánto falta: «vence el 16 oct 2027 · dentro de 365 días». Con
- * solo la fecha, saber si hay que avisarle al cliente que renueve obliga a hacer la cuenta.
- * Recién publicado, mientras llega la página revalidada, `expiresAt` todavía es nula y se
- * enseña la duración del plan en su lugar.
+ * La vigencia dice la fecha y cuánto falta: «hasta el 16 oct 2027 · dentro de 365 días». Se
+ * cuenta desde la fecha del evento, más los meses del plan. Recién publicado, mientras llega la
+ * página revalidada, `expiresAt` todavía es nula y se enseña la regla en su lugar.
  */
 function EventOverviewList({ overview }: { readonly overview: EventOverview }) {
   const duration = pluralize(overview.planDurationMonths, 'mes', 'meses');
@@ -247,11 +246,11 @@ function EventOverviewList({ overview }: { readonly overview: EventOverview }) {
             <>
               <strong>Hasta el {formatDate(overview.expiresAt)}</strong>
               <span>
-                {duration}, {formatDaysUntil(overview.expiresAt)}
+                {duration} después del evento, {formatDaysUntil(overview.expiresAt)}
               </span>
             </>
           ) : (
-            <strong>{duration} desde hoy</strong>
+            <strong>{duration} después del evento</strong>
           )}
         </dd>
       </div>

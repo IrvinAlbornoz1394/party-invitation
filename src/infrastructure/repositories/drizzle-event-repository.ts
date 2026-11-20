@@ -874,19 +874,16 @@ export class DrizzleEventRepository implements EventRepository {
          * veces —con dos fechas de publicación y dos vigencias distintas—. Aquí, el segundo
          * UPDATE no toca ninguna fila y la acción responde que no se pudo.
          *
-         * La vigencia sale del plan del propio evento: `now()` más sus meses. En SQL, así que el
-         * instante de publicación y el de caducidad se miden con el mismo reloj.
+         * La vigencia se cuenta desde la FECHA DEL EVENTO, no desde la publicación: la fecha del
+         * evento más los meses del plan. Así la invitación nunca vence antes de la celebración por
+         * mucho que se publique con anticipación, y republicar no regala ni quita meses.
          */
         const result = await tx.execute(
           sql`update public.events e
                  set status = 'published',
-                     /* Se conservan si ya existen: un evento que volvió a borrador por una
-                        edición no gana meses de vigencia al republicarse. */
+                     /* Se conserva si ya existe: es la primera publicación. */
                      published_at = coalesce(e.published_at, now()),
-                     expires_at = coalesce(
-                       e.expires_at,
-                       now() + make_interval(months => p.duration_months)
-                     ),
+                     expires_at = e.starts_at + make_interval(months => p.duration_months),
                      updated_at = now()
                 from public.plans p
                where e.id = ${eventId}::uuid
@@ -1156,9 +1153,9 @@ export class DrizzleEventRepository implements EventRepository {
           const templateChanged = before.template_id !== details.templateId;
 
           /*
-           * La vigencia solo se toca si el evento ya la tiene —está o estuvo publicado— y cambió
-           * el plan. Se mide desde la publicación y no desde hoy: subir de plan no regala meses
-           * de más, solo cambia cuántos le tocaban desde el principio.
+           * La vigencia solo se toca si el evento ya la tiene —está o estuvo publicado—. Se recalcula
+           * siempre con la fecha y el plan nuevos: es la fecha del evento más los meses del plan, así
+           * que mover la fecha o cambiar de plan la mueve con ellos.
            */
           /*
            * Un evento publicado vuelve a borrador si cambió **algo**: la invitación deja de verse
@@ -1194,10 +1191,12 @@ export class DrizzleEventRepository implements EventRepository {
                        theme_id = ${details.themeId}::uuid,
                        palette_key = ${details.paletteKey},
                        expires_at = case
-                         when ${planChanged} and e.published_at is not null
-                           then e.published_at + make_interval(
-                             months => (select p.duration_months from public.plans p
-                                         where p.key = ${details.planKey}))
+                         when e.published_at is not null
+                           then (${`${details.date} ${details.time}`}::timestamp
+                                  at time zone ${details.timeZone})
+                                + make_interval(
+                                    months => (select p.duration_months from public.plans p
+                                                where p.key = ${details.planKey}))
                          else e.expires_at
                        end
                  where e.id = ${eventId}::uuid

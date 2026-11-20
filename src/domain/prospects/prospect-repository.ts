@@ -21,6 +21,12 @@ export interface ProspectRepository {
   /** Desde el formulario público. Sin sesión: quien escribe aquí no tiene cuenta. */
   submit(form: ProspectForm, clientIp: string | null): Promise<SubmitProspectResult>;
 
+  /**
+   * Los correos de las cuentas de plataforma activas: a quién avisar de una solicitud nueva. Sin
+   * sesión, como `submit`, porque lo pide el formulario público; la función solo devuelve correos.
+   */
+  listPlatformNoticeEmails(): Promise<readonly string[]>;
+
   /** La bandeja entera. El orden de urgencia lo pone el dominio, no la consulta. */
   list(credentials: PlatformCredentials): Promise<readonly Prospect[]>;
 

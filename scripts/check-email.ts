@@ -34,7 +34,6 @@ const [, , recipient] = process.argv;
 async function main(): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.AUTH_EMAIL_FROM;
-  const noticeTo = process.env.PROSPECT_NOTICE_EMAIL;
   const gmailUser = process.env.GMAIL_USER;
   const gmailPassword = process.env.GMAIL_APP_PASSWORD;
   // Mismo orden que el contenedor: Gmail, si está, gana sobre Resend.
@@ -45,14 +44,9 @@ async function main(): Promise<void> {
   console.log(`  GMAIL_APP_PASSWORD     ${describe(gmailPassword, true)}`);
   console.log(`  RESEND_API_KEY         ${describe(apiKey, true)}`);
   console.log(`  AUTH_EMAIL_FROM        ${describe(from)}`);
-  console.log(`  PROSPECT_NOTICE_EMAIL  ${describe(noticeTo)}`);
   console.log('');
   console.log(`  Proveedor en uso: ${useGmail ? 'Gmail (SMTP)' : 'Resend'}\n`);
 
-  /*
-   * Las dos primeras son las que deciden si se manda algo. La tercera solo decide a dónde va el
-   * aviso de prospectos, así que su ausencia se avisa y no detiene la prueba.
-   */
   if (!useGmail && (!apiKey || !from)) {
     console.error(
       '✗ Faltan GMAIL_USER y GMAIL_APP_PASSWORD, o RESEND_API_KEY y AUTH_EMAIL_FROM.\n\n' +
@@ -68,21 +62,12 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (!noticeTo) {
-    console.warn(
-      '⚠ PROSPECT_NOTICE_EMAIL está vacía: las solicitudes del formulario público se\n' +
-        '  guardan en la bandeja pero nadie recibe el aviso. No rompe nada, pero conviene\n' +
-        '  ponerla en producción.\n',
-    );
-  }
-
-  const to = recipient ?? noticeTo;
+  const to = recipient;
 
   if (!to) {
     console.error(
       '✗ No hay a quién escribirle.\n\n' +
-        '  Pasa un destinatario:  npm run check:email -- tu@correo.com\n' +
-        '  O define PROSPECT_NOTICE_EMAIL y se usará ese.\n',
+        '  Pasa un destinatario:  npm run check:email -- tu@correo.com\n',
     );
     process.exit(1);
   }

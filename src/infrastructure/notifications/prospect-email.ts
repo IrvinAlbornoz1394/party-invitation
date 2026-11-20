@@ -1,6 +1,7 @@
 import 'server-only';
 
 import type {
+  PlatformProspectNotice,
   ProspectNotice,
   ProspectNotifier,
 } from '@/domain/prospects/prospect-notifier';
@@ -32,15 +33,12 @@ const PRODUCT_NAME = 'MiEvento';
  * herramienta que no existe para alguien que todavía no es cliente.
  */
 export class ResendProspectNotifier implements ProspectNotifier {
-  constructor(
-    private readonly client: EmailClient,
-    /** A dónde llega el aviso interno. Ver `PROSPECT_NOTICE_EMAIL` en `lib/env.ts`. */
-    private readonly noticeTo: string,
-  ) {}
+  constructor(private readonly client: EmailClient) {}
 
-  async notifyPlatform(notice: ProspectNotice): Promise<boolean> {
+  async notifyPlatform(notice: PlatformProspectNotice): Promise<boolean> {
     const result = await this.client.sendEmail({
-      to: this.noticeTo,
+      /* A todos los admins activos en un solo envío, igual que el aviso de contenido enviado. */
+      to: notice.to.join(', '),
       /*
        * El asunto lleva el nombre y el teléfono. En una bandeja de entrada, un asunto que dice
        * «Solicitud nueva» y nada más obliga a abrir el correo para saber de quién era; con el
@@ -82,7 +80,7 @@ export class ResendProspectNotifier implements ProspectNotifier {
  * perdido en un prospecto perdido, que es peor.
  */
 export class ConsoleProspectNotifier implements ProspectNotifier {
-  async notifyPlatform(notice: ProspectNotice): Promise<boolean> {
+  async notifyPlatform(notice: PlatformProspectNotice): Promise<boolean> {
     console.info(
       [
         '',
@@ -91,6 +89,7 @@ export class ConsoleProspectNotifier implements ProspectNotifier {
         '│',
         `│  ${notice.form.contactName} · ${notice.form.contactPhone}`,
         `│  ${describeAsk(notice) || 'Sin más detalles'}`,
+        `│  Para: ${notice.to.join(', ')}`,
         `│  Bandeja: ${inboxUrl()}`,
         '│',
         '└─────────────────────────────────────────────────────────────',

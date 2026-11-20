@@ -34,6 +34,14 @@ import { db } from '../db/client';
  * con que un camino nuevo construyera un actor a mano para leer la lista entera de contactos.
  */
 export class DrizzleProspectRepository implements ProspectRepository {
+  async listPlatformNoticeEmails(): Promise<readonly string[]> {
+    const rows = await db.execute<{ email: string }>(
+      sql`select email from app.list_platform_notice_emails()`,
+    );
+
+    return rows.rows.map((row) => row.email);
+  }
+
   async submit(form: ProspectForm, clientIp: string | null): Promise<SubmitProspectResult> {
     const result = await db.execute<{ status: string; prospect_id: string | null }>(
       sql`select status, prospect_id

@@ -295,9 +295,8 @@ export interface EventRepository {
   /**
    * Publica un evento. Devuelve falso si no estaba en un estado desde el que se pueda.
    *
-   * La vigencia se calcula aquí y no en la aplicación: sale de `plans.duration_months`, que es
-   * un dato del catálogo, y hacerlo en SQL garantiza que el instante de publicación y el de
-   * caducidad se midan con el mismo reloj.
+   * La vigencia se calcula aquí y no en la aplicación: es la fecha del evento más
+   * `plans.duration_months`, un dato del catálogo.
    */
   publish(
     credentials: PlatformCredentials,

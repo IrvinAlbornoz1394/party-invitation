@@ -10,7 +10,7 @@ import {
   type TouchChannel,
 } from '@/domain/prospects/prospect';
 import type { CreateClient, CreateClientOutcome } from '@/application/clients/manage-clients';
-import type { ProspectNotifier } from '@/domain/prospects/prospect-notifier';
+import type { ProspectNotice, ProspectNotifier } from '@/domain/prospects/prospect-notifier';
 import type {
   ProspectRepository,
   ProspectTouch,
@@ -64,13 +64,29 @@ export class SubmitProspect {
     if (result.outcome === 'received') {
       const notice = { form: parsed.data };
 
-      await Promise.allSettled([
-        this.notifier.notifyPlatform(notice),
-        this.notifier.acknowledge(notice),
-      ]);
+      await Promise.allSettled([this.notifyAdmins(notice), this.notifier.acknowledge(notice)]);
     }
 
     return result;
+  }
+
+  /**
+   * El aviso a los admins de la plataforma. Siempre debería haber al menos uno —sin él nadie
+   * entra al panel—, pero si la lista llega vacía no se rompe nada: la solicitud ya está en la
+   * bandeja, y se deja constancia en el log para que alguien lo note.
+   */
+  private async notifyAdmins(notice: ProspectNotice): Promise<boolean> {
+    const to = await this.prospects.listPlatformNoticeEmails();
+
+    if (to.length === 0) {
+      console.error(
+        '[prospectos] No hay ninguna cuenta de plataforma activa a quien avisar de la solicitud nueva.',
+      );
+
+      return false;
+    }
+
+    return this.notifier.notifyPlatform({ ...notice, to });
   }
 }
 

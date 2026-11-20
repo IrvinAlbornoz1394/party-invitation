@@ -173,7 +173,7 @@ porque la alternativa es recorrer un flujo entero —pedir un código, llenar el
 quedarse mirando una bandeja de entrada sin saber si el fallo está en la clave, en el dominio sin
 verificar o en el remitente.
 
-Sin destinatario usa `PROSPECT_NOTICE_EMAIL`. Que Resend acepte el envío no garantiza que llegue a
+Pide el destinatario como argumento. Que Resend acepte el envío no garantiza que llegue a
 la bandeja: si no aparece, el registro está en <https://resend.com/emails>.
 
 El script importa el cliente real, que lleva `import 'server-only'`; se sortea con
@@ -886,9 +886,9 @@ enlaces pegados de otros sitios.
 - **Una identidad con dos membresías de alcance cliente recibe 404** en `/panel/equipo`,
   `/panel/ajustes` y `/panel/inicio`: esas rutas no llevan el cliente en la URL y elegir uno por
   defecto enseñaría los datos del cliente equivocado. No ocurre con los datos de hoy.
-- **El aviso de prospectos necesita `PROSPECT_NOTICE_EMAIL`.** Sin ella —o sin Resend— los dos
-  correos se escriben en la consola y el formulario sigue funcionando. Es deliberado: un aviso
-  perdido no debe convertirse en un prospecto perdido. En producción hay que ponerla.
+- **El aviso de prospectos llega a las cuentas de plataforma activas.** Sin proveedor de correo los
+  dos correos se escriben en la consola y el formulario sigue funcionando. Es deliberado: un aviso
+  perdido no debe convertirse en un prospecto perdido.
 - **La mesa de regalos no se pinta.** `event_gift_registries` y la funcionalidad
   `mesa_regalos` están en la base desde el principio, pero no hay bloque `gifts` ni
   componentes. Es lo exclusivo del plan Plus junto con el código de vestimenta.

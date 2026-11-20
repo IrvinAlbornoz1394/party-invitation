@@ -33,13 +33,22 @@ export interface ProspectNotice {
   readonly form: ProspectForm;
 }
 
+/**
+ * El aviso interno, con sus destinatarios: los correos de las cuentas de plataforma activas
+ * (`app.list_platform_notice_emails()`), igual que el aviso de «contenido enviado». No hay una
+ * dirección aparte en el entorno: quien administra la plataforma es quien recibe sus avisos.
+ */
+export interface PlatformProspectNotice extends ProspectNotice {
+  readonly to: readonly string[];
+}
+
 export interface ProspectNotifier {
   /**
    * Avisa a la plataforma. Devuelve si se pudo.
    *
    * No lanza: quien llama ya guardó la solicitud y no tiene nada que deshacer.
    */
-  notifyPlatform(notice: ProspectNotice): Promise<boolean>;
+  notifyPlatform(notice: PlatformProspectNotice): Promise<boolean>;
 
   /**
    * Acusa recibo a quien escribió. Sin correo en el formulario, no hace nada y devuelve `false`.

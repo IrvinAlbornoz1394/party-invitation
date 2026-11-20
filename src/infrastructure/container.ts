@@ -240,14 +240,6 @@ const lazyInvitationNotifier: InvitationNotifier = {
 };
 
 /**
- * Los avisos de una solicitud nueva, con la misma construcción perezosa.
- *
- * Hacen falta **dos** condiciones y no una: el proveedor de correo y una dirección a donde mandar
- * el aviso interno. Sin la segunda no se puede avisar a nadie aunque Resend esté configurado, así
- * que se cae a la consola igual que sin proveedor — y no se lanza, porque un aviso perdido no debe
- * convertirse en un prospecto perdido. Ver `ConsoleProspectNotifier`.
- */
-/**
  * El notificador de eventos: los avisos de alta y de «hay algo que revisar».
  *
  * Perezoso como los otros dos, y por el mismo motivo escrito arriba: construirlo al importar el
@@ -278,10 +270,14 @@ function prospectNotifier(): ProspectNotifier {
   if (prospectNotifierInstance === null) {
     const client = emailClient();
 
-    prospectNotifierInstance =
-      client && env.PROSPECT_NOTICE_EMAIL
-        ? new ResendProspectNotifier(client, env.PROSPECT_NOTICE_EMAIL)
-        : new ConsoleProspectNotifier();
+    /*
+     * Sin proveedor de correo se cae a la consola, y no se lanza: un aviso perdido no debe
+     * convertirse en un prospecto perdido. Los destinatarios son los admins de la plataforma; los
+     * pone `SubmitProspect`. Ver `ConsoleProspectNotifier`.
+     */
+    prospectNotifierInstance = client
+      ? new ResendProspectNotifier(client)
+      : new ConsoleProspectNotifier();
   }
 
   return prospectNotifierInstance;

@@ -67,28 +67,6 @@ const serverEnvSchema = z.object({
   GMAIL_APP_PASSWORD: z.string().optional(),
 
   /**
-   * A dónde llega el aviso de una solicitud nueva del formulario público.
-   *
-   * Opcional, y su ausencia **no** rompe nada: sin ella el aviso se escribe en la consola y la
-   * solicitud sigue guardada en la bandeja. Es distinto de `RESEND_API_KEY`, cuya ausencia en
-   * producción sí es un error — porque un código de acceso sin enviar deja a alguien fuera,
-   * mientras que un aviso sin enviar solo obliga a abrir el panel.
-   *
-   * Va aparte de `AUTH_EMAIL_FROM` a propósito: el remitente suele ser un buzón que nadie lee
-   * («no-reply@…»), y mandar ahí los prospectos sería perderlos.
-   */
-  PROSPECT_NOTICE_EMAIL: z
-    /*
-     * La cadena vacía cuenta como ausente. `z.email().optional()` a secas la RECHAZA —`undefined`
-     * es opcional, `''` no— y eso tumbaba el arranque de quien dejara la variable declarada y sin
-     * valor, que es justo lo que dice el `.env.example` para desarrollo. Una variable opcional que
-     * revienta al estar vacía es peor que no tenerla.
-     */
-    .union([z.literal(''), z.email()])
-    .optional()
-    .transform((value) => (value === '' ? undefined : value)),
-
-  /**
    * La carpeta donde se guardan las fotos subidas, mientras el almacenamiento sea el disco local.
    *
    * Relativa al directorio desde el que arranca el servidor. En Vercel no sirve —el disco es

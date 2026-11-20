@@ -271,6 +271,7 @@ porque falta configurar el correo convertiría un aviso perdido en un prospecto 
 
 ### Dónde va el aviso
 
-`PROSPECT_NOTICE_EMAIL`, aparte de `AUTH_EMAIL_FROM` a propósito: el remitente suele ser un buzón
-que nadie lee («no-reply@…») y mandar ahí los prospectos sería perderlos. Sin ella —o sin Resend—
-los dos avisos se escriben en la consola y el formulario sigue funcionando.
+A las cuentas de plataforma activas (`app.list_platform_notice_emails()`), las mismas que reciben el
+aviso de «contenido enviado». No hay una dirección aparte que configurar. Si no hubiera ninguna
+cuenta de plataforma —no debería pasar— el aviso se omite con un error en el log y la solicitud
+sigue en la bandeja. Sin proveedor de correo, los dos avisos se escriben en la consola.
