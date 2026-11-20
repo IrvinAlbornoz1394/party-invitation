@@ -1,9 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import type { ActionState } from '@/app/action-state';
 import { isProspectStatus, TOUCH_CHANNELS, type TouchChannel } from '@/domain/prospects/prospect';
 import {
   convertProspectToClient,
+  deleteProspect,
   discardProspect,
   linkProspectToClient,
   recordProspectTouch,
@@ -225,6 +227,32 @@ export async function reopenProspectAction(
   }
 
   return refreshed(prospectId, 'Vuelve a la bandeja como contactada.');
+}
+
+/**
+ * Eliminar una solicitud descartada (lógico). Devuelve un `ActionState` y no el estado de los
+ * formularios de la ficha porque la llama el diálogo de confirmación, desde la ficha o la bandeja.
+ */
+export async function deleteProspectAction(prospectId: string): Promise<ActionState> {
+  const credentials = await requirePlatformCredentials();
+  const result = await deleteProspect.execute(credentials, prospectId);
+
+  switch (result.outcome) {
+    case 'deleted':
+      revalidatePath('/admin/prospectos');
+      revalidatePath('/admin');
+
+      return { status: 'success', message: 'Solicitud eliminada.' };
+
+    case 'not-discarded':
+      return { status: 'error', message: 'Solo se pueden eliminar solicitudes descartadas.' };
+
+    case 'not-found':
+      return { status: 'error', message: 'Esa solicitud ya no existe.' };
+
+    case 'forbidden':
+      return { status: 'error', message: 'No se pudo eliminar la solicitud.' };
+  }
 }
 
 /**

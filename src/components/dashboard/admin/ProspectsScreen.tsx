@@ -1,9 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Input, Segmented } from 'antd';
+import { Alert, Button, Input, Segmented, Tooltip } from 'antd';
+import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
+import { deleteProspectAction } from '@/app/admin/(authenticated)/prospectos/actions';
+import { DeleteDialog } from './DeleteDialog';
 import type { TableProps } from 'antd';
-import { Ban, CircleCheck, Inbox, MessageCircle, Search } from 'lucide-react';
+import { Ban, CircleCheck, Inbox, MessageCircle, Search, Trash2 } from 'lucide-react';
 import { isOverdue, type Prospect } from '@/domain/prospects/prospect';
 import { formatDate, pluralize } from '../format';
 import { EmptyCell, IdentityCell } from '../primitives/Cell';
@@ -57,6 +60,8 @@ export function ProspectsScreen({
 }) {
   const [view, setView] = useState<ProspectView>('open');
   const [query, setQuery] = useState('');
+  const [deleting, setDeleting] = useState<Prospect | null>(null);
+  const [feedback, setFeedback] = useState<ActionState>(IDLE_ACTION_STATE);
 
   const won = useMemo(() => closed.filter((prospect) => prospect.status === 'won'), [closed]);
   const lost = useMemo(() => closed.filter((prospect) => prospect.status === 'lost'), [closed]);
@@ -84,6 +89,19 @@ export function ProspectsScreen({
         title="Prospectos"
         description="Quién pidió información y a quién toca escribirle. Al contratar se vuelve cliente; si no, se descarta con su motivo."
       />
+
+      <div role="status" aria-live="polite">
+        {feedback.message && (
+          <Alert
+            className="dash-page-alert"
+            type={feedback.status === 'error' ? 'error' : 'success'}
+            showIcon
+            closable
+            message={feedback.message}
+            onClose={() => setFeedback(IDLE_ACTION_STATE)}
+          />
+        )}
+      </div>
 
       <div className="dash-grid">
         <StatCard
@@ -140,7 +158,7 @@ export function ProspectsScreen({
           rows={filtered}
           rowKey="id"
           minWidth={860}
-          columns={columnsFor(view, now)}
+          columns={columnsFor(view, now, setDeleting)}
           rowHref={(prospect) => `/admin/prospectos/${prospect.id}`}
           empty={
             query.trim() === ''
@@ -152,7 +170,33 @@ export function ProspectsScreen({
           }
         />
       </SectionCard>
+
+      <DeleteDialog
+        key={deleting?.id}
+        open={deleting !== null}
+        title="Eliminar solicitud"
+        confirmLabel="Eliminar solicitud"
+        onConfirm={() =>
+          deleting
+            ? deleteProspectAction(deleting.id)
+            : Promise.resolve({ status: 'error', message: null })
+        }
+        onClose={() => setDeleting(null)}
+        onResult={setFeedback}
+      >
+        <DeleteProspectWarning prospect={deleting} />
+      </DeleteDialog>
     </>
+  );
+}
+
+/** Lo que pasa al eliminar una descartada. Lo comparten la bandeja y la ficha. */
+export function DeleteProspectWarning({ prospect }: { readonly prospect: Prospect | null }) {
+  return (
+    <p>
+      Vas a eliminar la solicitud de <strong>{prospect?.contactName}</strong>. Deja de aparecer en
+      la bandeja y en las cifras de prospectos.
+    </p>
   );
 }
 
@@ -175,7 +219,11 @@ const UNTOUCHED: StatusAppearance = { label: 'Sin contactar', tone: 'pending' };
  * cerradas sería una columna que repite lo que ya dice la pastilla elegida arriba, ocupando el
  * sitio de lo único que ahí se quiere leer.
  */
-function columnsFor(view: ProspectView, now: Date): TableProps<Prospect>['columns'] {
+function columnsFor(
+  view: ProspectView,
+  now: Date,
+  onDelete: (prospect: Prospect) => void,
+): TableProps<Prospect>['columns'] {
   const identity: TableProps<Prospect>['columns'] = [
     {
       title: 'Quién',
@@ -243,6 +291,28 @@ function columnsFor(view: ProspectView, now: Date): TableProps<Prospect>['column
           prospect.lostReason ? <span>{prospect.lostReason}</span> : <EmptyCell />,
       },
       ...arrival,
+      {
+        title: '',
+        key: 'actions',
+        width: 64,
+        align: 'right',
+        render: (_value, prospect) => (
+          <Tooltip title="Eliminar solicitud">
+            <Button
+              type="text"
+              danger
+              icon={<Trash2 size={15} strokeWidth={1.9} aria-hidden="true" />}
+              aria-label={`Eliminar la solicitud de ${prospect.contactName}`}
+              /* La fila lleva a la ficha; eliminar no debe además navegar. */
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(prospect);
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+            />
+          </Tooltip>
+        ),
+      },
     ];
   }
 

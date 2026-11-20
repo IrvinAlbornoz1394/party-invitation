@@ -3,7 +3,11 @@
 import { useActionState, useState } from 'react';
 import { Alert, Button, Input, Segmented, Select } from 'antd';
 import Link from 'next/link';
-import { ArrowLeft, Ban, MessageCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Ban, MessageCircle, RotateCcw, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { deleteProspectAction } from '@/app/admin/(authenticated)/prospectos/actions';
+import { DeleteDialog } from './DeleteDialog';
+import { DeleteProspectWarning } from './ProspectsScreen';
 import type { ClientSummary } from '@/domain/clients/client-repository';
 import { slugifyClientName } from '@/domain/clients/client-slug';
 import type { Prospect } from '@/domain/prospects/prospect';
@@ -92,6 +96,8 @@ export function ProspectDetailScreen({
 
   const whatsapp = prospect.contactPhone.replace(/[^\d]/g, '');
   const isDiscarded = prospect.status === 'lost';
+  const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <>
@@ -287,16 +293,37 @@ export function ProspectDetailScreen({
                   embudo.
                 </p>
 
-                <form action={reopen}>
-                  <input type="hidden" name="prospectId" value={prospect.id} />
+                <div className="dash-row-actions">
+                  <form action={reopen}>
+                    <input type="hidden" name="prospectId" value={prospect.id} />
+                    <Button
+                      htmlType="submit"
+                      loading={isReopening}
+                      icon={<RotateCcw size={15} strokeWidth={2} />}
+                    >
+                      Reabrir
+                    </Button>
+                  </form>
                   <Button
-                    htmlType="submit"
-                    loading={isReopening}
-                    icon={<RotateCcw size={15} strokeWidth={2} />}
+                    danger
+                    icon={<Trash2 size={15} strokeWidth={2} />}
+                    onClick={() => setDeleteOpen(true)}
                   >
-                    Reabrir
+                    Eliminar
                   </Button>
-                </form>
+                </div>
+
+                {/* Al eliminar, la ficha deja de existir: se vuelve a la bandeja. */}
+                <DeleteDialog
+                  open={isDeleteOpen}
+                  title="Eliminar solicitud"
+                  confirmLabel="Eliminar solicitud"
+                  onConfirm={() => deleteProspectAction(prospect.id)}
+                  onClose={() => setDeleteOpen(false)}
+                  onResult={() => router.push('/admin/prospectos')}
+                >
+                  <DeleteProspectWarning prospect={prospect} />
+                </DeleteDialog>
               </div>
             </SectionCard>
           ) : (

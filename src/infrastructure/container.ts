@@ -63,6 +63,7 @@ import {
   ListProspects,
   RecordProspectTouch,
   ReopenProspect,
+  DeleteProspect,
   SubmitProspect,
 } from '@/application/prospects/manage-prospects';
 import { ResolveInvitation } from '@/application/events/resolve-invitation';
@@ -299,6 +300,7 @@ export const recordProspectTouch = new RecordProspectTouch(prospectRepository);
 export const linkProspectToClient = new LinkProspectToClient(prospectRepository);
 export const discardProspect = new DiscardProspect(prospectRepository);
 export const reopenProspect = new ReopenProspect(prospectRepository);
+export const deleteProspect = new DeleteProspect(prospectRepository);
 
 const authRepository = new DrizzleAuthRepository();
 const userRepository = new DrizzleUserRepository();

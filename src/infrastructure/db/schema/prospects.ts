@@ -98,6 +98,11 @@ export const prospects = pgTable(
      * solicitud tiene que sobrevivir — es historia del embudo, no del tenant.
      */
     clientId: uuid('client_id').references(() => clients.id, { onDelete: 'set null' }),
+    /**
+     * Eliminado lógico (`sql/increments/2026-11-21_prospectos_eliminados.sql`). Solo una
+     * descartada se puede eliminar; ver `app.delete_prospect()`.
+     */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
 
     ...timestamps,
   },

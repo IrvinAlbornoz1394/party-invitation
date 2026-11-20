@@ -17,6 +17,14 @@ export type SubmitProspectResult =
  * `SECURITY DEFINER` en vez de por RLS: no hay ningún cliente con el que acotar a quien todavía
  * no es cliente.
  */
+/** Eliminar una solicitud. Solo se puede con una descartada: ver `app.delete_prospect()`. */
+export type DeleteProspectResult =
+  | { readonly outcome: 'deleted' }
+  | { readonly outcome: 'not-found' }
+  /** Sigue abierta o se ganó. Hay que descartarla antes. */
+  | { readonly outcome: 'not-discarded' }
+  | { readonly outcome: 'forbidden' };
+
 export interface ProspectRepository {
   /** Desde el formulario público. Sin sesión: quien escribe aquí no tiene cuenta. */
   submit(form: ProspectForm, clientIp: string | null): Promise<SubmitProspectResult>;
@@ -26,6 +34,9 @@ export interface ProspectRepository {
    * sesión, como `submit`, porque lo pide el formulario público; la función solo devuelve correos.
    */
   listPlatformNoticeEmails(): Promise<readonly string[]>;
+
+  /** Elimina (lógico) una solicitud descartada. */
+  delete(credentials: PlatformCredentials, prospectId: string): Promise<DeleteProspectResult>;
 
   /** La bandeja entera. El orden de urgencia lo pone el dominio, no la consulta. */
   list(credentials: PlatformCredentials): Promise<readonly Prospect[]>;

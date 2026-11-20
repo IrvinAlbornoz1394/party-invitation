@@ -2381,6 +2381,7 @@ begin
            (select count(*)::integer from public.prospect_touches t where t.prospect_id = p.id)
       from public.prospects p
       left join public.clients c on c.id = p.client_id
+     where p.deleted_at is null
      order by p.created_at desc;
 end;
 $$;
@@ -2411,7 +2412,7 @@ begin
     return 'forbidden';
   end if;
 
-  if not exists (select 1 from public.prospects where id = p_prospect_id) then
+  if not exists (select 1 from public.prospects where id = p_prospect_id and deleted_at is null) then
     return 'not_found';
   end if;
 
@@ -2455,6 +2456,7 @@ as $$
              select count(*)::integer
                from public.prospects p
               where p.status not in ('won', 'lost')
+                and p.deleted_at is null
                 and (p.status = 'new' or (p.next_follow_up_at is not null
                                           and p.next_follow_up_at <= now()))
            )
@@ -2525,7 +2527,8 @@ begin
      set client_id = p_client_id,
          status = 'won',
          lost_reason = null
-   where id = p_prospect_id;
+   where id = p_prospect_id
+     and deleted_at is null;
 
   if not found then
     return 'not_found';
@@ -2581,6 +2584,56 @@ begin
 end;
 $$;
 
+-- ── Eliminar una solicitud descartada ─────────────────────────────────────────
+--
+-- Lógico, como clientes y eventos. Solo se puede con una DESCARTADA: una abierta todavía se está
+-- atendiendo, y una ganada está ligada a su cliente y es la historia de cómo llegó. Para eliminar
+-- una abierta, primero se descarta, que es lo que obliga a anotar por qué.
+create or replace function app.delete_prospect(
+  p_session_hash text,
+  p_prospect_id  uuid,
+  p_ip           inet default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_actor_id uuid := app.platform_actor(p_session_hash);
+  v_status   prospect_status;
+  v_name     text;
+begin
+  if v_actor_id is null then
+    return 'forbidden';
+  end if;
+
+  select p.status, p.contact_name into v_status, v_name
+    from public.prospects p
+   where p.id = p_prospect_id
+     and p.deleted_at is null
+   for update;
+
+  if not found then
+    return 'not_found';
+  end if;
+
+  if v_status <> 'lost' then
+    return 'not_discarded';
+  end if;
+
+  update public.prospects
+     set deleted_at = now()
+   where id = p_prospect_id;
+
+  insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip)
+  values (null, v_actor_id, 'prospect.deleted', 'prospect', p_prospect_id,
+          jsonb_build_object('contact_name', v_name), p_ip);
+
+  return 'deleted';
+end;
+$$;
+
 -- ── Permisos de ejecución ─────────────────────────────────────────────────────
 -- Por defecto Postgres concede EXECUTE a PUBLIC en cada función nueva, lo cual con
 -- SECURITY DEFINER es peligroso. Se revoca y se concede solo a quien debe usarla.
@@ -2629,6 +2682,7 @@ grant execute on function app.active_content_link(text, uuid, uuid) to mievento_
 grant execute on function app.issue_content_link(text, uuid, uuid, uuid, text, interval, inet) to mievento_app;
 grant execute on function app.delete_client(text, uuid, inet) to mievento_app;
 grant execute on function app.delete_event(text, uuid, inet) to mievento_app;
+grant execute on function app.delete_prospect(text, uuid, inet) to mievento_app;
 
 
 -- app.platform_actor NO se concede a la aplicación. Es el detalle interno con el que las

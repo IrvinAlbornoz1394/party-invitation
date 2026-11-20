@@ -11,7 +11,9 @@ import {
 } from '@/domain/prospects/prospect';
 import type { CreateClient, CreateClientOutcome } from '@/application/clients/manage-clients';
 import type { ProspectNotice, ProspectNotifier } from '@/domain/prospects/prospect-notifier';
+import { isUuid } from '@/application/clients/manage-clients';
 import type {
+  DeleteProspectResult,
   ProspectRepository,
   ProspectTouch,
   SubmitProspectResult,
@@ -353,5 +355,23 @@ export class ReopenProspect {
       nextFollowUpAt: null,
       lostReason: null,
     });
+  }
+}
+
+/**
+ * Eliminar una solicitud descartada. Lógico: deja de verse en la bandeja, en el contador y en las
+ * cifras. La regla de «solo descartadas» la impone `app.delete_prospect()`.
+ */
+export class DeleteProspect {
+  constructor(private readonly prospects: ProspectRepository) {}
+
+  async execute(
+    credentials: PlatformCredentials,
+    prospectId: string,
+  ): Promise<DeleteProspectResult> {
+    if (!canAdministerPlatform(credentials.actor)) return { outcome: 'forbidden' };
+    if (!isUuid(prospectId)) return { outcome: 'not-found' };
+
+    return this.prospects.delete(credentials, prospectId);
   }
 }

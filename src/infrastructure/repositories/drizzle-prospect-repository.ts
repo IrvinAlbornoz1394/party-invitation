@@ -10,6 +10,7 @@ import {
   type TouchChannel,
 } from '@/domain/prospects/prospect';
 import type {
+  DeleteProspectResult,
   ProspectRepository,
   ProspectTouch,
   SubmitProspectResult,
@@ -107,6 +108,27 @@ export class DrizzleProspectRepository implements ProspectRepository {
       createdAt: new Date(row.created_at),
       authorEmail: row.author_email,
     }));
+  }
+
+  async delete(credentials: PlatformCredentials, prospectId: string): Promise<DeleteProspectResult> {
+    const result = await db.execute<{ status: string; [column: string]: unknown }>(
+      sql`select app.delete_prospect(
+            ${hashSessionToken(credentials.sessionToken)},
+            ${prospectId}::uuid,
+            ${credentials.clientIp}::inet
+          ) as status`,
+    );
+
+    switch (result.rows.at(0)?.status) {
+      case 'deleted':
+        return { outcome: 'deleted' };
+      case 'not_found':
+        return { outcome: 'not-found' };
+      case 'not_discarded':
+        return { outcome: 'not-discarded' };
+      default:
+        return { outcome: 'forbidden' };
+    }
   }
 
   async recordTouch(input: {
