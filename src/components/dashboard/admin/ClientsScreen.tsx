@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { Alert, Button, Input, Tooltip } from 'antd';
 import type { TableProps } from 'antd';
-import { Pencil, Plus, Search } from 'lucide-react';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { deleteClientAction } from '@/app/admin/(authenticated)/clientes/actions';
 import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import type { ClientSummary } from '@/domain/clients/client-repository';
 import { formatDate, pluralize } from '../format';
@@ -13,6 +14,7 @@ import { PageHeader } from '../primitives/PageHeader';
 import { SectionCard } from '../primitives/SectionCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { clientStatus } from '../primitives/status-display';
+import { DeleteClientWarning, DeleteDialog } from './DeleteDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { NewClientDialog } from './NewClientDialog';
 
@@ -35,13 +37,17 @@ export function ClientsScreen({ clients }: { readonly clients: readonly ClientSu
    */
   const [editing, setEditing] = useState<ClientSummary | null>(null);
   const [isEditOpen, setEditOpen] = useState(false);
+  const [deleting, setDeleting] = useState<ClientSummary | null>(null);
 
   const columns = useMemo(
     () =>
-      buildColumns((client) => {
-        setEditing(client);
-        setEditOpen(true);
-      }),
+      buildColumns(
+        (client) => {
+          setEditing(client);
+          setEditOpen(true);
+        },
+        setDeleting,
+      ),
     [],
   );
 
@@ -138,6 +144,23 @@ export function ClientsScreen({ clients }: { readonly clients: readonly ClientSu
         onResult={setFeedback}
       />
 
+      <DeleteDialog
+        key={deleting?.id}
+        open={deleting !== null}
+        title="Eliminar cliente"
+        confirmLabel="Eliminar cliente"
+        confirmText={deleting?.name}
+        onConfirm={() =>
+          deleting
+            ? deleteClientAction(deleting.id)
+            : Promise.resolve({ status: 'error', message: null })
+        }
+        onClose={() => setDeleting(null)}
+        onResult={setFeedback}
+      >
+        {deleting && <DeleteClientWarning client={deleting} />}
+      </DeleteDialog>
+
       {editing && (
         <EditClientDialog
           /* La llave reinicia el estado de la acción al cambiar de cliente: sin ella, el error
@@ -155,6 +178,7 @@ export function ClientsScreen({ clients }: { readonly clients: readonly ClientSu
 
 function buildColumns(
   onEdit: (client: ClientSummary) => void,
+  onDelete: (client: ClientSummary) => void,
 ): TableProps<ClientSummary>['columns'] {
   return [
     {
@@ -201,23 +225,38 @@ function buildColumns(
     {
       title: '',
       key: 'actions',
-      width: 64,
+      width: 104,
       align: 'right',
       render: (_value, client) => (
-        <Tooltip title="Editar cliente">
-          <Button
-            type="text"
-            icon={<Pencil size={15} strokeWidth={1.9} aria-hidden="true" />}
-            aria-label={`Editar ${client.name}`}
-            /* La fila entera lleva a la ficha; editar no debe además navegar, ni con el ratón
-               ni con Enter o espacio, que la fila también escucha. */
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit(client);
-            }}
-            onKeyDown={(event) => event.stopPropagation()}
-          />
-        </Tooltip>
+        <span className="dash-row-actions">
+          <Tooltip title="Editar cliente">
+            <Button
+              type="text"
+              icon={<Pencil size={15} strokeWidth={1.9} aria-hidden="true" />}
+              aria-label={`Editar ${client.name}`}
+              /* La fila entera lleva a la ficha; editar no debe además navegar, ni con el ratón
+                 ni con Enter o espacio, que la fila también escucha. */
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit(client);
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+            />
+          </Tooltip>
+          <Tooltip title="Eliminar cliente">
+            <Button
+              type="text"
+              danger
+              icon={<Trash2 size={15} strokeWidth={1.9} aria-hidden="true" />}
+              aria-label={`Eliminar ${client.name}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(client);
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+            />
+          </Tooltip>
+        </span>
       ),
     },
   ];

@@ -6,6 +6,7 @@ import type {
   ClientRepository,
   ClientSummary,
   CreateClientResult,
+  DeleteResult,
   UpdateClientResult,
 } from '@/domain/clients/client-repository';
 import { type ClientActor, displayNameOf } from '@/domain/auth/actor';
@@ -175,4 +176,25 @@ export class UpdateClient {
       contactPhone: contactPhone.length > 0 ? contactPhone : null,
     });
   }
+}
+
+/**
+ * Eliminar un cliente: lógico, junto con todos sus eventos. Lo hace `app.delete_client()`, que
+ * también revalida el privilegio. Ver `ClientRepository.delete`.
+ */
+export class DeleteClient {
+  constructor(private readonly clients: ClientRepository) {}
+
+  async execute(credentials: PlatformCredentials, clientId: string): Promise<DeleteResult> {
+    if (!canAdministerPlatform(credentials.actor)) return { outcome: 'forbidden' };
+
+    /* El id llega de un formulario: si no tiene forma de uuid, el cast de Postgres reventaría. */
+    if (!isUuid(clientId)) return { outcome: 'not-found' };
+
+    return this.clients.delete(credentials, clientId);
+  }
+}
+
+export function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }

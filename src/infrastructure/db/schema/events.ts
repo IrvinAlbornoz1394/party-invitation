@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -11,6 +12,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { timestamps } from './_shared';
@@ -70,8 +72,11 @@ export const events = pgTable(
      */
     paletteKey: text('palette_key'),
 
-    /** Segmento público de la URL. Único globalmente porque la invitación se sirve en /<slug>/<code>. */
-    slug: text('slug').notNull().unique(),
+    /**
+     * Segmento público de la URL. Único entre los eventos vivos porque la invitación se sirve en
+     * /<slug>/<code>; el de un evento eliminado queda libre.
+     */
+    slug: text('slug').notNull(),
 
     /**
      * Código de acceso de la invitación: el `k7m2p4` de `/fatima/k7m2p4`.
@@ -154,9 +159,16 @@ export const events = pgTable(
     changeRequestNote: text('change_request_note'),
 
     createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    /**
+     * Eliminado lógico (`sql/increments/2026-11-20_eliminado_logico.sql`). La política de RLS de
+     * `events` lo excluye, así que para cualquier consulta con contexto de tenant el evento
+     * sencillamente no existe; las funciones SECURITY DEFINER lo filtran a mano.
+     */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
+    uniqueIndex('events_slug_active_key').on(t.slug).where(sql`deleted_at is null`),
     /**
      * Objetivo de las claves ajenas compuestas de las tablas hijas.
      *

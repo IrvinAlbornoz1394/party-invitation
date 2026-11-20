@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Button, Input, Segmented, Select } from 'antd';
+import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import type { TableProps } from 'antd';
 import { Plus, Search } from 'lucide-react';
 import {
@@ -22,6 +23,7 @@ import { PageHeader } from '../primitives/PageHeader';
 import { SectionCard } from '../primitives/SectionCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { eventStatus } from '../primitives/status-display';
+import { DeleteEventDialog } from './DeleteDialog';
 import { EditEventDialog } from './EditEventDialog';
 import { editEventColumn } from './edit-event-column';
 import { NewEventDialog, NewEventNotice } from './NewEventDialog';
@@ -80,14 +82,19 @@ export function EventsScreen({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isEditOpen, setEditOpen] = useState(false);
   const [editFeedback, setEditFeedback] = useState<EditEventState>(INITIAL_EDIT_EVENT_STATE);
+  const [deleting, setDeleting] = useState<EventSummary | null>(null);
+  const [deleteFeedback, setDeleteFeedback] = useState<ActionState>(IDLE_ACTION_STATE);
 
   const tableColumns = useMemo(
     () => [
       ...columns,
-      editEventColumn((event) => {
-        setEditingId(event.id);
-        setEditOpen(true);
-      }),
+      editEventColumn(
+        (event) => {
+          setEditingId(event.id);
+          setEditOpen(true);
+        },
+        setDeleting,
+      ),
     ],
     [],
   );
@@ -177,6 +184,16 @@ export function EventsScreen({
             closable
             message={editFeedback.message}
             onClose={() => setEditFeedback(INITIAL_EDIT_EVENT_STATE)}
+          />
+        )}
+        {deleteFeedback.message && (
+          <Alert
+            className="dash-page-alert"
+            type={deleteFeedback.status === 'error' ? 'error' : 'success'}
+            showIcon
+            closable
+            message={deleteFeedback.message}
+            onClose={() => setDeleteFeedback(IDLE_ACTION_STATE)}
           />
         )}
       </div>
@@ -283,6 +300,12 @@ export function EventsScreen({
         onResult={setFeedback}
         options={options}
         clients={clients}
+      />
+
+      <DeleteEventDialog
+        event={deleting}
+        onClose={() => setDeleting(null)}
+        onResult={setDeleteFeedback}
       />
 
       {editingId && (

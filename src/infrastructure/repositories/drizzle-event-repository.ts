@@ -29,7 +29,9 @@ import type {
   NewEventRecord,
   ClientContact,
 } from '@/domain/events/event-repository';
+import type { DeleteResult } from '@/domain/clients/client-repository';
 import { hashSessionToken } from '../auth/credential-hashing';
+import { deleteOutcome } from './drizzle-client-repository';
 import { db } from '../db/client';
 import { eventTypes, events, plans, templates, themes } from '../db/schema';
 import { withAuthorizedClientContext, withTenant, type TenantTransaction } from '../db/tenant';
@@ -1333,6 +1335,21 @@ export class DrizzleEventRepository implements EventRepository {
     );
 
     return rows.rows.map((row) => row.email);
+  }
+
+  async deleteAsPlatform(
+    credentials: PlatformCredentials,
+    eventId: string,
+  ): Promise<DeleteResult> {
+    const result = await db.execute<{ status: string; [column: string]: unknown }>(
+      sql`select app.delete_event(
+            ${hashSessionToken(credentials.sessionToken)},
+            ${eventId}::uuid,
+            ${credentials.clientIp}::inet
+          ) as status`,
+    );
+
+    return deleteOutcome(result.rows.at(0)?.status);
   }
 }
 

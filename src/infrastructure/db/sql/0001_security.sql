@@ -188,8 +188,14 @@ $$;
 -- pantalla lo esconda.
 alter table public.events enable row level security;
 drop policy if exists tenant_isolation on public.events;
+--
+-- `deleted_at is null` va en USING y no en WITH CHECK: un evento eliminado no se ve ni se puede
+-- tocar desde ningún contexto, pero la política no decide quién elimina —eso lo hace
+-- `app.delete_event()`, que corre como dueño—. Así, todas las consultas con contexto de tenant
+-- (panel del cliente, ficha del admin, editor) dejan de verlo sin que ninguna tenga que acordarse.
 create policy tenant_isolation on public.events
   using (client_id = app.current_client_id()
+         and deleted_at is null
          and (app.current_event_id() is null or id = app.current_event_id()))
   with check (client_id = app.current_client_id()
          and (app.current_event_id() is null or id = app.current_event_id()));
@@ -944,7 +950,8 @@ begin
                      limit 1
                   ) m
                   join public.clients c on c.id = m.client_id and c.status = 'active'
-                  join public.events e on e.id = v_scope_event_id),
+                                        and c.deleted_at is null
+                  join public.events e on e.id = v_scope_event_id and e.deleted_at is null),
                '[]'::jsonb
              )
       from public.users u
@@ -988,7 +995,10 @@ begin
                 left join public.events e on e.id = m.event_id
                where m.user_id = u.id
                  and m.status <> 'disabled'
-                 and c.status = 'active'),
+                 and c.status = 'active'
+                 and c.deleted_at is null
+                 -- Una membresía de alcance evento muere con su evento.
+                 and (m.event_id is null or e.deleted_at is null)),
              '[]'::jsonb
            )
     from public.users u
@@ -1048,7 +1058,18 @@ begin
     return;
   end if;
 
-  select e.status into v_status from public.events e where e.id = v_link.event_id;
+  select e.status into v_status
+    from public.events e
+    join public.clients c on c.id = e.client_id
+   where e.id = v_link.event_id
+     and e.deleted_at is null
+     and c.deleted_at is null;
+
+  -- Eliminado (o su cliente): el enlace deja de existir, igual que uno reemplazado.
+  if not found then
+    return query select 'invalid'::text, null::uuid, null::timestamptz;
+    return;
+  end if;
 
   if v_status is distinct from 'draft' then
     return query select 'closed'::text, v_link.event_id, null::timestamptz;
@@ -1171,7 +1192,9 @@ begin
       join public.clients c on c.id = e.client_id
      where e.id = p_event_id
        and e.client_id = p_client_id
+       and e.deleted_at is null
        and c.status = 'active'
+       and c.deleted_at is null
   ) then
     return;
   end if;
@@ -1304,8 +1327,9 @@ begin
     select c.id, c.name, c.slug, c.status::text, c.contact_email, c.contact_phone,
            count(e.id), c.created_at
     from public.clients c
-    left join public.events e on e.client_id = c.id
+    left join public.events e on e.client_id = c.id and e.deleted_at is null
     where c.status <> 'closed'
+      and c.deleted_at is null
     group by c.id
     order by c.name;
 end;
@@ -1350,6 +1374,8 @@ begin
            e.plan_key, e.access_code, e.client_fills_content
     from public.events e
     join public.clients c on c.id = e.client_id
+    where e.deleted_at is null
+      and c.deleted_at is null
     order by e.starts_at desc;
 end;
 $$;
@@ -1398,7 +1424,8 @@ begin
   select true into v_target_ok
   from public.clients c
   where c.id = p_client_id
-    and c.status = 'active';
+    and c.status = 'active'
+    and c.deleted_at is null;
 
   if not coalesce(v_target_ok, false) then
     insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip)
@@ -1516,6 +1543,7 @@ begin
   from public.events e
   where e.slug = p_slug
     and e.access_code = p_code
+    and e.deleted_at is null
   limit 1;
 
   -- Si no es el código del evento, puede ser el de una de sus familias. El slug se exige igual:
@@ -1529,6 +1557,7 @@ begin
     join public.events e on e.id = g.event_id
     where e.slug = p_slug
       and g.invite_code = p_code
+      and e.deleted_at is null
     limit 1;
   end if;
 
@@ -1693,7 +1722,7 @@ begin
     return;
   end if;
 
-  if exists (select 1 from public.clients c where c.slug = v_slug) then
+  if exists (select 1 from public.clients c where c.slug = v_slug and c.deleted_at is null) then
     return query select 'slug_taken'::text, null::uuid, null::uuid;
     return;
   end if;
@@ -1708,7 +1737,13 @@ begin
   -- El único de `users.email` es global, así que este caso existe igualmente; lo que se
   -- elige aquí es contarlo. Callarlo dejaría a quien da de alta ante un fallo sin
   -- explicación y sin nada que hacer.
-  if exists (select 1 from public.users u where u.email = v_email) then
+  --
+  -- Con una excepción: la identidad que solo alcanzaba clientes ELIMINADOS (`app.orphan_user`).
+  -- Esa persona ya no tiene acceso a nada, así que darle el cliente nuevo no le concede nada que
+  -- alguien quisiera retirarle, y negarlo dejaría el correo inutilizable para siempre.
+  select u.id into v_user_id from public.users u where u.email = v_email;
+
+  if v_user_id is not null and not app.orphan_user(v_user_id) then
     return query select 'email_taken'::text, null::uuid, null::uuid;
     return;
   end if;
@@ -1717,6 +1752,13 @@ begin
   values (trim(p_name), v_slug, v_email, v_phone)
   returning id into v_client_id;
 
+  if v_user_id is not null then
+    -- Se reutiliza: nombre nuevo y de vuelta a `invited`, como si naciera ahora.
+    update public.users u
+       set name = trim(p_owner_name), status = 'invited'
+     where u.id = v_user_id;
+  else
+
   -- La identidad y su membresía, en la misma transacción y en ese orden. Un cliente sin
   -- ninguna membresía no lo arregla nadie desde la aplicación, porque para entrar a un
   -- cliente hace falta alcanzarlo.
@@ -1724,9 +1766,10 @@ begin
   -- Nace como `invited` en los dos sitios: todavía no ha entrado nadie. La de la identidad se
   -- promueve sola en el primer acceso; la de la membresía es la que dice «tiene acceso
   -- concedido y no lo ha usado», y se promueve igual.
-  insert into public.users (email, name, status)
-  values (v_email, trim(p_owner_name), 'invited')
-  returning id into v_user_id;
+    insert into public.users (email, name, status)
+    values (v_email, trim(p_owner_name), 'invited')
+    returning id into v_user_id;
+  end if;
 
   -- El rol es `owner` con alcance cliente, y no es configurable: quien recibe un cliente
   -- nuevo tiene que poder administrarlo entero, incluido conceder acceso al resto.
@@ -1784,6 +1827,7 @@ declare
   v_phone     text := nullif(trim(coalesce(p_contact_phone, '')), '');
   v_name      text := trim(coalesce(p_name, ''));
   v_owner_id  uuid;
+  v_taken_by  uuid;
 begin
   if v_actor_id is null then
     return 'forbidden';
@@ -1792,6 +1836,7 @@ begin
   select c.contact_email into v_old_email
   from public.clients c
   where c.id = p_client_id
+    and c.deleted_at is null
   for update;
 
   if not found then
@@ -1819,14 +1864,29 @@ begin
       and u.email = v_old_email
     limit 1;
 
-    if exists (
-      select 1 from public.users u
-      where u.email = v_email and u.id is distinct from v_owner_id
-    ) then
+    select u.id into v_taken_by
+    from public.users u
+    where u.email = v_email and u.id is distinct from v_owner_id;
+
+    if v_taken_by is not null and not app.orphan_user(v_taken_by) then
       return 'email_taken';
     end if;
 
-    if v_owner_id is not null then
+    if v_taken_by is not null then
+      -- El correo nuevo es de una identidad que solo alcanzaba clientes eliminados. No se puede
+      -- renombrar al dueño actual (chocaría con el único), así que la que pasa a ser dueña de este
+      -- cliente es esa identidad: se le mueven las membresías del dueño anterior en este cliente.
+      if v_owner_id is not null then
+        update public.memberships m
+           set user_id = v_taken_by
+         where m.client_id = p_client_id
+           and m.user_id = v_owner_id;
+      end if;
+
+      update public.users u
+         set status = 'invited'
+       where u.id = v_taken_by and u.status = 'disabled';
+    elsif v_owner_id is not null then
       update public.users set email = v_email where id = v_owner_id;
     end if;
   end if;
@@ -1852,6 +1912,156 @@ exception
   -- Dos ediciones a la vez hacia el mismo correo: la segunda choca con el único de `users`.
   when unique_violation then
     return 'email_taken';
+end;
+$$;
+
+-- ── Eliminar: lógico, y solo desde la plataforma ─────────────────────────────
+--
+-- Eliminar marca `deleted_at` y no borra ninguna fila. Lo que hace que «eliminado» signifique algo
+-- es que todo lo demás lo respeta: la política de `events` lo esconde de cualquier contexto de
+-- tenant, y cada función SECURITY DEFINER lo filtra a mano (listados, sesiones, enlaces,
+-- invitación pública). Ver `sql/increments/2026-11-20_eliminado_logico.sql`.
+--
+-- Son funciones y no un UPDATE con contexto de tenant por lo mismo que el alta: eliminar es una
+-- decisión de plataforma, y además tiene efectos fuera del tenant —cortar sesiones, liberar
+-- correos— que el rol de la aplicación no puede ni debe poder hacer.
+
+-- Una identidad «huérfana»: no es de plataforma y no alcanza ningún cliente vivo. Es la que se
+-- puede reutilizar cuando su correo vuelve a darse de alta. No se concede a la aplicación.
+create or replace function app.orphan_user(p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public
+as $$
+  select exists (
+           select 1 from public.users u
+            where u.id = p_user_id and u.platform_role is null
+         )
+     and not exists (
+           select 1
+             from public.memberships m
+             join public.clients c on c.id = m.client_id
+             left join public.events e on e.id = m.event_id
+            where m.user_id = p_user_id
+              and c.deleted_at is null
+              and (m.event_id is null or e.deleted_at is null)
+         );
+$$;
+
+-- Eliminar un evento. Su invitación deja de abrirse en ese mismo instante —aunque esté publicada—,
+-- su URL queda libre, y el enlace del cliente y las sesiones abiertas con él dejan de valer.
+create or replace function app.delete_event(
+  p_session_hash text,
+  p_event_id     uuid,
+  p_ip           inet default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_actor_id  uuid := app.platform_actor(p_session_hash);
+  v_client_id uuid;
+  v_title     text;
+  v_slug      text;
+begin
+  if v_actor_id is null then
+    return 'forbidden';
+  end if;
+
+  update public.events e
+     set deleted_at = now()
+   where e.id = p_event_id
+     and e.deleted_at is null
+  returning e.client_id, e.title, e.slug into v_client_id, v_title, v_slug;
+
+  if v_client_id is null then
+    return 'not_found';
+  end if;
+
+  update public.content_links l
+     set revoked_at = now()
+   where l.event_id = p_event_id
+     and l.revoked_at is null;
+
+  update public.sessions s
+     set revoked_at = now()
+   where s.scope_event_id = p_event_id
+     and s.revoked_at is null;
+
+  insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip)
+  values (v_client_id, v_actor_id, 'event.deleted', 'event', p_event_id,
+          jsonb_build_object('title', v_title, 'slug', v_slug), p_ip);
+
+  return 'deleted';
+end;
+$$;
+
+-- Eliminar un cliente, y con él todos sus eventos (con el mismo instante, para que se sepa cuáles
+-- cayeron juntos si algún día se restaura). Las cuentas que se quedan sin ningún cliente vivo
+-- pierden sus sesiones: su correo queda libre para volver a darse de alta.
+create or replace function app.delete_client(
+  p_session_hash text,
+  p_client_id    uuid,
+  p_ip           inet default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_actor_id uuid := app.platform_actor(p_session_hash);
+  v_now      timestamptz := now();
+  v_name     text;
+  v_events   integer;
+begin
+  if v_actor_id is null then
+    return 'forbidden';
+  end if;
+
+  update public.clients c
+     set deleted_at = v_now
+   where c.id = p_client_id
+     and c.deleted_at is null
+  returning c.name into v_name;
+
+  if v_name is null then
+    return 'not_found';
+  end if;
+
+  update public.events e
+     set deleted_at = v_now
+   where e.client_id = p_client_id
+     and e.deleted_at is null;
+  get diagnostics v_events = row_count;
+
+  update public.content_links l
+     set revoked_at = v_now
+   where l.client_id = p_client_id
+     and l.revoked_at is null;
+
+  -- Las sesiones de enlace de sus eventos, y las de quien ya no alcanza nada. Las de quien tiene
+  -- otro cliente vivo se quedan: `resolve_session` ya deja de ofrecerle este.
+  update public.sessions s
+     set revoked_at = v_now
+   where s.revoked_at is null
+     and (
+       s.scope_event_id in (select e.id from public.events e where e.client_id = p_client_id)
+       or (
+         s.user_id in (select m.user_id from public.memberships m where m.client_id = p_client_id)
+         and app.orphan_user(s.user_id)
+       )
+     );
+
+  insert into public.audit_log (client_id, user_id, action, entity_type, entity_id, metadata, ip)
+  values (p_client_id, v_actor_id, 'client.deleted', 'client', p_client_id,
+          jsonb_build_object('name', v_name, 'events_deleted', v_events), p_ip);
+
+  return 'deleted';
 end;
 $$;
 
@@ -1981,7 +2191,7 @@ begin
   if p_event_id is not null
      and not exists (
        select 1 from public.events e
-        where e.id = p_event_id and e.client_id = p_client_id
+        where e.id = p_event_id and e.client_id = p_client_id and e.deleted_at is null
      ) then
     return query select 'event_not_found'::text, null::uuid, null::uuid;
     return;
@@ -2307,7 +2517,7 @@ begin
     return 'forbidden';
   end if;
 
-  if not exists (select 1 from public.clients where id = p_client_id) then
+  if not exists (select 1 from public.clients where id = p_client_id and deleted_at is null) then
     return 'client_not_found';
   end if;
 
@@ -2417,6 +2627,8 @@ grant execute on function app.list_platform_notice_emails() to mievento_app;
 grant execute on function app.redeem_content_link(text, text, interval, inet, text) to mievento_app;
 grant execute on function app.active_content_link(text, uuid, uuid) to mievento_app;
 grant execute on function app.issue_content_link(text, uuid, uuid, uuid, text, interval, inet) to mievento_app;
+grant execute on function app.delete_client(text, uuid, inet) to mievento_app;
+grant execute on function app.delete_event(text, uuid, inet) to mievento_app;
 
 
 -- app.platform_actor NO se concede a la aplicación. Es el detalle interno con el que las

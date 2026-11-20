@@ -38,8 +38,10 @@ import {
   ListClients,
   LoadOwnClient,
   UpdateClient,
+  DeleteClient,
 } from '@/application/clients/manage-clients';
 import { CreateEvent, LoadNewEventOptions } from '@/application/events/create-event';
+import { DeleteEvent } from '@/application/events/delete-event';
 import { EditEventDetails } from '@/application/events/edit-event-details';
 import { PublishEvent } from '@/application/events/publish-event';
 import { ManageContentLink, RedeemContentLink } from '@/application/events/manage-content-link';
@@ -335,6 +337,7 @@ export const setEventAccessStatus = new SetEventAccessStatus(userRepository);
 export const listClients = new ListClients(clientRepository);
 export const createClient = new CreateClient(clientRepository, lazyInvitationNotifier);
 export const updateClient = new UpdateClient(clientRepository);
+export const deleteClient = new DeleteClient(clientRepository);
 /*
  * La conversión se arma AQUÍ, lejos de los demás casos de uso de prospectos, porque depende del
  * alta de clientes y no al revés. Es el mismo criterio que ya ordena este archivo: manda la
@@ -366,6 +369,7 @@ export const loadNewEventOptions = new LoadNewEventOptions(catalogRepository);
 export const findEventForPlatform = new FindEventForPlatform(eventRepository);
 export const findEventOverviewForPlatform = new FindEventOverviewForPlatform(eventRepository);
 export const editEventDetails = new EditEventDetails(eventRepository, findEventForPlatform);
+export const deleteEvent = new DeleteEvent(eventRepository);
 export const publishEvent = new PublishEvent(eventRepository, invitationRepository);
 export const submitEventContent = new SubmitEventContent(
   eventRepository,

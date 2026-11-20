@@ -80,6 +80,15 @@ export type UpdateClientResult =
   /** No existe, o la sesión no es de plataforma. No se distinguen. */
   | { readonly outcome: 'forbidden' };
 
+/**
+ * Resultado de eliminar (lógico) un cliente o un evento. `not-found` incluye «ya estaba
+ * eliminado»: para quien pulsa el botón, las dos cosas significan que ya no está.
+ */
+export type DeleteResult =
+  | { readonly outcome: 'deleted' }
+  | { readonly outcome: 'not-found' }
+  | { readonly outcome: 'forbidden' };
+
 /** Lo que un cliente sabe de sí mismo. Lo que ve en su propio panel. */
 export interface ClientProfile {
   readonly id: string;
@@ -112,4 +121,10 @@ export interface ClientRepository {
 
   /** Corrige nombre, correo y teléfono. Por función SECURITY DEFINER, igual que el alta. */
   update(credentials: PlatformCredentials, changes: ClientChanges): Promise<UpdateClientResult>;
+
+  /**
+   * Elimina el cliente y todos sus eventos, de forma lógica (`app.delete_client()`). Sus
+   * invitaciones dejan de abrirse y su correo queda libre para un alta nueva.
+   */
+  delete(credentials: PlatformCredentials, clientId: string): Promise<DeleteResult>;
 }

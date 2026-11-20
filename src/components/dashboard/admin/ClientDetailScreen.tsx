@@ -4,7 +4,9 @@ import { useMemo, useState } from 'react';
 import { Alert, Button, Tooltip } from 'antd';
 import type { TableProps } from 'antd';
 import Link from 'next/link';
-import { ArrowLeft, CalendarDays, CircleCheck, Clock, Pencil, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { deleteClientAction } from '@/app/admin/(authenticated)/clientes/actions';
+import { ArrowLeft, CalendarDays, CircleCheck, Clock, Pencil, Plus, Trash2 } from 'lucide-react';
 import { IDLE_ACTION_STATE, type ActionState } from '@/app/action-state';
 import {
   INITIAL_EDIT_EVENT_STATE,
@@ -26,6 +28,7 @@ import { StatCard } from '../primitives/StatCard';
 import { StatusPill } from '../primitives/StatusPill';
 import { clientFillAppearance, clientStatus, eventStatus } from '../primitives/status-display';
 import { clientFillStage } from '@/domain/events/client-progress';
+import { DeleteClientWarning, DeleteDialog, DeleteEventDialog } from './DeleteDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { EditEventDialog } from './EditEventDialog';
 import { editEventColumn } from './edit-event-column';
@@ -73,15 +76,22 @@ export function ClientDetailScreen({
 
   /* El evento cuyo enlace para el cliente está abierto en el modal. */
   const [linkEvent, setLinkEvent] = useState<EventSummary | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState<EventSummary | null>(null);
+  const [deleteFeedback, setDeleteFeedback] = useState<ActionState>(IDLE_ACTION_STATE);
+  const [isDeleteClientOpen, setDeleteClientOpen] = useState(false);
+  const router = useRouter();
 
   const tableColumns = useMemo(
     () => [
       ...columns,
       contentLinkColumn(setLinkEvent),
-      editEventColumn((event) => {
-        setEditingEventId(event.id);
-        setEventEditOpen(true);
-      }),
+      editEventColumn(
+        (event) => {
+          setEditingEventId(event.id);
+          setEventEditOpen(true);
+        },
+        setDeletingEvent,
+      ),
     ],
     [],
   );
@@ -110,6 +120,14 @@ export function ClientDetailScreen({
               onClick={() => setEditOpen(true)}
             >
               Editar
+            </Button>
+            <Button
+              danger
+              size="large"
+              icon={<Trash2 size={16} strokeWidth={2} />}
+              onClick={() => setDeleteClientOpen(true)}
+            >
+              Eliminar
             </Button>
             {/*
               El alta vive en la cabecera y no dentro de la tarjeta de eventos porque es la acción
@@ -149,6 +167,16 @@ export function ClientDetailScreen({
             closable
             message={eventFeedback.message}
             onClose={() => setEventFeedback(INITIAL_EDIT_EVENT_STATE)}
+          />
+        )}
+        {deleteFeedback.message && (
+          <Alert
+            className="dash-page-alert"
+            type={deleteFeedback.status === 'error' ? 'error' : 'success'}
+            showIcon
+            closable
+            message={deleteFeedback.message}
+            onClose={() => setDeleteFeedback(IDLE_ACTION_STATE)}
           />
         )}
       </div>
@@ -240,6 +268,25 @@ export function ClientDetailScreen({
           options={options}
         />
       )}
+
+      <DeleteEventDialog
+        event={deletingEvent}
+        onClose={() => setDeletingEvent(null)}
+        onResult={setDeleteFeedback}
+      />
+
+      {/* Al eliminar, la ficha deja de existir: se vuelve a la lista, que es donde se anuncia. */}
+      <DeleteDialog
+        open={isDeleteClientOpen}
+        title="Eliminar cliente"
+        confirmLabel="Eliminar cliente"
+        confirmText={client.name}
+        onConfirm={() => deleteClientAction(client.id)}
+        onClose={() => setDeleteClientOpen(false)}
+        onResult={() => router.push('/admin/clientes')}
+      >
+        <DeleteClientWarning client={client} />
+      </DeleteDialog>
 
       <ContentLinkDialog
         event={linkEvent}

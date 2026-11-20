@@ -1,8 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import type { ActionState } from '@/app/action-state';
 import type { EditableEventDetails } from '@/domain/events/event-details';
-import { createEvent, editEventDetails } from '@/infrastructure/container';
+import { createEvent, deleteEvent, editEventDetails } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 import {
   INITIAL_NEW_EVENT_STATE,
@@ -120,6 +121,32 @@ export async function createEventAction(
         status: 'error',
         message: 'No se pudo crear el evento.',
       };
+  }
+}
+
+/**
+ * Eliminar un evento (lógico: `app.delete_event()`). Su invitación deja de abrirse aunque esté
+ * publicada. Recibe el cliente solo para revalidar su ficha; quién puede eliminar lo decide la
+ * base de datos, no ese dato.
+ */
+export async function deleteEventAction(eventId: string, clientId: string): Promise<ActionState> {
+  const credentials = await requirePlatformCredentials();
+  const result = await deleteEvent.execute(credentials, eventId);
+
+  switch (result.outcome) {
+    case 'deleted':
+      revalidatePath('/admin/eventos');
+      revalidatePath(`/admin/clientes/${clientId}`);
+      revalidatePath('/admin/clientes');
+      revalidatePath('/admin');
+
+      return { status: 'success', message: 'Evento eliminado. Su invitación ya no se puede abrir.' };
+
+    case 'not-found':
+      return { status: 'error', message: 'Ese evento ya no existe.' };
+
+    case 'forbidden':
+      return { status: 'error', message: 'No se pudo eliminar el evento.' };
   }
 }
 

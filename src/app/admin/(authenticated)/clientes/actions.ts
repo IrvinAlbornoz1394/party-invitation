@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import type { ActionState } from '@/app/action-state';
-import { createClient, updateClient } from '@/infrastructure/container';
+import { createClient, deleteClient, updateClient } from '@/infrastructure/container';
 import { requirePlatformCredentials } from '@/lib/auth/current-session';
 
 /**
@@ -120,6 +120,30 @@ export async function updateClientAction(
 
     case 'forbidden':
       return { status: 'error', message: 'No se pudo actualizar el cliente.' };
+  }
+}
+
+/**
+ * Eliminar un cliente y todos sus eventos (lógico: `app.delete_client()`). Las mismas tres capas
+ * que el alta. Sus invitaciones dejan de abrirse y su correo queda libre para un alta nueva.
+ */
+export async function deleteClientAction(clientId: string): Promise<ActionState> {
+  const credentials = await requirePlatformCredentials();
+  const result = await deleteClient.execute(credentials, clientId);
+
+  switch (result.outcome) {
+    case 'deleted':
+      revalidatePath('/admin/clientes');
+      revalidatePath('/admin/eventos');
+      revalidatePath('/admin');
+
+      return { status: 'success', message: 'Cliente eliminado, junto con sus eventos.' };
+
+    case 'not-found':
+      return { status: 'error', message: 'Ese cliente ya no existe.' };
+
+    case 'forbidden':
+      return { status: 'error', message: 'No se pudo eliminar el cliente.' };
   }
 }
 

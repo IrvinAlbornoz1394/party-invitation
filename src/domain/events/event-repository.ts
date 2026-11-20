@@ -10,6 +10,7 @@ import type {
 } from './event-details';
 import type { NewEvent } from './new-event';
 import type { PlatformCredentials } from '../auth/platform-credentials';
+import type { DeleteResult } from '../clients/client-repository';
 
 /**
  * Un evento tal como se lista, en los dos paneles.
@@ -422,4 +423,10 @@ export interface EventRepository {
    * leer esa tabla — solo disparar el aviso.
    */
   listPlatformNoticeEmails(): Promise<readonly string[]>;
+
+  /**
+   * Elimina el evento de forma lógica (`app.delete_event()`). Su invitación deja de abrirse aunque
+   * esté publicada, su URL queda libre y el enlace del cliente deja de valer.
+   */
+  deleteAsPlatform(credentials: PlatformCredentials, eventId: string): Promise<DeleteResult>;
 }

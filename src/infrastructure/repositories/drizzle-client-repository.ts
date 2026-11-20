@@ -8,6 +8,7 @@ import type {
   ClientRepository,
   ClientSummary,
   CreateClientResult,
+  DeleteResult,
   NewClient,
   UpdateClientResult,
 } from '@/domain/clients/client-repository';
@@ -150,5 +151,29 @@ export class DrizzleClientRepository implements ClientRepository {
       default:
         return { outcome: 'forbidden' };
     }
+  }
+
+  async delete(credentials: PlatformCredentials, clientId: string): Promise<DeleteResult> {
+    const result = await db.execute<{ status: string; [column: string]: unknown }>(
+      sql`select app.delete_client(
+            ${hashSessionToken(credentials.sessionToken)},
+            ${clientId}::uuid,
+            ${credentials.clientIp}::inet
+          ) as status`,
+    );
+
+    return deleteOutcome(result.rows.at(0)?.status);
+  }
+}
+
+/** Traduce la respuesta de `app.delete_client()` / `app.delete_event()`. Falla cerrado. */
+export function deleteOutcome(status: string | undefined): DeleteResult {
+  switch (status) {
+    case 'deleted':
+      return { outcome: 'deleted' };
+    case 'not_found':
+      return { outcome: 'not-found' };
+    default:
+      return { outcome: 'forbidden' };
   }
 }

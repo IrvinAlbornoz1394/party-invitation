@@ -892,6 +892,12 @@
   align-items: center;
   flex-wrap: wrap;
 }
+/* Botones de fila (editar, eliminar) juntos y alineados a la derecha. */
+.dash-row-actions {
+  display: inline-flex;
+  gap: 2px;
+  white-space: nowrap;
+}
 .dash-toolbar__count {
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
