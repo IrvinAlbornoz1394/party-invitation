@@ -99,3 +99,18 @@ export function paletteToCssVariables(palette: DashboardPalette): CSSProperties 
     '--dash-mark': palette.mark,
   } as CSSProperties;
 }
+
+/**
+ * Las mismas variables como declaraciones para una regla `:root { … }`.
+ *
+ * Van en `:root` y no en el `style` de `.dash` porque los modales y desplegables de antd se pintan
+ * en un portal fuera de `.dash`, y ahí las variables no llegarían. Los valores salen de
+ * `DASHBOARD_PALETTES`, que vive en el código: no hay nada que escapar.
+ */
+export function paletteToRootCss(palette: DashboardPalette): string {
+  const declarations = Object.entries(paletteToCssVariables(palette))
+    .map(([name, value]) => `${name}:${String(value)};`)
+    .join('');
+
+  return `:root{${declarations}}`;
+}

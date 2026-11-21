@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { DASHBOARD_PALETTES, paletteToCssVariables, type DashboardVariant } from '../theme/dashboard-palette';
+import { DASHBOARD_PALETTES, paletteToRootCss, type DashboardVariant } from '../theme/dashboard-palette';
 import { DashboardTheme } from '../theme/DashboardTheme';
 import { buildCrumbs, resolveActiveKey, type Crumb, type Navigation } from '../navigation/nav-model';
 import { Sidebar } from './Sidebar';
@@ -110,8 +110,10 @@ export function DashboardShell({
          * sobre el contenido en escritorio.
          */
         data-nav-open={isNavOpen}
-        style={paletteToCssVariables(palette)}
       >
+        {/* Los colores del panel, en `:root` para que lleguen también a los modales. */}
+        <style>{paletteToRootCss(palette)}</style>
+
         {/*
           Primer elemento tabulable de la página, oculto hasta que recibe el foco. Sin él,
           quien navega con teclado atraviesa la barra lateral entera —hasta doce enlaces y el
